@@ -1,0 +1,101 @@
+{
+ "title": "Video to specification: sam-3.1 tracking, muse-wonder-1.0 vs muse-spark-1.3 observations, muse-spark-1.3 specification",
+ "seeds": [
+  70000,
+  70001,
+  70002,
+  70003,
+  70004,
+  70005,
+  70006,
+  70007,
+  70008,
+  70009,
+  70010,
+  70011,
+  70012,
+  70013,
+  70014,
+  70015,
+  70016,
+  70017,
+  70018,
+  70019
+ ],
+ "split": "eval",
+ "family": "mixed",
+ "cameras": [
+  "top",
+  "side"
+ ],
+ "sam_prompts": [
+  "cup",
+  "block",
+  "marker",
+  "tray",
+  "wall"
+ ],
+ "sam_requests_per_video": 6,
+ "models": {
+  "tracking": "sam-3.1",
+  "observations": [
+   "muse-wonder-1.0",
+   "muse-spark-1.3"
+  ],
+  "specification": "muse-spark-1.3"
+ },
+ "spec_observations_model": "muse-spark-1.3",
+ "plan": [
+  "Each seed: render the scripted demonstration (top + side), track with sam-3.1, rebuild the table-plane trace, compare with simulator ground truth per frame.",
+  "Both observation models see the same videos once each; their events are matched to ground-truth grasp/release events (same type and object, one-to-one, closest first).",
+  "Specification from the video trace (with the muse-spark-1.3 observations) vs specification from the ground-truth trace, both by muse-spark-1.3; compared by proposal signature (constraints not rejected: type, phase, selector, parameters; active goals: selector, target).",
+  "Every seed is reported, including failures."
+ ],
+ "metrics": [
+  "object found rate (detection within 5 cm of ground truth, frames where visible)",
+  "table-plane centroid error (cm): median of per-object medians",
+  "grasp/release detection within 1 s and absolute timing error (s)",
+  "cup tilt error from the side view (deg)",
+  "proposal-signature equality, video vs ground-truth trace",
+  "observation models: event F1 at 0.5 s, relevant-object set correct, care cue for the cup when the demonstration kept it upright, latency"
+ ],
+ "thresholds": {
+  "found_rate_min": 0.95,
+  "centroid_cm_median_max": 1.5,
+  "event_detection_min": 0.9,
+  "timing_s_median_max": 0.3,
+  "tilt_deg_median_max": 5.0,
+  "signature_equal_min": 18
+ },
+ "decision_rule": {
+  "min_f1_gain": 0.05,
+  "text": "use muse-wonder-1.0 for observations only if its mean event F1 is at least 0.05 above muse-spark-1.3 and it gets the relevant-object set right at least as often; otherwise keep muse-spark-1.3"
+ },
+ "hypotheses": [
+  "Tracking from rendered video meets every pre-stated threshold.",
+  "The specification from video has the same proposal signature as the one from the ground-truth trace on at least 18 of 20 seeds."
+ ],
+ "budget_caps": {
+  "muse-wonder-1.0": 60,
+  "muse-spark-1.3:video": 60,
+  "sam-3.1": 120
+ },
+ "inputs_rule": "for each seed: sample_layout(seed, 'eval'), the scripted demonstration, rendered by mirror.perception.render_demo_video (top + side), with its ground truth; all files listed with sha256 in inputs.json; no model call",
+ "registration": "video",
+ "created_at": "2026-10-31T20:56:56.815034+00:00",
+ "created_unix": 1793480216.815034,
+ "audit": {
+  "roots": [
+   "results",
+   "data",
+   "external:media",
+   "external:site_final",
+   "external:mirror-studio-rt",
+   "external:perception",
+   "external:probes"
+  ],
+  "text_files": 1321,
+  "hits": [],
+  "result": "no seed or input hash of this registration found"
+ }
+}
