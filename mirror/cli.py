@@ -392,6 +392,13 @@ def cmd_studio(args, out: Out) -> int:
     return 0
 
 
+def _rel(p: Path) -> str:
+    try:
+        return str(Path(p).resolve().relative_to(REPO))
+    except ValueError:
+        return str(p)
+
+
 def cmd_doctor(args, out: Out) -> int:
     from mirror.interpret.auto import cassette_dir, proposal_recorded, recorded_models
     from mirror.interpret.llm import DEFAULT_BASE_URL, DEFAULT_MODEL
@@ -428,21 +435,31 @@ def cmd_doctor(args, out: Out) -> int:
     cdir = cassette_dir(env)
     models = recorded_models(cdir)
     n = len(list(Path(cdir).glob("*.json")))
-    check("recordings", n > 0, f"{n} in {cdir}" + (f"; recorded with {', '.join(sorted(set(models.values())))}"
-                                                     if models else ""), required=False)
+    check("recordings", n > 0, f"{n} in {_rel(cdir)}" + (f"; recorded with {', '.join(sorted(set(models.values())))}"
+                                                           if models else ""), required=False)
+    trace = None
     if DEMO_PATH.exists():
         check("reference demo", True, str(DEMO_PATH.relative_to(REPO)))
         try:
             trace = load_demo(DEMO_PATH)
-            match = any(proposal_recorded(trace, m, cdir) for m in models)
+            wanted = env.get("MIRROR_LLM_MODEL")
+            cands = [wanted] if wanted else list(models)
+            match = any(proposal_recorded(trace, m, cdir) for m in cands)
             check("recordings match demo", match,
-                  "yes: the proposal will be replayed" if match else
-                  "no: interpretation will use the offline rules unless MIRROR_LLM_MODE is set",
+                  (f"yes: the proposal will be replayed from {wanted if wanted else 'the matching model'}"
+                   if match else "no: interpretation will use the offline rules unless MIRROR_LLM_MODE is set"),
                   required=False)
         except Exception as e:  # noqa: BLE001
             check("reference demo", False, f"unreadable: {e}"[:120])
     else:
         check("reference demo", False, "missing (run `mirror demo --regenerate`)", required=False)
+    from mirror.interpret.auto import recordings_by_model
+    dirs = sorted({cdir.resolve(), *[p.resolve() for p in (REPO / "data").glob("cassettes*") if p.is_dir()]})
+    for r in recordings_by_model(dirs, trace):
+        demo = "" if r["matches_demo"] is None else ("; reference demo recorded" if r["matches_demo"]
+                                                     else "; reference demo not recorded")
+        check(f"recordings: {r['model']}", True,
+              f"{r['count']} in {_rel(Path(r['directory']))} (API reported {r['reported']}){demo}", required=False)
     if args.ping:
         import httpx
         base = (env.get("MIRROR_LLM_BASE_URL") or DEFAULT_BASE_URL).rstrip("/")

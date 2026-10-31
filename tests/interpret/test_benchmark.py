@@ -19,7 +19,11 @@ SETS = [("cases.json", "corrections_benchmark.json"),
         ("cases_holdout.json", "corrections_benchmark_holdout_after_prompt_revision.json")]
 # Results produced with the current prompts replay exactly; earlier ones need
 # the prompts of their own revision and are checked for unchanged cases only.
-CURRENT = SETS[2:]
+CURRENT = [(c, r, "gpt-5.5", CASSETTES) for c, r in SETS[2:]]
+MUSE_CASSETTES = REPO / "data" / "cassettes_muse" / "corrections_benchmark"
+SETS += [("cases.json", "corrections_benchmark_muse.json"),
+         ("cases_holdout.json", "corrections_benchmark_holdout_muse.json")]
+CURRENT += [(c, r, "muse-spark-1.3", MUSE_CASSETTES) for c, r in SETS[-2:]]
 ID_RE = re.compile(r"^c_(upright|forbidden_contact|keep_clearance)_(final|transport|always)_(cup|block|marker|all)$")
 
 
@@ -61,16 +65,16 @@ def test_scoring_flags():
     assert sc["refused_correctly"] and not sc["exact"]
 
 
-@pytest.mark.parametrize("cases_file,results", CURRENT)
-def test_model_results_replay_exactly(cases_file, results):
+@pytest.mark.parametrize("cases_file,results,model,cassettes", CURRENT)
+def test_model_results_replay_exactly(cases_file, results, model, cassettes):
     res_path = REPO / "results" / results
-    models = recorded_models(CASSETTES)
-    if not res_path.exists() or not models:
+    models = recorded_models(cassettes)
+    if not res_path.exists() or model not in models:
         pytest.skip("no committed model results or recordings")
     from mirror.scenes import reference_scene
     committed = [r for r in json.loads(res_path.read_text())["runs"] if r["interpreter"] != "offline-rules"]
     assert committed, "results have no model run"
-    client = LLMClient(mode="replay", model=next(iter(models)), cassette_dir=CASSETTES,
+    client = LLMClient(mode="replay", model=model, cassette_dir=cassettes,
                        transport=httpx.MockTransport(lambda r: (_ for _ in ()).throw(AssertionError("network"))))
     rep = run_benchmark(client, reference_scene("shortcut"),
                         load_cases(REPO / "mirror/interpret/benchmark" / cases_file))

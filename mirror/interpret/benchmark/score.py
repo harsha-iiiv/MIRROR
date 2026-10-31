@@ -136,28 +136,48 @@ def run_case(spec: TaskSpec, scene: SceneState, text: str, client: LLMClient,
 
 
 def run_benchmark(client: LLMClient, scene: SceneState, cases_doc: Optional[dict] = None,
-                  base: Optional[TaskSpec] = None, validation_layer: bool = False) -> dict[str, Any]:
+                  base: Optional[TaskSpec] = None, validation_layer: bool = False,
+                  abort_if=None) -> dict[str, Any]:
     """``validation_layer`` False measures interpreter output only (the default);
-    True also applies the deterministic checks of mirror.interpret.guard."""
+    True also applies the deterministic checks of mirror.interpret.guard.
+    ``abort_if(result)`` returning True stops the run after that case (used to
+    stop on authentication or quota errors instead of spending more calls)."""
     from mirror.interpret.benchmark.overlap import overlap
     from mirror.interpret.prompts import EXAMPLE_PHRASES, PROMPT_REVISION
     cases_doc = cases_doc or load_cases()
     base = base or load_base_spec()
     base_state = state_of(base)
     rows = []
+    aborted = None
+    u0 = len(client.usage)
     for case in cases_doc["cases"]:
+        if aborted:
+            break
         n_usage = len(client.usage)
         res = run_case(base, scene, case["text"], client, validation_layer)
+        if abort_if is not None and abort_if(res):
+            aborted = f"after case {case['id']}: {res.get('error', '')[:200]}"
         models = sorted({u["model"] for u in client.usage[n_usage:]})
         res["models"] = models or ([client.label] if client.offline else [])
         res["score"] = score_case(case, res, base_state)
         rows.append({"id": case["id"], "category": case["category"], "text": case["text"],
                      "gold": case["gold"], "result": res,
                      "prompt_overlap": overlap(case["text"], EXAMPLE_PHRASES)})
-    return {"interpreter": client.label, "mode": client.mode, "prompt_revision": PROMPT_REVISION,
-            "validation_layer": validation_layer,
+    calls = client.usage[u0:]
+    live = [u for u in calls if not u.get("from_cassette")]
+    usage = {"calls": len(calls), "network_calls": len(live),
+             "calls_with_retry_or_repair": sum(1 for u in calls if (u.get("attempt") or 1) > 1),
+             "prompt_tokens": sum(u.get("prompt_tokens") or 0 for u in calls),
+             "completion_tokens": sum(u.get("completion_tokens") or 0 for u in calls),
+             "latency_s_total": round(sum(u.get("latency_s") or 0 for u in live), 1),
+             "latency_s_median": (sorted(u.get("latency_s") or 0 for u in live)[len(live) // 2] if live else None)}
+    out = {"interpreter": client.label, "mode": client.mode, "prompt_revision": PROMPT_REVISION,
+            "validation_layer": validation_layer, "usage": usage,
             "models_returned": sorted({m for r in rows for m in r["result"]["models"]}),
             "summary": summarize(rows), "cases": rows}
+    if aborted:
+        out["aborted"] = aborted
+    return out
 
 
 def summarize(rows: list[dict]) -> dict[str, Any]:

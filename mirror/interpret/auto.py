@@ -2,8 +2,12 @@
 
 Rules:
   * MIRROR_LLM_MODE set: respect it (live, record, replay or offline).
-  * otherwise: replay the recorded responses when a recording exists for this
-    demonstration's proposal request, else use the offline rules.
+  * otherwise, with MIRROR_LLM_MODEL set: replay that model's recorded
+    responses (from MIRROR_CASSETTE_DIR) when they match this demonstration's
+    proposal request, else use the offline rules. Another model's recordings
+    are never substituted for the one asked for.
+  * otherwise: replay whichever model's recorded responses match, else use the
+    offline rules.
 A live call is never made unless MIRROR_LLM_MODE asks for it.
 """
 from __future__ import annotations
@@ -55,12 +59,15 @@ def resolve_client(trace: Optional[DemoTrace] = None,
         client = LLMClient.from_env(env)
         return client, f"MIRROR_LLM_MODE={env['MIRROR_LLM_MODE']}"
     directory = cassette_dir(env)
+    wanted = env.get("MIRROR_LLM_MODEL")
     if trace is not None:
-        for requested in recorded_models(directory):
+        candidates = [wanted] if wanted else list(recorded_models(directory))
+        for requested in candidates:
             if proposal_recorded(trace, requested, directory):
                 return (LLMClient(mode="replay", model=requested, cassette_dir=directory),
-                        "recorded responses match this demonstration")
-        reason = "no recording matches this demonstration"
+                        f"recorded responses from {requested} match this demonstration")
+        reason = (f"no recording from {wanted} in {directory} matches this demonstration" if wanted
+                  else "no recording matches this demonstration")
     else:
         reason = "no demonstration to match against recordings"
     return LLMClient(mode="offline"), reason
@@ -73,3 +80,24 @@ def describe_client(client: LLMClient) -> str:
         reported = recorded_models(client.cassette_dir).get(client.model, client.model)
         return f"recorded responses from {reported} (replay, no network)"
     return f"{client.model} at {client.base_url} ({client.mode})"
+
+
+def recordings_by_model(directories: list[Path], trace: Optional[DemoTrace] = None) -> list[dict]:
+    """One row per (directory, requested model): how many recordings, the model id
+    the API reported, and whether the demonstration's proposal is recorded."""
+    rows = []
+    for d in directories:
+        counts: dict[str, int] = {}
+        reported: dict[str, str] = {}
+        for p in sorted(Path(d).glob("*.json")):
+            try:
+                cas = json.loads(p.read_text(encoding="utf-8"))
+                m = cas["request"]["model"]
+            except (OSError, ValueError, KeyError):
+                continue
+            counts[m] = counts.get(m, 0) + 1
+            reported[m] = cas["response"].get("model") or m
+        for m in sorted(counts):
+            rows.append({"directory": str(d), "model": m, "reported": reported[m], "count": counts[m],
+                         "matches_demo": proposal_recorded(trace, m, Path(d)) if trace is not None else None})
+    return rows

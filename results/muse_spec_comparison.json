@@ -1,0 +1,58 @@
+{
+ "model": "muse-spark-1.3",
+ "built_like": "mirror.evaluate.specs.evaluation_specs (_build: proposal, confirm goals + c_upright_final_cup, reference correction)",
+ "recordings": "data/cassettes_muse",
+ "compared_with": "frozen pair replayed from data/cassettes (gpt-5.5-2026-04-23)",
+ "fields_compared": "bindings; goals (selector, target, status); every constraint (type, phase, selector, params, status); ordering; enforced constraints; active goals. Prose fields ignored.",
+ "result": {
+  "v2": {
+   "evaluator_signature_identical": true,
+   "differences": {},
+   "frozen_enforced": [
+    "c_upright_final_cup"
+   ],
+   "muse_enforced": [
+    "c_upright_final_cup"
+   ],
+   "frozen_active_goals": [
+    "g_inside_block",
+    "g_inside_cup",
+    "g_inside_marker"
+   ],
+   "muse_active_goals": [
+    "g_inside_block",
+    "g_inside_cup",
+    "g_inside_marker"
+   ]
+  },
+  "v3": {
+   "evaluator_signature_identical": true,
+   "differences": {},
+   "frozen_enforced": [
+    "c_upright_final_cup",
+    "c_upright_transport_cup"
+   ],
+   "muse_enforced": [
+    "c_upright_final_cup",
+    "c_upright_transport_cup"
+   ],
+   "frozen_active_goals": [
+    "g_inside_block",
+    "g_inside_cup",
+    "g_inside_marker"
+   ],
+   "muse_active_goals": [
+    "g_inside_block",
+    "g_inside_cup",
+    "g_inside_marker"
+   ]
+  }
+ },
+ "spec_sha256": {
+  "frozen_v2": "546ca656ea2952f2\u2026",
+  "frozen_v3": "baafa260a6834153\u2026",
+  "muse_v2": "7b18030c5cbbadd3\u2026",
+  "muse_v3": "7ee3ac0153407424\u2026"
+ },
+ "note": "Specification hashes differ because prose and interpreter labels differ; the evaluator's enforced signature is identical for both versions."
+}

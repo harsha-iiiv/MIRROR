@@ -1,0 +1,2269 @@
+{
+ "benchmark": "correction_compiler",
+ "tag": "muse",
+ "cases_file": "cases.json",
+ "cases_sha256": "4eaa228264add77bfae084d9654ca35aa92ec335cdcc225aabd4b2f80032c532",
+ "n_cases": 44,
+ "base_spec": "spec_demo_ref_demo_reference",
+ "scene": "ref_shortcut",
+ "generated_at": "2026-10-31T16:03:13Z",
+ "runs": [
+  {
+   "interpreter": "muse-spark-1.3",
+   "mode": "record",
+   "prompt_revision": "3",
+   "validation_layer": false,
+   "usage": {
+    "calls": 44,
+    "network_calls": 44,
+    "calls_with_retry_or_repair": 0,
+    "prompt_tokens": 96533,
+    "completion_tokens": 80019,
+    "latency_s_total": 377.8,
+    "latency_s_median": 7.12
+   },
+   "models_returned": [
+    "muse-spark-1.3"
+   ],
+   "summary": {
+    "cases": 44,
+    "exact": 44,
+    "apply_cases": 32,
+    "apply_exact": 32,
+    "refusal_cases": 12,
+    "refusal_exact": 12,
+    "refused_any_type": 12,
+    "false_accepts": 0,
+    "false_refusals": 0,
+    "scope_error_cases": 0,
+    "wrong_rule_cases": 0,
+    "errors": 0,
+    "overlap_cases": [],
+    "overlap_exact": 0,
+    "non_overlap_cases": 44,
+    "non_overlap_exact": 44,
+    "by_category": {
+     "absent": {
+      "n": 3,
+      "exact": 3
+     },
+     "ambiguous": {
+      "n": 4,
+      "exact": 4
+     },
+     "contact": {
+      "n": 2,
+      "exact": 2
+     },
+     "contradiction": {
+      "n": 1,
+      "exact": 1
+     },
+     "negation": {
+      "n": 5,
+      "exact": 5
+     },
+     "ordering": {
+      "n": 3,
+      "exact": 3
+     },
+     "paraphrase": {
+      "n": 8,
+      "exact": 8
+     },
+     "phase": {
+      "n": 4,
+      "exact": 4
+     },
+     "scope": {
+      "n": 6,
+      "exact": 6
+     },
+     "tolerance": {
+      "n": 4,
+      "exact": 4
+     },
+     "unsupported": {
+      "n": 4,
+      "exact": 4
+     }
+    }
+   },
+   "cases": [
+    {
+     "id": "p01",
+     "category": "paraphrase",
+     "text": "This container must remain upright throughout transport, not just at the destination.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 8.903,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "p02",
+     "category": "paraphrase",
+     "text": "Keep the cup upright the whole time you are carrying it.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 12.617,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "p03",
+     "category": "paraphrase",
+     "text": "The cup has to stay vertical while it's being moved, not only when it's put down.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 8.34,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "p04",
+     "category": "paraphrase",
+     "text": "Don't tilt the cup on the way to the tray.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 6.379,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "p05",
+     "category": "paraphrase",
+     "text": "The beads must not spill while the cup is carried.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 13.373,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "p06",
+     "category": "paraphrase",
+     "text": "While carrying the mug, keep it upright.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 6.377,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "p07",
+     "category": "paraphrase",
+     "text": "Carrying the cup on its side is not OK.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 6.835,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "p08",
+     "category": "paraphrase",
+     "text": "The cup should never be on its side during transport.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 5.663,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "s01",
+     "category": "scope",
+     "text": "Only the cup matters, the marker can lie down.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ],
+       [
+        "set_status",
+        "c_upright_transport_marker"
+       ],
+       [
+        "set_status",
+        "c_upright_final_marker"
+       ]
+      ],
+      "latency_s": 35.447,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "s02",
+     "category": "scope",
+     "text": "The cup must stay upright while carried; the block and the marker can tilt.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ],
+       [
+        "set_status",
+        "c_upright_transport_block"
+       ],
+       [
+        "set_status",
+        "c_upright_transport_marker"
+       ]
+      ],
+      "latency_s": 9.194,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "s03",
+     "category": "scope",
+     "text": "Keep the marker upright while carrying it.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_marker",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_transport_marker": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_marker"
+       ]
+      ],
+      "latency_s": 9.194,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "s04",
+     "category": "scope",
+     "text": "The block and the cup both need to stay upright during transport.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_block",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_transport_block": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ],
+       [
+        "set_status",
+        "c_upright_transport_block"
+       ]
+      ],
+      "latency_s": 8.618,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "s05",
+     "category": "scope",
+     "text": "Every object must stay upright while carried.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_all",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_transport_all": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "add_constraint",
+        "c_upright_transport_all"
+       ]
+      ],
+      "latency_s": 16.07,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "s06",
+     "category": "scope",
+     "text": "The marker must end standing up in the tray.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_final_marker",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_marker": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_final_marker"
+       ]
+      ],
+      "latency_s": 9.182,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "h01",
+     "category": "phase",
+     "text": "The cup only needs to be upright when you set it down.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 16.139,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "h02",
+     "category": "phase",
+     "text": "The cup must be upright at all times.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_always_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_always_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "add_constraint",
+        "c_upright_always_cup"
+       ]
+      ],
+      "latency_s": 17.748,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "h03",
+     "category": "phase",
+     "text": "Keep the marker upright when you set it down.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_final_marker",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_marker": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_final_marker"
+       ]
+      ],
+      "latency_s": 7.133,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "h04",
+     "category": "phase",
+     "text": "The cup must stay upright while carrying it and when placing it.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 8.811,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "t01",
+     "category": "tolerance",
+     "text": "Keep the cup within 30 degrees of upright while carrying it.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 30.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 30.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "modify_constraint",
+        "c_upright_transport_cup"
+       ],
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 6.465,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "t02",
+     "category": "tolerance",
+     "text": "The cup may tilt at most 5 degrees during transport.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 5.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 5.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "modify_constraint",
+        "c_upright_transport_cup"
+       ],
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 6.437,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "t03",
+     "category": "tolerance",
+     "text": "While the cup is carried it can lean up to 20 degrees, no more.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_upright_transport_cup",
+        "params": {
+         "max_tilt_deg": 20.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_transport_cup": {
+         "max_tilt_deg": 20.0
+        },
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "modify_constraint",
+        "c_upright_transport_cup"
+       ],
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 4.8,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "t04",
+     "category": "tolerance",
+     "text": "Once placed, the cup must be within 10 degrees of vertical.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 10.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 10.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "modify_constraint",
+        "c_upright_final_cup"
+       ]
+      ],
+      "latency_s": 3.656,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "n01",
+     "category": "negation",
+     "text": "The cup doesn't need to stay upright while it is carried.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_cup"
+       ]
+      ],
+      "latency_s": 17.51,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "n02",
+     "category": "negation",
+     "text": "It doesn't matter whether the cup ends upright.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {},
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_final_cup"
+       ]
+      ],
+      "latency_s": 11.338,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "n03",
+     "category": "negation",
+     "text": "The marker is allowed to tilt.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "c_upright_transport_marker"
+       ],
+       [
+        "set_status",
+        "c_upright_final_marker"
+       ]
+      ],
+      "latency_s": 9.263,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "n04",
+     "category": "negation",
+     "text": "The order doesn't matter.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "o_cup_before_block"
+       ],
+       [
+        "set_status",
+        "o_block_before_marker"
+       ]
+      ],
+      "latency_s": 5.427,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "n05",
+     "category": "negation",
+     "text": "You don't have to pack the marker.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": [
+       "g_inside_marker"
+      ]
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [],
+       "inactive_goals": [
+        "g_inside_marker"
+       ]
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "g_inside_marker"
+       ]
+      ],
+      "latency_s": 9.166,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "o01",
+     "category": "ordering",
+     "text": "Pack the block before the cup.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [
+       "o_block_before_cup"
+      ],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [
+        "o_block_before_cup"
+       ],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "o_cup_before_block"
+       ],
+       [
+        "add_ordering",
+        "o_block_before_cup"
+       ]
+      ],
+      "latency_s": 7.627,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "o02",
+     "category": "ordering",
+     "text": "The cup has to go in first.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [
+       "o_cup_before_block",
+       "o_cup_before_marker"
+      ],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [
+        "o_cup_before_block",
+        "o_cup_before_marker"
+       ],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "o_cup_before_block"
+       ],
+       [
+        "add_ordering",
+        "o_cup_before_marker"
+       ]
+      ],
+      "latency_s": 9.073,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "o03",
+     "category": "ordering",
+     "text": "Put the marker in last.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       }
+      ],
+      "ordering": [
+       "o_block_before_marker",
+       "o_cup_before_marker"
+      ],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       "ordering": [
+        "o_block_before_marker",
+        "o_cup_before_marker"
+       ],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "set_status",
+        "o_block_before_marker"
+       ],
+       [
+        "add_ordering",
+        "o_cup_before_marker"
+       ]
+      ],
+      "latency_s": 11.224,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "c01",
+     "category": "contact",
+     "text": "The cup must not touch the wall.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_forbidden_contact_transport_cup",
+        "params": {
+         "with": [
+          "obstacle"
+         ]
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_forbidden_contact_transport_cup": {
+         "with": [
+          "obstacle"
+         ]
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "add_constraint",
+        "c_forbidden_contact_transport_cup"
+       ]
+      ],
+      "latency_s": 7.888,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "c02",
+     "category": "contact",
+     "text": "Keep the cup at least 3 cm away from the wall while carrying it.",
+     "gold": {
+      "outcome": "apply",
+      "enforced": [
+       {
+        "id": "c_upright_final_cup",
+        "params": {
+         "max_tilt_deg": 15.0
+        }
+       },
+       {
+        "id": "c_keep_clearance_transport_cup",
+        "params": {
+         "min_m": 0.03
+        }
+       }
+      ],
+      "ordering": [],
+      "inactive_goals": []
+     },
+     "result": {
+      "outcome": "apply",
+      "state": {
+       "enforced": {
+        "c_upright_final_cup": {
+         "max_tilt_deg": 15.0
+        },
+        "c_keep_clearance_transport_cup": {
+         "min_m": 0.03
+        }
+       },
+       "ordering": [],
+       "inactive_goals": []
+      },
+      "model": "muse-spark-1.3",
+      "ops": [
+       [
+        "add_constraint",
+        "c_keep_clearance_transport_cup"
+       ]
+      ],
+      "latency_s": 5.726,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": false,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "a01",
+     "category": "ambiguous",
+     "text": "It must stay upright the whole time.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "result": {
+      "outcome": "asks",
+      "question": "Which object must stay upright the whole time?",
+      "latency_s": 3.398,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": true,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "a02",
+     "category": "ambiguous",
+     "text": "Keep that one upright.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "result": {
+      "outcome": "asks",
+      "question": "Which object do you mean by 'that one' that must stay upright?",
+      "latency_s": 3.808,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": true,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "a03",
+     "category": "ambiguous",
+     "text": "This one can tilt, but that one can't.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "result": {
+      "outcome": "asks",
+      "question": "Which objects do 'this one' and 'that one' refer to \u2014 which can tilt and which must stay upright?",
+      "latency_s": 5.448,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": true,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "a04",
+     "category": "ambiguous",
+     "text": "The object must not tilt while carried.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "result": {
+      "outcome": "asks",
+      "question": "Which object must not tilt while it is carried?",
+      "latency_s": 5.542,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": true,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "a05",
+     "category": "contradiction",
+     "text": "The cup must stay upright while carried, and it may tilt while carried.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "result": {
+      "outcome": "asks",
+      "question": "Should the cup stay upright while carried, or may it tilt while carried?",
+      "latency_s": 5.656,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": true,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "x01",
+     "category": "absent",
+     "text": "The bowl must stay upright.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "result": {
+      "outcome": "asks",
+      "question": "There is no bowl in the scene (block, cup, marker). Which object did you mean by 'the bowl'?",
+      "latency_s": 6.401,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": true,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "x02",
+     "category": "absent",
+     "text": "Keep the bottle upright during transport.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "result": {
+      "outcome": "asks",
+      "question": "Which object did you mean by 'bottle'?",
+      "latency_s": 6.903,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": true,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "x03",
+     "category": "absent",
+     "text": "The lid must go in first.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "result": {
+      "outcome": "asks",
+      "question": "Which object did you mean by 'the lid'?",
+      "latency_s": 5.92,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": true,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "u01",
+     "category": "unsupported",
+     "text": "Move faster.",
+     "gold": {
+      "outcome": "rejects"
+     },
+     "result": {
+      "outcome": "rejects",
+      "reason": "You asked the robot to move faster, which is not about goals, orientation, contact, clearance, or ordering.",
+      "latency_s": 4.327,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": true,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "u02",
+     "category": "unsupported",
+     "text": "Use your left hand.",
+     "gold": {
+      "outcome": "rejects"
+     },
+     "result": {
+      "outcome": "rejects",
+      "reason": "I understood you want the robot to use its left hand, which is not a goal, orientation, contact, clearance, or ordering requirement.",
+      "latency_s": 3.443,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": true,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "u03",
+     "category": "unsupported",
+     "text": "Make the robot quieter.",
+     "gold": {
+      "outcome": "rejects"
+     },
+     "result": {
+      "outcome": "rejects",
+      "reason": "You asked to make the robot quieter, which is not about goals, orientation, contact, clearance, or ordering.",
+      "latency_s": 2.804,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": true,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    },
+    {
+     "id": "u04",
+     "category": "unsupported",
+     "text": "Close the gripper more gently.",
+     "gold": {
+      "outcome": "rejects"
+     },
+     "result": {
+      "outcome": "rejects",
+      "reason": "You asked for a gentler gripper close, which is about low-level grasp force and not a goal, orientation, contact, clearance, or ordering requirement.",
+      "latency_s": 4.301,
+      "models": [
+       "muse-spark-1.3"
+      ],
+      "score": {
+       "exact": true,
+       "scope_errors": [],
+       "false_accept": false,
+       "false_refusal": false,
+       "refused_correctly": true,
+       "wrong_rule": false
+      }
+     },
+     "prompt_overlap": []
+    }
+   ]
+  }
+ ],
+ "notes": []
+}

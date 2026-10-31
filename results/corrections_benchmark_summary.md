@@ -6,6 +6,8 @@ The first three sets are the headline results. Prompt revision 2 (neutral exampl
 
 Each interpreter has two rows. 'Model output only' / 'rule output only' is the interpreter's output after schema and specification checks. '+ validation layer' applies the deterministic absent-object check (mirror/interpret/guard.py) to the same stored outputs, with no new model calls. That layer was added after the jar/bowl false accepts were seen, so its rows are post-hoc, not independent measurements.
 
+The Muse Spark rows swap the model after development: both case sets had been seen, and prompt revision 3 was written while testing the development model (gpt-5.5). They are a post-hoc model swap on unchanged prompts, not a blind benchmark of Muse Spark.
+
 | set | interpreter | output | model id returned | exact | prompt-overlap cases (exact) | other cases exact | false accepts | false refusals | wrong rule | scope-error cases |
 |---|---|---|---|---|---|---|---|---|---|---|
 | [Frozen set, first run (blind), prompt revision 1](corrections_benchmark.md) | offline-rules (offline) | rule output only | offline-rules | 38/44 (86%) | n/a (no prompt) | 38/44 (86%) | 0 | 1 | 5 | 0 |
@@ -36,3 +38,7 @@ Each interpreter has two rows. 'Model output only' / 'rule output only' is the i
 | [Held-out set, prompt revision 3 (current); offline rules include one post-hold-out fix](corrections_benchmark_holdout_after_prompt_revision.md) | offline-rules (offline) | + validation layer (same outputs) | offline-rules | 22/28 (79%) | n/a (no prompt) | 22/28 (79%) | 0 | 5 | 1 | 0 |
 | [Held-out set, prompt revision 3 (current); offline rules include one post-hold-out fix](corrections_benchmark_holdout_after_prompt_revision.md) | gpt-5.5 (record) | model output only | gpt-5.5-2026-04-23 | 26/28 (93%) | none | 26/28 (93%) | 1 | 0 | 2 | 1 |
 | [Held-out set, prompt revision 3 (current); offline rules include one post-hold-out fix](corrections_benchmark_holdout_after_prompt_revision.md) | gpt-5.5 (record) | + validation layer (same outputs) | gpt-5.5-2026-04-23 | 27/28 (96%) | none | 27/28 (96%) | 0 | 0 | 1 | 0 |
+| [Frozen set, Muse Spark swap (post-hoc: set seen in development, prompt revision 3 tuned on the development model)](corrections_benchmark_muse.md) | muse-spark-1.3 (record) | model output only | muse-spark-1.3 | 44/44 (100%) | none | 44/44 (100%) | 0 | 0 | 0 | 0 |
+| [Frozen set, Muse Spark swap (post-hoc: set seen in development, prompt revision 3 tuned on the development model)](corrections_benchmark_muse.md) | muse-spark-1.3 (record) | + validation layer (same outputs) | muse-spark-1.3 | 44/44 (100%) | none | 44/44 (100%) | 0 | 0 | 0 | 0 |
+| [Held-out set, Muse Spark swap (post-hoc: set seen in development, prompt revision 3 tuned on the development model)](corrections_benchmark_holdout_muse.md) | muse-spark-1.3 (record) | model output only | muse-spark-1.3 | 27/28 (96%) | none | 27/28 (96%) | 0 | 0 | 1 | 1 |
+| [Held-out set, Muse Spark swap (post-hoc: set seen in development, prompt revision 3 tuned on the development model)](corrections_benchmark_holdout_muse.md) | muse-spark-1.3 (record) | + validation layer (same outputs) | muse-spark-1.3 | 27/28 (96%) | none | 27/28 (96%) | 0 | 0 | 1 | 1 |

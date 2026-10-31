@@ -27,7 +27,18 @@ from mirror.interpret import LLMClient  # noqa: E402
 from mirror.interpret.auto import recorded_models  # noqa: E402
 from mirror.interpret.benchmark import load_base_spec, load_cases, run_benchmark  # noqa: E402
 
-CASSETTES = ROOT / "data" / "cassettes" / "corrections_benchmark"
+# Benchmark recordings live in <MIRROR_CASSETTE_DIR>/corrections_benchmark
+# (default data/cassettes/corrections_benchmark).
+_BASE = Path(os.environ["MIRROR_CASSETTE_DIR"]) if os.environ.get("MIRROR_CASSETTE_DIR") else ROOT / "data" / "cassettes"
+CASSETTES = (_BASE if _BASE.is_absolute() else ROOT / _BASE) / "corrections_benchmark"
+
+# Errors that mean the account or quota is the problem: stop instead of
+# spending more calls.
+_STOP_MARKERS = ("authentication failed", "HTTP 401", "HTTP 402", "HTTP 403", "HTTP 429")
+
+
+def _should_stop(result: dict) -> bool:
+    return result.get("outcome") == "error" and any(m in result.get("error", "") for m in _STOP_MARKERS)
 
 
 def model_client() -> tuple[LLMClient | None, str]:
@@ -35,6 +46,11 @@ def model_client() -> tuple[LLMClient | None, str]:
     if mode and mode != "offline":
         return LLMClient.from_env(cassette_dir=CASSETTES), f"MIRROR_LLM_MODE={mode}"
     models = recorded_models(CASSETTES)
+    wanted = os.environ.get("MIRROR_LLM_MODEL")
+    if wanted:
+        if wanted in models:
+            return LLMClient(mode="replay", model=wanted, cassette_dir=CASSETTES), "replaying recordings"
+        return None, f"no recordings from {wanted} in {CASSETTES}"
     if len(models) == 1:
         requested = next(iter(models))
         return LLMClient(mode="replay", model=requested, cassette_dir=CASSETTES), "replaying recordings"
@@ -108,6 +124,10 @@ RUNS = [
     ("after_prompt_revision", "Frozen set, prompt revision 3 (current; made after seeing results)"),
     ("holdout_after_prompt_revision", "Held-out set, prompt revision 3 (current); offline rules include one "
                                       "post-hold-out fix"),
+    ("muse", "Frozen set, Muse Spark swap (post-hoc: set seen in development, prompt revision 3 tuned on "
+             "the development model)"),
+    ("holdout_muse", "Held-out set, Muse Spark swap (post-hoc: set seen in development, prompt revision 3 "
+                     "tuned on the development model)"),
 ]
 
 
@@ -131,6 +151,9 @@ def summary_markdown(out: Path) -> str:
              "absent-object check (mirror/interpret/guard.py) to the same stored outputs, with no new model "
              "calls. That layer was added after the jar/bowl false accepts were seen, so its rows are "
              "post-hoc, not independent measurements.", "",
+             "The Muse Spark rows swap the model after development: both case sets had been seen, and prompt "
+             "revision 3 was written while testing the development model (gpt-5.5). They are a post-hoc model "
+             "swap on unchanged prompts, not a blind benchmark of Muse Spark.", "",
              "| set | interpreter | output | model id returned | exact | prompt-overlap cases (exact) | other cases exact "
              "| false accepts | false refusals | wrong rule | scope-error cases |",
              "|---|---|---|---|---|---|---|---|---|---|---|"]
@@ -212,7 +235,10 @@ def main(argv=None) -> int:
         if client is None:
             report["notes"].append(f"model run skipped: {why}")
         else:
-            report["runs"].append(run_benchmark(client, scene, cases, base))
+            run = run_benchmark(client, scene, cases, base, abort_if=_should_stop)
+            report["runs"].append(run)
+            if run.get("aborted"):
+                report["notes"].append(f"model run stopped early: {run['aborted']}")
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     stem = "corrections_benchmark" + (f"_{args.tag}" if args.tag else "")

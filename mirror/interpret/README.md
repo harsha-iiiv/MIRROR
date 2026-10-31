@@ -127,3 +127,18 @@ sent to the model). It was added after the benchmark showed the model mapping
 "bowl" and "jar" onto the cup, so the benchmark reports it as separate,
 post-hoc rows computed from the same stored outputs. Nouns outside the lexicon
 are not detected.
+
+## Recordings per model
+
+`data/cassettes` holds the development-model (gpt-5.5) recordings that the frozen
+evaluation replays; it is the default directory. `data/cassettes_muse` holds Muse
+Spark (muse-spark-1.3) recordings made with the same prompts (revision 3): the
+reference story and both correction-benchmark sets. Choose explicitly:
+
+    MIRROR_LLM_MODEL=muse-spark-1.3 MIRROR_CASSETTE_DIR=data/cassettes_muse mirror story
+
+With `MIRROR_LLM_MODEL` set, replay uses only that model's recordings and never
+substitutes another model's; `mirror doctor` lists recordings per model and
+directory. The Muse specification pair built like the frozen one has identical
+enforced constraints, goals, selectors and parameters
+(`results/muse_spec_comparison.json`).
