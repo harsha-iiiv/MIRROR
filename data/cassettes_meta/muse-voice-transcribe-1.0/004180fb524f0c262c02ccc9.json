@@ -1,0 +1,22 @@
+{
+ "key": "004180fb524f0c262c02ccc98202c45faa8b3ee3d8e7aa63c9aab86d864f32a7",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:456f663f05a0c0b1663187f887bbaa6549690ee86baad9b096e73235c84d77bd"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/95CC3F389C0147A18B94EFD4E9DBD72E",
+  "transcript": "I only care about the cup staying upright when it is carried. Tilt the others as you like..",
+  "audioDurationMs": 5200,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.649,
+ "recorded_at": "2026-10-31T22:12:33Z"
+}

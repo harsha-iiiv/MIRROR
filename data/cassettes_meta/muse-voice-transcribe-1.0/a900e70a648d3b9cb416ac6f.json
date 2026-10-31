@@ -1,0 +1,22 @@
+{
+ "key": "a900e70a648d3b9cb416ac6f2d764ff93c69ef0db2fadcb22e939e4d195348c4",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:6a56b0643aa952d079a520996380272eb4aeae3180d3e47f322eed3ef40902f2"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/9814D43FC7594CA1BC2CD352DDF36DE2",
+  "transcript": "The cup has to go has to go in first.",
+  "audioDurationMs": 2080,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.986,
+ "recorded_at": "2026-10-31T22:05:03Z"
+}

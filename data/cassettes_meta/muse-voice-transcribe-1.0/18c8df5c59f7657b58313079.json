@@ -1,0 +1,22 @@
+{
+ "key": "18c8df5c59f7657b58313079c5f45f7f764f1eef97c28d3739adf52de9feabf5",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:024be69c6d8e2b9a81851b372cafbfd2ca1495c8019d2c4fd1c6855adc0319e6"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/F9ADBE45BAD146C58C46AC66907247B7",
+  "transcript": "Keep the marker upright when you set it down.",
+  "audioDurationMs": 2720,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.866,
+ "recorded_at": "2026-10-31T22:01:22Z"
+}

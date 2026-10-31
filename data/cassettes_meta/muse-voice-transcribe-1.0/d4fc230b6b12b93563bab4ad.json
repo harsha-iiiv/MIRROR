@@ -1,0 +1,22 @@
+{
+ "key": "d4fc230b6b12b93563bab4ad781f3102d4fbb9abc6934eebf5d7a7ed2f9bd025",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:fa26b83b72190450c2d6c6d43887572b5624f4de9018dab35a49e1e0cbdff865"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/EA3A473FF64844B5BE7A6FE9FFD5BFD6",
+  "transcript": "The cup must not touch the wall.",
+  "audioDurationMs": 2320,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.66,
+ "recorded_at": "2026-10-31T22:05:36Z"
+}

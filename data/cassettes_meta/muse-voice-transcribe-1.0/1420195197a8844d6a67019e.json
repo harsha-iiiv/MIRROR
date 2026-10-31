@@ -1,0 +1,22 @@
+{
+ "key": "1420195197a8844d6a67019e3972b7ca146a463ed8edf36a3eed18e7a9f85e7c",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:b164a4a66b8faecbb7e6a2742449b3696ed13dd610c5dd377e1ab0128e01333a"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/78E08B31C0A447499B041FA54657463C",
+  "transcript": "A tilt of up to 25 degrees is acceptable for the cup while you carry it. but not more.,",
+  "audioDurationMs": 6000,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.504,
+ "recorded_at": "2026-10-31T22:15:20Z"
+}

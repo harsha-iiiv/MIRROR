@@ -1,0 +1,22 @@
+{
+ "key": "011b73d43e4d3322c6648fd5880c3b6d367875b2f710c5d9044936a248999acc",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:81b66f81ad9f3934c507875cb1991acfc03db920965f645179f2b30d75311b12"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/B04706C1F2C940ED955C8554F79BB8D0",
+  "transcript": "keep that one upright..",
+  "audioDurationMs": 1600,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.832,
+ "recorded_at": "2026-10-31T22:06:32Z"
+}

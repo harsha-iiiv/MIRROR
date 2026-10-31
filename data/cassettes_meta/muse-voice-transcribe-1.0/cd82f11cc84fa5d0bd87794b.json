@@ -1,0 +1,22 @@
+{
+ "key": "cd82f11cc84fa5d0bd87794b52621fd916c5efcc095d5af538932c1ec27ddb6a",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:7d6896f0f6cd19c90330b58d5954de7b22a2aba42b78bbcae91901436f1b9c45"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/471D3A7F171643E99A015F72AB7DE5C5",
+  "transcript": "Once placed, the cup must be within 10 degrees of vertical..",
+  "audioDurationMs": 4240,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.014,
+ "recorded_at": "2026-10-31T22:02:50Z"
+}

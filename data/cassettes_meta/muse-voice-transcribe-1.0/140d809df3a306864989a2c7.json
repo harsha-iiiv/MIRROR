@@ -1,0 +1,22 @@
+{
+ "key": "140d809df3a306864989a2c7db3d1bda87844015d6951e5eb413db3a64ea3970",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:868181d006b913160989f1916d66363e2a09bca762e46985dc9cf9783e1bd3f6"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/266AE2E1A84A4045BA6D6CBFD1595DD3",
+  "transcript": "The cup has to stay vertical while it's being moved, not only when it's put down..",
+  "audioDurationMs": 5040,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.633,
+ "recorded_at": "2026-10-31T21:54:58Z"
+}

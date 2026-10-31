@@ -1,0 +1,22 @@
+{
+ "key": "cd52023cadcb6709c4a2ae0ebf9b5050376d9909271908df39af394e3f5c975c",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:19efd364a462314e60c00be686c69672edde6d43618df8d588bbadd34ae20141"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/057DD28110D7460AA86C1031C1751F83",
+  "transcript": "Put the marker in last.",
+  "audioDurationMs": 2080,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.669,
+ "recorded_at": "2026-10-31T22:05:17Z"
+}

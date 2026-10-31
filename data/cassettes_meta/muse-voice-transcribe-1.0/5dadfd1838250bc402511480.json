@@ -1,0 +1,22 @@
+{
+ "key": "5dadfd1838250bc4025114800ac6952e5a7edb455c1d0d2b12b96c5c017ade4d",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:e57cefe0916179ec99c0141268c213c4fd7f40953595809a4994800ba838f64e"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/3288E9DD12CB4937A430668BC54154DD",
+  "transcript": "This one can tilt but that one can't.",
+  "audioDurationMs": 2880,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.902,
+ "recorded_at": "2026-10-31T22:06:55Z"
+}

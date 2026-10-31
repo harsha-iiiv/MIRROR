@@ -1,0 +1,22 @@
+{
+ "key": "d39c160dc00cc4daedf23e36c96806a1af88861956b776efae0c25041c38c466",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:1dc3cf017ab1e227d78b4277101adf5140aed8acd1703bd12765677a2b13eb27"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/D885E6363CE9484AA932D66DECDA3325",
+  "transcript": "Keep the cup at at least three centimeters away from the wall while carrying it..",
+  "audioDurationMs": 4560,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.266,
+ "recorded_at": "2026-10-31T22:05:37Z"
+}

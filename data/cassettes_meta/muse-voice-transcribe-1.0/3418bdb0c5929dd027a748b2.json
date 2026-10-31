@@ -1,0 +1,22 @@
+{
+ "key": "3418bdb0c5929dd027a748b23120445d4757e3d4257f47c4422f07c5e11c4741",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:cc19f9751023895f11e4bd4d6d042660b03afcad5041177c56dbf93256b00b70"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/DA70F8AAD49A4C65A4249FA07F19B48C",
+  "transcript": "Use your left hand.",
+  "audioDurationMs": 1520,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.642,
+ "recorded_at": "2026-10-31T22:08:36Z"
+}

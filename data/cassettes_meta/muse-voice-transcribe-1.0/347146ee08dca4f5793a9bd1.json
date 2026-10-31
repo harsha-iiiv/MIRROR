@@ -1,0 +1,22 @@
+{
+ "key": "347146ee08dca4f5793a9bd1ddb9d644b3b26786750138aefcb6be6bde0e700b",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:d0343505aa4bbfc6cca81217b98b25d6ef7a2e40dea95ab566fbbffb65c9cefe"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/D110A528E693489F981BE968AE7FD15A",
+  "transcript": "The marker should go into the tray before the block.",
+  "audioDurationMs": 3520,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.185,
+ "recorded_at": "2026-10-31T22:17:22Z"
+}

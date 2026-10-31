@@ -1,0 +1,22 @@
+{
+ "key": "75261ac06815261b611b0a6a08c11871bf4387c1e4824f81b71f5bf79e36af9a",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:554ce151af47b64a0437fd4ce7b5653dd641c8090bd77e76785ca560f77cc34d"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/EC08A6368AA04B3CBC24AA6B40E23057",
+  "transcript": "You don't have to pack the marker..",
+  "audioDurationMs": 1920,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.857,
+ "recorded_at": "2026-10-31T22:04:17Z"
+}

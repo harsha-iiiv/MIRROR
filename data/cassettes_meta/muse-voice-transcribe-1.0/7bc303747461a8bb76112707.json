@@ -1,0 +1,22 @@
+{
+ "key": "7bc303747461a8bb761127071ef14763df13836ec5f365d000d9abfc5ea0b67a",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:ec9ad446df0ee802fa05ea5cbd6e0d0f75a78b7bce0d964e40a1037ca5432706"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/6D6531CB767B4F779CFD42606661BD12",
+  "transcript": "The ball must stay upright.",
+  "audioDurationMs": 2320,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.825,
+ "recorded_at": "2026-10-31T22:07:32Z"
+}

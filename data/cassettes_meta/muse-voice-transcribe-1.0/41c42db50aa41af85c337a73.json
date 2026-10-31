@@ -1,0 +1,22 @@
+{
+ "key": "41c42db50aa41af85c337a73dbbe483fc840199a19e969f77d1d8d59810a9176",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:134d9ca12185efb06d72c6806a0ba93caabebdd4d4a61d610cdec5b7261e8468"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/9C5AEEC662CD447AA24CECC02907B448",
+  "transcript": "Carrying the cup on its side is not okay..",
+  "audioDurationMs": 3200,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.021,
+ "recorded_at": "2026-10-31T21:56:20Z"
+}

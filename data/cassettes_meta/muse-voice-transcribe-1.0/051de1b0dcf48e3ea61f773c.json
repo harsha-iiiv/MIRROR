@@ -1,0 +1,22 @@
+{
+ "key": "051de1b0dcf48e3ea61f773c476d1e7d125500d6ca2ee9cdd830a4ca0882e108",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:c376aea5fbb034b807552a6c8e8262750d4d245986a11482a0054a7a957e45da"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/D3F1C5F267254127BB6EBF2ABEFD6062",
+  "transcript": "pack the phone before the cup.",
+  "audioDurationMs": 2080,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.788,
+ "recorded_at": "2026-10-31T22:18:52Z"
+}

@@ -1,0 +1,22 @@
+{
+ "key": "d7c8995a696cc9ec7d7f80ea3f4d43c71ca53422884bfa956b580e6765c81633",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:26c3bbccc96ec26e1b72fd0be1e3bb02dbc6d932870ab127641251408ad1fde4"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/EB3C663667094227A0D7C9C9109C063D",
+  "transcript": "Make the robot robot quieter.",
+  "audioDurationMs": 2000,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.822,
+ "recorded_at": "2026-10-31T22:08:43Z"
+}

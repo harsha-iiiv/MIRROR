@@ -1,0 +1,22 @@
+{
+ "key": "ba7769c61271c0f274fb8107caa151b3366c9d0dca46048b922c197f9d5ee78b",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:9924c4dfbb19321b78d8394092255515996e30c64687288b97034ca502cbc0f0"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/F9155B8B29E049E2A2981F3541938824",
+  "transcript": "For the cup, cup, being upright only matters at at the end..",
+  "audioDurationMs": 3520,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.079,
+ "recorded_at": "2026-10-31T22:14:36Z"
+}

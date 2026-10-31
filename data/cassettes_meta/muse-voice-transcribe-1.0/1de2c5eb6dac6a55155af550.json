@@ -1,0 +1,22 @@
+{
+ "key": "1de2c5eb6dac6a55155af550d6670061ffb7993ee0a1e64c98f6282d0e9bf818",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:2adf63f6c891910b2cada8ee515b565cb14389eead82aa52de7840f5ec790b63"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/685BA6983AEF4802B2FA5CEC56E82058",
+  "transcript": "The marker has has to be standing upright once it is in the tray..",
+  "audioDurationMs": 3760,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.06,
+ "recorded_at": "2026-10-31T22:13:13Z"
+}

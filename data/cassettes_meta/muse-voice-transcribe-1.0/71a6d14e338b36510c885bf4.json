@@ -1,0 +1,22 @@
+{
+ "key": "71a6d14e338b36510c885bf45627999ceb73fbf041cf65538c4d83a4b34c3ead",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:728e60f8880cc2b704bd4207ac86204defffc7616b1e4612a87876b4c0100cb8"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/9537F77BC13C4EECB95F165C070B9EE8",
+  "transcript": "That thing has to stay upright while carried..:",
+  "audioDurationMs": 2960,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.909,
+ "recorded_at": "2026-10-31T22:18:03Z"
+}

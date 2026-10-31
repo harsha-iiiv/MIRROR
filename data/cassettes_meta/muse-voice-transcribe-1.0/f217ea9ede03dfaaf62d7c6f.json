@@ -1,0 +1,22 @@
+{
+ "key": "f217ea9ede03dfaaf62d7c6f80d405b0e763baaba2ad95e841e961f3a0ae2502",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:368924ca8b8362b5ba4ae74727d53491d32a5b5f24f85cfc2a1972ec2e0c5869"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/138973D58FCF46F38D17720EFC9AB063",
+  "transcript": "Pack the block before the cup..",
+  "audioDurationMs": 2240,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.915,
+ "recorded_at": "2026-10-31T22:04:25Z"
+}

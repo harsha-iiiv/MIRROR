@@ -1,0 +1,22 @@
+{
+ "key": "62d148ca3db875fce24bc0139e2c7f33cd1ba5432db5fbb2cff24ef0d2a9c268",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:40b011f830bfc56485bf2fad33144a50fd7ee27d3e8484ffa4a7994ed50af64c"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/44B72DE35C9147ECB26B5D6367FE9E6A",
+  "transcript": "Keep the marker marker upright while carrying it.",
+  "audioDurationMs": 2720,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.027,
+ "recorded_at": "2026-10-31T21:59:25Z"
+}

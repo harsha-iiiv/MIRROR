@@ -1,0 +1,22 @@
+{
+ "key": "d3ceca9cccdaf6ee7eeb5661c61b281d37a6ade400f1f5ed0e3c3cfc8b7419f8",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:185470684d1982d783dee576d4154dab5b6670682cdc52552cee6730047efe68"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/76E61B8C0251467BA297D9291D0CCCC8",
+  "transcript": "The bowl must must stay upright.",
+  "audioDurationMs": 2240,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.795,
+ "recorded_at": "2026-10-31T22:07:37Z"
+}

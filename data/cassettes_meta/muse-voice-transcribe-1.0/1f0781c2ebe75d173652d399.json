@@ -1,0 +1,22 @@
+{
+ "key": "1f0781c2ebe75d173652d39921a0de048108172d58e23817a904bf24789d7156",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:10de6244be277798054bbabc291184d514f1fab0625b33a3792219c91d18ce53"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/1187D19B5FDE496AB37D336B6507BD1B",
+  "transcript": "The cup may tilt at most five degrees during transport.",
+  "audioDurationMs": 3920,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.022,
+ "recorded_at": "2026-10-31T22:02:18Z"
+}

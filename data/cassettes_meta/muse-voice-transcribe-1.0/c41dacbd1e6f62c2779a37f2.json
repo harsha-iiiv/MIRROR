@@ -1,0 +1,22 @@
+{
+ "key": "c41dacbd1e6f62c2779a37f2ad50fdb747c961c634fbc3843d936ebe84737dd5",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:679d17430158daf47c9d96c5083c0f58e10bcb1a9c32ef86f81b5e21fff899ad"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/4CD92F1DA3954975A4BD0D3CCAE3150D",
+  "transcript": "Take a photo of the tray when you are done.",
+  "audioDurationMs": 2400,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.873,
+ "recorded_at": "2026-10-31T22:19:06Z"
+}

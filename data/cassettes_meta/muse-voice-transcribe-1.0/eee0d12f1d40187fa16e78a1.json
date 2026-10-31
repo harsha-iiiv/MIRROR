@@ -1,0 +1,22 @@
+{
+ "key": "eee0d12f1d40187fa16e78a127bec40190bbc92541e5e98e64472b4e3087a8a7",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:3f23a64e97eddc49f7583cf6c6b02283d155469e02947391737f70f5547be060"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/CB2B5F0B5E9940DFBE0D1983BCDC04D8",
+  "transcript": "Keep the cup within 30 degrees of upright while carrying it..",
+  "audioDurationMs": 3760,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.225,
+ "recorded_at": "2026-10-31T22:02:00Z"
+}

@@ -1,0 +1,22 @@
+{
+ "key": "53e6b3401dc4d547dbd0632a7f2c36f94eb68d01fd1e259c2025835480367ce9",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:1abf953cd1a8b4f8bc98186161cb4ab3500ec220d3453039751fba2abb43cac5"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/549CF2E8F59E4F0C8E48FC7A8F14E770",
+  "transcript": "During transport, transport, the cup must not lean more than eight degrees..",
+  "audioDurationMs": 4160,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.441,
+ "recorded_at": "2026-10-31T22:15:40Z"
+}

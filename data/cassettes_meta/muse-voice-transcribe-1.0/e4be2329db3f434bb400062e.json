@@ -1,0 +1,22 @@
+{
+ "key": "e4be2329db3f434bb400062efab4756800de4952ef5d0d846b8f538e8cb3299d",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:8be444ea9e62166d64aef39c22b4da4930892cb0c3c9a964aec46474a007a08b"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/1D80B8D73DC04A9B9531971B7E7DAE6D",
+  "transcript": "this one can tilt but that one can't.",
+  "audioDurationMs": 3120,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.971,
+ "recorded_at": "2026-10-31T22:06:37Z"
+}

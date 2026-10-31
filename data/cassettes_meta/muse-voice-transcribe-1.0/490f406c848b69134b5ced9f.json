@@ -1,0 +1,22 @@
+{
+ "key": "490f406c848b69134b5ced9f98b44d7b5bf04b18af8d5d1a27db12e8d9faad24",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:ae9251b880d45d473b62e7d641f0566c06b0764920a4c7fe35334113d8df8910"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/139922AEC533496D921B894B06C6B609",
+  "transcript": "This container must remain upright throughout transport. Not just at the destination.",
+  "audioDurationMs": 5520,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.347,
+ "recorded_at": "2026-10-31T21:54:31Z"
+}

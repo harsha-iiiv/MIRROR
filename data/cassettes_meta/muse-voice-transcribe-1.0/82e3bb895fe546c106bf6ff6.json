@@ -1,0 +1,22 @@
+{
+ "key": "82e3bb895fe546c106bf6ff62e2cb0f54596bb2198a2b8bd3ca3dd1b107a97b1",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:5aacdb5d6245408141c51286e428eeb16b07a6a0fae448ce2c6fa4e18a7f3dc4"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/128CD98990BF4A808F9957162C6CD084",
+  "transcript": "Don't tilt the the cup on the way to the tray...",
+  "audioDurationMs": 2560,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.201,
+ "recorded_at": "2026-10-31T21:55:33Z"
+}

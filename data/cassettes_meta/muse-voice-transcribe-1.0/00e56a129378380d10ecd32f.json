@@ -1,0 +1,22 @@
+{
+ "key": "00e56a129378380d10ecd32f4a1deb8e8cad8245e8ac4ff3672290063fea6b1a",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:825f7be9a0a5d2fd0a8d7e174ef2cf099270342f74a3202fcfdd889f7c666ec6"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/D4FE9F8E38AE46D4B920F0838406C71E",
+  "transcript": "Keep the cup upright the whole time you are carrying it,.",
+  "audioDurationMs": 3440,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.195,
+ "recorded_at": "2026-10-31T21:54:41Z"
+}

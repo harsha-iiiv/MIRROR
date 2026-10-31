@@ -1,0 +1,22 @@
+{
+ "key": "f6c6860cfac08ab371a09f76e26e892982acfe26791356a0da1666e993782699",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:574fe79448beac802985c8c50bb94a619c98d25e4272862ae66f9b7ec9b6c739"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/396F1A915966430FB426F16554D48A10",
+  "transcript": "The marker must must end standing up in the tray.",
+  "audioDurationMs": 3120,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.01,
+ "recorded_at": "2026-10-31T22:00:14Z"
+}

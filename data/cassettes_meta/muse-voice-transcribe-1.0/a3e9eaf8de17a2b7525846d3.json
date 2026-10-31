@@ -1,0 +1,22 @@
+{
+ "key": "a3e9eaf8de17a2b7525846d3efb623d1f39ccd43607b094248bf985564b17e54",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:2a2c9d75d208093ac4ccae22e6668aa115c151404217b8c9c7411cdb863bed43"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/D6EF60AF92A94FB89836699B6E33C22E",
+  "transcript": "Forget about keeping the marker upright.",
+  "audioDurationMs": 2400,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.95,
+ "recorded_at": "2026-10-31T22:16:43Z"
+}

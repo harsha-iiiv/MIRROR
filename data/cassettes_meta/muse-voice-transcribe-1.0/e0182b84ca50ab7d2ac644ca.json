@@ -1,0 +1,22 @@
+{
+ "key": "e0182b84ca50ab7d2ac644ca54253e4765b13bbfc8fdc8ab70b54a15e10b23a3",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:d4b3a1d00df4c066ab95523ca95f4ac9ec081ce5fb19cf46edcbeb0f6f73bbb3"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/5F5A04C5E5FA4B9D8F8A93FE00AD17BB",
+  "transcript": "The lid must go in first..",
+  "audioDurationMs": 2160,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.758,
+ "recorded_at": "2026-10-31T22:08:11Z"
+}

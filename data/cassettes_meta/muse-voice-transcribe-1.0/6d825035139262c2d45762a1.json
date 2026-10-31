@@ -1,0 +1,22 @@
+{
+ "key": "6d825035139262c2d45762a1ff70f5e3d572c91b5de7b486f285453508644ee1",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:b8e02518760e6e3414a7854e3cc2d3828dec9df60be04c2a4f59fd50eed35994"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/38E309768DD54B2A81742958BC1BAF4D",
+  "transcript": "The bull must must stay upright..",
+  "audioDurationMs": 2320,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.9,
+ "recorded_at": "2026-10-31T22:07:27Z"
+}

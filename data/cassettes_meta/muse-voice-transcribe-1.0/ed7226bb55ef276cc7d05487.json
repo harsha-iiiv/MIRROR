@@ -1,0 +1,22 @@
+{
+ "key": "ed7226bb55ef276cc7d05487e562317036721904cf418d06bcb458abe99ce94a",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:c1484a3f4f3d5fdb9a5c6b542e627cd33daece164808f2424b32a34da5895f14"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/097AD1FF7D2B41D6B574519ED6C10740",
+  "transcript": "Close the gripper more gently.",
+  "audioDurationMs": 2160,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.774,
+ "recorded_at": "2026-10-31T22:08:47Z"
+}

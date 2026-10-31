@@ -1,0 +1,22 @@
+{
+ "key": "034974673911afe7482563288209fe0c71299b9877277bd96e44bb1999f7bb4e",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:5e6ccebf50e1f54d9eb8155b46a57c2504bb7898694a27fbaaa5f1b339476408"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/C5AED903599841CEB2F96E8D0F47EB7D",
+  "transcript": "Pack the phone before the cup.",
+  "audioDurationMs": 2080,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.859,
+ "recorded_at": "2026-10-31T22:18:52Z"
+}

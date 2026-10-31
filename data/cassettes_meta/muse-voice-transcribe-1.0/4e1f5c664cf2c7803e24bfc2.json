@@ -1,0 +1,22 @@
+{
+ "key": "4e1f5c664cf2c7803e24bfc299337cc5627b75b63921ecfb3cc67158946414e9",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:3d8d5699dd06122afbbb3001bd38d75ba48df946f4d67894a8f29d46a49f28d2"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/0E53F2BE4D4C44CFB90285D88DC5ACB4",
+  "transcript": "the jar must not be tilted.",
+  "audioDurationMs": 2400,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.782,
+ "recorded_at": "2026-10-31T22:18:38Z"
+}

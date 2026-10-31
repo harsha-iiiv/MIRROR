@@ -1,0 +1,22 @@
+{
+ "key": "5c7d70776738c210e71a2a703a06c1d47d3b28da9bca2fa140449538b0b729e1",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:7dab0381f8cc042a10dff6e7a8c262b96becbbdd05e9d46ac1d946a8e713b678"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/ED00BD5B7A9744F3B7FA1880FE797092",
+  "transcript": "It doesn't matter whether the cup ends upright..",
+  "audioDurationMs": 2800,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.016,
+ "recorded_at": "2026-10-31T22:03:37Z"
+}

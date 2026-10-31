@@ -1,0 +1,22 @@
+{
+ "key": "e2ecd0f114eb136b3ec5601f8bcf4b8f14c9824d75bd78ed4c821dc853bf2729",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:60c2d6633f7a0e59e19321269672d1cde82aff604a78417016685bf2b0010839"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/004DCC7F0CAA42DFAC26A30599013685",
+  "transcript": "While carrying the mug, keep it upright",
+  "audioDurationMs": 2880,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.973,
+ "recorded_at": "2026-10-31T21:56:04Z"
+}

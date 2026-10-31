@@ -1,0 +1,22 @@
+{
+ "key": "c7f77d024a71a4d37e170621f3fbc0c01bbefc77f13e9d612f629c466ae3478a",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:37d9be23cc7b35e391d5be484565a6855d4474cd0a96b16e5380ff8e68dd362f"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/7EBF4D2048B04027B652840FF84383A7",
+  "transcript": "Keep the bottle upright during transport..",
+  "audioDurationMs": 2560,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.935,
+ "recorded_at": "2026-10-31T22:08:05Z"
+}

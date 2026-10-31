@@ -1,0 +1,22 @@
+{
+ "key": "881cc477e0b6113d963d35a8ac5c630c01186a90082e5b7425cd9facf6e3a8c9",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:41dd21d22ed57d600eaa7c0470c959b165d1069db9e8b4f1dca1854ac22d9e93"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/223CFA21635F497BB968C89A126D8747",
+  "transcript": "You tilted the cup and the beads fell out. It has to stay level while moving..",
+  "audioDurationMs": 5120,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.294,
+ "recorded_at": "2026-10-31T22:10:34Z"
+}

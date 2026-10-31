@@ -1,0 +1,22 @@
+{
+ "key": "973493fa258822f1d63097f1320cab814407285b41e85470774662a4b4e22ccf",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:83865e37ddcb6af8ac1f986edf5afd93c848cfcb3d9d40c651b538cda92458b2"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/1F864B9506DF450B9A7D69E242161852",
+  "transcript": "The cup only needs to be upright when you set it down. down.",
+  "audioDurationMs": 3360,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.467,
+ "recorded_at": "2026-10-31T22:00:45Z"
+}

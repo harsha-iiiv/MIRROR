@@ -1,0 +1,22 @@
+{
+ "key": "e1b37db01af35214bd8ccac00f03427c73951d55cf36e29fe76008c376440d97",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:1fa70590b754adf173c46545094b5e416b234a4bf85ba661862b11467daab7dd"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/45FF045AA4984A7E8FC95582C25EDB8B",
+  "transcript": "Grip harder.",
+  "audioDurationMs": 1440,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.734,
+ "recorded_at": "2026-10-31T22:19:10Z"
+}

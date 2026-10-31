@@ -1,0 +1,22 @@
+{
+ "key": "11a18b3a32aa78eb51405ff1312e75bed99b71b893a338fb9bc372c9b4e1b91c",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:16cab36716922346fb33a0f19e453f8c80968db26353862c0c68fd349704b7e3"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/0078034447934191B844C3BE99B2503A",
+  "transcript": "all three objects have to stay upright at all times.,",
+  "audioDurationMs": 3840,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.196,
+ "recorded_at": "2026-10-31T22:12:54Z"
+}

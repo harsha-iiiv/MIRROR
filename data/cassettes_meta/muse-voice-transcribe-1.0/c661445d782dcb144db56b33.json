@@ -1,0 +1,22 @@
+{
+ "key": "c661445d782dcb144db56b332ae45efcd910eac3b6c33bdfe1e09ace9f885eee",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:73183e7e36f97dc83327237c174d579afcb8744f9009fbd1aeaf3aa0490fcba9"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/39157FA84E9D4A4D942C439E9AAF6346",
+  "transcript": "Don't let it tip over.",
+  "audioDurationMs": 1680,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.664,
+ "recorded_at": "2026-10-31T22:17:57Z"
+}

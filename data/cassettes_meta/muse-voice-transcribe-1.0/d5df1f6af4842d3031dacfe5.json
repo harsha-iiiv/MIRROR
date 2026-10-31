@@ -1,0 +1,22 @@
+{
+ "key": "d5df1f6af4842d3031dacfe5c0eb4fdddfad56342c595d723b0a731a9b07ab3a",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:b96009e063282a44f29aad98a9a4ac9243ba7d437244959b93c272c86d3d0b27"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/DECF79CDE020400BB495D173B99A1D2A",
+  "transcript": "The cup must stay upright while carrying it and when placing it..",
+  "audioDurationMs": 4320,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.141,
+ "recorded_at": "2026-10-31T22:01:45Z"
+}

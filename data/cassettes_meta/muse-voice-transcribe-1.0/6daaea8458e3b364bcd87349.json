@@ -1,0 +1,22 @@
+{
+ "key": "6daaea8458e3b364bcd87349ee03191fe31c389e508d5d0c2baea033afd1c8d9",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:b190875ff0413032b718432e4d8c865d0a74e92d52002a8fb741de0205853296"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/9FAFC95E4460425DBE71D687EC25D5D0",
+  "transcript": "All three objects have to stay upright at all times.",
+  "audioDurationMs": 3840,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.167,
+ "recorded_at": "2026-10-31T22:13:11Z"
+}

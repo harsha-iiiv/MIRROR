@@ -1,0 +1,22 @@
+{
+ "key": "35775d6f6485d79198c78b16445544da8166150bcddedbc1880819ed990ccdb4",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:7ffed66f1b3093d71cc9ad6151937611ea74556431c30fefc20f91940d2395cd"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/00E21490DBFB491BA83114118C13B350",
+  "transcript": "No tipping the container while it's in the gripper.",
+  "audioDurationMs": 2720,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.006,
+ "recorded_at": "2026-10-31T22:09:33Z"
+}

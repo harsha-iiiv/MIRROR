@@ -1,0 +1,22 @@
+{
+ "key": "3470ee79959eaaaf31057d6cb3542571dcacf58c04ddfc8173334385fd2663be",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:576546cfa9dbf6d3cee8c3618160c9dd2b92e3168e062ed06176410fa4a62b70"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/70D96B17EF334BB69C1E373D5B64B1E2",
+  "transcript": "The block must stay upright the whole time, from start to finish.",
+  "audioDurationMs": 4480,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.128,
+ "recorded_at": "2026-10-31T22:13:45Z"
+}

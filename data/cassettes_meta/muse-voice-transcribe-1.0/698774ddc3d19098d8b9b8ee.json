@@ -1,0 +1,22 @@
+{
+ "key": "698774ddc3d19098d8b9b8eef7810c771ccb438147ecf27ed9de9b63c3a07fcf",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:17adc65a19d518709161c4b467047390ec3a27d01da5ee751759a9056a4f6b16"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/B700932084FE4B0292599C0718762F4C",
+  "transcript": "The block and the cup both need to stay upright during transport.",
+  "audioDurationMs": 4240,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.168,
+ "recorded_at": "2026-10-31T21:59:44Z"
+}

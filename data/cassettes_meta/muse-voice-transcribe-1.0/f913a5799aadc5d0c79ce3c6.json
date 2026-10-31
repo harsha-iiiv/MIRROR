@@ -1,0 +1,22 @@
+{
+ "key": "f913a5799aadc5d0c79ce3c612afd2292214e68f950b65b755e8029bad7bd7e0",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:45a62a7f0fcb81efb343144e13d32701df05a22f41be6f20ea883b8cf5a4e79c"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/8B4BAD88269644BC841D09EA915A7846",
+  "transcript": "The cup must be upright at all times.",
+  "audioDurationMs": 3040,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.042,
+ "recorded_at": "2026-10-31T22:01:20Z"
+}

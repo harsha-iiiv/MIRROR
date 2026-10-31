@@ -1,0 +1,22 @@
+{
+ "key": "c4cc7d63dab87d8591384c237389bc395d98b9b202d5f26f7eca4220f6f3c2ba",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:2851e1985d5e7163421460b5585660eb61781ea84271248c4a60874d592cb6ba"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/CCB8E1C88AF74E27AFFF2E8E932760BF",
+  "transcript": "upright during transport too. For the cup, not merely at the end,.",
+  "audioDurationMs": 4480,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.234,
+ "recorded_at": "2026-10-31T22:11:05Z"
+}

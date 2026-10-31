@@ -1,0 +1,22 @@
+{
+ "key": "f455b84c666fa0e8de17cb65d4ca4140f1d8380a673cd5c712430f147362bc8f",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:41035bb4e138c7218b6f96ac7eb08c7a8ea16f79e6f1afd267d9bb112d75cee8"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/1211E8045FDB4138A356A3BAD0920C1F",
+  "transcript": "While the cup is carried, it can lean up to 20 degrees, no more.",
+  "audioDurationMs": 4640,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.296,
+ "recorded_at": "2026-10-31T22:02:42Z"
+}

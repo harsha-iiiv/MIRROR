@@ -1,0 +1,22 @@
+{
+ "key": "951a016d1aa741200c8d37e44479f6d77db81b8b08cc8c6c5736cd9a68c337bb",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:ab056a63ed694bffc1bafc2bad7e5ad294d2350b62acf5e30fe8b09217b2381b"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/9BA88E7C4EF347DE938BE68E2E9EF3E1",
+  "transcript": "The order doesn't matter..",
+  "audioDurationMs": 1760,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.813,
+ "recorded_at": "2026-10-31T22:03:57Z"
+}

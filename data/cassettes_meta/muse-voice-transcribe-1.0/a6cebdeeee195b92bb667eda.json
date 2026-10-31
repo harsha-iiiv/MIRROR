@@ -1,0 +1,22 @@
+{
+ "key": "a6cebdeeee195b92bb667eda2f29a08260eddfcd24975ac466bd09a11e3af0e5",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:d5d9a71b125d7c14543077a132f9e90d4db14c5be2cba1c18a82bb6c3df6e5f3"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/E73AE827FD624D2388405AA87EAE63ED",
+  "transcript": "The cup must stay upright while carried. The block and the marker can tilt.",
+  "audioDurationMs": 5280,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.442,
+ "recorded_at": "2026-10-31T21:59:24Z"
+}

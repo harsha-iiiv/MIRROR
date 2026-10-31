@@ -1,0 +1,22 @@
+{
+ "key": "03bc1cd8a1ad841ce10ace7545344e1c31b524698a7b5907de495b472edb830b",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:54b7c4d3d142a12e895468df28e630997a718c676fcec01560fa628394f4a0fc"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/DFECCD55604744BD9AC4CBAD41E648FB",
+  "transcript": "The cup should never be on its side during transport.",
+  "audioDurationMs": 3280,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.936,
+ "recorded_at": "2026-10-31T21:57:02Z"
+}

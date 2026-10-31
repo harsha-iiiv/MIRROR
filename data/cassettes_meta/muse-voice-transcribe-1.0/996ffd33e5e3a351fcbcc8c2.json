@@ -1,0 +1,22 @@
+{
+ "key": "996ffd33e5e3a351fcbcc8c29e359cb81adee50bb002a1f738c846bd6e2e38d8",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:d38e4e89dee9d1e255fcd15b0ac704a951f757b959aa6bcb0708bce06463fcff"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/C7071317808C4CF09FF271A905A69043",
+  "transcript": "Avoid bumping the cup into the wall while carrying it.",
+  "audioDurationMs": 3440,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.878,
+ "recorded_at": "2026-10-31T22:17:48Z"
+}

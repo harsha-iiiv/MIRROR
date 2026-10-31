@@ -1,0 +1,22 @@
+{
+ "key": "aafd959274831e9af0a00d39301be96388d1d53b7237f8f2a8a15b6d74782ef1",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:eac60788214bdf9e246462f7d0449821246ed4b024417776a47918477b8f1b31"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/7EA45E1E70C144F29C088C94238C50FB",
+  "transcript": "Only the cup cup matters. The marker can lie down.",
+  "audioDurationMs": 3440,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.342,
+ "recorded_at": "2026-10-31T21:57:40Z"
+}

@@ -1,0 +1,22 @@
+{
+ "key": "a6ef44377c3f0bcdb727170e09d15259ab3c724996b9190a9eafd55c8145b664",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:ce1a29ae73186ee09c7a242a3a8e6b3584f8763965b8d94dd6182b214b7bbde9"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/F62940C9E64142F69CAF221E869D2573",
+  "transcript": "The cup doesn't need to stay upright while it is carried.",
+  "audioDurationMs": 3280,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.006,
+ "recorded_at": "2026-10-31T22:03:10Z"
+}

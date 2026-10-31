@@ -1,0 +1,22 @@
+{
+ "key": "adcf643eff01a844181a3b071a66f8e3367b95b0704634bc9ba9bf254599c151",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:390a7083e5fcfe199d715601772bdd95fabb71b052057c04234da270fdab9a46"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/97DECBE9DCAC4A4D80156D7FDEE025A5",
+  "transcript": "The cup can end up on its side in the tray. That's fine.",
+  "audioDurationMs": 3680,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.141,
+ "recorded_at": "2026-10-31T22:16:25Z"
+}

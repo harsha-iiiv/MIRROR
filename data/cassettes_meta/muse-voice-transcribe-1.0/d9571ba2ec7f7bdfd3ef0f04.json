@@ -1,0 +1,22 @@
+{
+ "key": "d9571ba2ec7f7bdfd3ef0f04d344d07f4277ae326b38dba6ab327bed4cd70995",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:4e7523ba68bfec34c30c9740b6a7670e3e4cafe91a67476a51969333f5ce4554"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/23130C2A51C941C988C0B10673A28D7A",
+  "transcript": "The beads must not spill while the cup is carried.",
+  "audioDurationMs": 3280,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.036,
+ "recorded_at": "2026-10-31T21:55:54Z"
+}

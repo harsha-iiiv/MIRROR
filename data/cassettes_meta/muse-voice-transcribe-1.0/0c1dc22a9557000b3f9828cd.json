@@ -1,0 +1,22 @@
+{
+ "key": "0c1dc22a9557000b3f9828cd819898b04dd67e4533f447c66c97b59d94e95469",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:e755bcb23ece445c32acb761b679d25d5f842634c839a9abf139049cbfc4846c"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/C048171073724CDEBD6B750D0FB557B3",
+  "transcript": "The pen should stay vertical while you carry it. The cup too..",
+  "audioDurationMs": 3920,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.275,
+ "recorded_at": "2026-10-31T22:12:05Z"
+}

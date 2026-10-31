@@ -1,0 +1,22 @@
+{
+ "key": "e32cb214c946c197f1df3e257bdebc4ea4ce78572ee6cafb4768f8d86242eb7e",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:e2f81961b10809cffd89318b97d489a4a666eb2666758039ce2694335dadb678"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/BCBFA274DB2846BB8036AC3B0FB89442",
+  "transcript": "Please make sure the cup stays upright as you move it over to the tray.,",
+  "audioDurationMs": 4080,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.239,
+ "recorded_at": "2026-10-31T22:09:09Z"
+}

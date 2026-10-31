@@ -1,0 +1,22 @@
+{
+ "key": "a699977aca589d925bf0881f5e023b97b22ce66108e0aebd91d54dc9a26792dc",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:26c9d7d5b86c06b4cba34be4db80d9ce26b755ccff4ecb7f9a51117d77098db0"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/97DCF2FBD1CF40A99C537A0287DD309F",
+  "transcript": "It must stay upright the whole time..",
+  "audioDurationMs": 2880,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.963,
+ "recorded_at": "2026-10-31T22:06:10Z"
+}

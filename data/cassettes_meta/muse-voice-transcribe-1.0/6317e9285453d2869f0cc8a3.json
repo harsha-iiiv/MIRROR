@@ -1,0 +1,22 @@
+{
+ "key": "6317e9285453d2869f0cc8a31e5df02bea9a4c6d72137ea1cc6746288119c955",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:bd7a5a371f4a0f11065ba03ecb24cf9f757fc516d8641eb05b5dd05f3923009b"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/3117DC8C77FC430B87CBCB70294D6CD2",
+  "transcript": "Keep the cube level while carrying it..",
+  "audioDurationMs": 2480,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.829,
+ "recorded_at": "2026-10-31T22:12:53Z"
+}

@@ -1,0 +1,22 @@
+{
+ "key": "b50aa3d6c4fd0205774c3b7382ca2422db8e9df0805a41b4e34005135c222ac3",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:403738ac936901db735c003701c5134bc42c8dae9a5afa5697a7fd3f5c286b21"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/AEB0F25B871C4C05B71C976A2C531025",
+  "transcript": "The cup must must stay upright while carried. and it may tilt while carried..",
+  "audioDurationMs": 4800,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.325,
+ "recorded_at": "2026-10-31T22:07:20Z"
+}

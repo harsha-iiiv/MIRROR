@@ -1,0 +1,22 @@
+{
+ "key": "74a9c03a77bcdaec67d609dd35d3cc061fb65f05545e75899fad6380c7672dac",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:4782f0957087270a6be29bd76afadf31d47aa72efbd5c9d6ddbc9c5ca7887657"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/055F3E725E2042A0A4115DFB569AC22E",
+  "transcript": "don't let it tip over",
+  "audioDurationMs": 1760,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.949,
+ "recorded_at": "2026-10-31T22:17:50Z"
+}

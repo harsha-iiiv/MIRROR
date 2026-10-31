@@ -1,0 +1,22 @@
+{
+ "key": "33214c5f5e29b12366947f4fe99c169e691b684a9c76a69375cb7a7d58937a95",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:5c291f5692118dfd0551c7d2b47e92e0d8d7abb202bce2817b71c8c1aa5eab1c"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/DE938510C30140AB918CE936BC8BF40A",
+  "transcript": "Every object must stay upright while carried.",
+  "audioDurationMs": 3280,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.206,
+ "recorded_at": "2026-10-31T21:59:50Z"
+}

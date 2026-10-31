@@ -1,0 +1,22 @@
+{
+ "key": "26212933d4f8937bd32749040af84b41f9688b4072616ed10697419c0285922f",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:d9fb543e50ee055dc52d00b816562667e42558694c9cb25eb8e37fccb1edcf9d"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/BEBE34B7595645A0BBE5EA593A091C15",
+  "transcript": "Relax the cup's final upright tolerance to 40 40 degrees.",
+  "audioDurationMs": 3840,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.105,
+ "recorded_at": "2026-10-31T22:15:59Z"
+}

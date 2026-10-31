@@ -1,0 +1,22 @@
+{
+ "key": "ed5f9ca693d9353658291a64a8b455339097f9559e063723cc59f044ef501d64",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:690805ee9e79752d5bcf950f2803ec74f698ea1ff4fd593c8b6b376eb054229a"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/66238F6C84ED4CACB42E014668FC83BF",
+  "transcript": "The object must not tilt while carried.",
+  "audioDurationMs": 2880,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.875,
+ "recorded_at": "2026-10-31T22:07:04Z"
+}

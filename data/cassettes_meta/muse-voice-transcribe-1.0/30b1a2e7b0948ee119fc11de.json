@@ -1,0 +1,22 @@
+{
+ "key": "30b1a2e7b0948ee119fc11de53209164021b8227434361b731f1550f6b23cf9a",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:f57c95540fe5c3c28c480c2333a478f354b7f6df00829672f443cab5de558bf6"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/2FA2919DAA9946B7A0AB8879B0753DDE",
+  "transcript": "The marker is allowed to tilt.",
+  "audioDurationMs": 2160,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.871,
+ "recorded_at": "2026-10-31T22:03:41Z"
+}

@@ -1,0 +1,22 @@
+{
+ "key": "c0f01b22d5b3a33028da1340ea3d3a8252f1bb19a781a9dbd15da89cda48d1fb",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:134ba46ba15368deec82195dc9352ad65ae106a45a0f1f4bdc39665d95536228"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/9676C8EADC814808955F6AD6A8F09804",
+  "transcript": "When you carry the cup, it's opening has to face up the entire way.",
+  "audioDurationMs": 4560,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 1.274,
+ "recorded_at": "2026-10-31T22:09:35Z"
+}

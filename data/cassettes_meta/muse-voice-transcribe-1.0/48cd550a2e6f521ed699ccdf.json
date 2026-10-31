@@ -1,0 +1,22 @@
+{
+ "key": "48cd550a2e6f521ed699ccdf3112f21ad71ab3e6cb6b91b31c12772babc971d4",
+ "model": "muse-voice-transcribe-1.0",
+ "endpoint": "/asr/transcribe",
+ "request": {
+  "request": {
+   "model": "muse-voice-transcribe-1.0",
+   "audioEncoding": "WAV",
+   "mode": "PUSH_TO_TALK"
+  },
+  "audio": "sha256:a8a18f05f4841c22c4d8afcc4ca54a792d5abce338ae7c18c327c17bba630776"
+ },
+ "response": {
+  "sessionId": "voyager/transcribe/D45FC737889D4CA0A6C6D92D4984D7A7",
+  "transcript": "Pack the objects in whatever order you like..",
+  "audioDurationMs": 2640,
+  "turns": []
+ },
+ "blobs": [],
+ "latency_s": 0.948,
+ "recorded_at": "2026-10-31T22:17:13Z"
+}
