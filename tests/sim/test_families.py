@@ -33,9 +33,18 @@ def test_shortcut_family_differs_and_is_deterministic():
     assert a != sample_layout(3, "dev")
 
 
-def test_family_seed_ranges():
-    sample_layout(EVAL_SEED_BASE, "eval")
-    sample_layout(SHORTCUT_EVAL_SEED_BASE, "eval", family="shortcut")
+def test_family_seed_ranges_accept_the_registered_eval_seeds():
+    # Checked with the seed validator alone: no evaluation layout is generated.
+    from mirror.scenes.sampling import _check_seed
+    for seed in (30000, 30059):
+        _check_seed(seed, "eval", "mixed")
+    for seed in (40000, 40029):
+        _check_seed(seed, "eval", "shortcut")
+    for seed in (30000, 30004):
+        _check_seed(seed, "blocked", "mixed")
+
+
+def test_family_seed_ranges_reject_out_of_range_seeds():
     with pytest.raises(ValueError):
         sample_layout(EVAL_SEED_BASE + 5, "eval", family="shortcut")
     with pytest.raises(ValueError):

@@ -203,3 +203,33 @@ def test_frames_are_sampled_for_playback(demo_pack_run):
     assert abs(len(frames) - res.sim_time * 30.0) <= 2
     assert {"cup_0", "gripper", "gripper_finger_r", "cup_0/bead7"} <= set(frames[0].bodies)
     assert frames[-1].phase == "settle"
+
+
+def test_waypoint_outside_the_workspace_fails_instead_of_being_clamped(demo_scene):
+    env = SimEnv(demo_scene)
+    start = env.gripper_pose().pos
+    steps = [PlanStep(kind="move", waypoints=[Pose(pos=(0.60, 0.0, 0.30), quat=DOWN)])]
+    res = env.execute(plan_of(demo_scene, steps))
+    assert res.status == "execution_failed"
+    assert "outside the workspace" in res.reason and "x=0.6000" in res.reason
+    # Nothing moved toward the unreachable target.
+    assert np.allclose(env.gripper_pose().pos, start, atol=2e-3)
+
+
+def test_simulation_is_deterministic(demo_scene):
+    a = SimEnv(demo_scene, seed=0).execute(plan_of(demo_scene, pick_steps(demo_scene, "block_0")))
+    b = SimEnv(demo_scene, seed=123).execute(plan_of(demo_scene, pick_steps(demo_scene, "block_0")))
+    assert np.array_equal(a.log.obj_pos, b.log.obj_pos) and a.log.phase == b.log.phase
+    assert a.log.meta["deterministic"] is True
+
+
+def test_objects_falling_off_the_table_come_to_rest_on_the_floor(demo_scene):
+    from mirror.scenes.objects import make_block
+    from mirror.sim.model import FLOOR_Z
+    scene = demo_scene.model_copy(deep=True)
+    scene.objects = [o if o.id != "block_0" else make_block("block_0", 0.0, 0.62) for o in scene.objects]
+    env = SimEnv(scene)
+    res = env.execute(plan_of(scene, []))
+    k = res.log.index("block_0")
+    assert res.log.obj_pos[-1, k, 2] == pytest.approx(FLOOR_Z + 0.02, abs=3e-3)
+    assert any(c.object_id == "block_0" and c.other == "floor" for c in res.log.contacts)

@@ -19,8 +19,14 @@ plan.
 """
 from __future__ import annotations
 
+import inspect
+import json
 import math
+import os
+import time
+import warnings
 from collections import deque
+from pathlib import Path
 
 import numpy as np
 
@@ -43,6 +49,42 @@ OBJECT_SPACING = 0.13
 SLOT_PASS_MARGIN = GRIPPER.palm_half[1] + 0.01   # palm half length plus margin
 _FAR = WORLD.workspace_y[1] + 0.10
 _GRID = 0.01
+
+
+LEDGER_ENV = "MIRROR_EVAL_LEDGER"
+DEFAULT_LEDGER = Path(__file__).resolve().parents[2] / "results" / "eval" / "ledger.jsonl"
+
+
+def ledger_path() -> Path:
+    """Where evaluation-layout accesses are recorded (MIRROR_EVAL_LEDGER overrides)."""
+    p = os.environ.get(LEDGER_ENV)
+    return Path(p) if p else DEFAULT_LEDGER
+
+
+def _caller_module() -> str:
+    """Module name of the first stack frame outside this module."""
+    for fr in inspect.stack()[2:]:
+        name = fr.frame.f_globals.get("__name__", "")
+        if name != __name__:
+            return name or fr.filename
+    return "unknown"
+
+
+def _record_eval_access(seed: int, split: str, family: str, caller: str | None = None) -> None:
+    """Append one line to the evaluation ledger. Never raises: a failed write
+    only warns, so generation is not blocked by the ledger."""
+    entry = {"seed": int(seed), "split": split, "family": family, "unix": time.time(),
+             "caller": caller or _caller_module()}
+    path = ledger_path()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+        try:
+            os.write(fd, (json.dumps(entry, sort_keys=True) + "\n").encode())
+        finally:
+            os.close(fd)
+    except OSError as exc:
+        warnings.warn(f"could not append to the evaluation ledger {path}: {exc}", RuntimeWarning, stacklevel=3)
 
 
 def _check_seed(seed: int, split: str, family: str = "mixed") -> None:
@@ -196,8 +238,15 @@ def sample_layout(seed: int, split: str, family: str = "mixed") -> SceneState:
     Seeds: dev seeds are below EVAL_SEED_BASE for both families; eval seeds
     start at EVAL_SEED_BASE for "mixed" and at SHORTCUT_EVAL_SEED_BASE for
     "shortcut". The blocked split has only the mixed family.
+
+    Ledger: every call with split "eval" or "blocked" and seed >=
+    EVAL_SEED_BASE appends {seed, split, family, unix, caller} to the
+    append-only evaluation ledger (results/eval/ledger.jsonl under the
+    repository, or MIRROR_EVAL_LEDGER) before the layout is generated.
     """
     _check_seed(seed, split, family)
+    if split in ("eval", "blocked") and seed >= EVAL_SEED_BASE:
+        _record_eval_access(seed, split, family)
     if family == "mixed":
         rng = np.random.default_rng([seed, SPLITS.index(split), 0x6D6972])
     else:

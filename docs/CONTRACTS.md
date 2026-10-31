@@ -167,17 +167,20 @@ touches both finger geoms.
 **Execution failures.** `execution_failed` for a failed grasp, a drop (no
 two-finger hold for 0.15 s between grasp and release), sustained tracking
 error (> 20 mm or 0.25 rad for 0.3 s; the reason names the obstacle in
-contact) or an unreachable orientation; `timeout` past `max_sim_time`.
+contact), a waypoint outside the workspace (never clamped) or an unreachable
+orientation; `timeout` past `max_sim_time`.
 
 **Contacts.** One record per (step, object, other) with the maximum depth.
 `object_id` is a movable object id or `gripper`; `other` is an object id,
-`table`, `tray:<id>`, `obstacle:<id>` or `gripper`. Object-object contacts are
+`table`, `floor`, `tray:<id>`, `obstacle:<id>` or `gripper`. A floor plane 0.75 m below the table catches anything that falls off. Object-object contacts are
 recorded in both directions; bead contacts are not recorded.
 
 **Scenes.** Ids `ref_demo`, `ref_shortcut`, `ref_blocked`, `<split>_<seed>`.
 `sample_layout` accepts `dev`, `eval` and `blocked`; dev seeds are below
 `EVAL_SEED_BASE` and eval seeds at or above it (enforced). `validate_layout`
-and `route_exists` are exported.
+and `route_exists` are exported. Every evaluation-split layout generated at a
+seed at or above `EVAL_SEED_BASE` is appended to `results/eval/ledger.jsonl`
+(redirect with `MIRROR_EVAL_LEDGER`).
 
 **Route labels** are carried in transport step notes as `route=<label>; ...`,
 for example `route=through_slot:wall_0:0:pitched+90` or `route=around:wall_0:+y`.

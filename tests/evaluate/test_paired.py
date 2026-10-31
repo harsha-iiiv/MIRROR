@@ -113,6 +113,13 @@ def test_manifest_mismatches_are_refused(tmp_path, monkeypatch):
         verify_manifest(p, a, b, [10001], "eval")
 
 
+def test_executor_described_as_deterministic(dev_report):
+    from mirror.evaluate.paired import DEFAULT_EXECUTOR_LABEL, _name
+    label = _name(None, DEFAULT_EXECUTOR_LABEL)
+    assert "deterministic" in label and "seed=0" not in label
+    assert dev_report.config["executor"] == "StubEnv"
+
+
 def test_code_hash_is_stable():
     assert paired_mod.code_hash() == paired_mod.code_hash()
 

@@ -45,13 +45,15 @@ def test_blocked_wall_spans_workspace_and_slot_is_the_only_route():
     assert not route_exists(no_slot, cup.pose.pos[:2], s.trays[0].pose.pos[:2])
 
 
-def test_sampling_is_deterministic_and_splits_differ():
+def test_sampling_is_deterministic():
+    # Evaluation layouts are never generated in tests (D4); the eval split
+    # uses the same code path with a different seed stream.
     assert sample_layout(7, "dev") == sample_layout(7, "dev")
-    assert sample_layout(EVAL_SEED_BASE + 7, "eval") == sample_layout(EVAL_SEED_BASE + 7, "eval")
     assert sample_layout(7, "dev") != sample_layout(8, "dev")
 
 
 def test_split_seed_ranges_are_enforced():
+    # Every call below is rejected by the seed check before any layout is drawn.
     with pytest.raises(ValueError):
         sample_layout(EVAL_SEED_BASE, "dev")
     with pytest.raises(ValueError):

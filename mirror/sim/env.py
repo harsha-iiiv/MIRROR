@@ -185,6 +185,9 @@ class SimEnv:
     """
 
     def __init__(self, scene: SceneState, *, seed: int = 0):
+        """``seed`` is accepted for interface compatibility only: the simulator
+        is deterministic (no noise is injected anywhere), so identical scene
+        and plan give an identical rollout regardless of the seed."""
         self.scene = scene
         self.seed = seed
         self.model, self.index = build_model(scene)
@@ -339,11 +342,23 @@ class SimEnv:
         half = min(max(self._jaw_cmd / 2.0, FINGER_RANGE[0]), FINGER_RANGE[1])
         ctrl[self._finger_act] = half
 
-    def _set_reference(self, pos, quat) -> None:
+    def outside_workspace(self, pos) -> list[str]:
+        """Axes on which ``pos`` lies outside the robot's reachable box."""
         ws = self.scene.workspace
-        pos = np.array([min(max(pos[0], ws.x_range[0]), ws.x_range[1]),
-                        min(max(pos[1], ws.y_range[0]), ws.y_range[1]),
-                        min(max(pos[2], ws.z_range[0]), ws.z_range[1])])
+        eps = 1e-9
+        out = []
+        for name, v, (lo, hi) in zip("xyz", pos, (ws.x_range, ws.y_range, ws.z_range)):
+            if v < lo - eps or v > hi + eps:
+                out.append(f"{name}={float(v):.4f} not in [{lo:g}, {hi:g}]")
+        return out
+
+    def _set_reference(self, pos, quat) -> None:
+        # Targets are never clamped: a target outside the reachable box stops
+        # execution with a failure instead of being executed somewhere else.
+        bad = self.outside_workspace(pos)
+        if bad:
+            raise _Failure("execution_failed", "target outside the workspace: " + ", ".join(bad))
+        pos = np.array([pos[0], pos[1], pos[2]], dtype=float)
         quat = rot.qnormalize(quat)
         ang = rot.wrist_angles(quat, self._ref_angles)
         if not (YAW_RANGE[0] <= ang[0] <= YAW_RANGE[1] and ROLL_RANGE[0] <= ang[1] <= ROLL_RANGE[1]
@@ -477,6 +492,10 @@ class _Execution:
 
     def move_to(self, target: Pose, max_speed: float) -> None:
         env = self.env
+        bad = env.outside_workspace(target.pos)
+        if bad:
+            raise _Failure("execution_failed",
+                           f"waypoint outside the workspace during {self.phase}: " + ", ".join(bad))
         p0, q0 = env._ref_pos.copy(), env._ref_quat.copy()
         p1, q1 = np.asarray(target.pos, dtype=float), rot.qnormalize(target.quat)
         if np.dot(q0, q1) < 0:
@@ -587,7 +606,7 @@ class _Execution:
             "scene_id": env.scene.scene_id, "spec_version": plan.spec_version,
             "planner": plan.planner, "status": status, "reason": reason,
             "events": self.events, "timestep": self.dt, "frame_hz": self.frame_hz,
-            "seed": env.seed,
+            "deterministic": True,
             "executor": {"angular_speed_max": ANGULAR_SPEED_MAX, "linear_speed_max": LINEAR_SPEED_MAX,
                          "time_scaling": "trapezoidal velocity per segment", "linear_accel_max": LINEAR_ACCEL_MAX, "angular_accel_max": ANGULAR_ACCEL_MAX, "drop_grace_s": DROP_GRACE,
                          "track_pos_tol_m": TRACK_POS_TOL, "track_ang_tol_rad": TRACK_ANG_TOL},

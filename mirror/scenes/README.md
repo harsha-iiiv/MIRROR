@@ -63,3 +63,14 @@ Measured over dev seeds 0 to 999: slot on the line 100%, extra boxes
 0 / 1 / 2 = 62.7% / 29.8% / 7.5%, 2.53 draws per accepted layout.
 
 Scene ids: `<split>_<seed>` for mixed, `<split>_shortcut_<seed>` for shortcut.
+
+## Evaluation ledger
+
+Every `sample_layout` call with split `eval` or `blocked` and seed >= 10000
+(any family) appends one JSON line `{seed, split, family, unix, caller}` to
+`results/eval/ledger.jsonl` under the repository root, before the layout is
+generated. `caller` is the calling module. Set `MIRROR_EVAL_LEDGER` to write
+elsewhere (the sim tests point it at a temporary file). A failed write warns
+and never blocks generation. Development seeds (below 10000) are not recorded.
+The registered evaluation seeds (DECISIONS D4) are mixed 30000-30059, shortcut
+40000-40029 and blocked 30000-30004; tests and the studio never generate them.

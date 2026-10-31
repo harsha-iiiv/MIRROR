@@ -71,6 +71,24 @@ def eval_seeds(seeds: list[int]) -> list[int]:
     return [s + EVAL_SEED_BASE if s < EVAL_SEED_BASE else s for s in seeds]
 
 
+def _rehearsal_ledger(args) -> None:
+    """Rehearsals record their layouts in a disposable ledger under
+    results/tmp unless MIRROR_EVAL_LEDGER is set, so they never touch the
+    evaluation ledger. A new rehearsal freeze starts that ledger afresh."""
+    import os
+    rehearsal = args.rehearsal
+    if args.mode == "final" and Path(args.manifest).exists():
+        from mirror.evaluate.models import FreezeManifest
+        rehearsal = FreezeManifest.model_validate_json(Path(args.manifest).read_text()).kind == "rehearsal"
+    if not rehearsal or os.environ.get("MIRROR_EVAL_LEDGER"):
+        return
+    led = ROOT / "results" / "tmp" / f"{Path(args.manifest).resolve().parent.name}-ledger.jsonl"
+    led.parent.mkdir(parents=True, exist_ok=True)
+    if args.mode == "freeze-final" and led.exists():
+        led.unlink()
+    os.environ["MIRROR_EVAL_LEDGER"] = str(led)
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("mode", choices=["dev", "freeze", "eval", "blocked", "recheck", "freeze-final", "final"])
@@ -107,6 +125,9 @@ def main(argv=None) -> int:
         rep = ev.check(log, spec, scene, condition=f"recheck under v{spec.version}")
         print(rep.model_dump_json(indent=1))
         return 0
+
+    if args.mode in ("freeze-final", "final") and args.manifest:
+        _rehearsal_ledger(args)
 
     if args.mode == "freeze-final":
         from mirror.evaluate.final import freeze_final, rehearsal_strata
@@ -195,8 +216,9 @@ def main(argv=None) -> int:
 
 if __name__ == "__main__":
     from mirror.evaluate import FamilyUnsupported, FreezeError
+    from mirror.evaluate.specs import SpecAgreementError
     try:
         raise SystemExit(main())
-    except (FamilyUnsupported, FreezeError) as exc:
+    except (FamilyUnsupported, FreezeError, SpecAgreementError) as exc:
         print(f"refused: {exc}", file=sys.stderr)
         raise SystemExit(3)

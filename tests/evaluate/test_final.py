@@ -82,7 +82,9 @@ def test_final_runs_every_stratum_from_one_manifest(tmp_path):
                                     "seed1_corrected.json", "seed1_original.json"]
     Rollout.model_validate_json(ro[0].read_text())
     assert f.strata["primary"].trials[0].a.rollout_path == "rollouts/seed0_original.json"
-    assert "Rollout selection" in md and f.ledger["writer_active"] is True
+    assert "Rollout selection" in md
+    assert f.ledger["writer_active"] is False      # the stub layout function writes no ledger
+    assert any("vacuous" in n for n in f.notes)
 
 
 def test_final_refuses_changed_specs(tmp_path):
@@ -255,3 +257,43 @@ def test_offline_specs_refused_for_final_freeze(tmp_path):
     with pytest.raises(FreezeError, match="rehearsal"):
         freeze_final(tmp_path / "f.json", strata=_eval_strata(), spec_source="offline",
                      layout_fn=family_layout, ledger_path=tmp_path / "l.jsonl")
+
+
+def test_ledger_end_to_end_with_real_sampler(tmp_path, monkeypatch):
+    """Real layout sampler with a temporary ledger (MIRROR_EVAL_LEDGER): an
+    empty ledger freezes and runs; the run's own layouts appear in the ledger
+    after the freeze (the check is not vacuous); a ledger that already names
+    a frozen seed refuses the freeze. Uses blocked-split seeds that are
+    neither frozen nor retired, and never the eval split."""
+    scenes = pytest.importorskip("mirror.scenes")
+    led = tmp_path / "ledger.jsonl"
+    monkeypatch.setenv("MIRROR_EVAL_LEDGER", str(led))
+    strata = [dict(name="blocked", role="blocked", split="blocked", family="mixed", seeds=[12345])]
+    man = tmp_path / "f.json"
+    m = freeze_final(man, strata=strata, spec_builder=specs, kind="rehearsal")
+    assert m.ledger_at_freeze["exists"] is False
+    f = run_final(man, workers=1, spec_builder=specs, planner=stub_planner, env_factory=StubEnv, n_boot=50)
+    hits = f.ledger["frozen_seed_entries"]
+    assert f.ledger["writer_active"] and hits and all(e["unix"] >= m.created_unix for e in hits)
+    assert {(e["seed"], e["split"]) for e in hits} == {(12345, "blocked")}
+    assert not any("vacuous" in n for n in f.notes)
+    with pytest.raises(FreezeError, match="ledger"):
+        freeze_final(tmp_path / "again.json", strata=strata, spec_builder=specs, kind="rehearsal")
+
+
+def test_floor_contacts_count_as_outside_the_tray_and_in_contact_summary():
+    from mirror.contracts import Constraint, ObjectSelector, Status
+    from mirror.evaluate import check
+    from mirror.evaluate.paired import obstacle_contacts
+    from mirror.statelog import ContactRecord
+    from .synth import pack_all, prov
+    scene = make_scene()
+    b = pack_all(scene)
+    b.contacts.append(ContactRecord(step=b.n - 5, object_id="block_0", other="floor", depth=0.0))
+    log = b.build()
+    rule = Constraint(id="c_floor", type="forbidden_contact", applies_to=ObjectSelector(kind="block"),
+                      phase="always", params={"with": ["table_outside_tray"]}, status=Status.confirmed,
+                      provenance=prov())
+    r = check(log, make_spec(extra=[rule]), scene)
+    assert r.status == "constraint_violated" and r.forbidden_contacts[0]["other"] == "floor"
+    assert [c["other"] for c in obstacle_contacts(log)] == ["floor"]

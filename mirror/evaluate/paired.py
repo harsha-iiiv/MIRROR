@@ -31,6 +31,7 @@ HASHED_GROUPS = {
     "cassettes": ("data/cassettes", ("*",)),
 }
 MAX_WORKERS = 2
+DEFAULT_EXECUTOR_LABEL = "mirror.sim.SimEnv (deterministic physics; seed unused)"
 
 SIMPLIFICATIONS = [
     "Completion uses the object's centre: inside the tray's inner footprint (minus inside_margin_m) and above its floor.",
@@ -289,13 +290,14 @@ def _record(condition, rollout, log, plan, spec, scene, rules, interventions=0) 
 
 def obstacle_contacts(log) -> list[dict]:
     """Every interval in which the gripper or an object touches a static
-    obstacle, whatever the specification says. Planning is meant to avoid
+    obstacle or the room floor (it fell off the table), whatever the
+    specification says. Planning is meant to avoid
     these, so they reveal envelope or tracking mismatches."""
     if log is None:
         return []
     by: dict[tuple[str, str], list[tuple[int, float]]] = {}
     for c in log.contacts:
-        if c.other.startswith("obstacle:"):
+        if c.other.startswith("obstacle:") or c.other == "floor":
             by.setdefault((c.object_id, c.other), []).append((c.step, c.depth))
     out = []
     for (body, other), lst in sorted(by.items()):
@@ -588,7 +590,7 @@ def paired_eval(spec_a: TaskSpec, spec_b: TaskSpec, seeds: Sequence[int], split:
                     family=family, stratum=stratum,
                     rollout_hz=ROLLOUT_HZ if rollout_dir else None,
                     planner=_name(planner, "mirror.plan.plan"),
-                    executor=_name(env_factory, "mirror.sim.SimEnv(seed=0)"),
+                    executor=_name(env_factory, DEFAULT_EXECUTOR_LABEL),
                     checker=_chk.CHECKER_ID, n_boot=n_boot,
                     layouts_generated_unix=layouts_generated),
         trials=trials, metrics=metrics, paired=paired, scope=scope, blocked=blocked,

@@ -109,7 +109,8 @@ def _support_steps(log: StateLog, oid: str) -> np.ndarray:
     objs = set(log.object_ids)
     for c in log.contacts:
         for me, other in ((c.object_id, c.other), (c.other, c.object_id)):
-            if me == oid and (other == "table" or other.startswith("tray:") or (other in objs and other != oid)):
+            if me == oid and (other in ("table", "floor") or other.startswith("tray:")
+                              or (other in objs and other != oid)):
                 if 0 <= c.step < log.n:
                     out[c.step] = True
     return out
@@ -180,7 +181,7 @@ def _group_match(group: str, other: str, self_id: str, object_ids: set[str]) -> 
     if group == "obstacle":
         return other.startswith("obstacle:")
     if group == "table_outside_tray":
-        return other == "table"
+        return other in ("table", "floor")   # the room floor is outside the tray too
     if group == "other_objects":
         return other in object_ids and other != self_id
     if group == "tray":

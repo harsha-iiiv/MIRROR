@@ -5,6 +5,11 @@ import os
 os.environ.setdefault("MUJOCO_GL", "osmesa")
 os.environ.setdefault("PYOPENGL_PLATFORM", os.environ["MUJOCO_GL"])
 
+# Never touch the repository's evaluation ledger from tests.
+import tempfile  # noqa: E402
+
+os.environ["MIRROR_EVAL_LEDGER"] = os.path.join(tempfile.mkdtemp(prefix="ledger-"), "ledger.jsonl")
+
 import pytest
 
 from mirror.scenes import reference_scene

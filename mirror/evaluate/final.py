@@ -35,7 +35,7 @@ BLOCKED_SEEDS = list(range(30_000, 30_005))
 RETIRED_RANGES = [(10_000, 10_059), (20_000, 20_029)]
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-LEDGER_PATH = REPO_ROOT / "results" / "eval" / "ledger.jsonl"
+LEDGER_PATH = None   # resolved at call time: mirror.scenes.ledger_path() (MIRROR_EVAL_LEDGER)
 LEDGER_SPLITS = ("eval", "blocked")
 
 D3_STRATA = [
@@ -56,8 +56,10 @@ def rehearsal_strata(n_mixed: int = 6, n_shortcut: int = 6, n_blocked: int = 2) 
              seeds=list(range(0, n_mixed)), description="rehearsal on dev seeds"),
         dict(name="shortcut", role="stratum", split="dev", family="shortcut",
              seeds=list(range(500, 500 + n_shortcut)), description="rehearsal on dev seeds"),
+        # blocked seeds at or above the evaluation base (neither frozen nor
+        # retired) so the layout ledger is exercised by the rehearsal
         dict(name="blocked", role="blocked", split="blocked", family="mixed",
-             seeds=list(range(0, n_blocked)), description="rehearsal on dev seeds"),
+             seeds=list(range(12_000, 12_000 + n_blocked)), description="rehearsal seeds"),
     ]
 
 
@@ -79,8 +81,18 @@ def check_not_retired(strata: list[dict]) -> None:
                           f"(observed during development); use the re-registered ranges")
 
 
-def read_ledger(path: Path | str = LEDGER_PATH) -> list[dict]:
-    path = Path(path)
+def resolve_ledger(path=None) -> Path:
+    if path is not None:
+        return Path(path)
+    try:
+        from mirror.scenes import ledger_path
+        return Path(ledger_path())
+    except ImportError:
+        return REPO_ROOT / "results" / "eval" / "ledger.jsonl"
+
+
+def read_ledger(path=None) -> list[dict]:
+    path = resolve_ledger(path)
     if not path.exists():
         return []
     out = []
@@ -114,9 +126,14 @@ def ledger_hits(entries: list[dict], strata: list[dict]) -> list[dict]:
     return hits
 
 
-def _ledger_summary(path: Path) -> dict:
+def _ledger_summary(path) -> dict:
+    path = resolve_ledger(path)
     entries = read_ledger(path)
-    return dict(path="results/eval/ledger.jsonl" if Path(path) == LEDGER_PATH else Path(path).name,
+    try:
+        shown = path.resolve().relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        shown = path.name
+    return dict(path=shown,
                 exists=Path(path).exists(), entries=len(entries),
                 sha256=hashlib.sha256(Path(path).read_bytes()).hexdigest() if Path(path).exists() else None)
 
@@ -128,7 +145,7 @@ def default_specs(source: str = "replay"):
 
 def freeze_final(path: Path | str, *, strata: Optional[list[dict]] = None, kind: str = "final",
                  spec_builder: Callable = default_specs, config: Optional[dict] = None,
-                 layout_fn=None, ledger_path: Path | str = LEDGER_PATH,
+                 layout_fn=None, ledger_path=LEDGER_PATH,
                  spec_source: str = "replay") -> FreezeManifest:
     """Write the multi-stratum freeze manifest. Refuses retired seeds, strata
     whose family cannot be generated, and any frozen seed that already has a
@@ -145,7 +162,7 @@ def freeze_final(path: Path | str, *, strata: Optional[list[dict]] = None, kind:
                           f"already exist (first: {hits[0]}); these layouts were generated before the freeze")
     a, b, prov = spec_builder(spec_source) if spec_builder is default_specs else spec_builder()
     return freeze_strata(a, b, strata, path, kind=kind, config=config, spec_provenance=prov,
-                         ledger_at_freeze=_ledger_summary(Path(ledger_path)))
+                         ledger_at_freeze=_ledger_summary(ledger_path))
 
 
 ROLLOUT_RULE = ("Rollout JSON is committed for every seed where either condition carried an object "
@@ -171,7 +188,7 @@ def run_final(manifest_path: Path | str, *, workers: int = 2, save_rollouts: boo
               out_dir: Optional[Path | str] = None, spec_builder: Callable = default_specs,
               planner=None, env_factory=None, layout_fn=None, n_boot: int = 10_000,
               max_sim_time: float = 120.0, log_root: Optional[Path] = None,
-              ledger_path: Path | str = LEDGER_PATH,
+              ledger_path=LEDGER_PATH,
               rollout_stage: Optional[Path | str] = None) -> FinalReport:
     started = time.time()
     m = FreezeManifest.model_validate_json(Path(manifest_path).read_text())
@@ -230,7 +247,7 @@ def run_final(manifest_path: Path | str, *, workers: int = 2, save_rollouts: boo
     hits = ledger_hits(read_ledger(ledger_path), m.strata)
     expected = [st for st in m.strata if st["split"] in LEDGER_SPLITS
                 and any(s >= _seed_floor() for s in st["seeds"])]
-    ledger = dict(_ledger_summary(Path(ledger_path)), frozen_seed_entries=hits,
+    ledger = dict(_ledger_summary(ledger_path), frozen_seed_entries=hits,
                   entries_before_freeze=[e for e in hits if (e.get("unix") or 0) < m.created_unix],
                   writer_active=bool(hits) or not expected)
     if expected and not hits:

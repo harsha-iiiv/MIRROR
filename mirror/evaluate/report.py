@@ -64,7 +64,7 @@ def markdown(r: EvalReport, figs: dict | None = None) -> str:
         ("Beads lost, total (mean per executed trial)", f"{ma.beads_lost_total} ({f(ma.beads_lost_mean)})",
          f"{mb.beads_lost_total} ({f(mb.beads_lost_mean)})"),
         ("Trials with forbidden contacts", f"{ma.forbidden_contact_trials}", f"{mb.forbidden_contact_trials}"),
-        ("Trials with any obstacle contact (spec-independent)", f"{ma.obstacle_contact_trials}",
+        ("Trials with any obstacle or floor contact (spec-independent)", f"{ma.obstacle_contact_trials}",
          f"{mb.obstacle_contact_trials}"),
         ("Planning failures", f"{ma.planning_failures}", f"{mb.planning_failures}"),
         ("Execution failures", f"{ma.execution_failures}", f"{mb.execution_failures}"),
@@ -305,7 +305,7 @@ def final_markdown(f) -> str:
     row("Trials violating corrected rule", lambda c, r: str(c.corrected_rule_violations))
     row("Max corrected-object tilt (deg)", lambda c, r: nz(c.max_tilt_deg_max))
     row("Beads lost (total)", lambda c, r: str(c.beads_lost_total))
-    row("Obstacle-contact trials", lambda c, r: str(c.obstacle_contact_trials))
+    row("Obstacle- or floor-contact trials", lambda c, r: str(c.obstacle_contact_trials))
     row("Planning failures", lambda c, r: str(c.planning_failures))
     row("Execution failures", lambda c, r: str(c.execution_failures))
     row("Timeouts", lambda c, r: str(c.timeouts))

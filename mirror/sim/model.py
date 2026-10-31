@@ -21,7 +21,8 @@ carry one finger; their joint value is the distance from the jaw centre to
 that finger's pad, so the jaw opening is their sum.
 
 Contact labels. Every geom gets a label used for contact classification:
-"table", "tray:<id>", "obstacle:<id>", "gripper", an object id, or "bead".
+"table", "floor" (the room floor at FLOOR_Z below the table), "tray:<id>",
+"obstacle:<id>", "gripper", an object id, or "bead".
 """
 from __future__ import annotations
 
@@ -36,6 +37,7 @@ from mirror.geometry import CUP, GRIPPER, WORLD
 from mirror.scenes.objects import TRAY_FLOOR_THICKNESS
 
 TIMESTEP = 0.004
+FLOOR_Z = -0.75      # room floor below the table, so anything that falls off comes to rest
 
 # Geom visual groups.
 GROUP_STATIC, GROUP_ROBOT, GROUP_OBJECT, GROUP_BEAD = 0, 1, 2, 3
@@ -355,6 +357,8 @@ def scene_xml(scene: SceneState) -> str:
     {_robot_xml(scene)}
     {''.join(objs)}
     {''.join(beads)}
+    <geom name="floor" type="plane" size="3 3 0.1" pos="0 0 {FLOOR_Z}" rgba="0.95 0.95 0.94 1"
+          group="{GROUP_STATIC}" friction="{_f(FRICTION_STATIC)}"/>
   </worldbody>
   {_actuators_xml(scene)}
 </mujoco>"""
@@ -367,6 +371,8 @@ def _label_for_geom(name: str, scene: SceneState) -> tuple[str, str]:
     """(contact label, owner) for a geom name."""
     if name == "table":
         return "table", "table"
+    if name == "floor":
+        return "floor", "floor"
     head = name.split("/")[0]
     if head == "gripper":
         return "gripper", "gripper"

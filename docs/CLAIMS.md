@@ -37,6 +37,8 @@ not cover keep their freedom. Evaluation numbers are in
   holds the object), with no attachment constraint. Gravity compensation is
   applied to the robot's bodies only, not to the held object.
 * The executor stops at every waypoint, with speed and acceleration limits.
+  Targets outside the workspace are never clamped; they fail the rollout.
+  Anything that falls off the table comes to rest on a floor plane.
   Physics timestep 0.004 s.
 * Bead contacts are not logged; bead loss is measured from bead positions.
 * Layout validity at sampling time uses a conservative 2-D route search at

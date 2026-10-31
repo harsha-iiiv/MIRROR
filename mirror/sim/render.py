@@ -109,12 +109,10 @@ def display_xml(visual: VisualScene, bead_rgba=BEAD_RGBA, wall_alpha: float = WA
   </visual>
   <asset>
     <texture name="sky" type="skybox" builtin="gradient" rgb1="0.97 0.97 0.96" rgb2="0.86 0.87 0.88" width="64" height="64"/>
-    <material name="floor" rgba="0.95 0.95 0.94 1" reflectance="0"/>
     <material name="bead" emission="0.45" specular="0.3"/>
   </asset>
   <worldbody>
     <light pos="0.6 -0.9 2.0" dir="-0.25 0.45 -1" diffuse="0.50 0.50 0.50" specular="0.05 0.05 0.05" castshadow="true"/>
-    <geom type="plane" size="4 4 0.1" pos="0 0 -0.75" material="floor" contype="0" conaffinity="0"/>
     {"".join(statics)}
     {"".join(moving)}
   </worldbody>
