@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from .session_adapter import StudioService
+from .session_adapter import EvaluationFenceError, StudioService
 
 WEB_DIR = Path(__file__).resolve().parents[2] / "web"
 
@@ -50,7 +50,7 @@ class EvalIn(BaseModel):
     seeds: list[int]
     spec_a: Optional[int] = None
     spec_b: Optional[int] = None
-    split: str = "eval"
+    split: str = "dev"
 
 
 def create_app(service: Optional[StudioService] = None) -> FastAPI:
@@ -137,7 +137,10 @@ def create_app(service: Optional[StudioService] = None) -> FastAPI:
             raise HTTPException(409, "need two specification versions")
         if not body.seeds or len(body.seeds) > 64:
             raise HTTPException(422, "between 1 and 64 seeds")
-        return svc.evaluate(body.seeds, body.spec_a, body.spec_b, body.split).public()
+        try:
+            return svc.evaluate(body.seeds, body.spec_a, body.spec_b, body.split).public()
+        except EvaluationFenceError as exc:
+            raise HTTPException(403, str(exc)) from exc
 
     @app.post("/api/teleop/start")
     def teleop_start():

@@ -137,7 +137,10 @@ def build_core(spec: TaskSpec, scene: SceneState, cfg: PlannerConfig = DEFAULT_C
     g = ground(spec, scene)
     core = Core(spec, scene, cfg, g, [], t0=t0)
     if not g.ok:
-        core.status, core.reason = "invalid_spec", "; ".join(g.errors)
+        core.status, core.reason = "invalid_spec", "; ".join(dict.fromkeys(g.errors))
+        return core
+    if not g.objects_to_pack:
+        core.status, core.reason = "invalid_spec", "specification has no active goal: nothing to pack"
         return core
     tray_id = destination_tray(g)
     tray = next(t for t in scene.trays if t.id == tray_id)

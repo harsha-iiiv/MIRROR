@@ -28,7 +28,8 @@ def test_candidates_are_valid_under_the_spec():
 
 
 def test_identical_inputs_give_identical_plans():
-    a = plan(original_spec(), reference_scene("shortcut")).model_dump()
+    from .helpers import cached_plan
+    a = cached_plan("shortcut", "orig").model_dump()
     b = plan(original_spec(), reference_scene("shortcut")).model_dump()
     a.pop("planning_time_s"); b.pop("planning_time_s")
     assert a == b

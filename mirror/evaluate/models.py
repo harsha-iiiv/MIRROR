@@ -26,6 +26,9 @@ class FreezeManifest(_M):
     family: str = "mixed"                # single-stratum manifests
     strata: list[dict[str, Any]] = Field(default_factory=list)   # name, role, split, family, seeds
     spec_provenance: dict[str, Any] = Field(default_factory=dict)
+    file_hashes: dict[str, Any] = Field(default_factory=dict)    # group -> {sha256, files}
+    versions: dict[str, str] = Field(default_factory=dict)       # python, mujoco, numpy, ...
+    ledger_at_freeze: dict[str, Any] = Field(default_factory=dict)
 
 
 class TrialRecord(_M):
@@ -108,6 +111,8 @@ class FinalReport(_M):
     strata: dict[str, EvalReport]
     roles: dict[str, str] = Field(default_factory=dict)         # stratum name -> role
     blocked_reference: list[dict[str, Any]] = Field(default_factory=list)
+    ledger: dict[str, Any] = Field(default_factory=dict)        # eval-layout ledger entries for frozen seeds
+    rollout_selection: dict[str, Any] = Field(default_factory=dict)
     started_at: str = ""
     finished_at: str = ""
     wall_time_s: float = 0.0

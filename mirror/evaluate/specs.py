@@ -101,16 +101,33 @@ def _recorded_models(cassette_dir: Path) -> list[str]:
     return models
 
 
-def evaluation_specs(*, cassette_dir: Path | None = None) -> tuple[TaskSpec, TaskSpec, dict]:
+def evaluation_specs(*, cassette_dir: Path | None = None, source: str = "replay"
+                     ) -> tuple[TaskSpec, TaskSpec, dict]:
     """(original, corrected, provenance) built by replaying recorded model
     responses on the pinned reference demonstration. Raises
     SpecAgreementError unless the offline interpreter produces identical
-    enforced constraints and active goals for both versions."""
+    enforced constraints and active goals for both versions.
+
+    ``source="offline"`` builds the pair with the offline interpreter only;
+    it is meant for rehearsals when the recordings are being re-made, and the
+    provenance says so."""
     from mirror.contracts import DemoTrace
     from mirror.interpret import LLMClient
     cassette_dir = Path(cassette_dir or os.environ.get("MIRROR_CASSETTE_DIR") or CASSETTE_DIR)
     raw = gzip.decompress(PINNED_DEMO.read_bytes())
     trace = DemoTrace.model_validate_json(raw)
+    if source == "offline":
+        o, c, record = _build(trace, LLMClient(mode="offline"))
+        return o, c, dict(
+            source="offline interpreter on the pinned reference demonstration (replay not used)",
+            spec_source="offline", interpreter=o.interpreter, demo_id=trace.demo_id,
+            demo_sha256=hashlib.sha256(raw).hexdigest(), correction_text=REFERENCE_CORRECTION,
+            confirmed_rules=list(CONFIRM_RULES), correction_ops=[x.op for x in record.diff],
+            offline_agrees=None,
+            enforced_original=[x.id for x in o.enforced_constraints()],
+            enforced_corrected=[x.id for x in c.enforced_constraints()])
+    if source != "replay":
+        raise ValueError(f"unknown spec source {source!r}")
     models = [os.environ["MIRROR_LLM_MODEL"]] if os.environ.get("MIRROR_LLM_MODEL") else []
     models += [m for m in _recorded_models(cassette_dir) if m not in models]
     replay, errors = None, []
@@ -131,6 +148,7 @@ def evaluation_specs(*, cassette_dir: Path | None = None) -> tuple[TaskSpec, Tas
     original, corrected, record = replay
     prov = dict(
         source="replay of recorded model responses on the pinned reference demonstration",
+        spec_source="replay",
         interpreter=original.interpreter, demo_id=trace.demo_id,
         demo_sha256=hashlib.sha256(raw).hexdigest(), correction_text=REFERENCE_CORRECTION,
         confirmed_rules=list(CONFIRM_RULES), correction_ops=[o.op for o in record.diff],

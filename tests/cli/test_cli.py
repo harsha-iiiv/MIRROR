@@ -147,3 +147,16 @@ def test_table_alignment():
     lines = t.splitlines()
     assert lines[0].startswith("  x") and set(lines[1].strip()) <= {"-", " "}
     assert len(lines) == 4
+
+
+def test_interpret_with_pinned_keyframes_replays():
+    repo = cli.REPO
+    pinned_demo = repo / "data/cassettes/inputs/reference_demo.json.gz"
+    frames = repo / "data/cassettes/inputs/keyframes_reference"
+    if not pinned_demo.exists() or not frames.exists():
+        pytest.skip("no pinned inputs")
+    code, out = run("interpret", "--demo", str(pinned_demo), "--keyframes-dir", str(frames))
+    assert code == 0
+    assert "Attached 4 rendered simulator frames (not real video)" in out
+    assert "switching to the offline rules" not in out
+    assert "interpreter: offline-rules" not in out

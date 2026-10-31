@@ -49,8 +49,8 @@ def test_blocked_scene_returns_no_plan_with_certificate():
 
 
 def test_layouts_are_deterministic_in_seed():
-    assert fixture_layout(10003).model_dump() == fixture_layout(10003).model_dump()
-    assert fixture_layout(10003).model_dump() != fixture_layout(10004).model_dump()
+    assert fixture_layout(9003).model_dump() == fixture_layout(9003).model_dump()
+    assert fixture_layout(9003).model_dump() != fixture_layout(9004).model_dump()
 
 
 def test_visual_scene_names_match_scene_ids():
@@ -77,6 +77,6 @@ def test_paired_eval_reports_every_seed():
     s = _session()
     v1 = s.spec
     v2, _ = s.correct(REFERENCE_CORRECTION)
-    rep = s.paired_eval(v1, v2, [10000, 10001, 10002])
-    assert [p["seed"] for p in rep["pairs"]] == [10000, 10001, 10002]
+    rep = s.paired_eval(v1, v2, [9000, 9001, 9002])
+    assert [p["seed"] for p in rep["pairs"]] == [9000, 9001, 9002]
     assert all("original" in p and "corrected" in p for p in rep["pairs"])

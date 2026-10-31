@@ -43,11 +43,39 @@ def find_item(spec: TaskSpec, item_id: str):
     return None
 
 
+def effective_kind(sel: ObjectSelector, spec: TaskSpec) -> Optional[str]:
+    """The object kind a selector names, resolving a role through the bindings.
+    A selector covers every object of that kind in the scene."""
+    if sel.kind:
+        return sel.kind
+    if sel.role:
+        for b in spec.bindings:
+            if b.role == sel.role:
+                return b.kind
+    return None
+
+
 def find_constraint(spec: TaskSpec, ctype: str, phase: str, kind: Optional[str]) -> Optional[Constraint]:
     for c in spec.constraints:
-        if c.type == ctype and c.phase == phase and c.applies_to.kind == kind:
+        if c.type == ctype and c.phase == phase and effective_kind(c.applies_to, spec) == kind:
             return c
     return None
+
+
+def find_goal(spec: TaskSpec, kind: str):
+    for g in spec.goals:
+        if effective_kind(g.object, spec) == kind:
+            return g
+    return None
+
+
+def active_goal_kinds(spec: TaskSpec) -> list[str]:
+    out = []
+    for g in spec.goals:
+        k = effective_kind(g.object, spec)
+        if k and g.status != Status.rejected and k not in out:
+            out.append(k)
+    return out
 
 
 def selector_kinds(sel: ObjectSelector, spec: TaskSpec) -> set[str]:

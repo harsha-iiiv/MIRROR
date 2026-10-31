@@ -273,6 +273,12 @@ def final_markdown(f) -> str:
         L += [f"- Specifications: {p.get('source', '')}; interpreter `{p.get('interpreter')}`; "
               f"offline interpreter agrees: {p.get('offline_agrees')}.",
               f"- Correction text: \"{p.get('correction_text', '')}\"", ""]
+    if m.file_hashes:
+        L.append("- Also frozen: " + "; ".join(f"{v['path']} `{v['sha256'][:12]}` ({v['files']} files)"
+                                              for v in m.file_hashes.values()) + ".")
+    if m.versions:
+        L.append("- Runtime: " + ", ".join(f"{k} {v}" for k, v in m.versions.items()) + ".")
+    L.append("")
     L += ["| stratum | role | split | family | seeds | n |", "|---|---|---|---|---|---|"]
     for st in m.strata:
         L.append(f"| {st['name']} | {st['role']} | {st['split']} | {st['family']} | {_rng(st['seeds'])} | "
@@ -331,6 +337,31 @@ def final_markdown(f) -> str:
         for x in f.blocked_reference:
             L.append(f"| {x['condition']} | {x['status']} | {x['failure_class'] or '-'} | "
                      f"{x['independent']['verdict']} |")
+        L.append("")
+    led = f.ledger or {}
+    if led:
+        L += ["## Evaluation-layout ledger", "",
+              f"Ledger `{led.get('path')}`: {led.get('entries', 0)} entries in total, "
+              f"{len(led.get('frozen_seed_entries', []))} for frozen seeds, "
+              f"{len(led.get('entries_before_freeze', []))} of them before the freeze "
+              f"(freeze refuses to run if this is not zero). At freeze time the ledger had "
+              f"{(m.ledger_at_freeze or {}).get('entries', 0)} entries and none for frozen seeds."
+              + ("" if led.get("writer_active") else
+                 " The ledger writer recorded nothing for the frozen evaluation seeds, so this check is vacuous."),
+              ""]
+        ent = led.get("frozen_seed_entries", [])
+        if ent:
+            L += ["<details><summary>Ledger entries for frozen seeds</summary>", "",
+                  "| seed | split | family | unix time | caller |", "|---|---|---|---|---|"]
+            L += [f"| {e.get('seed')} | {e.get('split')} | {e.get('family', 'mixed')} | {e.get('unix')} | "
+                  f"{e.get('caller', '')} |" for e in ent]
+            L += ["", "</details>", ""]
+    sel = f.rollout_selection or {}
+    if sel:
+        L += ["## Rollout selection", "", sel["rule"], ""]
+        for name, seeds in sel.get("selected", {}).items():
+            L.append(f"- {name}: {len(seeds)} of {len(f.strata[name].trials)} seeds "
+                     f"({_rng(seeds) if seeds else 'none'})")
         L.append("")
     L += [f"Wall time {f.wall_time_s:.0f} s. Finite simulated trials; not formal verification and not "
           f"evidence of physical deployment.", ""]

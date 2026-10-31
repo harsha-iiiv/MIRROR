@@ -100,9 +100,10 @@ def check_proposal(d: ProposalDraft, summary: DemoSummary) -> list[str]:
     if not included:
         errs.append("objects: at least one object must be part of the task")
     for o in d.objects:
-        if o.include_in_task and not any(s.ended_in_tray for s in _kind_objects(summary, o.kind)):
-            errs.append(f"objects: the {o.kind} did not end in a tray in the demonstration; "
-                        "it cannot be inferred as a packing goal")
+        objs = _kind_objects(summary, o.kind)
+        if o.include_in_task and not all(s.ended_in_tray for s in objs):
+            errs.append(f"objects: not every {o.kind} ended in a tray in the demonstration; a goal "
+                        f"for the {o.kind} covers every object of that kind, so it cannot be inferred")
     seen = set()
     for i, r in enumerate(d.rules):
         where = f"rules[{i}]"
@@ -368,7 +369,8 @@ def correction_to_ops(d: CorrectionDraft, spec: TaskSpec, text: str,
                 for ph in phases:
                     relax_keys.add((r.type, ph, r.object_kind))
                 matches = [c for c in spec.constraints
-                           if c.type == r.type and c.applies_to.kind == r.object_kind and c.phase in phases]
+                           if c.type == r.type and so.effective_kind(c.applies_to, spec) == r.object_kind
+                           and c.phase in phases]
                 for c in matches:
                     if c.status != Status.rejected:
                         ops.append(SpecOp(op="set_status", target_id=c.id, value={"status": "rejected"},
@@ -392,7 +394,7 @@ def correction_to_ops(d: CorrectionDraft, spec: TaskSpec, text: str,
                 continue
             st = "confirmed" if op.action == "confirm_item" else "rejected"
             if isinstance(item, Constraint):
-                key = (item.type, item.phase, item.applies_to.kind)
+                key = (item.type, item.phase, so.effective_kind(item.applies_to, spec))
                 (require_keys if st == "confirmed" else relax_keys).add(key)
             if item.status != Status(st):
                 ops.append(SpecOp(op="set_status", target_id=item.id, value={"status": st},
@@ -406,14 +408,17 @@ def correction_to_ops(d: CorrectionDraft, spec: TaskSpec, text: str,
                 continue
             require_keys.add(("order", op.before_kind, op.after_kind))
             oid = so.ordering_id(op.before_kind, op.after_kind)
-            rev = so.ordering_id(op.after_kind, op.before_kind)
             for o in spec.ordering:
-                if o.id == rev and o.status != Status.rejected:
-                    ops.append(SpecOp(op="set_status", target_id=rev, value={"status": "rejected"},
+                if (so.effective_kind(o.before, spec) == op.after_kind
+                        and so.effective_kind(o.after, spec) == op.before_kind and o.status != Status.rejected):
+                    ops.append(SpecOp(op="set_status", target_id=o.id, value={"status": "rejected"},
                                       rationale="replaced by the opposite order"))
-                    touched.append(rev)
-            existing = so.find_item(spec, oid)
+                    touched.append(o.id)
+            existing = so.find_item(spec, oid) or next(
+                (o for o in spec.ordering if so.effective_kind(o.before, spec) == op.before_kind
+                 and so.effective_kind(o.after, spec) == op.after_kind), None)
             if existing is not None:
+                oid = existing.id
                 if existing.status != Status.confirmed:
                     ops.append(SpecOp(op="set_status", target_id=oid, value={"status": "confirmed"},
                                       rationale=op.rationale))
@@ -424,19 +429,20 @@ def correction_to_ops(d: CorrectionDraft, spec: TaskSpec, text: str,
                 ).model_dump(mode="json")))
             touched.append(oid)
         elif op.action == "relax_order":
+            ek = lambda o: {so.effective_kind(o.before, spec), so.effective_kind(o.after, spec)}
             if (op.before_kind is None) != (op.after_kind is None):
                 kinds = {op.before_kind or op.after_kind}
-                matches = [o for o in spec.ordering if {o.before.kind, o.after.kind} & kinds]
+                matches = [o for o in spec.ordering if ek(o) & kinds]
             elif op.before_kind is None:
                 matches = list(spec.ordering)
             else:
                 pair = {op.before_kind, op.after_kind}
-                matches = [o for o in spec.ordering if {o.before.kind, o.after.kind} == pair]
+                matches = [o for o in spec.ordering if ek(o) == pair]
             if not matches:
                 errs.append(f"{where}: there is no ordering rule to relax")
                 continue
             for o in matches:
-                relax_keys.add(("order", o.before.kind, o.after.kind))
+                relax_keys.add(("order", so.effective_kind(o.before, spec), so.effective_kind(o.after, spec)))
                 if o.status != Status.rejected:
                     ops.append(SpecOp(op="set_status", target_id=o.id, value={"status": "rejected"},
                                       rationale=op.rationale))
@@ -447,8 +453,8 @@ def correction_to_ops(d: CorrectionDraft, spec: TaskSpec, text: str,
                 if k is None:
                     errs.append(f"{where}: goal_kind is required")
                 continue
-            gid = so.goal_id(k)
-            g = so.find_item(spec, gid)
+            g = so.find_goal(spec, k)
+            gid = g.id if g is not None else so.goal_id(k)
             if op.action == "add_goal":
                 if g is None:
                     ops.append(SpecOp(op="add_goal", target_id=gid, rationale=op.rationale, value=Goal(

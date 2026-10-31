@@ -20,9 +20,9 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from ..contracts import (DemoTrace, ObstacleSpec, PlanResult, Pose, Rollout,
+from ..contracts import (DemoTrace, ObjectSpec, ObstacleSpec, PlanResult, Pose, Rollout,
                          RolloutFrame, RolloutReport, SceneState, SlotSpec,
-                         SpecOp, TaskSpec, VisualScene)
+                         SpecOp, TaskSpec, TraySpec, VisualScene)
 from ..geometry import WORLD
 
 SNAPSHOT_FORMAT = "mirror-studio-session/1"
@@ -30,6 +30,31 @@ ROLLOUT_FORMAT = "mirror-studio-rollout/1"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 REFERENCE_CORRECTION = "This container must remain upright throughout transport, not just at the destination."
+
+# The studio never generates evaluation-split layouts. Its own paired runs use a
+# disjoint showcase range of development seeds; pre-registered evaluation
+# results are only ever loaded from the files the evaluation package wrote.
+SHOWCASE_SPLIT = "dev"
+SHOWCASE_SEEDS = range(9000, 9100)
+
+
+class EvaluationFenceError(RuntimeError):
+    """Raised when a request would generate or run evaluation-split layouts."""
+
+
+def check_showcase(seeds, split: str) -> list[int]:
+    seeds = [int(x) for x in seeds]
+    if split != SHOWCASE_SPLIT:
+        raise EvaluationFenceError(
+            f"the studio runs paired comparisons only on the '{SHOWCASE_SPLIT}' split; "
+            "load pre-registered evaluation results instead")
+    bad = [x for x in seeds if x not in SHOWCASE_SEEDS]
+    if bad:
+        raise EvaluationFenceError(
+            f"seeds {bad[:5]} are outside the showcase range {SHOWCASE_SEEDS.start}-{SHOWCASE_SEEDS.stop - 1}")
+    if not seeds:
+        raise EvaluationFenceError("no seeds")
+    return seeds
 
 
 def _dump(x: Any) -> Any:
@@ -72,7 +97,8 @@ def packages_available() -> tuple[bool, list[str]]:
 # -------------------------------------------------------- compact frames ---
 
 
-def compact_rollout(rollout: Rollout, *, max_hz: float = 30.0, extra: Optional[dict] = None) -> dict:
+def compact_rollout(rollout: Rollout, *, max_hz: float = 30.0, extra: Optional[dict] = None,
+                    digits: int = 4) -> dict:
     """Columnar, rounded playback payload: much smaller than a raw Rollout."""
     frames = rollout.frames
     step = 1
@@ -80,18 +106,20 @@ def compact_rollout(rollout: Rollout, *, max_hz: float = 30.0, extra: Optional[d
         step = max(1, int(round(rollout.frame_hz / max_hz)))
     frames = frames[::step]
     names: list[str] = []
-    for f in frames:
+    for f in rollout.frames:
         for n in f.bodies:
             if n not in names:
                 names.append(n)
+    # A frame may omit bodies that did not move since the previous frame (delta
+    # encoded rollouts); carry their last pose forward.
     bodies: dict[str, list] = {n: [] for n in names}
-    for f in frames:
-        for n in names:
-            p = f.bodies.get(n)
-            if p is None:
-                bodies[n].append(None)
-            else:
-                bodies[n].append([round(v, 4) for v in p.pos] + [round(v, 4) for v in p.quat])
+    last: dict[str, Optional[list]] = {n: None for n in names}
+    for k, f in enumerate(rollout.frames):
+        for n, p in f.bodies.items():
+            last[n] = [round(v, digits) for v in p.pos] + [round(v, digits) for v in p.quat]
+        if k % step == 0:
+            for n in names:
+                bodies[n].append(last[n])
     out = {
         "format": ROLLOUT_FORMAT,
         "id": rollout.report.rollout_id,
@@ -258,6 +286,7 @@ class StudioService:
         self.payload_cache: dict[str, dict] = {}
         self.trace_cache: dict[str, Optional[dict]] = {}
         self.eval_entries: dict[str, dict] = {}
+        self.payload_digits = 4
         self.teleop = None
 
     # ------------------------------------------------------------ events
@@ -443,12 +472,11 @@ class StudioService:
             self._progress(job, 0.05, "Finding distinct valid behaviours")
             with self.lock:
                 if self.mode == "live":
-                    from ..interpret import make_clarification
-                    from ..plan import candidate_plans
-                    spec, scene = self.session.spec, self.session.scene
-                    plans = candidate_plans(spec, scene, k=2)
-                    clar = make_clarification(spec, scene, plans)
-                    self.session.clarification = clar
+                    clar = self.session.clarify()
+                    plans = list(getattr(self.session, "clarification_candidates", None) or [])
+                    if not plans:   # older Session: plan the candidates here
+                        from ..plan import candidate_plans
+                        plans = candidate_plans(self.session.spec, self.session.scene, k=2)
                     cd = self._execute_candidates(job, plans, _dump(clar))
                 else:
                     clar = self.session.clarify()
@@ -466,6 +494,10 @@ class StudioService:
         from ..pipeline import RolloutEntry
         from ..sim import SimEnv
         spec, scene = self.session.spec, self.session.scene
+        digests = (cd.get("candidates") or []) if isinstance(cd, dict) else []
+        if digests and all(isinstance(d.get("index"), int) and d["index"] < len(plans) for d in digests):
+            # The clarification compares a subset of the planned candidates; run exactly those.
+            plans = [plans[d["index"]] for d in digests]
         out = []
         for i, p in enumerate(plans):
             plan = p if isinstance(p, PlanResult) else (getattr(p, "plan", None) or p)
@@ -488,7 +520,8 @@ class StudioService:
             self.session.rollouts[rid] = RolloutEntry(Rollout(report=rep, visual=env.visual_scene(), frames=res.frames),
                                                       res.log, plan, scene, spec.version)
             self.tags[rid] = ["candidate"]
-            digest = (cd.get("candidates") or [{}] * len(plans))[i] if isinstance(cd, dict) else {}
+            digests = (cd.get("candidates") or []) if isinstance(cd, dict) else []
+            digest = digests[i] if i < len(digests) else {}
             out.append({"label": digest.get("label", chr(65 + i)), "rollout_id": rid,
                         "routes": digest.get("routes", rep.route_labels)})
         cd = dict(cd) if isinstance(cd, dict) else {"raw": cd}
@@ -504,7 +537,9 @@ class StudioService:
         return self.submit("answer", {"text": text}, work)
 
     def evaluate(self, seeds: list[int], spec_a: Optional[int] = None, spec_b: Optional[int] = None,
-                 split: str = "eval") -> Job:
+                 split: str = SHOWCASE_SPLIT) -> Job:
+        seeds = check_showcase(seeds, split)
+
         def work(job):
             s = self.session
             a = s.spec_version(spec_a) if spec_a else s.specs[0]
@@ -531,13 +566,10 @@ class StudioService:
 
         The freeze manifest is written before any evaluation layout is generated.
         Step logs are kept so every trial can be replayed in the viewer."""
-        from ..evaluate import freeze, paired_eval
-        from ..scenes import sample_layout
-        run_dir = self._runtime_dir() / f"eval-{int(time.time())}-{uuid.uuid4().hex[:4]}"
+        from ..evaluate import paired_eval
+        seeds = check_showcase(seeds, split)
+        run_dir = self._runtime_dir() / f"showcase-{int(time.time())}-{uuid.uuid4().hex[:4]}"
         run_dir.mkdir(parents=True)
-        manifest = run_dir / "freeze.json"
-        if split == "eval":
-            freeze(a, b, seeds, split, manifest, config={"source": "studio"})
         workers = int(os.environ.get("MIRROR_STUDIO_EVAL_WORKERS", "2"))
         est = max(20.0, 2 * len(seeds) * 22.0 / max(1, workers))
         done = threading.Event()
@@ -555,17 +587,24 @@ class StudioService:
         if "rollout_dir" in inspect.signature(paired_eval).parameters:
             kw["rollout_dir"] = run_dir / "rollouts"
         try:
-            rep = paired_eval(a, b, seeds, split=split, manifest_path=manifest if split == "eval" else None,
-                              workers=workers, log_dir=run_dir / "logs", **kw)
+            rep = paired_eval(a, b, seeds, split=SHOWCASE_SPLIT, workers=workers, log_dir=run_dir / "logs", **kw)
         finally:
             done.set()
-        return self._register_evaluation(_dump(rep), run_dir, a.version, b.version,
-                                         log_dir=run_dir / "logs", rollout_dir=run_dir / "rollouts")
+        (run_dir / "report.json").write_text(rep.model_dump_json())
+        out = self._register_evaluation(_dump(rep), run_dir, a.version, b.version,
+                                        log_dir=run_dir / "logs", rollout_dir=run_dir / "rollouts")
+        out["source"] = {"kind": "showcase", "split": SHOWCASE_SPLIT,
+                         "note": "development seeds run in the studio; not the pre-registered evaluation"}
+        return out
 
     def _register_evaluation(self, out: dict, base: Path, va: Optional[int], vb: Optional[int], *,
-                             log_dir: Optional[Path] = None, rollout_dir: Optional[Path] = None) -> dict:
-        """Make every trial of an evaluation report replayable in the viewer."""
-        from ..scenes import sample_layout
+                             log_dir: Optional[Path] = None, rollout_dir: Optional[Path] = None,
+                             prefix: str = "") -> dict:
+        """Make every trial of an evaluation report replayable in the viewer.
+
+        Layouts are rebuilt only for the showcase development split. For any
+        other split the minimap and labels come from a sketch of the recorded
+        rollout's own geometry, so no evaluation layout is ever generated here."""
         from ..contracts import RolloutReport as _RR
         split = out.get("split", "eval")
         out["spec_a"] = va if va is not None else out.get("manifest", {}).get("spec_a", {}).get("version")
@@ -583,42 +622,69 @@ class StudioService:
 
         for t in out.get("trials", []):
             seed = int(t["seed"])
-            try:
-                scene = sample_layout(seed, split)
-            except Exception:  # noqa: BLE001 - keep the report even if layouts cannot be rebuilt
-                scene = None
-            if scene is not None and scene.scene_id != t.get("scene_id", scene.scene_id):
-                scene = None
-            if scene is not None:
-                studio["scenes"][str(seed)] = scene.model_dump(mode="json")
+            scene = None
+            if split == SHOWCASE_SPLIT and int(seed) in SHOWCASE_SEEDS:
+                try:
+                    from ..scenes import sample_layout
+                    scene = sample_layout(seed, SHOWCASE_SPLIT)
+                except Exception:  # noqa: BLE001 - fall back to the sketch
+                    scene = None
+                if scene is not None and scene.scene_id != t.get("scene_id", scene.scene_id):
+                    scene = None
             ids = {}
             for key in ("a", "b"):
                 rec = t[key]
-                rid = f"e{seed}{key}"
+                rid = f"e{prefix}{seed}{key}"
                 ids[key] = rid
+                rpath = resolve(rec.get("rollout_path"), rollout_dir)
+                sc = scene
+                if sc is None and rpath:
+                    try:
+                        sc = scene_sketch(Rollout.model_validate_json(Path(rpath).read_text()), t.get("scene_id", ""))
+                    except Exception:  # noqa: BLE001
+                        sc = None
                 self.eval_entries[rid] = {
-                    "scene": scene, "report": _RR.model_validate(rec["report"]),
-                    "log_path": resolve(rec.get("log_path"), log_dir),
-                    "rollout_path": resolve(rec.get("rollout_path"), rollout_dir),
+                    "scene": sc, "report": _RR.model_validate(rec["report"]),
+                    "log_path": resolve(rec.get("log_path"), log_dir) if scene is not None else None,
+                    "rollout_path": rpath,
                     "spec_version": out["spec_a"] if key == "a" else out["spec_b"],
-                    "seed": seed, "condition": rec.get("condition", "")}
+                    "seed": seed, "condition": rec.get("condition", ""), "sketch": scene is None}
                 self.tags[rid] = ["eval"]
                 self.trace_cache.pop(rid, None)
                 self.payload_cache.pop(rid, None)
+                if sc is not None:
+                    studio["scenes"][str(seed)] = sc.model_dump(mode="json")
             studio["rollout_ids"][str(seed)] = ids
         out["studio"] = studio
         return out
 
     def load_evaluation(self, report_path: str | Path) -> dict:
-        """Show a saved evaluation report (JSON written by the evaluation package)."""
+        """Show saved evaluation results (load only; nothing is run or sampled).
+
+        Accepts a single paired report (``trials``) or the pre-registered final
+        report (``strata``: one paired report per stratum, each in its own folder)."""
         path = Path(report_path)
         if path.is_dir():
             cands = sorted(path.glob("*.json"), key=lambda p: (p.name != "report.json", p.name))
-            path = next(p for p in cands if '"trials"' in p.read_text()[:200000])
+            path = next(p for p in cands if '"trials"' in p.read_text()[:400000] or '"strata"' in p.read_text()[:400000])
         data = json.loads(path.read_text())
         with self.lock:
-            self.evaluation = self._register_evaluation(data, path.parent, None, None,
-                                                        log_dir=path.parent / "logs", rollout_dir=path.parent / "rollouts")
+            if "strata" in data:
+                strata = {}
+                for name, rep in data["strata"].items():
+                    d = path.parent / name
+                    strata[name] = self._register_evaluation(rep, d, None, None, log_dir=d / "logs",
+                                                             rollout_dir=d / "rollouts", prefix=f"{name}-")
+                ev = {k: v for k, v in data.items() if k != "strata"}
+                ev["strata"] = strata
+                ev["final"] = True
+                first = next(iter(strata.values()), {})
+                ev["spec_a"], ev["spec_b"] = first.get("spec_a"), first.get("spec_b")
+            else:
+                ev = self._register_evaluation(data, path.parent, None, None,
+                                               log_dir=path.parent / "logs", rollout_dir=path.parent / "rollouts")
+            ev["source"] = {"kind": "loaded", "file": path.name, "folder": path.parent.name}
+            self.evaluation = ev
             self._changed()
             return self.evaluation
 
@@ -772,7 +838,7 @@ class StudioService:
         with self.lock:
             if rollout_id in self.eval_entries:
                 e = self.eval_entries[rollout_id]
-                payload = compact_rollout(self._eval_rollout(rollout_id), extra={
+                payload = compact_rollout(self._eval_rollout(rollout_id), digits=self.payload_digits, extra={
                     "kind": "eval", "scene": e["scene"].model_dump(mode="json") if e["scene"] else None, "plan": None})
                 self.payload_cache[rollout_id] = payload
                 return payload
@@ -780,11 +846,11 @@ class StudioService:
                 if self.demo_rollout is None:
                     raise KeyError("demo")
                 extra = {"beads_hidden": self.mode == "live", "kind": "demonstration"}
-                payload = compact_rollout(self.demo_rollout, extra=extra)
+                payload = compact_rollout(self.demo_rollout, extra=extra, digits=self.payload_digits)
             else:
                 e = self.session.rollouts[rollout_id]
                 plan = e.plan
-                payload = compact_rollout(e.rollout, extra={
+                payload = compact_rollout(e.rollout, digits=self.payload_digits, extra={
                     "kind": "rollout", "scene": e.scene.model_dump(mode="json"),
                     "plan": _plan_summary(plan)})
                 if payload.get("visual") is None:
@@ -811,7 +877,7 @@ class StudioService:
                     except Exception:  # noqa: BLE001 - a missing log only loses the minimap path
                         self.trace_cache[rid] = None
                 has = bool(e.get("rollout_path") or (e["log_path"] and e["scene"] is not None))
-                rollouts.append({"id": rid, "report": e["report"].model_dump(mode="json"),
+                rollouts.append({"id": rid, "report": e["report"].model_dump(mode="json"), "sketch": e.get("sketch", False),
                                  "scene_id": e["report"].scene_id, "spec_version": e["spec_version"],
                                  "scene": e["scene"].model_dump(mode="json") if e["scene"] else None, "plan": None,
                                  "tags": ["eval"], "has_frames": has, "trace": self.trace_cache[rid]})
@@ -848,23 +914,109 @@ class StudioService:
 
 
 def trace_summary(rollout: Rollout, scene: SceneState, points: int = 90) -> Optional[dict]:
-    """Downsampled path of the container (first cup) for minimaps: [x, y, z, tilt_deg]."""
+    """Downsampled object paths for minimaps: [x, y, z, tilt_deg] per point.
+
+    ``points`` is the container's (first cup) path; ``objects`` holds every
+    movable object's path."""
     import math
-    cup = next((o.id for o in scene.objects if o.kind == "cup"), None)
-    if cup is None or not rollout.frames:
+    if not rollout.frames:
         return None
-    pts = []
     frames = rollout.frames
     step = max(1, len(frames) // points)
-    for f in frames[::step] + [frames[-1]]:
-        p = f.bodies.get(cup)
-        if p is None:
+    idx = list(range(0, len(frames), step)) + [len(frames) - 1]
+    paths = {}
+    for o in scene.objects:
+        pts = []
+        cur = None
+        k = 0
+        for i, f in enumerate(frames):
+            cur = f.bodies.get(o.id, cur)
+            if k < len(idx) and i == idx[k]:
+                while k < len(idx) and idx[k] == i:
+                    k += 1
+            else:
+                continue
+            p = cur
+            if p is None:
+                continue
+            w, x, y, z = p.quat
+            zz = 1.0 - 2.0 * (x * x + y * y)
+            tilt = math.degrees(math.acos(max(-1.0, min(1.0, zz))))
+            pts.append([round(p.pos[0], 3), round(p.pos[1], 3), round(p.pos[2], 3), round(tilt, 1)])
+        paths[o.id] = pts
+    cup = next((o.id for o in scene.objects if o.kind == "cup"), None)
+    # Container tilt over time (about 200 samples) for the before/after chart.
+    tilt = []
+    if cup is not None:
+        cur = None
+        tstep = max(1, len(frames) // 200)
+        for i, f in enumerate(frames):
+            cur = f.bodies.get(cup, cur)
+            if cur is None or (i % tstep and i != len(frames) - 1):
+                continue
+            w, x, y, z = cur.quat
+            zz = 1.0 - 2.0 * (x * x + y * y)
+            tilt.append([round(f.t, 2), round(math.degrees(math.acos(max(-1.0, min(1.0, zz)))), 1),
+                         1 if f.phase.startswith(("transport", "lift", "place")) and f.phase.endswith(":" + cup) else 0])
+    return {"object_id": cup, "points": paths.get(cup, []), "objects": paths, "tilt": tilt}
+
+
+def scene_sketch(rollout: Rollout, scene_id: str = "") -> SceneState:
+    """An approximate SceneState rebuilt from a recorded rollout's own geometry.
+
+    Used to label and map loaded evaluation rollouts without regenerating their
+    layouts. Static geoms become box obstacles (a box that does not reach the
+    table is the lintel above an opening and is kept as a wall slot); objects
+    take their first recorded pose; kinds come from the instance id prefix."""
+    from ..contracts import Workspace
+    from ..geometry import BLOCK, CUP, MARKER, WORLD
+    vis = rollout.visual
+    objects, trays, obstacles = [], [], []
+    first = {}
+    for f in rollout.frames:
+        for k, v in f.bodies.items():
+            first.setdefault(k, v)
+    if vis is not None:
+        for b in vis.bodies:
+            if not b.static:
+                continue
+            if b.name.startswith("tray"):
+                xs = [g.pos[0] for g in b.geoms]
+                ys = [g.pos[1] for g in b.geoms]
+                floor = min(b.geoms, key=lambda g: g.pos[2])
+                trays.append(TraySpec(id=b.name, pose=Pose(pos=(sum(xs) / len(xs), sum(ys) / len(ys), floor.pos[2] + floor.size[2])),
+                                      inner_half=(max(0.02, floor.size[0] - 0.008), max(0.02, floor.size[1] - 0.008))))
+                continue
+            if b.name in ("world", "table") or not b.geoms:
+                continue
+            boxes = [g for g in b.geoms if g.type == "box"]
+            if not boxes:
+                continue
+            low = [g for g in boxes if g.pos[2] - g.size[2] < 0.02]
+            high = [g for g in boxes if g.pos[2] - g.size[2] >= 0.02]
+            for i, g in enumerate(low):
+                obstacles.append(ObstacleSpec(id=f"{b.name}" if len(low) == 1 else f"{b.name}#{i}", kind="box",
+                                              pose=Pose(pos=g.pos, quat=g.quat), half=tuple(g.size)))
+            for i, g in enumerate(high):
+                # The lintel spans an opening; draw it as a wall with a slot over its length.
+                obstacles.append(ObstacleSpec(id=f"{b.name}~slot{i}", kind="wall",
+                                              pose=Pose(pos=(g.pos[0], g.pos[1], 0.0)), length=2 * g.size[1],
+                                              height=g.pos[2] + g.size[2], thickness=2 * g.size[0],
+                                              slots=[SlotSpec(y_min=g.pos[1] - g.size[1], y_max=g.pos[1] + g.size[1],
+                                                              z_min=0.0, z_max=g.pos[2] - g.size[2])]))
+    for oid, pose in first.items():
+        kind = next((k for k in ("cup", "block", "marker") if oid.startswith(k)), None)
+        if kind is None or "/" in oid or "bead" in oid:
             continue
-        w, x, y, z = p.quat
-        zz = 1.0 - 2.0 * (x * x + y * y)
-        tilt = math.degrees(math.acos(max(-1.0, min(1.0, zz))))
-        pts.append([round(p.pos[0], 3), round(p.pos[1], 3), round(p.pos[2], 3), round(tilt, 1)])
-    return {"object_id": cup, "points": pts}
+        size = {"cup": {"outer_half": list(CUP.outer_half), "wall": CUP.wall}, "block": {"half": list(BLOCK.half)},
+                "marker": {"radius": MARKER.radius, "half_length": MARKER.half_length}}[kind]
+        objects.append(ObjectSpec(id=oid, kind=kind, size=size, mass=0.05, pose=pose,
+                                  beads=sum(1 for n in first if n.startswith(oid + "/") and "bead" in n)))
+    return SceneState(scene_id=scene_id or rollout.report.scene_id, split="custom", objects=objects, trays=trays,
+                      obstacles=obstacles,
+                      workspace=Workspace(x_range=WORLD.workspace_x, y_range=WORLD.workspace_y, z_range=WORLD.workspace_z),
+                      gripper_start=first.get("gripper", Pose(pos=(0.0, 0.0, 0.3))),
+                      notes="sketch rebuilt from the recorded rollout geometry")
 
 
 def _frame_dict(f: RolloutFrame, teleop=None) -> dict:

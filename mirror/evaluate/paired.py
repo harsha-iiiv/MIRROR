@@ -23,16 +23,23 @@ from .stats import paired_binary, paired_continuous
 from .trial import execute_trial, tilt_trace
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]   # mirror/
+REPO_ROOT = PACKAGE_ROOT.parent
+# Frozen alongside mirror/: everything else that can change an evaluation result.
+HASHED_GROUPS = {
+    "scripts": ("scripts", ("*.py",)),
+    "demos": ("data/demos", ("*",)),
+    "cassettes": ("data/cassettes", ("*",)),
+}
 MAX_WORKERS = 2
 
 SIMPLIFICATIONS = [
     "Completion uses the object's centre: inside the tray's inner footprint (minus inside_margin_m) and above its floor.",
     "Settled means linear speed below tolerances.settle_speed_mps over the last 0.3 s of the log; angular speed is not checked.",
-    "Transport phase boundaries come from the executor's per-step held-object label (finger-contact detection).",
+    "Transport phase = the executor's per-step held label (finger contacts; gaps up to 0.5 s bridged) plus, between first grasp and last release, steps where the object is more than 5 mm above its resting height and touches no support.",
     "Bead retention counts bead centres inside the cup interior box (2 mm tolerance) at the final step.",
     "keep_clearance uses a bounding-sphere distance to obstacle boxes (conservative).",
     "Upright-route feasibility witness is a clearance condition, not a constructed trajectory; scenes with box obstacles are 'unknown'.",
-    "Infeasibility proofs consider only the carried object and assume the tool centre lies within its bounding sphere.",
+    "The independent infeasibility proof covers any motion of a rigidly top-grasped object (tool centre on its axis, palm above its top, grasp depth 0 to the palm's lower face) with the tool centre in the workspace; it uses a 0.1 mm strictness margin (CONTACT_FREE_EPS_M). Only planner records with proven: true count as planner proofs.",
 ]
 
 
@@ -47,6 +54,43 @@ def code_hash(root: Path = PACKAGE_ROOT) -> tuple[str, int]:
         h.update(p.read_bytes())
         h.update(b"\0")
     return h.hexdigest(), len(files)
+
+
+def tree_hash(root: Path, patterns=("*",)) -> tuple[str, int]:
+    """sha256 over the relative paths and bytes of matching files under root."""
+    h = hashlib.sha256()
+    files = sorted({p for pat in patterns for p in root.rglob(pat)
+                    if p.is_file() and "__pycache__" not in p.parts}) if root.exists() else []
+    for p in files:
+        h.update(p.relative_to(root).as_posix().encode())
+        h.update(b"\0")
+        h.update(p.read_bytes())
+        h.update(b"\0")
+    return h.hexdigest(), len(files)
+
+
+def file_hashes() -> dict:
+    out = {}
+    for name, (rel, pats) in HASHED_GROUPS.items():
+        d, n = tree_hash(REPO_ROOT / rel, pats)
+        out[name] = {"path": rel, "sha256": d, "files": n}
+    return out
+
+
+def runtime_versions() -> dict:
+    import platform
+    out = {"python": platform.python_version(), "numpy": np.__version__}
+    try:
+        import mujoco
+        out["mujoco"] = mujoco.__version__
+    except ImportError:
+        out["mujoco"] = "not installed"
+    try:
+        import scipy
+        out["scipy"] = scipy.__version__
+    except ImportError:
+        pass
+    return out
 
 
 def _spec_ref(spec: TaskSpec) -> dict:
@@ -65,7 +109,8 @@ def freeze(spec_a: TaskSpec, spec_b: TaskSpec, seeds: Sequence[int], split: str,
     m = FreezeManifest(created_at=_dt.datetime.fromtimestamp(now, _dt.timezone.utc).isoformat(),
                        created_unix=now, split=split, seeds=[int(s) for s in seeds],
                        spec_a=_spec_ref(spec_a), spec_b=_spec_ref(spec_b),
-                       code_sha256=digest, code_files=n, config=dict(config or {}), family=family)
+                       code_sha256=digest, code_files=n, config=dict(config or {}), family=family,
+                       file_hashes=file_hashes(), versions=runtime_versions())
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(m.model_dump_json(indent=1))
     return m
@@ -103,7 +148,8 @@ def make_layout_fn(family: str = "mixed", layout_fn: Optional[Callable] = None) 
 
 
 def verify_manifest(path: Path | str, spec_a: TaskSpec, spec_b: TaskSpec,
-                    seeds: Sequence[int], split: str, family: str = "mixed") -> FreezeManifest:
+                    seeds: Sequence[int], split: str, family: str = "mixed", *,
+                    allow_code_drift: bool = False) -> FreezeManifest:
     """Check that the manifest freezes exactly these specs, the current code
     and (for multi-stratum manifests) a stratum with this split, family and
     seed list."""
@@ -128,9 +174,25 @@ def verify_manifest(path: Path | str, spec_a: TaskSpec, spec_b: TaskSpec,
         problems.append("specification A differs from the frozen version")
     if m.spec_b != _spec_ref(spec_b):
         problems.append("specification B differs from the frozen version")
+    drift = []
+    if m.file_hashes:
+        now = file_hashes()
+        drift += [f"{g} ({m.file_hashes[g]['path']})" for g in m.file_hashes
+                  if now.get(g, {}).get("sha256") != m.file_hashes[g]["sha256"]]
+    if m.versions:
+        cur = runtime_versions()
+        drift += [f"{k} version {m.versions[k]} -> {cur.get(k)}" for k in m.versions if cur.get(k) != m.versions[k]]
+    if drift:
+        if allow_code_drift and m.kind == "rehearsal":
+            m.config = dict(m.config, file_drift="changed during the rehearsal: " + ", ".join(drift))
+        else:
+            problems.append("changed since the freeze: " + ", ".join(drift))
     digest, _ = code_hash()
     if digest != m.code_sha256:
-        problems.append("code under mirror/ changed since the freeze")
+        if allow_code_drift and m.kind == "rehearsal":
+            m.config = dict(m.config, code_drift=f"code changed during the rehearsal (now {digest[:12]})")
+        else:
+            problems.append("code under mirror/ changed since the freeze")
     if problems:
         raise FreezeError("; ".join(problems))
     return m
@@ -138,7 +200,8 @@ def verify_manifest(path: Path | str, spec_a: TaskSpec, spec_b: TaskSpec,
 
 def freeze_strata(spec_a: TaskSpec, spec_b: TaskSpec, strata: list[dict], path: Path | str, *,
                   kind: str = "final", config: Optional[dict] = None,
-                  spec_provenance: Optional[dict] = None) -> FreezeManifest:
+                  spec_provenance: Optional[dict] = None,
+                  ledger_at_freeze: Optional[dict] = None) -> FreezeManifest:
     """Write one manifest covering several strata (each: name, role, split,
     family, seeds). Written once, before any of their layouts is generated."""
     path = Path(path)
@@ -157,7 +220,8 @@ def freeze_strata(spec_a: TaskSpec, spec_b: TaskSpec, strata: list[dict], path: 
                        seeds=[x for st in clean for x in st["seeds"]],
                        spec_a=_spec_ref(spec_a), spec_b=_spec_ref(spec_b), code_sha256=digest,
                        code_files=n, config=dict(config or {}), kind=kind, strata=clean,
-                       spec_provenance=dict(spec_provenance or {}))
+                       spec_provenance=dict(spec_provenance or {}), file_hashes=file_hashes(),
+                       versions=runtime_versions(), ledger_at_freeze=dict(ledger_at_freeze or {}))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(m.model_dump_json(indent=1))
     return m
@@ -280,7 +344,8 @@ def compact_rollout(rollout, *, max_bytes: int = ROLLOUT_MAX_BYTES) -> tuple[str
     from mirror.contracts import Rollout
     data = _round(rollout.model_dump(mode="json"))
     frames = data.get("frames", [])
-    full = [dict(fr["bodies"]) for fr in frames]
+    full4 = [dict(fr["bodies"]) for fr in frames]
+    full = full4
 
     def encode(bead_every: int):
         last: dict[str, dict] = {}
@@ -306,6 +371,20 @@ def compact_rollout(rollout, *, max_bytes: int = ROLLOUT_MAX_BYTES) -> tuple[str
             break
         text = encode(every)
         notes = notes[:1] + [f"bead bodies listed at most every {every}th frame"]
+    if len(text) > max_bytes:
+        full = [_round(b, 3) for b in full4]      # 1 mm / 0.001 resolution for playback
+        text = encode(8)
+        notes.append("frame poses rounded to 3 decimals")
+    while len(text) > max_bytes and len(frames) > 2 and data.get("frame_hz", 0) > 4:
+        keep = list(range(0, len(frames), 2))
+        if keep[-1] != len(frames) - 1:
+            keep.append(len(frames) - 1)
+        frames[:] = [frames[i] for i in keep]
+        full = [full[i] for i in keep]
+        data["frames"] = frames
+        data["frame_hz"] = data["frame_hz"] / 2.0
+        text = encode(8)
+        notes.append(f"frame rate halved to {data['frame_hz']:g} Hz")
     if len(text) > max_bytes:
         notes.append(f"{len(text)} bytes after thinning (target {max_bytes})")
     data["report"]["notes"] = data["report"]["notes"] + ["playback: " + n for n in notes]
@@ -409,7 +488,7 @@ def paired_eval(spec_a: TaskSpec, spec_b: TaskSpec, seeds: Sequence[int], split:
                 conditions: tuple[str, str] = ("original", "corrected"),
                 n_boot: int = 10_000, include_blocked: bool = False, family: str = "mixed",
                 rollout_dir: Optional[Path | str] = None, stratum: str = "",
-                require_manifest: bool = False) -> EvalReport:
+                require_manifest: bool = False, allow_code_drift: bool = False) -> EvalReport:
     """Run spec A and spec B on the identical initial scene for every seed.
 
     For split "eval" a freeze manifest (see ``freeze``) must already exist and
@@ -423,7 +502,8 @@ def paired_eval(spec_a: TaskSpec, spec_b: TaskSpec, seeds: Sequence[int], split:
     if split == "eval" or require_manifest:
         if manifest_path is None:
             raise FreezeError(f"the {split} split requires a freeze manifest (manifest_path)")
-        manifest = verify_manifest(manifest_path, spec_a, spec_b, seeds, split, family)
+        manifest = verify_manifest(manifest_path, spec_a, spec_b, seeds, split, family,
+                                   allow_code_drift=allow_code_drift)
     else:
         if manifest_path is not None and Path(manifest_path).exists():
             manifest = verify_manifest(manifest_path, spec_a, spec_b, seeds, split, family)
@@ -435,8 +515,6 @@ def paired_eval(spec_a: TaskSpec, spec_b: TaskSpec, seeds: Sequence[int], split:
                                       code_sha256=digest, code_files=n, family=family,
                                       config={"note": "development run; not frozen in advance"})
     layouts_generated = time.time()
-    if split == "eval" and layouts_generated < manifest.created_unix:
-        raise FreezeError("layout generation precedes the freeze manifest")
     scenes = {s: layout(s, split) for s in seeds}
     rules = corrected_rules(spec_a, spec_b)
     if not rules:
@@ -467,6 +545,9 @@ def paired_eval(spec_a: TaskSpec, spec_b: TaskSpec, seeds: Sequence[int], split:
                conditions[1]: condition_metrics(rb, conditions[1])}
     pairs = [dict(seed=t.seed, a=t.a.report.status, b=t.b.report.status,
                   a_vfs=t.a.violation_free_success, b_vfs=t.b.violation_free_success) for t in trials]
+    for key in ("code_drift", "file_drift"):
+        if manifest.config.get(key):
+            notes.append(manifest.config[key] + "; acceptable only because this is a rehearsal")
     exercised = [t.seed for t in trials if t.a.corrected_violations]
     paired = dict(
         outcome_pairs=pairs,

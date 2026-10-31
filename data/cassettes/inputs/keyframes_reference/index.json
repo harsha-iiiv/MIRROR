@@ -1,0 +1,26 @@
+[
+ {
+  "file": "00.png",
+  "t": 0.0,
+  "label": "start",
+  "sha256": "0b988927ab5da514eba4c367c37ae137aa4f620cbb466b95d2a303def2e5020c"
+ },
+ {
+  "file": "01.png",
+  "t": 13.736,
+  "label": "carrying the cup",
+  "sha256": "5b8964bb3f389c31633926f6460018cc51d949472564fe96afedb4b4ddea0b71"
+ },
+ {
+  "file": "02.png",
+  "t": 43.5,
+  "label": "carrying the block",
+  "sha256": "61a84c7a573c49e2c9fda634953b11b3bffe1115021ecfacdcec3a0741f9b764"
+ },
+ {
+  "file": "03.png",
+  "t": 82.136,
+  "label": "end",
+  "sha256": "2c90744f81d1ec0a194d4cbbd59458b5d622e24649ad913504c5afbc33977626"
+ }
+]

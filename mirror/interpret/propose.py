@@ -21,23 +21,29 @@ class Interpretation:
     interpreter: str
     usage: dict[str, Any] = field(default_factory=dict)
     from_cassette: bool = False
+    keyframes_used: int = 0
 
 
-def propose_spec_detailed(trace: DemoTrace, client: Optional[LLMClient] = None) -> Interpretation:
+def propose_spec_detailed(trace: DemoTrace, client: Optional[LLMClient] = None, *,
+                          keyframes: Optional[list] = None) -> Interpretation:
+    """``keyframes``: optional rendered simulator frames (mirror.interpret.keyframes)
+    attached to the prompt as images. Ignored by the offline rules."""
     summary = summarize_demo(trace)
     if client is None or client.offline:
         draft = propose_offline(summary, trace.scene)
         spec = proposal_to_spec(draft, summary, trace, OFFLINE_LABEL)
         return Interpretation(spec=spec, draft=draft, summary=summary, interpreter=OFFLINE_LABEL)
-    res = client.complete_json(propose_messages(summary, trace.scene), ProposalDraft,
+    res = client.complete_json(propose_messages(summary, trace.scene, keyframes), ProposalDraft,
                                name="propose_spec", validate=lambda d: check_proposal(d, summary))
     spec = proposal_to_spec(res.data, summary, trace, res.model)
     return Interpretation(spec=spec, draft=res.data, summary=summary, interpreter=res.model,
-                          usage=res.usage, from_cassette=res.from_cassette)
+                          usage=res.usage, from_cassette=res.from_cassette,
+                          keyframes_used=len(keyframes or []))
 
 
-def propose_spec(trace: DemoTrace, client: Optional[LLMClient] = None) -> TaskSpec:
+def propose_spec(trace: DemoTrace, client: Optional[LLMClient] = None, *,
+                 keyframes: Optional[list] = None) -> TaskSpec:
     """Propose a TaskSpec from a demonstration. Inferred rules and orderings are
     ``proposed`` with an open question each; nothing is enforced until a human
     confirms it."""
-    return propose_spec_detailed(trace, client).spec
+    return propose_spec_detailed(trace, client, keyframes=keyframes).spec

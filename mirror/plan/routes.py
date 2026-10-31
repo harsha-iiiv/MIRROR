@@ -392,6 +392,37 @@ class RouteSearch:
                     pts.append(c)
         return pts
 
+    # ------------------------------------------------------ explanations
+    def _wall_end_reason(self, w: ObstacleSpec, end: str) -> Optional[str]:
+        """If the wall's end lies beyond the TCP's reach along the wall, say so."""
+        p, R = wall_frame(w)
+        al = R[:2, 1]
+        ws = self.ws
+        along = [float(al @ (np.array([x, y]) - p[:2])) for x in ws.x_range for y in ws.y_range]
+        s = 1.0 if end == "+y" else -1.0
+        wall_end = w.length / 2
+        reach = max(s * a for a in along)
+        if wall_end >= reach:
+            return (f"no collision-free path: the {end} end of {w.id} is {wall_end:.3f} m along the wall "
+                    f"from its centre, beyond the workspace limit of {reach:.3f} m")
+        return None
+
+
+    def _blocked_reason(self, prefix: str, g: "FreeGraph", retry) -> str:
+        """Name only the obstacles that decide the failure: an obstacle is
+        reported when removing it alone lets the same search succeed. Static
+        scene obstacles are tested in order of how often they were hit;
+        virtual route blockers and the table are never removed. If no single
+        obstacle is decisive, the failure is reported as joint."""
+        hits = [n for n, _ in (g.hits + g.prune_hits).most_common()
+                if not n.startswith("virtual:") and n != "table"]
+        decisive = [n for n in hits[:4] if retry(n)]
+        if decisive:
+            return f"{prefix} (blocked by {', '.join(decisive)})"
+        if hits:
+            return f"{prefix} (no single obstacle is decisive; obstructed by {', '.join(hits[:3])} together)"
+        return prefix
+
     # ---------------------------------------------------------- legs
     def _path_waypoints(self, g: FreeGraph, path: list[int], yaw: float, goal_yaw=None) -> list[Waypoint]:
         out = []
@@ -409,9 +440,12 @@ class RouteSearch:
         gy = self._goal_yaw_near(q.start_yaw)
         cost, path = g.shortest(g.iS, [g.iG], q.start_yaw, gy)
         if path is None:
-            bl = g.blockers()
-            return Candidate(label, family, False, reason="no collision-free path within the workspace"
-                             + (f" (blocked by {', '.join(bl)})" if bl else ""))
+            def retry(name):
+                w2 = world.without({name})
+                g2 = FreeGraph(q, w2, list(xy_nodes) + self.corners(w2, levels), levels, q.start_pos, q.goal_pos)
+                return g2.shortest(g2.iS, [g2.iG], q.start_yaw, gy)[1] is not None
+            return Candidate(label, family, False,
+                             reason=self._blocked_reason("no collision-free path within the workspace", g, retry))
         wps = [Waypoint(q.start_pos.copy(), gripper_rot(q.start_yaw), "start")] + \
             self._path_waypoints(g, path, q.start_yaw, gy)
         return Candidate(label, family, True, cost=cost, waypoints=_simplify(wps))
@@ -437,7 +471,10 @@ class RouteSearch:
                 other = "-y" if end == "+y" else "+y"
                 world = self.closed.with_boxes([end_blocker(w, other)])
                 nodes = [s_xy, g_xy] + self.corners(world, base_levels)
-                cands.append(self.free_candidate(f"around:{w.id}:{end}", "around", world, nodes, base_levels))
+                c = self.free_candidate(f"around:{w.id}:{end}", "around", world, nodes, base_levels)
+                if not c.feasible and f"blocked by obstacle:{w.id}" in (c.reason or ""):
+                    c.reason = self._wall_end_reason(w, end) or c.reason
+                cands.append(c)
             for k, slot in enumerate(w.slots):
                 for mode in q.cfg.modes:
                     cands.append(self.slot_candidate(w, k, mode))
@@ -563,9 +600,12 @@ class RouteSearch:
         g1 = FreeGraph(q1, self.closed, nodes1, levels, q.start_pos, Ae)
         c1, p1 = g1.shortest(g1.iS, [g1.node(1, entry)], q.start_yaw)
         if p1 is None:
-            bl = g1.blockers()
+            def retry1(name):
+                w2 = self.closed.without({name})
+                g2 = FreeGraph(q1, w2, nodes1, levels, q.start_pos, Ae)
+                return g2.shortest(g2.iS, [g2.node(1, entry)], q.start_yaw)[1] is not None
             return Candidate(label, "through_slot", False, mode=mode.name, max_tilt_deg=mode.tilt_deg,
-                             reason="no path to the slot approach point" + (f" (blocked by {', '.join(bl)})" if bl else ""))
+                             reason=self._blocked_reason("no path to the slot approach point", g1, retry1))
         rot = abs(wrap(pyaw - q.start_yaw)) + 2 * abs(mode.pitch)
         c_portal = (float(np.linalg.norm(B - A)) + abs(Ae[2] - A[2]) + abs(Bx[2] - B[2])
                     + cfg.rotation_penalty * rot)
@@ -575,9 +615,12 @@ class RouteSearch:
         gy = q.goal_yaw + math.pi * round((pyaw - q.goal_yaw) / math.pi)
         c2, p2 = g2.shortest(g2.node(0, exit_), [g2.iG], pyaw, gy)
         if p2 is None:
-            bl = g2.blockers()
+            def retry2(name):
+                w2 = self.closed.without({name})
+                g3 = FreeGraph(q2, w2, nodes2, levels, Bx, q.goal_pos)
+                return g3.shortest(g3.node(0, exit_), [g3.iG], pyaw, gy)[1] is not None
             return Candidate(label, "through_slot", False, mode=mode.name, max_tilt_deg=mode.tilt_deg,
-                             reason="no path from the slot to the goal" + (f" (blocked by {', '.join(bl)})" if bl else ""))
+                             reason=self._blocked_reason("no path from the slot to the goal", g2, retry2))
         wps = [Waypoint(q.start_pos.copy(), Rin, "start")]
         wps += self._path_waypoints(g1, p1, q.start_yaw)
         if abs(wrap(pyaw - q.start_yaw)) > 1e-9:

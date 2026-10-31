@@ -13,3 +13,5 @@ node_modules/
 *.log
 # interim development runs; final reports are committed explicitly
 results/dev*/
+results/rehearsal/
+site/

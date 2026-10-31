@@ -185,10 +185,13 @@ def sample_layout(seed: int, split: str, family: str = "mixed") -> SceneState:
     Empirical shares after validation are listed in mirror/scenes/README.md.
 
     family="shortcut" always cuts a slot whose centre lies within
-    SHORTCUT_SLOT_JITTER of the point where the straight line from the cup
-    to the tray crosses the wall (clipped to the admissible range). Every
-    other choice, including the open-end side (a fair coin), follows the
-    mixed rules. The family is defined by geometry only.
+    SHORTCUT_SLOT_JITTER (uniform) of the point where the straight line from
+    the cup to the tray crosses the wall, so the slot always contains that
+    point; the wall's open end is on the side away from the crossing point
+    (a slot must keep 0.12 m from the open end), and draws where no such
+    slot fits are redrawn. Object, tray, wall position, open-end width and
+    box choices follow the mixed rules. The family is defined by scene
+    geometry only, never by planning or execution outcomes.
 
     Seeds: dev seeds are below EVAL_SEED_BASE for both families; eval seeds
     start at EVAL_SEED_BASE for "mixed" and at SHORTCUT_EVAL_SEED_BASE for
@@ -202,7 +205,7 @@ def sample_layout(seed: int, split: str, family: str = "mixed") -> SceneState:
     ws = default_workspace()
     for attempt in range(500):
         scene = _draw(rng, seed, split, ws) if family == "mixed" else _draw_shortcut(rng, seed, split, ws)
-        if not validate_layout(scene):
+        if scene is not None and not validate_layout(scene):
             note = scene.notes + f" (accepted after {attempt + 1} draw{'s' if attempt else ''})"
             return scene.model_copy(update={"notes": note})
     raise RuntimeError(f"could not sample a valid {split} {family} layout for seed {seed}")
@@ -304,7 +307,11 @@ def _draw_shortcut(rng: np.random.Generator, seed: int, split: str, ws) -> Scene
     ty = float(u(y_lo + 0.03 + ohy, y_hi - 0.03 - ohy))
     tray = make_tray("tray_0", tx, ty)
     cx, cy = pts[0]
-    side = int(rng.choice([-1, 1]))
+    t = (wall_x - cx) / (tx - cx)
+    y_cross = cy + t * (ty - cy)
+    # Open end on the side away from the crossing point, so that the slot can
+    # sit on the line (a slot keeps 0.12 m from the open end).
+    side = -1 if y_cross > 0 else 1
     gap = float(u(0.20, 0.30))
     y0, y1 = (-_FAR, y_hi - gap) if side > 0 else (y_lo + gap, _FAR)
     L = WORLD.slot_length
@@ -314,21 +321,15 @@ def _draw_shortcut(rng: np.random.Generator, seed: int, split: str, ws) -> Scene
         hi_lim = min(hi_lim, y1 - 0.12 - L / 2)
     else:
         lo_lim = max(lo_lim, y0 + 0.12 + L / 2)
-    t = (wall_x - cx) / (tx - cx)
-    y_cross = cy + t * (ty - cy)
     c = y_cross + float(u(-SHORTCUT_SLOT_JITTER, SHORTCUT_SLOT_JITTER))
-    slots = []
-    if hi_lim > lo_lim:
-        c = min(max(c, lo_lim), hi_lim)
-        slots.append((c - L / 2, c + L / 2))
+    if not (lo_lim <= c <= hi_lim):
+        return None   # no admissible slot on the line: draw again
+    slots = [(c - L / 2, c + L / 2)]
     obstacles = [make_wall("wall_0", wall_x, y0, y1, slots=slots)]
     obstacles += _draw_boxes(rng, ws, wall_x)
     n_boxes = len(obstacles) - 1
-    if slots:
-        slot_txt = (f"slot at y {slots[0][0]:+.2f}..{slots[0][1]:+.2f} "
-                    f"(cup-to-tray line crosses the wall at y {y_cross:+.2f})")
-    else:
-        slot_txt = "no admissible slot position"
+    slot_txt = (f"slot at y {slots[0][0]:+.2f}..{slots[0][1]:+.2f} "
+                f"(cup-to-tray line crosses the wall at y {y_cross:+.2f})")
     desc = [f"wall open at its {'+' if side > 0 else '-'}y end ({gap:.2f} m)", slot_txt,
             f"{n_boxes} extra box{'es' if n_boxes != 1 else ''}"]
     return SceneState(scene_id=f"{split}_shortcut_{seed}", seed=seed, split=split, objects=objs,

@@ -1,0 +1,263 @@
+{
+  "key": "978dbd0b906c298036ed4939346eec0dcf68ed5d2ad57362ce78340feddff094",
+  "name": "compile_correction",
+  "request": {
+    "model": "gpt-5.5",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Task family: packing a kit of rigid objects into a destination tray on a table.\nObjects: cup (open-top vessel that may hold loose beads), block, marker (standing cylinder).\nGoal type: an object ends at rest inside the destination tray.\nRule types:\n  upright: the object's axis stays within max_tilt_deg of vertical (default 15).\n  forbidden_contact: the object must not touch contact_with groups\n    (obstacle, table_outside_tray, other_objects).\n  keep_clearance: the object stays at least min_clearance_m from obstacles.\nPhases: final (once placed and settled), transport (from grasp until release of that object),\n  always (every moment of the task).\nOrdering: one object kind must be packed before another.\n\nYou compile a person's correction of a robot task specification into edit\noperations. A deterministic compiler applies them, assigns identifiers and\nstatuses, and checks them, so describe intent precisely.\n\nActions:\n  require_rule  the rule must hold (creates it, or confirms and updates an existing one).\n                Needs rule.type, rule.object_kind and rule.phase.\n  relax_rule    the rule is not required (rejects matching rules; phase null means\n                every phase of that rule type for that object).\n  confirm_item / reject_item  confirm or reject an existing goal, rule or ordering by target_id.\n  require_order / relax_order  before_kind must be packed before after_kind\n                (relax_order with both kinds null relaxes every ordering).\n  add_goal / remove_goal  whether goal_kind must end in the tray.\n\nRules:\n1. Scope: apply each change only to the objects the person names. Use\n   object_kind null (every object) only if they explicitly say all or every.\n2. Resolve each description to an object kind in the scene by its meaning. If a\n   pronoun or description could mean more than one object in the task and the\n   context does not settle it, use outcome \"clarify\" with a question and options.\n3. If the person names an object that is not in the scene (a different object, not\n   another description of one that is), use outcome \"clarify\" and ask which object\n   they meant; never substitute a scene object for it.\n4. If the correction contradicts itself, use outcome \"clarify\".\n5. If it is not about goals, orientation, contact, clearance or ordering, use\n   outcome \"reject\" and explain in interpretation.\n6. Keep existing rules unless the person changes them. A correction that adds a\n   phase keeps the rules already in place for other phases.\n7. If an orientation or contact requirement states no phase, use transport.\n8. Never output coordinates or robot commands. Use null for fields that do not apply.\n9. interpretation restates, in one sentence, what you understood."
+      },
+      {
+        "role": "user",
+        "content": "{\n \"correction\": \"The cup has to stay vertical while it's being moved, not only when it's put down.\",\n \"objects_in_scene\": [\n  \"block\",\n  \"cup\",\n  \"marker\"\n ],\n \"specification\": {\n  \"goals\": [\n   {\n    \"id\": \"g_inside_cup\",\n    \"object_kind\": \"cup\",\n    \"status\": \"confirmed\"\n   },\n   {\n    \"id\": \"g_inside_block\",\n    \"object_kind\": \"block\",\n    \"status\": \"confirmed\"\n   },\n   {\n    \"id\": \"g_inside_marker\",\n    \"object_kind\": \"marker\",\n    \"status\": \"confirmed\"\n   }\n  ],\n  \"objects\": [\n   {\n    \"kind\": \"cup\",\n    \"part_of_task\": true,\n    \"role\": \"container\"\n   },\n   {\n    \"kind\": \"block\",\n    \"part_of_task\": true,\n    \"role\": \"block\"\n   },\n   {\n    \"kind\": \"marker\",\n    \"part_of_task\": true,\n    \"role\": \"marker\"\n   }\n  ],\n  \"open_questions\": [\n   {\n    \"about\": \"c_upright_transport_cup\",\n    \"id\": \"u_upright_transport_cup\",\n    \"question\": \"The cup stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed?\"\n   },\n   {\n    \"about\": \"c_upright_transport_block\",\n    \"id\": \"u_upright_transport_block\",\n    \"question\": \"The block stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed?\"\n   },\n   {\n    \"about\": \"c_upright_final_block\",\n    \"id\": \"u_upright_final_block\",\n    \"question\": \"Must the block end upright in the tray?\"\n   },\n   {\n    \"about\": \"c_upright_transport_marker\",\n    \"id\": \"u_upright_transport_marker\",\n    \"question\": \"The marker stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed?\"\n   },\n   {\n    \"about\": \"c_upright_final_marker\",\n    \"id\": \"u_upright_final_marker\",\n    \"question\": \"Must the marker end upright in the tray?\"\n   },\n   {\n    \"about\": \"o_cup_before_block\",\n    \"id\": \"u_cup_before_block\",\n    \"question\": \"The cup was packed before the block. Is that order required?\"\n   },\n   {\n    \"about\": \"o_block_before_marker\",\n    \"id\": \"u_block_before_marker\",\n    \"question\": \"The block was packed before the marker. Is that order required?\"\n   }\n  ],\n  \"ordering\": [\n   {\n    \"after_kind\": \"block\",\n    \"before_kind\": \"cup\",\n    \"id\": \"o_cup_before_block\",\n    \"status\": \"proposed\"\n   },\n   {\n    \"after_kind\": \"marker\",\n    \"before_kind\": \"block\",\n    \"id\": \"o_block_before_marker\",\n    \"status\": \"proposed\"\n   }\n  ],\n  \"rules\": [\n   {\n    \"description\": \"Keep the cup within 15 degrees of upright while carried.\",\n    \"id\": \"c_upright_transport_cup\",\n    \"object_kind\": \"cup\",\n    \"params\": {\n     \"max_tilt_deg\": 15.0\n    },\n    \"phase\": \"transport\",\n    \"status\": \"proposed\",\n    \"type\": \"upright\"\n   },\n   {\n    \"description\": \"Keep the cup within 15 degrees of upright once placed.\",\n    \"id\": \"c_upright_final_cup\",\n    \"object_kind\": \"cup\",\n    \"params\": {\n     \"max_tilt_deg\": 15.0\n    },\n    \"phase\": \"final\",\n    \"status\": \"confirmed\",\n    \"type\": \"upright\"\n   },\n   {\n    \"description\": \"Keep the block within 15 degrees of upright while carried.\",\n    \"id\": \"c_upright_transport_block\",\n    \"object_kind\": \"block\",\n    \"params\": {\n     \"max_tilt_deg\": 15.0\n    },\n    \"phase\": \"transport\",\n    \"status\": \"proposed\",\n    \"type\": \"upright\"\n   },\n   {\n    \"description\": \"Keep the block within 15 degrees of upright once placed.\",\n    \"id\": \"c_upright_final_block\",\n    \"object_kind\": \"block\",\n    \"params\": {\n     \"max_tilt_deg\": 15.0\n    },\n    \"phase\": \"final\",\n    \"status\": \"proposed\",\n    \"type\": \"upright\"\n   },\n   {\n    \"description\": \"Keep the marker within 15 degrees of upright while carried.\",\n    \"id\": \"c_upright_transport_marker\",\n    \"object_kind\": \"marker\",\n    \"params\": {\n     \"max_tilt_deg\": 15.0\n    },\n    \"phase\": \"transport\",\n    \"status\": \"proposed\",\n    \"type\": \"upright\"\n   },\n   {\n    \"description\": \"Keep the marker within 15 degrees of upright once placed.\",\n    \"id\": \"c_upright_final_marker\",\n    \"object_kind\": \"marker\",\n    \"params\": {\n     \"max_tilt_deg\": 15.0\n    },\n    \"phase\": \"final\",\n    \"status\": \"proposed\",\n    \"type\": \"upright\"\n   }\n  ],\n  \"version\": 2\n }\n}"
+      }
+    ],
+    "schema": {
+      "$defs": {
+        "DraftOp": {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "enum": [
+                "require_rule",
+                "relax_rule",
+                "confirm_item",
+                "reject_item",
+                "require_order",
+                "relax_order",
+                "add_goal",
+                "remove_goal"
+              ],
+              "type": "string"
+            },
+            "rule": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DraftRuleSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "target_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "before_kind": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "cup",
+                    "block",
+                    "marker"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "after_kind": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "cup",
+                    "block",
+                    "marker"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "goal_kind": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "cup",
+                    "block",
+                    "marker"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "rationale": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "action",
+            "rule",
+            "target_id",
+            "before_kind",
+            "after_kind",
+            "goal_kind",
+            "rationale"
+          ],
+          "type": "object"
+        },
+        "DraftRuleSpec": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "enum": [
+                "upright",
+                "forbidden_contact",
+                "keep_clearance"
+              ],
+              "type": "string"
+            },
+            "object_kind": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "cup",
+                    "block",
+                    "marker"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "phase": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "final",
+                    "transport",
+                    "always"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "max_tilt_deg": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "contact_with": {
+              "anyOf": [
+                {
+                  "items": {
+                    "enum": [
+                      "obstacle",
+                      "table_outside_tray",
+                      "other_objects"
+                    ],
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "min_clearance_m": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "object_kind",
+            "phase",
+            "max_tilt_deg",
+            "contact_with",
+            "min_clearance_m"
+          ],
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "outcome": {
+          "enum": [
+            "apply",
+            "clarify",
+            "reject"
+          ],
+          "type": "string"
+        },
+        "interpretation": {
+          "type": "string"
+        },
+        "question": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "options": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "ops": {
+          "items": {
+            "$ref": "#/$defs/DraftOp"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "outcome",
+        "interpretation",
+        "question",
+        "options",
+        "ops"
+      ],
+      "type": "object"
+    }
+  },
+  "response": {
+    "content": "{\"interpretation\":\"The cup must remain upright during transport as well as after it is placed in the tray.\",\"ops\":[{\"action\":\"require_rule\",\"after_kind\":null,\"before_kind\":null,\"goal_kind\":null,\"rationale\":\"The correction explicitly requires the cup to stay vertical while it is being moved, adding or confirming the transport-phase upright rule without removing the existing final upright requirement.\",\"rule\":{\"contact_with\":null,\"max_tilt_deg\":15.0,\"min_clearance_m\":null,\"object_kind\":\"cup\",\"phase\":\"transport\",\"type\":\"upright\"},\"target_id\":null}],\"options\":[],\"outcome\":\"apply\",\"question\":null}",
+    "model": "gpt-5.5-2026-04-23",
+    "usage": {
+      "prompt_tokens": 2207,
+      "completion_tokens": 267,
+      "total_tokens": 2474
+    }
+  },
+  "attempts": 1,
+  "format_used": "json_schema",
+  "recorded_at": "2026-10-31T11:55:33Z"
+}

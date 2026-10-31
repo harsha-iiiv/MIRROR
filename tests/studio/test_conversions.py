@@ -59,3 +59,17 @@ def test_transport_note_parsing():
     e = _transport_entry(s)
     assert e == {"object_id": "cup_0", "route": "through_slot:wall_0:0:pitched+90", "mode": "pitched+90", "note": s.note}
     assert _transport_entry(PlanStep(kind="transport", object_id="b", note="direct"))["route"] == "direct"
+
+
+def test_compact_rollout_carries_omitted_bodies_forward():
+    from mirror.contracts import Rollout, RolloutFrame
+    from mirror.studio.session_adapter import compact_rollout, trace_summary
+    rep = RolloutReport(rollout_id="e", scene_id="s", spec_id="x", spec_version=1, status="success")
+    frames = [RolloutFrame(t=0.0, bodies={"cup_0": Pose(pos=(0.1, 0, 0.05)), "gripper": Pose(pos=(0, 0, 0.3))}, gripper_width=0.09),
+              RolloutFrame(t=0.1, bodies={"gripper": Pose(pos=(0, 0, 0.2))}, gripper_width=0.09),
+              RolloutFrame(t=0.2, bodies={"cup_0": Pose(pos=(0.2, 0, 0.05))}, gripper_width=0.09)]
+    p = compact_rollout(Rollout(report=rep, frames=frames))
+    assert [x[0] for x in p["bodies"]["cup_0"]] == [0.1, 0.1, 0.2]
+    assert [x[2] for x in p["bodies"]["gripper"]] == [0.3, 0.2, 0.2]
+    tr = trace_summary(Rollout(report=rep, frames=frames), fixture_scene("demo"))
+    assert [pt[0] for pt in tr["objects"]["cup_0"]][-1] == 0.2

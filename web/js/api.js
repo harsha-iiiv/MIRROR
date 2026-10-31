@@ -14,14 +14,49 @@ export async function getState() {
   return isStatic ? getJSON(base + 'session.json') : getJSON('api/state');
 }
 
+// Fetch JSON while reporting received bytes (for large rollout files).
+async function getJSONProgress(url, onProgress) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}: ${url}`);
+  const total = Number(r.headers.get('content-length')) || 0;
+  if (!r.body || !onProgress) return r.json();
+  const reader = r.body.getReader();
+  const chunks = [];
+  let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    got += value.length;
+    onProgress(got, total);
+  }
+  const buf = new Uint8Array(got);
+  let o = 0;
+  for (const c of chunks) { buf.set(c, o); o += c.length; }
+  return JSON.parse(new TextDecoder().decode(buf));
+}
+
+const listeners = new Set();
+export function onRolloutProgress(fn) { listeners.add(fn); return () => listeners.delete(fn); }
+
 export async function getRollout(id) {
   if (rolloutCache.has(id)) return rolloutCache.get(id);
-  const p = (isStatic ? getJSON(`${base}rollouts/${encodeURIComponent(id)}.json`)
-                      : getJSON(`api/rollouts/${encodeURIComponent(id)}`))
-    .catch((e) => { rolloutCache.delete(id); throw e; });
+  const url = isStatic ? `${base}rollouts/${encodeURIComponent(id)}.json` : `api/rollouts/${encodeURIComponent(id)}`;
+  const report = (got, total) => listeners.forEach((fn) => fn(id, got, total));
+  const p = getJSONProgress(url, report)
+    .then((v) => { report(-1, 0); return v; })
+    .catch((e) => { rolloutCache.delete(id); report(-1, 0); throw e; });
   rolloutCache.set(id, p);
   return p;
 }
+
+// Warm the cache in the background (static site: fetch the next step's rollouts while idle).
+export function prefetch(ids) {
+  const run = () => ids.filter((x) => x && !rolloutCache.has(x)).slice(0, 2).forEach((x) => getRollout(x).catch(() => {}));
+  (window.requestIdleCallback || ((f) => setTimeout(f, 800)))(run);
+}
+
+export const repoUrl = cfg.repo || null;
 
 export function forgetRollouts() { rolloutCache.clear(); }
 export function forget(id) { rolloutCache.delete(id); }

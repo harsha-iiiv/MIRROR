@@ -99,10 +99,23 @@ def _phase_mask(ctx: _Ctx, idx: int, phase: str) -> np.ndarray:
     raise ValueError(f"unknown phase {phase}")
 
 
-def _transport_mask(log: StateLog, idx: int) -> np.ndarray:
-    """Steps from grasp to release of object ``idx``: the per-step held label,
-    with gaps shorter than TRANSPORT_GAP_FILL_S between held runs filled when
-    no other object is held during the gap."""
+LIFT_OFF_M = 0.005   # above its resting height and touching no support
+
+
+def _support_steps(log: StateLog, oid: str) -> np.ndarray:
+    """Steps at which object ``oid`` touches a support: the table, a tray or
+    another movable object."""
+    out = np.zeros(log.n, bool)
+    objs = set(log.object_ids)
+    for c in log.contacts:
+        for me, other in ((c.object_id, c.other), (c.other, c.object_id)):
+            if me == oid and (other == "table" or other.startswith("tray:") or (other in objs and other != oid)):
+                if 0 <= c.step < log.n:
+                    out[c.step] = True
+    return out
+
+
+def _held_mask(log: StateLog, idx: int) -> np.ndarray:
     held = np.asarray(log.held)
     m = held == idx
     runs = _intervals(m)
@@ -111,6 +124,25 @@ def _transport_mask(log: StateLog, idx: int) -> np.ndarray:
         if log.t[s1] - log.t[e0] <= TRANSPORT_GAP_FILL_S and not np.any((held[gap] >= 0) & (held[gap] != idx)):
             m[gap] = True
     return m
+
+
+def _transport_mask(log: StateLog, idx: int, *, with_lift: bool = True) -> np.ndarray:
+    """Steps from grasp to release of object ``idx``.
+
+    Primary signal: the executor's per-step held label, with gaps shorter
+    than TRANSPORT_GAP_FILL_S filled when no other object is held. Between the
+    first and last held step, steps where the object is lifted off (more than
+    LIFT_OFF_M above its resting height and touching no support) also count,
+    so a carry that the finger label misses is still checked."""
+    m = _held_mask(log, idx)
+    if not with_lift or not m.any() or log.n == 0:
+        return m
+    first, last = np.flatnonzero(m)[[0, -1]]
+    z = log.obj_pos[:, idx, 2]
+    lifted = (z > z[0] + LIFT_OFF_M) & ~_support_steps(log, log.object_ids[idx])
+    bracket = np.zeros(log.n, bool)
+    bracket[first:last + 1] = True
+    return m | (lifted & bracket)
 
 
 def _resolve(ctx: _Ctx, c: Constraint) -> list[str]:
@@ -342,6 +374,12 @@ def check(log: StateLog, spec: TaskSpec, scene: SceneState, *,
     else:
         status = "success"
 
+    for oid in log.object_ids:
+        k = log.index(oid)
+        extra = int((_transport_mask(log, k) & ~_held_mask(log, k)).sum())
+        if extra:
+            ctx.notes.append(f"{oid}: {extra} step(s) lifted off its support without the finger-contact "
+                             f"held label; counted as transport")
     notes = list(dict.fromkeys(ctx.notes))
     notes.append(f"required objects: {req}")
     for i in req:

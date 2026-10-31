@@ -27,10 +27,13 @@ def _scene_kinds(context: Optional[dict[str, Any]]) -> Optional[set[str]]:
     return None
 
 
+_LOCAL_KEYS = ("scene", "kind", "validation_layer")  # never sent to the model
+
+
 def _model_context(context: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
     if not context:
         return None
-    out = {k: v for k, v in context.items() if k not in ("scene", "kind") and v is not None}
+    out = {k: v for k, v in context.items() if k not in _LOCAL_KEYS and v is not None}
     return out or None
 
 
@@ -40,7 +43,9 @@ def compile_correction(spec: TaskSpec, text: str, client: Optional[LLMClient] = 
 
     ``context`` (all optional): ``scene`` (SceneState or dict) to detect objects
     that are not present, ``focus_kind`` for the object currently selected in
-    the interface, ``kind`` for the record kind.
+    the interface, ``kind`` for the record kind, ``validation_layer`` (default
+    True) to run the deterministic checks of mirror.interpret.guard after the
+    interpreter.
 
     Raises NeedsClarification (ambiguous referent, unknown object,
     contradiction) with a question to show the user, CorrectionRejected when the
@@ -54,6 +59,7 @@ def compile_correction(spec: TaskSpec, text: str, client: Optional[LLMClient] = 
     if client is None or client.offline:
         draft = compile_offline(spec, text, context)
         ops = correction_to_ops(draft, spec, text, scene_kinds)
+        _validation_layer(spec, text, context)
         return apply_ops(spec, ops, text=text, kind=kind, model=OFFLINE_LABEL)
 
     def validate(d: CorrectionDraft) -> list[str]:
@@ -69,4 +75,16 @@ def compile_correction(spec: TaskSpec, text: str, client: Optional[LLMClient] = 
         correct_messages(spec, text, sorted(scene_kinds) if scene_kinds else None, _model_context(context)),
         CorrectionDraft, name="compile_correction", validate=validate)
     ops = correction_to_ops(res.data, spec, text, scene_kinds)
+    _validation_layer(spec, text, context)
     return apply_ops(spec, ops, text=text, kind=kind, model=res.model)
+
+
+def _validation_layer(spec: TaskSpec, text: str, context: Optional[dict[str, Any]]) -> None:
+    """Deterministic checks after the interpreter, before anything is applied."""
+    if context and context.get("validation_layer") is False:
+        return
+    from mirror.interpret.guard import absent_object_question
+    scene = (context or {}).get("scene")
+    q = absent_object_question(text, spec, scene if isinstance(scene, SceneState) else None)
+    if q is not None:
+        raise q

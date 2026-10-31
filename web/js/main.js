@@ -5,7 +5,7 @@ import htm from 'htm';
 import * as api from './api.js';
 import { Viewer } from './viewer.js';
 import { fmtT, statusLabel, sceneLabel, latest, cupOutcome, isAux, isBlockedScene } from './util.js';
-import { PANELS, STEPS, stepState, correctionVersion } from './panels.js';
+import { PANELS, STEPS, stepState, correctionVersion, StoryBar, AboutPanel } from './panels.js';
 
 const html = htm.bind(h);
 
@@ -43,6 +43,9 @@ function App() {
   const [busy, setBusy] = useState({});          // action key -> job
   const [tool, setTool] = useState(null);        // scene edit tool: 'drag' | 'obstacle'
   const [opts, setOpts] = useState({ labels: true, trace: true, ghost: true });
+  const [story, setStory] = useState(localStorage.getItem('mirror-story') !== 'off');
+  const [about, setAbout] = useState(false);
+  const toggleStory = (on) => { localStorage.setItem('mirror-story', on ? 'on' : 'off'); setStory(on); };
   const viewerRef = useRef(null);
 
   // Start with the reference demonstration loaded.
@@ -101,11 +104,12 @@ function App() {
   }
 
   const cur = step || 'watch';
+  if (api.isStatic && snap) api.prefetch(prefetchFor(snap, cur));
   const sstate = stepState(snap);
   const display = chooseDisplay(snap, cur, pick, tool);
   const ctx = {
     snap, step: cur, setStep: (s) => { setStep(s); setPick(null); setTool(null); }, pick, setPick, busy: busyLive, action,
-    tool, setTool, viewer: viewerRef, display, isStatic: api.isStatic, error, setError,
+    tool, setTool, viewer: viewerRef, display, isStatic: api.isStatic, error, setError, story, toggleStory,
   };
   const Panel = PANELS[cur];
 
@@ -117,17 +121,21 @@ function App() {
           ${STEPS.map((s, i) => html`
             <button aria-current=${cur === s.key ? 'step' : null} class=${sstate[s.key]?.done ? 'done' : ''}
               disabled=${!sstate[s.key]?.enabled} onClick=${() => ctx.setStep(s.key)}
-              title=${s.title}><span class="ix">${i + 1}</span>${s.short}</button>`)}
+              title=${s.title} aria-label=${`Step ${i + 1}: ${s.short}`}><span class="ix" aria-hidden="true">${i + 1}</span>${s.short}</button>`)}
         </nav>
         <div class="top-right">
           <span class=${'badge ' + (api.isStatic ? '' : snap.mode)}
             title=${modeTitle(snap)}>${api.isStatic ? 'recorded session' : snap.mode === 'live' ? 'live simulation' : 'fixture data'}</span>
+          ${!story ? html`<button class="iconbtn" onClick=${() => toggleStory(true)} title="Show the guided story">Story</button>` : ''}
+          <button class="iconbtn" aria-expanded=${about} onClick=${() => setAbout(!about)}>About</button>
           <button class="iconbtn" onClick=${toggleTheme} aria-label=${'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme'}>${theme === 'dark' ? Icon.sun : Icon.moon}</button>
         </div>
       </header>
       <div class="banner" role="status">${snap.mode === 'fixture' ? html`<b>Fixture data.</b> ${(snap.missing_packages || []).length
         ? `The simulator packages are not available (${snap.missing_packages.slice(0, 3).join(', ')}${snap.missing_packages.length > 3 ? ', …' : ''}), so`
         : 'The studio was started on fixtures, so'} motion here is key-framed for interface development. It is not evidence.` : ''}</div>
+      ${story ? html`<${StoryBar} ctx=${ctx} />` : ''}
+      ${about ? html`<${AboutPanel} ctx=${ctx} onClose=${() => setAbout(false)} />` : ''}
       <main class="main">
         <${Stage} ctx=${ctx} viewerRef=${viewerRef} opts=${opts} setOpts=${setOpts} />
         <aside class="panel" aria-label="Step details">
@@ -136,6 +144,20 @@ function App() {
         </aside>
       </main>
     </div>`;
+}
+
+// The rollouts the next steps will show, fetched while the reader looks at this one.
+function prefetchFor(snap, step) {
+  const rs = snap.rollouts || [];
+  const pick = (f) => { const r = latest(rs, f); return r?.id; };
+  return {
+    watch: [pick((r) => r.tags.includes('run'))],
+    interpret: [pick((r) => r.tags.includes('run'))],
+    run: [pick((r) => r.tags.includes('world'))],
+    world: [pick((r) => r.tags.includes('corrected')), pick((r) => r.tags.includes('world'))],
+    correct: [],
+    evidence: [],
+  }[step] || [];
 }
 
 function modeTitle(snap) {
@@ -173,12 +195,26 @@ export function chooseDisplay(snap, step, pick, tool) {
     return { ...res, sub: sceneId === demoScene ? 'Change the layout, then replan' : 'Not yet run in this layout' };
   }
   if (step === 'correct') {
-    const after = cv ? latest(rs, (x) => x.spec_version >= cv && x.scene_id === sceneId && !isAux(x)) : null;
+    const after = cv ? (latest(rs, (x) => x.spec_version >= cv && x.scene_id === sceneId && !isAux(x) && x.has_frames)
+      || latest(rs, (x) => x.spec_version >= cv && x.tags.includes('corrected') && x.has_frames)) : null;
     if (after) return asRollout(after, ghostFor(snap, after));
     const before = latest(rs, (x) => x.scene_id === sceneId && !isAux(x)) || latest(rs, (x) => !isAux(x));
     return before ? asRollout(before) : res;
   }
   if (step === 'evidence') {
+    if (isBlockedScene(sceneId)) {
+      const rb = latest(rs, (x) => x.scene_id === sceneId && !isAux(x));
+      if (rb) return asRollout(rb);
+    }
+    // Feature a fresh layout where the original behaviour breaks the corrected rule.
+    const evs = snap.evaluation?.strata ? Object.values(snap.evaluation.strata) : snap.evaluation ? [snap.evaluation] : [];
+    for (const ev of evs) {
+      if (!ev?.trials || !ev.studio) continue;
+      const t = ev.trials.find((x) => x.a?.corrected_violations?.length);
+      const ids = t && ev.studio.rollout_ids?.[String(t.seed)];
+      const b = ids && rs.find((x) => x.id === ids.b && x.has_frames);
+      if (b) return asRollout(b, ghostFor(snap, b), `seed ${t.seed} · corrected v${b.spec_version} · ${statusLabel(b.report)}`);
+    }
     const r = latest(rs, (x) => x.scene_id === sceneId && !isAux(x));
     if (r && (isBlockedScene(sceneId) || r.tags.includes('blocked'))) return asRollout(r);
     return res;
@@ -214,6 +250,10 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
   const [speed, setSpeed] = useState(1);
   const [payload, setPayload] = useState(null);
   const [loadErr, setLoadErr] = useState(null);
+  const [loading, setLoading] = useState(null);
+  useEffect(() => api.onRolloutProgress((id, got, total) => {
+    setLoading(got < 0 ? null : { id, got, total });
+  }), []);
   const { snap, display, tool } = ctx;
 
   useEffect(() => {
@@ -266,7 +306,7 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
         if (!p.t || !p.t.length) {
           setPayload(p);
           v.showScene(p.visual || snap.scene_visual, p.scene || snap.scene);
-          setDur(0);
+          setDur(0); setT(0);
           return;
         }
         v.loadRollout(p, { ghost: g, sceneState: p.scene || (display.kind === 'demo' ? snap.demo?.scene : null) });
@@ -315,8 +355,10 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
             <button class="iconbtn" aria-pressed=${opts.labels} onClick=${() => setOpts({ ...opts, labels: !opts.labels })}>Labels</button>
           </div>
         </div>
-        ${display.kind !== 'scene' && payload && !payload.t?.length ? html`<div class="v-empty">${report?.plan_status === 'no_plan' ? 'No plan: nothing was executed.' : 'Nothing was executed.'}</div>` : ''}
+        ${display.kind !== 'scene' && payload && !payload.t?.length ? html`<div class="v-empty"><span class="v-note">${report?.plan_status === 'no_plan' ? 'No plan: nothing was executed.' : 'Nothing was executed.'}</span></div>` : ''}
         ${loadErr ? html`<div class="v-empty err">${loadErr}</div>` : ''}
+        ${loading ? html`<div class="v-loading" role="status">Loading recorded rollout ${loading.total ? `${Math.round((100 * loading.got) / loading.total)}%` : `${(loading.got / 1e6).toFixed(1)} MB`}
+          <div class="progress"><div style=${`width:${loading.total ? (100 * loading.got) / loading.total : 30}%`}></div></div></div>` : ''}
         ${payload?.t?.length ? html`<div class="v-legend">
           <span><i class="grad"></i>container path by tilt: within ${15}° → over</span>
           ${ghostOn && opts.ghost ? html`<span><i style="background:var(--faint)"></i>${ghostText(snap, display.ghost)}</span>` : ''}

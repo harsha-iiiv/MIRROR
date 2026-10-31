@@ -37,6 +37,7 @@ class Session:
     specs: list[TaskSpec] = field(default_factory=list)
     rollouts: dict[str, RolloutEntry] = field(default_factory=dict)
     clarification: Any = None
+    clarification_candidates: list = field(default_factory=list)
     events: list[dict] = field(default_factory=list)
 
     # ------------------------------------------------------------ helpers
@@ -121,6 +122,7 @@ class Session:
         # Ask for several distinct behaviours: with only two, both may differ
         # in an object the user does not care about.
         candidates = candidate_plans(self.spec, self.scene, k=4)
+        self.clarification_candidates = candidates
         self.clarification = make_clarification(self.spec, self.scene, candidates,
                                                 focus_kind=focus_kind)
         self._event("clarification", n_candidates=len(candidates))

@@ -116,6 +116,9 @@ class Envelope:
     @property
     def reach(self) -> float:
         """Largest distance from the TCP to any point of the envelope."""
+        cached = self.__dict__.get("_reach")
+        if cached is not None:
+            return cached
         r = 0.0
         for b in self.boxes:
             for sx in (-1, 1):
@@ -123,6 +126,7 @@ class Envelope:
                     for sz in (-1, 1):
                         p = b.c + b.R @ (b.h * np.array([sx, sy, sz]))
                         r = max(r, float(np.linalg.norm(p)))
+        self.__dict__["_reach"] = r
         return r
 
     def vertical_extent(self, R: np.ndarray) -> tuple[float, float]:
@@ -229,13 +233,19 @@ def check_poses(world: World, env: Envelope, pos: np.ndarray, rots: np.ndarray,
         first = Hit(int(bad_g[0] // E), "table")
     if world.boxes:
         oc, oR, oh = world.stacked(margin)
-        ov = sat_overlap(wc, wR, wh, oc, oR, oh)
-        rows = np.nonzero(ov.any(axis=1))[0]
-        if len(rows):
-            s = int(rows[0] // E)
-            if first is None or s < first.index:
-                j = int(np.nonzero(ov[rows[0]])[0][0])
-                first = Hit(s, world.boxes[j].name)
+        # broad phase: obstacle AABBs against the AABB of all sampled envelope boxes
+        oext = np.einsum("qij,qj->qi", np.abs(oR), oh)
+        wext = np.einsum("nij,nj->ni", np.abs(wR), wh)
+        lo, hi = (wc - wext).min(axis=0), (wc + wext).max(axis=0)
+        keep = np.nonzero(np.all(oc + oext >= lo, axis=1) & np.all(oc - oext <= hi, axis=1))[0]
+        if len(keep):
+            ov = sat_overlap(wc, wR, wh, oc[keep], oR[keep], oh[keep])
+            rows = np.nonzero(ov.any(axis=1))[0]
+            if len(rows):
+                s = int(rows[0] // E)
+                if first is None or s < first.index:
+                    j = int(keep[np.nonzero(ov[rows[0]])[0][0]])
+                    first = Hit(s, world.boxes[j].name)
     return first
 
 

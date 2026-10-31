@@ -40,24 +40,28 @@ def select(sel: ObjectSelector, scene: SceneState, roles: dict[str, list[str]]) 
 def ground(spec: TaskSpec, scene: SceneState) -> Grounding:
     """Resolve roles and selectors to scene instance ids.
 
-    Roles bind to scene objects of the binding's kind in id order. A goal
-    target names a tray role; with a single tray (or a target equal to a tray
-    id) it binds directly. Goals that are rejected are ignored; proposed and
-    confirmed goals define what must be packed.
+    A role covers every scene object of the kind(s) bound to it, and a
+    selector covers every object matching it (ObjectBinding.count is
+    descriptive only). A required binding with no matching object is an
+    error. A goal target names a tray role; with a single tray (or a target
+    equal to a tray id) it binds directly. Goals that are rejected are
+    ignored; proposed and confirmed goals define what must be packed.
     """
     g = Grounding()
     by_kind: dict[str, list[str]] = {}
     for o in sorted(scene.objects, key=lambda o: o.id):
         by_kind.setdefault(o.kind, []).append(o.id)
-    used: set[str] = set()
     for b in spec.bindings:
-        avail = [i for i in by_kind.get(b.kind, []) if i not in used]
-        if len(avail) < b.count:
-            msg = f"role {b.role!r} needs {b.count} {b.kind}(s), scene has {len(avail)} available"
+        ids = by_kind.get(b.kind, [])
+        if not ids:
+            msg = f"role {b.role!r} needs a {b.kind}; the scene has none"
             (g.errors if b.required else g.warnings).append(msg)
-        chosen = avail[: b.count]
-        g.roles.setdefault(b.role, []).extend(chosen)
-        used.update(chosen)
+        cur = g.roles.setdefault(b.role, [])
+        cur.extend(i for i in ids if i not in cur)
+        cur.sort()
+        if b.count != len(ids) and ids:
+            g.warnings.append(f"role {b.role!r}: binding count {b.count} is descriptive; "
+                              f"{len(ids)} {b.kind}(s) in the scene are covered")
     tray_ids = sorted(t.id for t in scene.trays)
     pack: list[str] = []
     for goal in spec.goals:

@@ -240,7 +240,27 @@ def cmd_interpret(args, out: Out) -> int:
     trace = load_demo(args.demo)
     info = out if not args.json else Out(sys.stderr)
     session = make_session(trace, info)
-    spec = with_fallback(session, session.interpret, info)
+    frames = None
+    if args.keyframes_dir:
+        from mirror.interpret.keyframes import load_keyframes
+        frames = load_keyframes(Path(args.keyframes_dir))
+    elif args.keyframes:
+        from mirror.interpret.keyframes import render_keyframes
+        frames = render_keyframes(trace, n=args.keyframes)
+    if frames:
+        info(f"Attached {len(frames)} rendered simulator frames (not real video): "
+             + ", ".join(f"t={k.t:g} s {k.label}" for k in frames))
+        if session.client.offline:
+            info("  (the offline rules do not use images)")
+
+        def step():
+            from mirror.interpret import propose_spec
+            spec = propose_spec(trace, session.client, keyframes=frames)
+            session.specs = [spec]
+            return spec
+        spec = with_fallback(session, step, info)
+    else:
+        spec = with_fallback(session, session.interpret, info)
     if args.json:
         out(spec.model_dump_json(indent=1))
     else:
@@ -455,6 +475,9 @@ def build_parser() -> argparse.ArgumentParser:
     i = sub.add_parser("interpret", help="proposed task specification")
     i.add_argument("--demo", help="demonstration JSON (.json or .json.gz)")
     i.add_argument("--json", action="store_true", help="print the specification as JSON")
+    i.add_argument("--keyframes", type=int, default=0,
+                   help="attach N rendered simulator frames of the demonstration to the prompt (off by default)")
+    i.add_argument("--keyframes-dir", help="attach previously saved keyframes (index.json + PNGs)")
     i.set_defaults(func=cmd_interpret)
 
     r = sub.add_parser("run", help="plan, execute and check one scene")

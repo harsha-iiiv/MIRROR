@@ -110,10 +110,13 @@ def test_evaluation_and_clarification(client):
     assert j["result"]["version"] == 2
     assert c.get("/api/state").json()["clarification"] is None
     assert c.post("/api/evaluate", json={"seeds": []}).status_code == 422
-    j = wait(c, c.post("/api/evaluate", json={"seeds": [10000, 10001]}).json())
+    assert c.post("/api/evaluate", json={"seeds": [9000], "split": "eval"}).status_code == 403
+    assert c.post("/api/evaluate", json={"seeds": [10000]}).status_code == 403
+    assert c.post("/api/evaluate", json={"seeds": [30000]}).status_code == 403
+    j = wait(c, c.post("/api/evaluate", json={"seeds": [9000, 9001]}).json())
     assert j["status"] == "done"
     ev = c.get("/api/state").json()["evaluation"]
-    assert [p["seed"] for p in ev["pairs"]] == [10000, 10001]
+    assert [p["seed"] for p in ev["pairs"]] == [9000, 9001]
 
 
 def test_websocket_announces_state_changes(client):

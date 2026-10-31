@@ -1,0 +1,524 @@
+{
+ "description": "Held-out correction cases, written after the offline rules were fixed on the frozen set and before any interpreter was run on these. Same base specification, scene, gold format and policy as cases.json.",
+ "policy": [
+  "An orientation requirement with no stated phase applies while carried (transport).",
+  "'At all times' / 'never' without a carrying phrase means phase 'always'.",
+  "Relaxing a rule with no stated phase relaxes every phase of it for that object.",
+  "A rule applies to every object only when the text says all / every.",
+  "A contact rule with no stated phase applies while carried."
+ ],
+ "frozen_at": "2026-10-31T04:45:00-07:00",
+ "cases": [
+  {
+   "id": "hp01",
+   "category": "paraphrase",
+   "text": "Please make sure the cup stays upright as you move it over to the tray.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hp02",
+   "category": "paraphrase",
+   "text": "No tipping the container while it's in the gripper.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hp03",
+   "category": "paraphrase",
+   "text": "When you carry the cup, its opening has to face up the entire way.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hp04",
+   "category": "paraphrase",
+   "text": "You tilted the cup and the beads fell out; it has to stay level while moving.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hp05",
+   "category": "paraphrase",
+   "text": "Upright during transport too, for the cup, not merely at the end.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hs01",
+   "category": "scope",
+   "text": "The pen should stay vertical while you carry it, the cup too.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_marker",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hs02",
+   "category": "scope",
+   "text": "I only care about the cup staying upright when it is carried; tilt the others as you like.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hs03",
+   "category": "scope",
+   "text": "Keep the cube level while carrying it.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_block",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hs04",
+   "category": "scope",
+   "text": "All three objects have to stay upright at all times.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_always_all",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hh01",
+   "category": "phase",
+   "text": "The marker has to be standing upright once it is in the tray.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_final_marker",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hh02",
+   "category": "phase",
+   "text": "The block must stay upright the whole time, from start to finish.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_always_block",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hh03",
+   "category": "phase",
+   "text": "For the cup, being upright only matters at the end.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "ht01",
+   "category": "tolerance",
+   "text": "A tilt of up to 25 degrees is acceptable for the cup while you carry it, but not more.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 25.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "ht02",
+   "category": "tolerance",
+   "text": "During transport the cup must not lean more than 8 degrees.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 8.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "ht03",
+   "category": "tolerance",
+   "text": "Relax the cup's final upright tolerance to 40 degrees.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 40.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hn01",
+   "category": "negation",
+   "text": "The cup can end up on its side in the tray, that's fine.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hn02",
+   "category": "negation",
+   "text": "Forget about keeping the marker upright.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hn03",
+   "category": "negation",
+   "text": "Pack the objects in whatever order you like.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "ho01",
+   "category": "ordering",
+   "text": "The marker should go into the tray before the block.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [
+     "o_marker_before_block"
+    ],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "hc01",
+   "category": "contact",
+   "text": "Avoid bumping the cup into the wall while carrying it.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_forbidden_contact_transport_cup",
+      "params": {
+       "with": [
+        "obstacle"
+       ]
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "ha01",
+   "category": "ambiguous",
+   "text": "Don't let it tip over.",
+   "gold": {
+    "outcome": "asks"
+   }
+  },
+  {
+   "id": "ha02",
+   "category": "ambiguous",
+   "text": "That thing has to stay upright while carried.",
+   "gold": {
+    "outcome": "asks"
+   }
+  },
+  {
+   "id": "ha03",
+   "category": "contradiction",
+   "text": "Keep the marker upright while carrying it, but the marker doesn't need to be upright while carried.",
+   "gold": {
+    "outcome": "asks"
+   }
+  },
+  {
+   "id": "hx01",
+   "category": "absent",
+   "text": "The jar must not be tilted.",
+   "gold": {
+    "outcome": "asks"
+   }
+  },
+  {
+   "id": "hx02",
+   "category": "absent",
+   "text": "Pack the phone before the cup.",
+   "gold": {
+    "outcome": "asks"
+   }
+  },
+  {
+   "id": "hu01",
+   "category": "unsupported",
+   "text": "Take a photo of the tray when you are done.",
+   "gold": {
+    "outcome": "rejects"
+   }
+  },
+  {
+   "id": "hu02",
+   "category": "unsupported",
+   "text": "Grip harder.",
+   "gold": {
+    "outcome": "rejects"
+   }
+  },
+  {
+   "id": "hu03",
+   "category": "unsupported",
+   "text": "Wait five seconds before starting.",
+   "gold": {
+    "outcome": "rejects"
+   }
+  }
+ ]
+}

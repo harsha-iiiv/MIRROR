@@ -13,7 +13,7 @@ from mirror.interpret.types import DemoSummary
 
 VOCABULARY = """\
 Task family: packing a kit of rigid objects into a destination tray on a table.
-Objects: cup (open-top container that may hold loose beads), block, marker (standing cylinder).
+Objects: cup (open-top vessel that may hold loose beads), block, marker (standing cylinder).
 Goal type: an object ends at rest inside the destination tray.
 Rule types:
   upright: the object's axis stays within max_tilt_deg of vertical (default 15).
@@ -33,16 +33,17 @@ raw video. Propose a task specification that a human will review.
 Rules:
 1. Separate evidence from inference. shown_by_demo cites measured values from the
    input; assumption states what you are inferring beyond them.
-2. A consistent behaviour is not automatically a requirement. It may be incidental:
-   a route forced by where the wall is, or an order that was simply convenient.
+2. A consistent behaviour is not automatically a requirement. It may be incidental,
+   for example forced by the layout or merely convenient.
 3. Every regularity (R1, R2, ...) must either appear in regularity_ids of an object,
    rule or ordering, or be listed in dismissed with a reason.
 4. Propose only rules the demonstration itself satisfies, and only where the
    behaviour plausibly matters for the objects involved. Do not turn an observed
-   margin into a rule (for example a clearance equal to the closest distance the
-   demonstration happened to keep); dismiss it with a reason instead.
+   margin into a rule; dismiss it with a reason instead.
 5. Each proposed rule and ordering gets one short, concrete question the human can
-   answer with "required" or "incidental", and your lean.
+   answer with "required" or "incidental", and your lean. If the lean rests on the
+   scene inventory (what an object contains) rather than on the demonstration, say
+   so in assumption.
 6. include_in_task is true only for objects that ended inside the tray.
 7. Do not invent objects, coordinates, routes or robot commands. Use null for
    parameters that do not apply to a rule type.
@@ -67,19 +68,35 @@ Actions:
 Rules:
 1. Scope: apply each change only to the objects the person names. Use
    object_kind null (every object) only if they explicitly say all or every.
-2. Resolve references from the text and context ("this container" is the cup).
-   If a pronoun or description could mean more than one object in the task and the
+2. Resolve each description to an object kind in the scene by its meaning. If a
+   pronoun or description could mean more than one object in the task and the
    context does not settle it, use outcome "clarify" with a question and options.
-3. If the person mentions an object that is not in the scene, use outcome "clarify"
-   and ask which object they meant.
+3. If the person names an object that is not in the scene (a different object, not
+   another description of one that is), use outcome "clarify" and ask which object
+   they meant; never substitute a scene object for it.
 4. If the correction contradicts itself, use outcome "clarify".
 5. If it is not about goals, orientation, contact, clearance or ordering, use
    outcome "reject" and explain in interpretation.
-6. Keep existing rules unless the person changes them. "Not just at the destination"
-   keeps the destination rule and adds the transport rule.
-7. If an orientation requirement has no stated phase, use transport.
+6. Keep existing rules unless the person changes them. A correction that adds a
+   phase keeps the rules already in place for other phases.
+7. If an orientation or contact requirement states no phase, use transport.
 8. Never output coordinates or robot commands. Use null for fields that do not apply.
 9. interpretation restates, in one sentence, what you understood."""
+
+
+# Illustrative phrases that appear in the prompts above. The correction benchmark
+# tags cases that share wording with them (scripts/bench_corrections.py).
+EXAMPLE_PHRASES = (
+    "open-top vessel that may hold loose beads",
+    "forced by the layout", "merely convenient", "an observed margin",
+    "what an object contains", "a correction that adds a phase",
+    "if an orientation or contact requirement states no phase, use transport",
+)
+
+# 1: original prompts; 2: neutral examples, contact rules default to transport;
+# 3: revision 2 with the object-resolution rule reworded (revision 2 led the model to
+#    map objects absent from the scene onto the cup).
+PROMPT_REVISION = "3"
 
 
 def scene_inventory(scene: SceneState) -> dict[str, Any]:
@@ -111,11 +128,23 @@ def summary_payload(summary: DemoSummary) -> dict[str, Any]:
             "notes": summary.notes}
 
 
-def propose_messages(summary: DemoSummary, scene: SceneState) -> list[dict[str, str]]:
+KEYFRAMES_NOTE = """
+
+The input also includes a few images. They are frames rendered by the simulator
+from the recorded demonstration, not real video or camera footage. Use them to
+understand the scene layout; the measurements are authoritative, and every
+statement in shown_by_demo must be supported by the measurements."""
+
+
+def propose_messages(summary: DemoSummary, scene: SceneState,
+                     keyframes: Optional[list] = None) -> list[dict[str, Any]]:
     payload = {"scene": scene_inventory(scene), "demonstration": summary_payload(summary)}
-    return [{"role": "system", "content": PROPOSE_SYSTEM},
-            {"role": "user", "content": "Propose the task specification for this demonstration.\n"
-                                        + json.dumps(payload, indent=1, sort_keys=True)}]
+    text = "Propose the task specification for this demonstration.\n" + json.dumps(payload, indent=1, sort_keys=True)
+    if not keyframes:
+        return [{"role": "system", "content": PROPOSE_SYSTEM}, {"role": "user", "content": text}]
+    from mirror.interpret.keyframes import image_parts
+    return [{"role": "system", "content": PROPOSE_SYSTEM + KEYFRAMES_NOTE},
+            {"role": "user", "content": [{"type": "text", "text": text}] + image_parts(keyframes)}]
 
 
 def spec_view(spec: TaskSpec) -> dict[str, Any]:

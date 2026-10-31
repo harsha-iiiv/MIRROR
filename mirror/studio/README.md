@@ -28,8 +28,8 @@ fresh temporary folder).
 ## Static site
 
 ```bash
-python scripts/export_static.py --out site --seeds 8              # runs the reference story live
-python scripts/export_static.py --out site --evaluation results/final   # reuse a saved evaluation report
+python scripts/export_static.py --out site                        # reference story live + showcase run on dev seeds 9000-9007
+python scripts/export_static.py --out site --evaluation results/eval/final   # load the pre-registered results instead
 ```
 
 The folder works on any static host (GitHub Pages included): `config.js` switches
@@ -51,11 +51,20 @@ backend, interpreter, code hash and every step's outcome.
 | POST | `/api/correct` | job: compile a correction; recorded rollouts are re-checked under the new version |
 | POST | `/api/recheck` | re-check one rollout under a version |
 | POST | `/api/clarify`, `/api/clarify/answer` | job: two candidate behaviours, executed; answer → new version |
-| POST | `/api/evaluate` | job: freeze, then paired evaluation on fresh layouts |
+| POST | `/api/evaluate` | job: showcase paired run, development split, seeds 9000-9099 only (anything else is refused with 403) |
 | POST | `/api/teleop/start\|finish\|cancel` | keyboard teleoperation (live only); steps over the websocket |
 | WS | `/ws` | `state` revisions, `job` progress, `teleop` commands and frames |
 
 Long operations run one at a time in a worker thread and report progress.
+
+## Evaluation fence
+
+The studio never generates evaluation-split layouts. Its own paired runs use the
+showcase development seeds 9000-9099 and are labelled as such. Pre-registered
+results (a single paired report, or the final report with one folder per
+stratum) are only loaded, through `--evaluation` or `StudioService.load_evaluation`;
+their maps are sketched from each recorded rollout's own geometry instead of
+regenerating layouts. A rehearsal report is labelled as a rehearsal.
 
 ## What the views show, and what they do not
 
@@ -68,6 +77,10 @@ Long operations run one at a time in a worker thread and report progress.
   drawn while a trace plays.
 * Tall static walls are drawn translucent so the gripper stays visible.
 * Minimaps in the evidence grid are downsampled container paths (about 90 points).
+  For loaded reports the map itself is a sketch rebuilt from the rollout's geometry.
+* The before/after chart plots the container's tilt from the recorded frames
+  (about 200 samples per run); the numbers beside it come from the checker's report.
+* The static site stores poses at 1 mm and 0.001 quaternion resolution.
 * Before any rollout exists, a layout preview places objects at their initial poses
   and hides beads.
 * The fixture backend's motion and bead spill are key-framed, not simulated.

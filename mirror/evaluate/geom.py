@@ -180,3 +180,10 @@ def wall_normal_axis(obs: ObstacleSpec) -> int:
 
 def objects_by_id(scene: SceneState) -> dict[str, ObjectSpec]:
     return {o.id: o for o in scene.objects}
+
+
+def tilt_of(quat) -> float:
+    """Tilt in degrees of a single (w, x, y, z) quaternion."""
+    w, x, y, z = (float(c) for c in quat)
+    zz = 1.0 - 2.0 * (x * x + y * y)
+    return math.degrees(math.acos(max(-1.0, min(1.0, zz))))

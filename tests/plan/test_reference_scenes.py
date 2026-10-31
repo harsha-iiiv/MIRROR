@@ -107,3 +107,15 @@ def test_plans_are_geometrically_valid(scene, spec):
             assert abs(y - tray.pose.pos[1]) < tray.inner_half[1]
             q = st.waypoints[0].quat
             assert abs(q[1]) < 1e-6 and abs(q[2]) < 1e-6  # gripper vertical at release
+
+
+def test_rejection_reasons_name_only_decisive_blockers():
+    r = cached_plan("blocked", "corr")
+    for ro in r.routes:
+        reason = ro.rejected_reason or ""
+        for oid in ("cup_0", "block_0", "marker_0"):
+            assert f"blocked by {oid}" not in reason and f", {oid}" not in reason, (ro.label, reason)
+    cup = {ro.label: ro.rejected_reason for ro in r.routes if ro.object_id == "cup_0"}
+    assert cup["direct"].endswith("(blocked by obstacle:wall_0)")
+    assert "beyond the workspace limit" in cup["around:wall_0:+y"]
+    assert "beyond the workspace limit" in cup["around:wall_0:-y"]

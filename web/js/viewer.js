@@ -180,8 +180,8 @@ export class Viewer {
     for (const b of visual.bodies) {
       const grp = new THREE.Group();
       grp.name = b.name;
-      const isTable = b.static && /table|floor|ground/i.test(b.name);
       for (const g of b.geoms) {
+        const isTable = b.static && (/table|floor|ground/i.test(b.name) || /table|floor|ground/i.test(g.name || ''));
         let mat;
         if (isTable) {
           this.tableMat = this.tableMat || new THREE.MeshStandardMaterial({ roughness: 0.95 });
@@ -198,6 +198,7 @@ export class Viewer {
         const m = geomMesh(g, mat);
         if (m) {
           grp.add(m);
+          if (isTable) this._addGrid(grp);
           if (b.static && !isTable && g.type === 'box') {
             this.edgeMat = this.edgeMat || new THREE.LineBasicMaterial({ transparent: true, opacity: 0.55 });
             this.edgeMat.color.set(cssVar('--muted') || '#6b6b70');
@@ -208,7 +209,6 @@ export class Viewer {
           if (wallLike(b, g, trayIds)) m.castShadow = false;
         }
       }
-      if (isTable) this._addGrid(grp);
       if (trayIds.has(b.name)) grp.userData.editable = { kind: 'tray', id: b.name };
       if (objIds.has(b.name)) grp.userData.editable = { kind: 'object', id: b.name };
       if (this.showLabels && (trayIds.has(b.name) || objIds.has(b.name))) {
@@ -254,6 +254,7 @@ export class Viewer {
 
   // Static preview of a scene (no rollout): objects at their initial poses.
   showScene(visual, sceneState) {
+    if (this.live) return;
     this.payload = null;
     this.ghost = null;
     this.playing = false;
@@ -281,12 +282,16 @@ export class Viewer {
 
   // Live teleoperation: show bodies from one frame ({name: [x,y,z,w,x,y,z]}).
   showLive(visual, sceneState, frame) {
+    this.live = true;
     this.payload = null; this.ghost = null; this.playing = false;
+    this.onTick(0, false);
     this.sceneState = sceneState;
     this._buildVisual(visual, sceneState);
     this._clearOverlay();
     if (frame) this.applyBodies(frame.bodies);
   }
+
+  endLive() { this.live = false; }
 
   applyBodies(bodies) {
     for (const [name, s] of Object.entries(bodies || {})) {
@@ -301,6 +306,7 @@ export class Viewer {
 
   // ---------------------------------------------------------- playback
   loadRollout(payload, { ghost = null, traceObject = null, sceneState = null, keepTime = false } = {}) {
+    if (this.live) return;
     this.payload = payload;
     this.ghost = ghost;
     this.sceneState = sceneState || payload.scene || this.sceneState;
@@ -340,7 +346,7 @@ export class Viewer {
       const grp = this.bodies.get(name);
       if (!grp) continue;
       const A = arr[i], B = arr[j] || A;
-      if (!A) { grp.visible = false; continue; }
+      if (!A) continue;
       if (!p.beads_hidden || !grp.userData.isBead) grp.visible = true;
       grp.position.set(A[0] + (B[0] - A[0]) * a, A[1] + (B[1] - A[1]) * a, A[2] + (B[2] - A[2]) * a);
       tmpA.set(A[4], A[5], A[6], A[3]);

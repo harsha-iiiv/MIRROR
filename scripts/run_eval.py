@@ -79,6 +79,8 @@ def main(argv=None) -> int:
                    help="write playback Rollout JSON (15 Hz) to <out>/rollouts/seed<k>_<condition>.json")
     p.add_argument("--rehearsal", action="store_true", help="freeze-final on development seeds")
     p.add_argument("--reference-specs", action="store_true", help="use the hand-written spec pair")
+    p.add_argument("--spec-source", default="replay", choices=["replay", "offline"],
+                   help="freeze-final: how the pre-registered specs are built (offline only for --rehearsal)")
     p.add_argument("--seeds", default="0-5")
     p.add_argument("--out", default=None)
     p.add_argument("--manifest", default=None)
@@ -113,7 +115,7 @@ def main(argv=None) -> int:
         if args.spec_a or args.spec_b or args.reference_specs:
             p.error("freeze-final uses the pre-registered specifications only")
         m = freeze_final(args.manifest, strata=rehearsal_strata() if args.rehearsal else None,
-                         kind="rehearsal" if args.rehearsal else "final",
+                         kind="rehearsal" if args.rehearsal else "final", spec_source=args.spec_source,
                          config={"workers": min(args.workers, 2), "max_sim_time": args.max_sim_time})
         for st in m.strata:
             print(f"  {st['name']:<9} {st['split']:<8} {st['family']:<9} {len(st['seeds'])} seeds")
@@ -158,6 +160,8 @@ def main(argv=None) -> int:
     if args.mode == "freeze":
         if not args.manifest:
             p.error("--manifest is required")
+        from mirror.evaluate.final import check_not_retired
+        check_not_retired([dict(split="eval", seeds=eval_seeds(seeds))])
         m = ev.freeze(spec_a, spec_b, eval_seeds(seeds), "eval", args.manifest,
                       config={"workers": min(args.workers, 2), "max_sim_time": args.max_sim_time},
                       family=args.family)

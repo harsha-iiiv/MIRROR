@@ -8,7 +8,7 @@ speaks the same protocol. Configuration comes from the environment:
   MODEL_API_KEY         bearer token (never written anywhere)
   MIRROR_LLM_MODE       live | record | replay | offline   (default: live if a
                         key is set, otherwise offline)
-  MIRROR_CASSETTE_DIR   default <repo>/data/cassettes
+  MIRROR_CASSETTE_DIR   default <repo>/data/cassettes (subdirectories are searched too)
   MIRROR_LLM_USAGE_LOG  optional JSON-lines file for per-call usage records
   MIRROR_LLM_TIMEOUT    seconds per request, default 90
 
@@ -320,8 +320,11 @@ class LLMClient:
 
     def _load_cassette(self, key: str) -> Optional[dict]:
         p = self._cassette_path(key)
-        if not p.exists():
-            return None
+        if not p.exists():  # recordings may be grouped one directory deeper
+            found = sorted(self.cassette_dir.glob(f"*/{p.name}"))
+            if not found:
+                return None
+            p = found[0]
         cas = json.loads(p.read_text(encoding="utf-8"))
         if cas.get("key") != key:
             return None
@@ -332,7 +335,7 @@ class LLMClient:
         self.cassette_dir.mkdir(parents=True, exist_ok=True)
         cas = {
             "key": key, "name": name,
-            "request": {"model": self.model, "messages": messages, "schema": schema},
+            "request": {"model": self.model, "messages": _compact_images(messages), "schema": schema},
             "response": {"content": result.content, "model": result.model, "usage": result.usage},
             "attempts": result.attempts, "format_used": result.format_used,
             "recorded_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -357,3 +360,23 @@ class LLMClient:
 
 class _FormatRejected(Exception):
     pass
+
+
+def _compact_images(messages: list[dict]) -> list[dict]:
+    """Replace inline image data with its hash for storage (the cassette key is
+    computed over the full request, so replay still needs the same images)."""
+    out = []
+    for m in messages:
+        c = m.get("content")
+        if isinstance(c, list):
+            parts = []
+            for p in c:
+                url = (p.get("image_url") or {}).get("url", "") if isinstance(p, dict) else ""
+                if url.startswith("data:"):
+                    head, _, data = url.partition(",")
+                    digest = hashlib.sha256(data.encode("ascii")).hexdigest()
+                    p = {"type": "image_url", "image_url": {"url": f"{head.split(';')[0]};sha256,{digest}"}}
+                parts.append(p)
+            m = {**m, "content": parts}
+        out.append(m)
+    return out

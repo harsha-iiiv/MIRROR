@@ -107,13 +107,20 @@ function routesText(r) {
 
 function NoPlan({ rep, plan }) {
   const inf = plan?.infeasibility;
-  const proven = inf && (inf.proven === true || inf.certificate || inf.kind === 'certificate');
-  return html`<div class=${'callout ' + (proven ? '' : '')} style="margin-bottom:8px">
+  const proven = !!(inf && (inf.proven === true || inf.certificate));
+  const reason = rep.plan_reason || plan?.reason || '';
+  const head = reason.split(/\s\[|;\s/)[0];
+  return html`<div class="callout" style="margin-bottom:8px">
     <b>${proven ? 'No valid plan exists (proven).' : 'The planner found no valid plan.'}</b>
-    <div>${rep.plan_reason || plan?.reason}</div>
-    ${inf ? html`<div class="muted" style="margin-top:4px">${proven ? 'Certificate' : 'Note'}: ${inf.detail || inf.reason || JSON.stringify(inf)}</div>`
-      : html`<div class="muted" style="margin-top:4px">This is not a proof that the layout is impossible.</div>`}
-    <div class="muted" style="margin-top:4px">The robot did not move. Nothing was executed rather than breaking the rule.</div>
+    ${inf?.statement ? html`<div style="margin-top:4px">${inf.statement}</div>` : html`<div style="margin-top:4px">${head}</div>`}
+    ${!proven ? html`<div class="muted" style="margin-top:4px">This is not a proof that the layout is impossible.</div>` : ''}
+    ${inf?.assumptions?.length ? html`<div class="muted" style="margin-top:6px">Assumes: ${inf.assumptions.join('; ')}.</div>` : ''}
+    ${inf?.not_covered?.length ? html`<div class="muted" style="margin-top:2px">Not covered: ${inf.not_covered.join('; ')}.</div>` : ''}
+    <div class="muted" style="margin-top:6px">The robot did not move: nothing was executed rather than breaking the rule.</div>
+    <details style="margin-top:6px"><summary class="muted" style="cursor:pointer">Planner detail</summary>
+      <div style="margin-top:4px;font-size:12px">${reason}</div>
+      ${inf ? html`<pre class="num" style="white-space:pre-wrap;font-size:11px;margin:6px 0 0">${JSON.stringify(inf.quantities || inf, null, 1)}</pre>` : ''}
+    </details>
   </div>`;
 }
 
@@ -131,7 +138,7 @@ function RoutesView({ plan }) {
 function RunButton({ ctx, label, tags = [], condition, spec_version = null, primary = true, busyKey = 'run' }) {
   const job = ctx.busy[busyKey];
   if (ctx.isStatic) return null;
-  return html`<button class=${'btn ' + (primary ? 'primary' : '')} disabled=${!!job || ctx.isStatic}
+  return html`<button class=${'btn ' + (primary && !ctx.story ? 'primary' : '')} disabled=${!!job || ctx.isStatic}
     title=${ctx.isStatic ? 'Needs the live studio' : ''}
     onClick=${() => ctx.action(busyKey, () => api.post('run', { spec_version, condition, tags })).then(() => ctx.setPick(null))}>${label}</button>`;
 }
@@ -194,6 +201,7 @@ function TeleopCard({ ctx, onDone }) {
     })();
     return () => {
       alive = false;
+      ctx.viewer.current?.endLive();
       clearInterval(timer);
       window.removeEventListener('keydown', onKey, true);
       window.removeEventListener('keyup', onKey, true);
@@ -209,8 +217,8 @@ function TeleopCard({ ctx, onDone }) {
       <span class="muted">${state.held ? 'holding ' + state.held : 'holding nothing'}</span></div>
     ${err ? html`<div class="err">${err}</div>` : ''}
     <div class="row" style="margin-top:10px">
-      <button class="btn primary" onClick=${async () => { await ctx.action('teleop', () => api.post('teleop/finish')); onDone(); }}>Use as the demonstration</button>
-      <button class="btn ghost" onClick=${async () => { await api.post('teleop/cancel'); onDone(); ctx.setPick('demo'); }}>Cancel</button>
+      <button class="btn primary" onClick=${async () => { ctx.viewer.current?.endLive(); await ctx.action('teleop', () => api.post('teleop/finish')); onDone(); }}>Use as the demonstration</button>
+      <button class="btn ghost" onClick=${async () => { ctx.viewer.current?.endLive(); await api.post('teleop/cancel'); onDone(); const pl = await api.getRollout('demo'); ctx.viewer.current?.loadRollout(pl, { sceneState: ctx.snap.demo?.scene }); }}>Cancel</button>
     </div></div>`;
 }
 
@@ -237,8 +245,8 @@ function WatchPanel({ ctx }) {
             aria-label=${`${e.type} ${e.object_id} at ${fmtT(e.t)}, jump`}><span class="t">${fmtT(e.t)}</span>
             <span>${cap(e.type)} <b>${e.object_id}</b></span></button></li>`)}</ol>
         <div class="row" style="margin-top:16px">
-          ${snap.specs.length && snap.specs[0].demo_id === d.demo_id ? html`<button class="btn primary" onClick=${() => ctx.setStep('interpret')}>See the interpretation</button>`
-            : html`<button class="btn primary" disabled=${!!ctx.busy.interpret || ctx.isStatic}
+          ${snap.specs.length && snap.specs[0].demo_id === d.demo_id ? html`<button class=${ctx.story ? 'btn' : 'btn primary'} onClick=${() => ctx.setStep('interpret')}>See the interpretation</button>`
+            : html`<button class=${ctx.story ? 'btn' : 'btn primary'} disabled=${!!ctx.busy.interpret || ctx.isStatic}
               onClick=${async () => { await ctx.action('interpret', () => api.post('interpret')); ctx.setStep('interpret'); }}>Interpret this demonstration</button>`}
         </div>
         <${JobLine} job=${ctx.busy.interpret} />
@@ -255,26 +263,32 @@ function WatchPanel({ ctx }) {
 
 function ItemRow({ id, title, sub, status, prov, staged, onSet, readonly }) {
   const eff = staged || status;
+  const label = (x) => (x === 'confirmed' ? 'enforced' : x);
   return html`<li>
     <div class="item-h">
       <div class="grow">
         <div class="item-title">${title}</div>
-        ${sub ? html`<div class="item-sub">${sub}</div>` : ''}
+        <div class="item-sub">${sub ? html`<span class="num">${sub}</span> · ` : ''}${staged && staged !== status
+          ? html`<span class="staged">${label(status)} → ${label(staged)}, not committed</span>`
+          : html`<span class=${'st-' + status}>${label(status)}</span>`}</div>
         <div class="prov">${prov}</div>
       </div>
-      ${readonly ? html`<${Chip} status=${status}>${status === 'confirmed' ? 'enforced' : status}<//>` : html`<div class="seg" role="group" aria-label=${'Decision for ' + id}>
+      ${readonly ? '' : html`<div class="seg" role="group" aria-label=${'Decision for ' + id}>
         <button class="c" aria-pressed=${eff === 'confirmed'} onClick=${() => onSet(id, 'confirmed')}>Required</button>
         <button class="r" aria-pressed=${eff === 'rejected'} onClick=${() => onSet(id, 'rejected')}>Not required</button>
       </div>`}
     </div>
-    ${readonly ? '' : staged && staged !== status ? html`<div class="staged">${status} → ${staged} (not yet committed)</div>`
-      : html`<div style="margin-top:4px"><${Chip} status=${status}>${status === 'confirmed' ? 'enforced' : status}<//></div>`}
   </li>`;
 }
 
 function InterpretPanel({ ctx }) {
   const { snap } = ctx;
-  const spec = currentSpec(snap);
+  const [ver, setVer] = useState(null);
+  const latestSpec = currentSpec(snap);
+  // A recorded session opens on the proposal itself; the live studio on the current version.
+  const want = ver ?? (ctx.isStatic ? snap.specs[0]?.version : latestSpec?.version);
+  const spec = specV(snap, want) || latestSpec;
+  const isLatest = spec && latestSpec && spec.version === latestSpec.version;
   const [staged, setStaged] = useState({});
   useEffect(() => setStaged({}), [spec?.version]);
   if (!spec) {
@@ -285,12 +299,16 @@ function InterpretPanel({ ctx }) {
   }
   const set = (id, st) => setStaged((s) => ({ ...s, [id]: s[id] === st ? undefined : st }));
   const changes = Object.entries(staged).filter(([k, v]) => v);
-  const ro = ctx.isStatic;
+  const ro = ctx.isStatic || !isLatest;
   return html`
     <div class="sec">
       <${Head} n="2" kicker="Interpret" title="What MIRROR thinks matters" lede=${spec.summary} />
-      <div class="row"><${Chip} status="accent">spec v${spec.version}<//>
+      <div class="row">
+        ${snap.specs.length > 1 ? html`<div class="seg" role="group" aria-label="Specification version">${snap.specs.map((sp) => html`
+          <button class="c" aria-pressed=${sp.version === spec.version} onClick=${() => setVer(sp.version)}>v${sp.version}</button>`)}</div>`
+          : html`<${Chip} status="accent">spec v${spec.version}<//>`}
         <span class="muted" style="font-size:12px">interpreter: ${spec.interpreter || 'unknown'}</span></div>
+      ${spec.version === 1 && snap.specs.length > 1 ? html`<p class="faint" style="font-size:12px;margin-top:6px">v1 is the proposal as the interpreter made it.</p>` : ''}
       <h3>Goals</h3>
       <ul class="list">${spec.goals.map((g) => html`<${ItemRow} id=${g.id} readonly=${true}
         title=${`${cap(selectorText(g.object))} ends inside the ${g.target} tray`} status=${g.status} prov=${provText(g.provenance)} />`)}</ul>
@@ -310,7 +328,7 @@ function InterpretPanel({ ctx }) {
           onClick=${() => ctx.action('decide', () => api.post('spec/decisions', { decisions: Object.fromEntries(changes) }))}>
           Commit ${changes.length || ''} decision${changes.length === 1 ? '' : 's'}${changes.length ? ` → v${spec.version + 1}` : ''}</button>` : ''}
         <span class="spacer"></span>
-        <button class="btn primary" onClick=${() => ctx.setStep('run')}>Run it</button>
+        <button class=${ctx.story ? 'btn' : 'btn primary'} onClick=${() => ctx.setStep('run')}>Run it</button>
       </div>
       <${SpecHistory} spec=${spec} />
     </div>`;
@@ -342,7 +360,7 @@ function RunPanel({ ctx }) {
     </div>
     ${r ? html`<div class="sec"><${ReportView} r=${r} /></div>
       <div class="sec"><p class="lede">Success here could be a recording. Change the world and see whether it replans.</p>
-        <button class="btn primary" onClick=${() => ctx.setStep('world')}>Change the world</button></div>` : ''}
+        <button class=${ctx.story ? 'btn' : 'btn primary'} onClick=${() => ctx.setStep('world')}>Change the world</button></div>` : ''}
     <${RunsList} ctx=${ctx} />`;
 }
 
@@ -391,7 +409,7 @@ function WorldPanel({ ctx }) {
     ${r ? html`<div class="sec"><${ReportView} r=${r} /></div>` : ''}
     ${r && /slot|pitch|tilt/i.test(routeOf(r, cupOutcome(r.report)?.object_id) || (r.plan?.transport ? '' : (r.report.route_labels || []).join(' '))) ? html`<div class="sec">
       <p class="lede">It took the short way: through the slot, with the cup on its side.</p>
-      <button class="btn primary" onClick=${() => ctx.setStep('correct')}>That is not what I meant</button></div>` : ''}
+      <button class=${ctx.story ? 'btn' : 'btn primary'} onClick=${() => ctx.setStep('correct')}>That is not what I meant</button></div>` : ''}
     <${RunsList} ctx=${ctx} />`;
 }
 
@@ -447,6 +465,7 @@ function CorrectPanel({ ctx }) {
   const cv = correctionVersion(snap);
   const rec = cv ? (spec.history || []).find((r) => r.version === cv) : null;
   const [text, setText] = useState('');
+  const [again, setAgain] = useState(false);
   const job = ctx.busy.correct;
   const before = cv ? specV(snap, cv - 1) || specV(snap, specV(snap, cv)?.parent_version) : null;
   const after = cv ? specV(snap, cv) : null;
@@ -461,47 +480,91 @@ function CorrectPanel({ ctx }) {
     const res = await ctx.action('correct', () => api.post('correct', { text: t }));
     if (res && (res.question || res.rejected)) setReply(res);
     else if (res && !res.changed) setReply({ rejected: 'That did not change the specification.' });
+    else setAgain(false);
   };
+  const input = html`
+    <label class="sr-only" for="corr">Correction</label>
+    <textarea id="corr" class="corr" placeholder=${snap.reference_correction} value=${text}
+      onInput=${(e) => setText(e.target.value)}
+      onKeyDown=${(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && text.trim()) submit(text.trim()); }}></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="btn ghost small" onClick=${() => setText(snap.reference_correction)}>Use the example sentence</button>
+      <span class="spacer"></span>
+      <button class="btn primary" disabled=${!text.trim() || !!job} onClick=${() => submit(text.trim())}>Apply correction</button>
+    </div>
+    <${JobLine} job=${job} />
+    ${reply?.question ? html`<div class="callout" style="margin-top:10px" role="status"><b>MIRROR needs to know:</b> ${reply.question}
+      ${reply.options?.length ? html`<div class="row" style="margin-top:8px">${reply.options.map((o) => html`<button class="btn small"
+        onClick=${() => { setText(o); }}>${o}</button>`)}</div>` : ''}
+      <div class="muted" style="margin-top:4px">It asks instead of guessing. Nothing changed yet.</div></div>` : ''}
+    ${reply?.rejected ? html`<div class="callout" style="margin-top:10px" role="status"><b>Not applied.</b> ${reply.rejected}</div>` : ''}`;
   return html`
     <div class="sec">
       <${Head} n="5" kicker="You misunderstood this" title="Correct one rule"
-        lede="Say what was wrong in plain words. MIRROR compiles it into a scoped change to the specification." />
-      ${!ctx.isStatic ? html`
-        <label class="sr-only" for="corr">Correction</label>
-        <textarea id="corr" class="corr" placeholder=${snap.reference_correction} value=${text}
-          onInput=${(e) => setText(e.target.value)}
-          onKeyDown=${(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && text.trim()) submit(text.trim()); }}></textarea>
-        <div class="row" style="margin-top:8px">
-          <button class="btn ghost small" onClick=${() => setText(snap.reference_correction)}>Use the example sentence</button>
-          <span class="spacer"></span>
-          <button class="btn primary" disabled=${!text.trim() || !!job} onClick=${() => submit(text.trim())}>Apply correction</button>
-        </div>
-        <${JobLine} job=${job} />
-        ${reply?.question ? html`<div class="callout" style="margin-top:10px" role="status"><b>MIRROR needs to know:</b> ${reply.question}
-          ${reply.options?.length ? html`<div class="row" style="margin-top:8px">${reply.options.map((o) => html`<button class="btn small"
-            onClick=${() => { setText(o); }}>${o}</button>`)}</div>` : ''}
-          <div class="muted" style="margin-top:4px">It asks instead of guessing. Nothing changed yet.</div></div>` : ''}
-        ${reply?.rejected ? html`<div class="callout" style="margin-top:10px" role="status"><b>Not applied.</b> ${reply.rejected}</div>` : ''}` : rec ? html`<blockquote class="callout">“${rec.text}”</blockquote>` : ''}
+        lede=${cv ? '' : 'Say what was wrong in plain words. MIRROR compiles it into a scoped change to the specification.'} />
+      ${cv && rec ? html`<blockquote class="quote">“${rec.text}”<span class="faint"> → spec v${cv}</span></blockquote>` : ''}
+      ${!ctx.isStatic && (!cv || again) ? input : ''}
+      ${!ctx.isStatic && cv && !again ? html`<button class="btn ghost small" onClick=${() => setAgain(true)}>Correct something else</button>` : ''}
     </div>
+    ${corrected && ghost ? html`<div class="sec"><${BeforeAfterStrip} a=${ghost} b=${corrected} /></div>` : ''}
+    ${cv && !corrected ? html`<div class="sec">
+      <p class="lede">Same planner, same controller, new rule. Run it in this layout.</p>
+      <${RunButton} ctx=${ctx} label=${`Replan and run v${spec.version}`} condition=${'corrected v' + spec.version} tags=${['corrected']} />
+      <${JobLine} job=${ctx.busy.run} />
+      ${ctx.isStatic ? html`<p class="muted">No corrected run was recorded in this layout.</p>` : ''}
+    </div>` : ''}
     ${cv && before && after ? html`<div class="sec">
-      <p class="kicker">What changed</p>
-      <p>“${rec?.text}”</p>
+      <p class="kicker">What changed in the specification</p>
       <${SpecDiff} a=${before} b=${after} record=${rec} />
     </div>` : ''}
     ${shownRecheck ? html`<div class="sec">
       <p class="kicker">The old behaviour, re-checked</p>
       <${RecheckCard} item=${shownRecheck} snap=${snap} />
     </div>` : ''}
-    ${cv ? html`<div class="sec">
-      ${corrected ? html`<p class="kicker">New behaviour</p>
-        ${ghost ? html`<${BeforeAfter} a=${ghost} b=${corrected} />` : ''}
-        <div style="margin-top:12px"><${ReportView} r=${corrected} compact=${true} /></div>
-        <div class="row" style="margin-top:12px"><button class="btn primary" onClick=${() => ctx.setStep('evidence')}>Test somewhere new</button></div>`
-      : html`<p class="lede">Same planner, same controller, new rule. Run it in this layout.</p>
-        <${RunButton} ctx=${ctx} label=${`Replan and run v${spec.version}`} condition=${'corrected v' + spec.version} tags=${['corrected']} />
-        <${JobLine} job=${ctx.busy.run} />`}
-    </div>` : ''}
+    ${corrected ? html`<div class="sec"><${ReportView} r=${corrected} compact=${true} />
+      <div class="row" style="margin-top:12px"><button class="btn" onClick=${() => ctx.setStep('evidence')}>Test somewhere new</button></div></div>` : ''}
     <div class="sec"><${ClarifyCard} ctx=${ctx} /></div>`;
+}
+
+// Tilt of the container over time, old behaviour against new, with the tolerance band.
+export function TiltChart({ a, b, tol = TOL, height = 132 }) {
+  const sa = a?.trace?.tilt || [], sb = b?.trace?.tilt || [];
+  if (!sa.length && !sb.length) return null;
+  const W = 360, H = height, L = 30, R = 8, T = 10, B = 22;
+  const tmax = Math.max(1, ...sa.map((p) => p[0]), ...sb.map((p) => p[0]));
+  const ymax = 90;
+  const x = (t) => L + ((W - L - R) * t) / tmax;
+  const y = (v) => T + (H - T - B) * (1 - Math.min(v, ymax) / ymax);
+  const path = (pts) => pts.map((p, i) => `${i ? 'L' : 'M'}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join('');
+  const ticks = [0, 15, 45, 90];
+  const tstep = tmax > 60 ? 20 : 10;
+  return html`<svg class="chart" viewBox=${`0 0 ${W} ${H}`} role="img"
+      aria-label=${`Cup tilt over time. Before: peak ${fmtNum(Math.max(0, ...sa.map((p) => p[1])))} degrees. After: peak ${fmtNum(Math.max(0, ...sb.map((p) => p[1])))} degrees. Tolerance ${tol} degrees.`}>
+    <rect x=${L} y=${y(tol)} width=${W - L - R} height=${y(0) - y(tol)} fill="var(--accent-soft)" />
+    ${ticks.map((v) => html`<g><line x1=${L} x2=${W - R} y1=${y(v)} y2=${y(v)} stroke="var(--line)" stroke-width="1" />
+      <text x=${L - 6} y=${y(v) + 3.5} text-anchor="end" class="ax">${v}°</text></g>`)}
+    ${Array.from({ length: Math.floor(tmax / tstep) + 1 }, (_, i) => i * tstep).map((t) => html`
+      <text x=${x(t)} y=${H - 6} text-anchor="middle" class="ax">${t}s</text>`)}
+    <text x=${W - R} y=${y(tol) - 4} text-anchor="end" class="ax">tolerance ${tol}°</text>
+    <path d=${path(sa)} fill="none" stroke="var(--bad)" stroke-width="1.6" stroke-linejoin="round" opacity="0.9" />
+    <path d=${path(sb)} fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" />
+  </svg>`;
+}
+
+function BeforeAfterStrip({ a, b }) {
+  const ca = cupOutcome(a.report), cb = cupOutcome(b.report);
+  const stat = (label, x, y, bad) => html`<div class="ba-stat"><div class="lbl">${label}</div>
+    <div class="ba-val"><span class=${bad ? 'bad-t' : ''}>${x}</span><span class="faint"> → </span><span>${y}</span></div></div>`;
+  return html`<p class="kicker">Before and after, same layout</p>
+    <div class="ba-legend"><span><i style="background:var(--bad)"></i>v${a.spec_version} · ${a.id}</span>
+      <span><i style="background:var(--accent)"></i>v${b.spec_version} · ${b.id}</span></div>
+    <${TiltChart} a=${a} b=${b} />
+    <div class="ba-stats">
+      ${stat('Cup max tilt while carried', fmtNum(ca?.max_transport_tilt_deg) + '°', fmtNum(cb?.max_transport_tilt_deg) + '°', (ca?.max_transport_tilt_deg || 0) > TOL)}
+      ${stat('Beads kept', ca ? `${ca.beads_in_container}/${ca.beads_total}` : '–', cb ? `${cb.beads_in_container}/${cb.beads_total}` : '–', ca && ca.beads_in_container < ca.beads_total)}
+      ${routeOf(a, ca?.object_id) || routeOf(b, cb?.object_id) ? stat('Cup route', routeOf(a, ca?.object_id) || '–', routeOf(b, cb?.object_id) || '–', false) : ''}
+    </div>
+    <p class="faint" style="font-size:12px;margin-top:8px">Measured by the checker from the simulator log of each run, not reported by the model.</p>`;
 }
 
 function RecheckCard({ item, snap }) {
@@ -544,12 +607,19 @@ function ClarifyCard({ ctx }) {
       <div class="question">${c.question || 'Would both of these still count as doing the task correctly?'}</div>
       <div class="cands">${cands.map((k, i) => {
         const r = rs.find((x) => x.id === k.rollout_id);
+        const focus = (c.differences || []).find((d) => d.object_id)?.object_id;
+        const tr = focus && r?.trace?.objects?.[focus] ? { points: r.trace.objects[focus] } : r?.trace;
         return html`<button class="cand" aria-pressed=${ctx.pick === k.rollout_id} onClick=${() => r && ctx.setPick(k.rollout_id)}
           aria-label=${'Watch candidate ' + (i + 1)}>
-          <${MiniMap} scene=${r?.scene || snap.scene} trace=${r?.trace} />
+          <${MiniMap} scene=${r?.scene || snap.scene} trace=${tr} />
+          ${focus ? html`<div class="faint" style="font-size:11px;padding:2px 10px 0">path of ${focus}</div>` : ''}
           <div class="meta"><b>${k.label && k.label.length <= 2 ? 'Behaviour ' + k.label : (k.label || 'Behaviour ' + String.fromCharCode(65 + i))}</b>
             <span class="muted">${(k.routes || []).slice(0, 3).join(', ') || k.summary || ''}</span>
-            ${r ? html`<span class="muted" style="display:block">simulated: cup tilt ${fmtNum(cupOutcome(r.report)?.max_transport_tilt_deg)}° · beads ${cupOutcome(r.report)?.beads_in_container ?? '–'}/${cupOutcome(r.report)?.beads_total ?? '–'}</span>` : ''}</div>
+            ${r ? (() => {
+              const fo = (r.report.outcomes || []).find((o) => o.object_id === focus);
+              const co = cupOutcome(r.report);
+              return html`<span class="muted" style="display:block">simulated: ${fo && fo !== co ? `${focus} tilt ${fmtNum(fo.max_transport_tilt_deg)}° · ` : ''}cup ${fmtNum(co?.max_transport_tilt_deg)}° · beads ${co?.beads_in_container ?? '–'}/${co?.beads_total ?? '–'}</span>`;
+            })() : ''}</div>
         </button>`;
       })}</div>
       ${(c.differences || []).length ? html`<ul class="list" style="font-size:12px;margin-bottom:10px">${c.differences.map((d) => html`<li>${d.statement
@@ -638,32 +708,46 @@ function EvalSummary({ ev, va, vb }) {
 
 function EvidencePanel({ ctx }) {
   const { snap } = ctx;
-  const [n, setN] = useState(snap.mode === 'live' ? 8 : 12);
-  const ev = useMemo(() => normalizeEval(snap.evaluation), [snap.evaluation]);
+  const [n, setN] = useState(8);
+  const raw = snap.evaluation;
+  const strataNames = raw?.strata ? Object.keys(raw.strata) : null;
+  const [stratum, setStratum] = useState(null);
+  const cur = strataNames ? (stratum && raw.strata[stratum] ? stratum : strataNames[0]) : null;
+  const evRaw = cur ? raw.strata[cur] : raw;
+  const ev = useMemo(() => normalizeEval(evRaw), [evRaw]);
   const specs = snap.specs;
   const a = specs[0], b = specs[specs.length - 1];
+  const va = evRaw?.spec_a ?? a?.version, vb = evRaw?.spec_b ?? b?.version;
   const job = ctx.busy.evaluate;
-  const seeds = Array.from({ length: n }, (_, i) => 10000 + i);
+  const seeds = Array.from({ length: n }, (_, i) => 9000 + i);
   const rs = snap.rollouts;
-  const blocked = latest(rs, (r) => isBlockedScene(r.scene_id) || r.tags.includes('blocked'));
-  const count = (f) => ev ? ev.pairs.filter(f).length : 0;
+  const blocked = latest(rs, (r) => !isAux(r) && (isBlockedScene(r.scene_id) || r.tags.includes('blocked')));
+  const src = raw?.source?.kind;
+  const evInfo = evalKind(raw);
+  const final = evInfo.kind === 'final';
   return html`
     <div class="sec">
-      <${Head} n="6" kicker="Somewhere it has not seen" title="Paired test on fresh layouts"
+      <${Head} n="6" kicker="Somewhere it has not seen" title=${final ? 'Pre-registered evaluation' : evInfo.kind === 'rehearsal' ? 'Evaluation rehearsal' : 'Paired test on fresh layouts'}
         lede="Both specifications run from the identical initial state in every layout, with the same planner and controller. Every attempt is shown." />
-      ${!ctx.isStatic ? html`<div class="row">
-        <label class="muted" for="nseeds" style="font-size:12px">Layouts</label>
-        <input id="nseeds" type="number" min="1" max="48" value=${n} onInput=${(e) => setN(Math.max(1, Math.min(48, parseInt(e.target.value || '1', 10))))}
-          style="width:64px;border:1px solid var(--line-strong);border-radius:999px;padding:4px 10px;background:var(--surface)" />
-        <span class="muted num" style="font-size:12px">seeds ${seeds[0]}–${seeds[seeds.length - 1]}</span>
+      ${raw ? html`<div class="row" style="margin-bottom:6px"><${Chip} status=${final ? 'accent' : ''}>${evInfo.label}<//></div>` : ''}
+      ${!ctx.isStatic && !raw?.strata && evInfo.kind !== 'final' ? html`<div class="row">
+        <label class="muted" for="nseeds" style="font-size:12px">Showcase layouts</label>
+        <input id="nseeds" class="num-in" type="number" min="1" max="24" value=${n} onInput=${(e) => setN(Math.max(1, Math.min(24, parseInt(e.target.value || '1', 10))))} />
+        <span class="muted num" style="font-size:12px">dev seeds ${seeds[0]}–${seeds[seeds.length - 1]}</span>
         <span class="spacer"></span>
-        <button class="btn primary" disabled=${!!job || specs.length < 2}
-          onClick=${() => ctx.action('evaluate', () => api.post('evaluate', { seeds }))}>Run v${a?.version} vs v${b?.version}</button>
-      </div><${JobLine} job=${job} />` : ''}
+        <button class=${ctx.story ? 'btn' : 'btn primary'} disabled=${!!job || specs.length < 2}
+          onClick=${() => ctx.action('evaluate', () => api.post('evaluate', { seeds, split: 'dev' }))}>Run v${a?.version} vs v${b?.version}</button>
+      </div>
+      <p class="faint" style="font-size:12px;margin-top:6px">The studio only runs development seeds. Pre-registered evaluation results are produced separately and loaded here unchanged.</p>
+      <${JobLine} job=${job} />` : ''}
+      ${strataNames ? html`<div class="tabs" role="tablist" aria-label="Strata">${strataNames.map((nm) => html`
+        <button role="tab" aria-selected=${nm === cur} onClick=${() => setStratum(nm)}>${cap(nm)}
+          <span class="faint num"> ${(raw.strata[nm].trials || []).length}</span></button>`)}</div>
+        ${raw.roles?.[cur] ? html`<p class="faint" style="font-size:12px">${roleText(raw.roles[cur], raw.strata[cur])}</p>` : ''}` : ''}
       ${ev ? html`
-        <${EvalSummary} ev=${ev} va=${snap.evaluation.spec_a ?? a?.version} vb=${snap.evaluation.spec_b ?? b?.version} />
-        <p class="faint" style="font-size:12px">Original runs are judged twice: under their own rules (left) and re-checked under the corrected rule (red outline).</p>
-        <div class="ev-colh"><span>seed</span><span>original v${snap.evaluation.spec_a ?? a?.version}</span><span>corrected v${snap.evaluation.spec_b ?? b?.version}</span></div>
+        <${EvalSummary} ev=${ev} va=${va} vb=${vb} />
+        <p class="faint" style="font-size:12px">Original runs are judged twice: under their own rules and re-checked under the corrected rule (red outline).</p>
+        <div class="ev-colh"><span>seed</span><span>original v${va}</span><span>corrected v${vb}</span></div>
         <div class="ev-grid">${ev.pairs.map((p) => html`<div class="ev-row">
           <div class="seed">${p.seed}</div>
           ${['a', 'b'].map((k) => {
@@ -672,25 +756,25 @@ function EvidencePanel({ ctx }) {
             const rep = cell?.report;
             const broke = k === 'a' && p.a_under_b?.status === 'constraint_violated';
             const cup = cupOutcome(rep);
-            return html`<button class="ev-cell" aria-pressed=${ctx.pick && ctx.pick === cell?.rollout_id}
-              style=${broke ? 'border-color: color-mix(in srgb, var(--bad) 55%, transparent)' : ''}
-              disabled=${!r} onClick=${() => r && ctx.setPick(r.id)} aria-label=${`seed ${p.seed} ${k === 'a' ? 'original' : 'corrected'}: ${statusLabel(rep)}`}>
+            return html`<button class=${'ev-cell' + (broke ? ' broke' : '')} aria-pressed=${ctx.pick && ctx.pick === cell?.rollout_id}
+              disabled=${!r?.has_frames} onClick=${() => r && ctx.setPick(r.id)} aria-label=${`seed ${p.seed} ${k === 'a' ? 'original' : 'corrected'}: ${statusLabel(rep)}`}>
               <${MiniMap} scene=${p.scene || r?.scene} trace=${r?.trace} />
               <div class="m"><${Chip} status=${rep?.status}>${statusLabel(rep)}<//>
                 ${cup ? html`<span class="num muted">${fmtNum(cup.max_transport_tilt_deg, 0)}° · ${cup.beads_in_container}/${cup.beads_total}</span>` : ''}
-                ${broke ? html`<span class="bad-t">breaks v${snap.evaluation.spec_b ?? b?.version}</span>` : ''}</div>
+                ${broke ? html`<span class="bad-t">breaks v${vb}</span>` : ''}</div>
             </button>`;
-          })}</div>`)}</div>`
+          })}</div>`)}</div>
+        ${ev.pairs.some((p) => rs.find((x) => x.id === p.a?.rollout_id)?.sketch) ? html`<p class="faint" style="font-size:12px">Maps are drawn from each recorded rollout's own geometry.</p>` : ''}`
       : html`<p class="muted">No evaluation yet.</p>`}
-      ${ev?.real && ev.raw.scope?.verdict ? html`<h3>Scope</h3><p>${ev.raw.scope.verdict}.</p>
+      ${ev?.real && ev.raw.scope?.verdict ? html`<h3>Scope</h3><p>${cap(ev.raw.scope.verdict)}.</p>
         <p class="faint" style="font-size:12px">Objects the correction does not mention may still tilt when that is cheaper.</p>` : ''}
-      ${ev?.real ? html`<details style="margin-top:10px"><summary class="muted" style="cursor:pointer;font-size:12px">Freeze manifest and simplifications</summary>
-        <dl class="kv" style="margin-top:8px"><dt>Split</dt><dd>${ev.raw.split}</dd><dt>Frozen</dt><dd>${ev.raw.manifest?.created_at}</dd>
-          <dt>Code</dt><dd class="num">${(ev.raw.manifest?.code_sha256 || '').slice(0, 12)} · ${ev.raw.manifest?.code_files} files</dd>
+      ${ev?.real ? html`<details style="margin-top:10px"><summary class="muted" style="cursor:pointer;font-size:12px">Manifest and simplifications</summary>
+        <dl class="kv" style="margin-top:8px"><dt>Split</dt><dd>${ev.raw.split}</dd><dt>Manifest</dt><dd>${(raw.manifest || ev.raw.manifest)?.created_at}</dd>
+          <dt>Code</dt><dd class="num">${((raw.manifest || ev.raw.manifest)?.code_sha256 || '').slice(0, 12)} · ${(raw.manifest || ev.raw.manifest)?.code_files} files</dd>
           <dt>Checker</dt><dd>${ev.raw.config?.checker}</dd><dt>Wall time</dt><dd class="num">${fmtNum(ev.raw.wall_time_s, 0)} s</dd></dl>
         <ul style="font-size:12px;padding-left:18px">${(ev.raw.simplifications || []).map((x) => html`<li>${x}</li>`)}</ul></details>` : ''}
     </div>
-    <div class="sec">
+    <div class="sec" id="blocked-case">
       <p class="kicker">The blocked case</p>
       <p class="lede">In this layout the slot is the only opening. Carrying the cup upright cannot fit through it. The robot should stop, not break the rule.</p>
       ${!ctx.isStatic ? html`<button class="btn" disabled=${!!ctx.busy.run}
@@ -699,6 +783,144 @@ function EvidencePanel({ ctx }) {
       ${blocked ? html`<div style="margin-top:10px"><${ReportView} r=${blocked} compact=${true} />
         <button class="btn small" style="margin-top:8px" onClick=${() => ctx.setPick(blocked.id)}>Show in viewer</button></div>` : ''}
     </div>`;
+}
+
+// What kind of evidence this is, stated plainly.
+export function evalKind(raw) {
+  if (!raw) return { kind: 'none', label: '' };
+  if (raw.kind === 'fixture') return { kind: 'fixture', label: 'fixture data, not evidence' };
+  const m = raw.manifest || {};
+  const split = raw.split || m.split || Object.values(raw.strata || {})[0]?.split;
+  if (raw.source?.kind === 'showcase') return { kind: 'showcase', label: 'showcase run on development seeds' };
+  if (m.kind === 'final' && split !== 'dev') return { kind: 'final', label: 'pre-registered, frozen before layouts were drawn' };
+  if (m.kind === 'rehearsal' || /rehears/i.test(raw.title || '') || split === 'dev')
+    return { kind: 'rehearsal', label: 'rehearsal on development seeds, not the pre-registered result' };
+  return { kind: 'loaded', label: `saved ${split || ''} report` };
+}
+
+function roleText(role, rep) {
+  if (role === 'primary') return 'Primary result: the standard layout sampler, unbiased mix of layouts.';
+  if (role === 'stratum') return 'Disclosed stratum: layouts with a wall slot near the straight cup-to-tray line, chosen by geometry when drawn, never by outcome.';
+  if (role === 'blocked') return 'Blocked layouts: the slot is the only opening, used for the infeasibility check.';
+  return rep?.title || role;
+}
+
+// ------------------------------------------------------------- story mode
+
+const STORY = {
+  watch: { title: 'Watch me', text: 'A recorded teleoperation in simulation packs the cup, the block and the marker, carrying everything around the wall.' },
+  interpret: { title: 'What does it think matters?', text: 'MIRROR proposes the task: goals, rules and open questions. Only rules marked required are enforced.' },
+  run: { title: 'Now your turn', text: 'The planner turns the enforced rules into a plan, MuJoCo executes it, and a separate checker reads the physics log.' },
+  world: { title: 'Change the world', text: 'The tray moves and the wall gets a slot. Replaying the demonstration is impossible; the robot replans and takes the short way, cup on its side.' },
+  correct: { title: 'You misunderstood this', text: 'One sentence becomes a scoped rule. The old run is re-checked under it and the new plan takes a different route.' },
+  evidence: { title: 'Somewhere it has not seen', text: 'Both versions start from identical states on layouts the correction never saw. Every attempt is shown, failures included.' },
+};
+
+function storyAction(ctx) {
+  const { snap, step, isStatic } = ctx;
+  const order = STEPS.map((x) => x.key);
+  const next = order[order.indexOf(step) + 1];
+  const go = (k) => () => ctx.setStep(k);
+  const nextLabel = next ? `Next: ${STEPS.find((x) => x.key === next).short}` : null;
+  if (isStatic) return next ? { label: nextLabel, run: go(next) } : { label: 'Back to the start', run: go('watch') };
+  const rs = snap.rollouts.filter((r) => !isAux(r));
+  const demoScene = snap.demo?.scene_id;
+  const specFresh = snap.specs.length && snap.specs[0].demo_id === snap.demo?.demo_id;
+  const cv = correctionVersion(snap);
+  const post = (k, path, body) => ctx.action(k, () => api.post(path, body));
+  switch (step) {
+    case 'watch':
+      return specFresh ? { label: nextLabel, run: go('interpret') }
+        : { label: 'Interpret the demonstration', busy: 'interpret', run: async () => { await post('interpret', 'interpret'); ctx.setStep('interpret'); } };
+    case 'interpret':
+      return rs.some((r) => r.scene_id === demoScene) ? { label: nextLabel, run: go('run') }
+        : { label: 'Run it in simulation', busy: 'run', run: async () => {
+          ctx.setStep('run');
+          if (snap.scene?.scene_id !== demoScene) await post('scene', 'scene', { preset: 'demo' });
+          await post('run', 'run', { condition: 'demonstration layout', tags: ['run'] });
+        } };
+    case 'run':
+      return rs.some((r) => r.tags.includes('world')) ? { label: nextLabel, run: go('world') }
+        : { label: 'Change the world and replan', busy: 'run', run: async () => {
+          ctx.setStep('world');
+          await post('scene', 'scene', { preset: 'shortcut' });
+          await post('run', 'run', { condition: 'changed world', tags: ['world'] });
+        } };
+    case 'world':
+      return { label: 'That is not what I meant', run: go('correct') };
+    case 'correct':
+      if (!cv) return { label: 'Apply the example correction', busy: 'correct', run: async () => {
+        const res = await post('correct', 'correct', { text: snap.reference_correction });
+        if (res?.changed) await post('run', 'run', { condition: 'corrected', tags: ['corrected'] });
+      } };
+      if (!rs.some((r) => r.spec_version >= cv && r.scene_id === snap.scene?.scene_id))
+        return { label: 'Replan with the correction', busy: 'run', run: () => post('run', 'run', { condition: 'corrected', tags: ['corrected'] }) };
+      return { label: nextLabel, run: go('evidence') };
+    case 'evidence':
+      if (!snap.evaluation) return { label: 'Run 8 fresh showcase layouts', busy: 'evaluate',
+        run: () => post('evaluate', 'evaluate', { seeds: Array.from({ length: 8 }, (_, i) => 9000 + i), split: 'dev' }) };
+      if (!rs.some((r) => isBlockedScene(r.scene_id))) return { label: 'Try the blocked layout', busy: 'run', run: async () => {
+        await post('scene', 'scene', { preset: 'blocked' });
+        await post('run', 'run', { condition: 'blocked layout', tags: ['blocked'] });
+        document.getElementById('blocked-case')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } };
+      return { label: 'Back to the start', run: go('watch') };
+    default:
+      return null;
+  }
+}
+
+export function StoryBar({ ctx }) {
+  const order = STEPS.map((x) => x.key);
+  const ix = order.indexOf(ctx.step);
+  const st = STORY[ctx.step];
+  const act = storyAction(ctx);
+  const busy = act?.busy && ctx.busy[act.busy];
+  const enabled = stepState(ctx.snap);
+  return html`<div class="story" role="region" aria-label="Guided story">
+    <div class="story-ix num" aria-label=${`Step ${ix + 1} of ${order.length}`}>${ix + 1}<span class="faint">/${order.length}</span></div>
+    <div class="story-text"><b>${st.title}${/[.?!]$/.test(st.title) ? '' : '.'}</b> <span>${st.text}</span></div>
+    <div class="story-act">
+      <button class="btn ghost small" disabled=${ix === 0} onClick=${() => ctx.setStep(order[ix - 1])}>Back</button>
+      ${act ? html`<button class="btn primary" disabled=${!!busy || (act.label.startsWith('Next') && !enabled[order[ix + 1]]?.enabled)}
+        onClick=${act.run}>${busy ? (busy.message?.split('\n')[0] || 'Working') + '…' : act.label}</button>` : ''}
+      <button class="iconbtn" aria-label="Hide the guided story" title="Explore freely" onClick=${() => ctx.toggleStory(false)}>✕</button>
+    </div>
+  </div>`;
+}
+
+// ------------------------------------------------------------- about
+
+export function AboutPanel({ ctx, onClose }) {
+  const { snap } = ctx;
+  const spec = snap.specs[0];
+  const interp = spec?.interpreter || 'not yet interpreted';
+  const isOffline = /offline|rules/.test(interp);
+  const ev = snap.evaluation;
+  const sources = { teleop_scripted: 'a scripted teleoperation of the simulated gripper', teleop_keyboard: 'keyboard teleoperation of the simulated gripper',
+    replay: 'a replayed trace', video_grounded: 'human video grounded to simulator objects' };
+  useEffect(() => {
+    const k = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', k);
+    return () => window.removeEventListener('keydown', k);
+  }, []);
+  return html`<div class="about" role="dialog" aria-label="What you are looking at">
+    <div class="about-h"><b>What you are looking at</b><button class="iconbtn" onClick=${onClose} aria-label="Close">✕</button></div>
+    <ul>
+      <li><b>Simulation only.</b> Everything runs in MuJoCo. Nothing here was executed on a physical robot or shows simulation-to-reality transfer.</li>
+      <li><b>The robot is a free-flying gripper.</b> Six position-controlled axes and two fingers; no arm is modelled. Objects move only through actuators and contact physics.</li>
+      <li><b>Privileged state.</b> Planning and checking read simulator state (poses, contacts, bead positions). It is not visual perception.</li>
+      <li><b>The demonstration</b> is ${sources[snap.demo?.source] || 'a recorded trace'}, not a video of a person.</li>
+      <li><b>The specification</b> was produced by <span class="num">${interp}</span>${isOffline ? ', the rule-based interpreter that needs no model' : ''}${spec?.history?.find((h) => h.model)?.model ? `; corrections compiled by ${spec.history.find((h) => h.model).model}` : ''}. Model output is validated against a schema before planning and never judges success.</li>
+      <li><b>Success is measured</b> by an independent checker from the physics log at every step: placement, tilt per phase, bead retention, contacts.</li>
+      <li><b>Evidence:</b> ${ev ? ({ final: 'the pre-registered evaluation, loaded unchanged from the evaluation output.',
+        rehearsal: 'a rehearsal of the evaluation pipeline on development seeds, not the pre-registered result.',
+        showcase: 'a showcase run on development seeds, not the pre-registered evaluation.',
+        fixture: 'fixture data, not evidence.' }[evalKind(ev).kind] || 'a saved evaluation report.') : 'no evaluation in this session yet.'}</li>
+      ${snap.mode === 'fixture' ? html`<li class="bad-t"><b>Fixture data:</b> key-framed placeholder motion, not physics.</li>` : ''}
+    </ul>
+    ${api.repoUrl ? html`<a class="btn small" href=${api.repoUrl} target="_blank" rel="noopener">Source code and claims</a>` : ''}
+  </div>`;
 }
 
 export const PANELS = { watch: WatchPanel, interpret: InterpretPanel, run: RunPanel, world: WorldPanel, correct: CorrectPanel, evidence: EvidencePanel };

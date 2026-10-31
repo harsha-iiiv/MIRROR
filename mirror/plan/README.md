@@ -20,7 +20,8 @@ reads `route=<label>; mode=<mode>; max_tilt_deg=<deg>`; the move note reads
 
 `PlanResult.routes` lists every candidate considered, for transports and for
 transits (labels prefixed `transit:`), with feasibility, cost and the reason
-for rejection, e.g. `violates c_cup_upright_transport (object tilt 90 deg >
+for rejection. `chosen` is True on exactly the transport and transit route each
+object's plan uses (never on a `no_plan` result). Rejection reasons look like e.g. `violates c_cup_upright_transport (object tilt 90 deg >
 max_tilt_deg 15 during transport)` or `envelope height 0.170 m plus 2 x 0.010 m
 margin exceeds slot opening 0.100 m`.
 
@@ -30,17 +31,35 @@ margin exceeds slot opening 0.100 m`.
 |---|---|
 | `direct` | straight horizontal moves between the start and goal columns |
 | `around:<wall>:+y` / `-y` | past that end of a wall (wall-local y) |
-| `through_slot:<wall>:<k>:<mode>` | through slot k in mode `upright`, `pitched+90` or `pitched-90` |
+| `through_slot:<wall>:<k>:<mode>` | through slot k in mode `upright` or `pitched±30/45/60/90` |
 | `detour` | around box obstacles when no wall is in the way |
 | `rrt:<modes>` | sampling-based fallback, only when no structured route is feasible |
 
-Modes pitch the gripper about its finger closing axis; the held object's tilt
-equals the pitch. In front of a slot the gripper turns its jaw along the wall,
+Modes pitch the gripper about its finger closing axis by 0, ±30, ±45, ±60 or
+±90 degrees; the held object's tilt equals the pitch. A mode passes a slot only
+if the envelope's exact vertical extent at that orientation (computed from the
+palm, finger and object boxes), plus the safety margin on both sides, fits the
+opening; for a straight horizontal pass at a fixed orientation that test is
+exact. With the reference slot (0.10 m) only ±90 fits the cup (envelope heights:
+upright 0.170, 30 deg 0.175, 45 deg 0.159, 60 deg 0.133, 90 deg 0.060 m). In front of a slot the gripper turns its jaw along the wall,
 pitches, passes straight through, then turns upright again behind it (at the
 lowest level where the turn is collision-free).
 
 Cost = TCP path length + 0.05 m per radian of gripper rotation. The cheapest
-feasible candidate is used; ties break on the label.
+feasible candidate is used; ties break on the label. Because rotation costs,
+the least-tilted mode that fits a given slot is cheapest, so a rule such as
+"within 45 degrees" yields the least-tilted feasible route rather than no plan
+whenever such a route exists.
+
+## Grounding
+
+A role covers every scene object of its bound kind and a selector covers every
+matching object (decision D5); `ObjectBinding.count` is descriptive and a
+mismatch is only a grounding warning. All matching objects are packed.
+
+Rejection reasons name an obstacle only when it is decisive: removing it
+alone lets the same search succeed. Around-routes blocked by a wall that
+reaches past the workspace say so explicitly.
 
 ## Constraints
 
@@ -65,17 +84,30 @@ body is the palm, both fingers and the held object. Margins: 10 mm in free
 space, 3 mm for approach, grasp, place, release and retreat. Segments are
 sampled so no body point moves more than the margin between samples.
 
-## No plan, and infeasibility certificates
+## No plan, and infeasibility records
 
-`status="no_plan"` lists every rejected candidate. `infeasibility` is set only
-when impossibility is proven (`proven: true`); the reason otherwise states
-that the planner found no plan and that this is not a proof. The one proof
-implemented is `separating_wall_slot_clearance` (see `certificate.py`): an
-upright rule bounds the object's tilt, a wall separates the object from the
-tray with no way around or over it inside the workspace, and any two points
-of the gripper and object in the wall's mid-plane span more height than all
-of the wall's openings. It holds within the planner's model (rigid top grasps
-in a stated depth range); its assumptions are listed in the certificate.
+`status="no_plan"` lists every rejected candidate. `infeasibility` carries one
+of two records (`certificate.py`):
+
+* `scope: any_motion`, `proven: true` (`separating_wall_slot_clearance`).
+  An upright rule bounds the object's tilt by alpha, a wall separates the
+  object from the tray with no way around or over it inside the workspace,
+  and any two points of the gripper and object in the wall's mid-plane span
+  more height than all of the wall's openings, for every tilt in [0, alpha]
+  (analytic bound, minimum at alpha). Holds for any motion within the
+  planner's model of rigid top grasps in a stated depth range. For the cup it
+  applies up to about 24 degrees.
+* `scope: planner_model`, `proven: false` (`slot_height_over_tilt_interval`).
+  Any motion must carry the object's bottom through an opening (proven), and
+  over every orientation within alpha the envelope is taller than the
+  tallest opening, so no straight horizontal pass at a fixed orientation (the
+  planner's primitive) fits. The minimum height is a dense sweep over tilt and
+  spin (0.25 deg grid) minus a stated bound of 2 x reach x grid half-spacing
+  (about 1 mm). Passes that rotate or move diagonally inside the opening are
+  not covered, so the reason still says this is not a proof.
+
+Without either record the reason states that the planner found no plan and
+that this is not a proof.
 
 ## Determinism
 
@@ -89,5 +121,5 @@ and its triggering is reported in the rejection reason.
 * The marker is represented by its square bounding prism (conservative).
 * Free-space motion is upright at a few fixed heights; orientation changes
   happen in place (in front of and behind slots, above the release spot).
-* Orientation modes are discrete: upright and pitched by 90 degrees either way.
+* Orientation modes are discrete: upright and pitched by 30, 45, 60 or 90 degrees either way; slots are crossed by a straight horizontal pass at a fixed orientation.
 * Planning uses exact object and obstacle poses from the scene description.

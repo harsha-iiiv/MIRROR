@@ -1,0 +1,828 @@
+{
+ "description": "Correction-compiler benchmark. Each case is applied to the same base specification (base_spec.json: the offline proposal for the reference demonstration after review, with the goals and c_upright_final_cup confirmed) in the shortcut scene (cup, block, marker). Gold is the exact set of enforced constraints (id and params), confirmed orderings and rejected goals after applying, or 'asks' (clarifying question expected) or 'rejects' (not a supported change). Written before any interpreter was run on them; cases are never edited after results are seen.",
+ "policy": [
+  "An orientation requirement with no stated phase applies while carried (transport).",
+  "'At all times' / 'never' without a carrying phrase means phase 'always'.",
+  "Relaxing a rule with no stated phase relaxes every phase of it for that object.",
+  "A rule applies to every object only when the text says all / every.",
+  "A contact rule with no stated phase applies while carried."
+ ],
+ "frozen_at": "2026-10-31T04:25:00-07:00",
+ "cases": [
+  {
+   "id": "p01",
+   "category": "paraphrase",
+   "text": "This container must remain upright throughout transport, not just at the destination.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "p02",
+   "category": "paraphrase",
+   "text": "Keep the cup upright the whole time you are carrying it.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "p03",
+   "category": "paraphrase",
+   "text": "The cup has to stay vertical while it's being moved, not only when it's put down.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "p04",
+   "category": "paraphrase",
+   "text": "Don't tilt the cup on the way to the tray.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "p05",
+   "category": "paraphrase",
+   "text": "The beads must not spill while the cup is carried.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "p06",
+   "category": "paraphrase",
+   "text": "While carrying the mug, keep it upright.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "p07",
+   "category": "paraphrase",
+   "text": "Carrying the cup on its side is not OK.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "p08",
+   "category": "paraphrase",
+   "text": "The cup should never be on its side during transport.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "s01",
+   "category": "scope",
+   "text": "Only the cup matters, the marker can lie down.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "s02",
+   "category": "scope",
+   "text": "The cup must stay upright while carried; the block and the marker can tilt.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "s03",
+   "category": "scope",
+   "text": "Keep the marker upright while carrying it.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_marker",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "s04",
+   "category": "scope",
+   "text": "The block and the cup both need to stay upright during transport.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_block",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "s05",
+   "category": "scope",
+   "text": "Every object must stay upright while carried.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_all",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "s06",
+   "category": "scope",
+   "text": "The marker must end standing up in the tray.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_final_marker",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "h01",
+   "category": "phase",
+   "text": "The cup only needs to be upright when you set it down.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "h02",
+   "category": "phase",
+   "text": "The cup must be upright at all times.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_always_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "h03",
+   "category": "phase",
+   "text": "Keep the marker upright when you set it down.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_final_marker",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "h04",
+   "category": "phase",
+   "text": "The cup must stay upright while carrying it and when placing it.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "t01",
+   "category": "tolerance",
+   "text": "Keep the cup within 30 degrees of upright while carrying it.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 30.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "t02",
+   "category": "tolerance",
+   "text": "The cup may tilt at most 5 degrees during transport.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 5.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "t03",
+   "category": "tolerance",
+   "text": "While the cup is carried it can lean up to 20 degrees, no more.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 20.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "t04",
+   "category": "tolerance",
+   "text": "Once placed, the cup must be within 10 degrees of vertical.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 10.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "n01",
+   "category": "negation",
+   "text": "The cup doesn't need to stay upright while it is carried.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "n02",
+   "category": "negation",
+   "text": "It doesn't matter whether the cup ends upright.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "n03",
+   "category": "negation",
+   "text": "The marker is allowed to tilt.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "n04",
+   "category": "negation",
+   "text": "The order doesn't matter.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "n05",
+   "category": "negation",
+   "text": "You don't have to pack the marker.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": [
+     "g_inside_marker"
+    ]
+   }
+  },
+  {
+   "id": "o01",
+   "category": "ordering",
+   "text": "Pack the block before the cup.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [
+     "o_block_before_cup"
+    ],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "o02",
+   "category": "ordering",
+   "text": "The cup has to go in first.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [
+     "o_cup_before_block",
+     "o_cup_before_marker"
+    ],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "o03",
+   "category": "ordering",
+   "text": "Put the marker in last.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     }
+    ],
+    "ordering": [
+     "o_block_before_marker",
+     "o_cup_before_marker"
+    ],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "c01",
+   "category": "contact",
+   "text": "The cup must not touch the wall.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_forbidden_contact_transport_cup",
+      "params": {
+       "with": [
+        "obstacle"
+       ]
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "c02",
+   "category": "contact",
+   "text": "Keep the cup at least 3 cm away from the wall while carrying it.",
+   "gold": {
+    "outcome": "apply",
+    "enforced": [
+     {
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      }
+     },
+     {
+      "id": "c_keep_clearance_transport_cup",
+      "params": {
+       "min_m": 0.03
+      }
+     }
+    ],
+    "ordering": [],
+    "inactive_goals": []
+   }
+  },
+  {
+   "id": "a01",
+   "category": "ambiguous",
+   "text": "It must stay upright the whole time.",
+   "gold": {
+    "outcome": "asks"
+   }
+  },
+  {
+   "id": "a02",
+   "category": "ambiguous",
+   "text": "Keep that one upright.",
+   "gold": {
+    "outcome": "asks"
+   }
+  },
+  {
+   "id": "a03",
+   "category": "ambiguous",
+   "text": "This one can tilt, but that one can't.",
+   "gold": {
+    "outcome": "asks"
+   }
+  },
+  {
+   "id": "a04",
+   "category": "ambiguous",
+   "text": "The object must not tilt while carried.",
+   "gold": {
+    "outcome": "asks"
+   }
+  },
+  {
+   "id": "a05",
+   "category": "contradiction",
+   "text": "The cup must stay upright while carried, and it may tilt while carried.",
+   "gold": {
+    "outcome": "asks"
+   }
+  },
+  {
+   "id": "x01",
+   "category": "absent",
+   "text": "The bowl must stay upright.",
+   "gold": {
+    "outcome": "asks"
+   }
+  },
+  {
+   "id": "x02",
+   "category": "absent",
+   "text": "Keep the bottle upright during transport.",
+   "gold": {
+    "outcome": "asks"
+   }
+  },
+  {
+   "id": "x03",
+   "category": "absent",
+   "text": "The lid must go in first.",
+   "gold": {
+    "outcome": "asks"
+   }
+  },
+  {
+   "id": "u01",
+   "category": "unsupported",
+   "text": "Move faster.",
+   "gold": {
+    "outcome": "rejects"
+   }
+  },
+  {
+   "id": "u02",
+   "category": "unsupported",
+   "text": "Use your left hand.",
+   "gold": {
+    "outcome": "rejects"
+   }
+  },
+  {
+   "id": "u03",
+   "category": "unsupported",
+   "text": "Make the robot quieter.",
+   "gold": {
+    "outcome": "rejects"
+   }
+  },
+  {
+   "id": "u04",
+   "category": "unsupported",
+   "text": "Close the gripper more gently.",
+   "gold": {
+    "outcome": "rejects"
+   }
+  }
+ ]
+}

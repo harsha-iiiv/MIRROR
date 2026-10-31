@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from mirror.contracts import SceneState, Status, TaskSpec
+from mirror.interpret.specops import effective_kind
 from mirror.interpret.drafts import (CorrectionDraft, DraftDismissal, DraftObject, DraftOp,
                                      DraftOrdering, DraftRule, DraftRuleSpec, ProposalDraft)
 from mirror.interpret.types import CorrectionRejected, DemoSummary, NeedsClarification
@@ -31,7 +32,8 @@ UNKNOWN_OBJECTS = ["bowl", "plate", "bottle", "spoon", "fork", "knife", "phone",
 _KIND_RE = {k: re.compile(r"\b(" + "|".join(v) + r")\b") for k, v in KIND_WORDS.items()}
 _UNKNOWN_RE = re.compile(r"\bthe (" + "|".join(UNKNOWN_OBJECTS) + r")s?\b")
 _PRONOUN_RE = re.compile(r"\b(it|its|it's|this one|that one|the object|the thing|the item|this|that)\b")
-_UPRIGHT_RE = re.compile(r"\b(upright|vertical|vertically|level|right side up|right-side up|opening up|straight up)\b")
+_UPRIGHT_RE = re.compile(r"\b(upright|vertical|vertically|level|right side up|right-side up|opening up|straight up|"
+                         r"standing up|stand up|stands up|standing)\b")
 _TILT_RE = re.compile(r"\b(tilt|tilts|tilted|tilting|tip|tips|tipped|tipping|on its side|sideways|lie|lies|lying|"
                       r"flip|flipped|turn over|turned over|spill|spills|spilled|spilling|pitch|pitched|lean|leans)\b")
 _CONTACT_RE = re.compile(r"\b(touch|touches|touching|hit|hits|hitting|bump|bumps|bumping|contact|collide|"
@@ -45,13 +47,15 @@ _PERMIT_RE = re.compile(r"\b(can|may|allowed|fine|ok|okay|free to|is acceptable|
                         r"irrelevant|optional|either way)\b")
 _MATTERS_RE = re.compile(r"\b(matters|counts|is important|is what matters|care about)\b")
 _IRRELEVANT_RE = re.compile(r"(doesn't matter|does not matter|don't care|do not care|irrelevant|optional|either way|"
+                            r"\bforget (about )?|never mind|don't worry about|do not worry about|\bignore\b|no longer|"
                             r"is fine|is ok|is okay|not important|no matter)")
 _TRANSPORT_RE = re.compile(r"(transport|\bcarr(y|ies|ied|ying)\b|\bmov(e|es|ed|ing)\b|in transit|on the way|en route|"
                            r"whole way|whole time|entire time|throughout|while (it is |it's )?(held|moving|being moved|"
                            r"in the gripper|grasped)|\bduring\b|in the air|\blift)")
 _FINAL_RE = re.compile(r"(destination|at the end|in the tray|into the tray|when (it is |it's )?(placed|put down|released|"
-                       r"set down|dropped off)|once (it is )?placed|\bfinal(ly)?\b|when you put|after (placing|release)|"
-                       r"\bwhen it lands|at rest)")
+                       r"set down|dropped off)|once (it is |it's )?placed|\bfinal(ly)?\b|when you put|after (placing|release)|"
+                       r"\bwhen it lands|at rest|when (you )?(set|put|place|lay|drop)s? (it|them|the \w+) (down|in)|"
+                       r"\b(set|put|lay)(ting)? (it |them )?down\b|when placing|once (it is |it's )?(down|released|in the tray))")
 _ALWAYS_RE = re.compile(r"(at all times|\balways\b|\bever\b|\bnever\b)")
 _DEG_RE = re.compile(r"(\d+(?:\.\d+)?)\s*(?:°|deg\b|degs\b|degrees?\b)")
 _DIST_RE = re.compile(r"(\d+(?:\.\d+)?)\s*(cm|mm|m)\b")
@@ -85,7 +89,7 @@ def propose_offline(summary: DemoSummary, scene: SceneState) -> ProposalDraft:
         objs = [o for o in summary.objects if o.kind == kind]
         if not objs:
             continue
-        inc = any(o.ended_in_tray for o in objs)
+        inc = all(o.ended_in_tray for o in objs)
         rids = [r.id for r in regs if r.kind == "inside" and r.object_kind == kind]
         if inc:
             included.append(kind)
@@ -100,12 +104,16 @@ def propose_offline(summary: DemoSummary, scene: SceneState) -> ProposalDraft:
             rules.append(DraftRule(
                 type="upright", object_kind=k, phase="transport", max_tilt_deg=15.0, contact_with=None,
                 min_clearance_m=None, regularity_ids=[r.id], shown_by_demo=r.statement,
-                assumption=(f"The {k} holds loose contents, so its orientation may matter while it moves."
+                assumption=(f"Scene knowledge, not demonstration evidence: the scene description lists loose "
+                            f"beads in the {k}, so its orientation may matter while it moves."
                             if beads.get(k, 0) > 0 else
                             f"Carrying the {k} upright may simply have been convenient."),
                 lean=lean,
                 question=(f"The {k} stayed upright the whole time it was carried. Must it stay upright "
-                          f"during transport, or only once it is placed?")))
+                          f"during transport, or only once it is placed?"
+                          + (f" (The lean towards 'required' comes from the scene description, which lists "
+                             f"loose beads in the {k}; the demonstration itself does not show that it matters.)"
+                             if beads.get(k, 0) > 0 else ""))))
         elif r.kind == "final_upright" and k in included:
             rules.append(DraftRule(
                 type="upright", object_kind=k, phase="final", max_tilt_deg=15.0, contact_with=None,
@@ -184,6 +192,9 @@ def _polarity(c: _Clause, t: str) -> Optional[bool]:
         up, tilt = bool(_UPRIGHT_RE.search(t)), bool(_TILT_RE.search(t))
         if irrelevant:
             return False
+        if tilt and c.deg is not None and re.search(
+                r"\b(at most|up to|no more than|not more than|maximum|max|within|less than|no further)\b|no more\b", t):
+            return True              # may tilt at most N degrees: a bound, so a requirement
         if tilt and not up:
             if neg:
                 return True          # must not tilt / can't tip / never spill
@@ -275,7 +286,8 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
     t = _normalize(text)
     if not t:
         raise CorrectionRejected("empty correction")
-    included = [g.object.kind for g in spec.goals if g.object.kind and g.status != Status.rejected]
+    from mirror.interpret.specops import active_goal_kinds
+    included = active_goal_kinds(spec) or [b.kind for b in spec.bindings]
     bound = [b.kind for b in spec.bindings]
     clauses = [_analyze(p) for p in _split(t)]
     text_prop = next((c.prop for c in clauses if c.prop), None)
@@ -302,7 +314,14 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
     only_kinds: list[str] = []
     explicit: dict[tuple, bool] = {}
     prev_positive: Optional[bool] = None
+    pending_phases: list[str] = []
     for c in clauses:
+        if c.phases and not c.kinds and not c.prop and not c.pronoun and not last_kinds:
+            pending_phases = list(c.phases)  # "Once placed, the cup must ..."
+            continue
+        if pending_phases and not c.phases:
+            c.phases = pending_phases
+        pending_phases = []
         continuation = bool(c.phases) and bool(last_kinds) and not c.kinds
         prop = c.prop or (text_prop if (c.kinds or c.pronoun or c.scope_only or continuation) else None)
         if prop is None:
@@ -389,7 +408,7 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
         for k in included:
             if k in only_kinds or any(key[2] == k for key in explicit):
                 continue
-            if any(cn.type == rtype and cn.applies_to.kind == k and cn.status != Status.rejected
+            if any(cn.type == rtype and effective_kind(cn.applies_to, spec) == k and cn.status != Status.rejected
                    for cn in spec.constraints):
                 ops.append(DraftOp(action="relax_rule", target_id=None, before_kind=None, after_kind=None,
                                    goal_kind=None, rationale=f"User said only the {', '.join(only_kinds)} matters",
