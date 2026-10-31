@@ -69,6 +69,17 @@ def run_story(svc: StudioService, *, seeds: list[int], clarify: bool, blocked: b
     svc.load_demo()
     log("demonstration loaded")
     job(svc.interpret(), "interpret")
+    # The human review: confirm every goal and the cup's final-upright rule, as in the evaluation.
+    spec = svc.session.spec
+    confirm = {g.id: "confirmed" for g in spec.goals if g.status.value != "confirmed"}
+    for c in spec.constraints:
+        if (c.type == "upright" and c.phase == "final" and c.applies_to.kind == "cup"
+                and c.status.value != "confirmed"):
+            confirm[c.id] = "confirmed"
+    if confirm:
+        svc.commit_decisions(confirm)
+        steps.append({"step": "confirm " + ", ".join(confirm), "status": "done", "error": None, "seconds": 0})
+        log(f"confirmed {len(confirm)} items -> v{svc.session.spec.version}")
     job(svc.run(condition="demonstration layout", tags=["run"]), "run on the demonstration layout")
     svc.set_scene_preset("shortcut")
     job(svc.run(condition="changed world", tags=["world"]), "run on the shortcut layout")
@@ -120,6 +131,7 @@ def write_site(svc: StudioService, out: Path, steps: list[dict], extra: dict) ->
         "llm_mode": os.environ.get("MIRROR_LLM_MODE", "live"),
         "llm_model": os.environ.get("MIRROR_LLM_MODEL", "muse-spark-1.3"),
         "interpreter": snap["specs"][0].get("interpreter") if snap["specs"] else None,
+        "interpreter_fallbacks": snap.get("fallbacks", []),
         "code_sha256": code_digest(),
         "steps": steps,
         "rollouts": len(ids),
@@ -151,6 +163,14 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     if args.backend == "fixture" and not args.allow_fixture:
         ap.error("fixture data is placeholder motion, not simulation; pass --allow-fixture to export it anyway")
+    if os.environ.get("MIRROR_LLM_MODE") == "replay" and not os.environ.get("MIRROR_LLM_MODEL"):
+        # Replay the recorded responses: request the model they were recorded with.
+        recorded = sorted({(json.loads(p.read_text()).get("request") or {}).get("model")
+                           for p in (ROOT / "data" / "cassettes").glob("*.json")
+                           if json.loads(p.read_text()).get("name") == "propose_spec"} - {None})
+        if recorded:
+            os.environ["MIRROR_LLM_MODEL"] = recorded[0]
+            log(f"replaying recorded responses of {recorded[0]}")
     svc = StudioService(backend=args.backend)
     if svc.mode == "fixture" and not args.allow_fixture:
         ap.error("simulation packages unavailable; refusing to export fixture data without --allow-fixture")

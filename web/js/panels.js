@@ -758,13 +758,17 @@ function EvidencePanel({ ctx }) {
             const cup = cupOutcome(rep);
             return html`<button class=${'ev-cell' + (broke ? ' broke' : '')} aria-pressed=${ctx.pick && ctx.pick === cell?.rollout_id}
               disabled=${!r?.has_frames} onClick=${() => r && ctx.setPick(r.id)} aria-label=${`seed ${p.seed} ${k === 'a' ? 'original' : 'corrected'}: ${statusLabel(rep)}`}>
-              <${MiniMap} scene=${p.scene || r?.scene} trace=${r?.trace} />
+              ${p.scene || r?.scene ? html`<${MiniMap} scene=${p.scene || r?.scene} trace=${r?.trace} />`
+                : html`<div class="mini-none"><span>report only</span></div>`}
               <div class="m"><${Chip} status=${rep?.status}>${statusLabel(rep)}<//>
                 ${cup ? html`<span class="num muted">${fmtNum(cup.max_transport_tilt_deg, 0)}° · ${cup.beads_in_container}/${cup.beads_total}</span>` : ''}
-                ${broke ? html`<span class="bad-t">breaks v${vb}</span>` : ''}</div>
+                ${broke ? html`<span class="bad-t">breaks v${vb}</span>` : ''}
+                ${cell?.trial?.feasibility === 'proven_infeasible' ? html`<span class="ok-t">proven impossible</span>` : ''}
+</div>
             </button>`;
           })}</div>`)}</div>
-        ${ev.pairs.some((p) => rs.find((x) => x.id === p.a?.rollout_id)?.sketch) ? html`<p class="faint" style="font-size:12px">Maps are drawn from each recorded rollout's own geometry.</p>` : ''}`
+        ${ev.pairs.some((p) => rs.find((x) => x.id === p.a?.rollout_id)?.sketch) ? html`<p class="faint" style="font-size:12px">Maps are drawn from each recorded rollout's own geometry.</p>` : ''}
+        ${raw?.rollout_selection?.rule && ev.pairs.some((p) => !rs.find((x) => x.id === p.a?.rollout_id)?.has_frames) ? html`<p class="faint" style="font-size:12px">"Report only": ${raw.rollout_selection.rule}</p>` : ''}`
       : html`<p class="muted">No evaluation yet.</p>`}
       ${ev?.real && ev.raw.scope?.verdict ? html`<h3>Scope</h3><p>${cap(ev.raw.scope.verdict)}.</p>
         <p class="faint" style="font-size:12px">Objects the correction does not mention may still tilt when that is cheaper.</p>` : ''}
@@ -773,7 +777,9 @@ function EvidencePanel({ ctx }) {
           <dt>Code</dt><dd class="num">${((raw.manifest || ev.raw.manifest)?.code_sha256 || '').slice(0, 12)} · ${(raw.manifest || ev.raw.manifest)?.code_files} files</dd>
           <dt>Checker</dt><dd>${ev.raw.config?.checker}</dd><dt>Wall time</dt><dd class="num">${fmtNum(ev.raw.wall_time_s, 0)} s</dd></dl>
         <ul style="font-size:12px;padding-left:18px">${(ev.raw.simplifications || []).map((x) => html`<li>${x}</li>`)}</ul></details>` : ''}
+      ${final && raw.ledger ? html`<${LedgerNote} raw=${raw} />` : ''}
     </div>
+    ${final && raw.blocked_reference?.length ? html`<div class="sec"><${BlockedProofs} raw=${raw} /></div>` : ''}
     <div class="sec" id="blocked-case">
       <p class="kicker">The blocked case</p>
       <p class="lede">In this layout the slot is the only opening. Carrying the cup upright cannot fit through it. The robot should stop, not break the rule.</p>
@@ -796,6 +802,33 @@ export function evalKind(raw) {
   if (m.kind === 'rehearsal' || /rehears/i.test(raw.title || '') || split === 'dev')
     return { kind: 'rehearsal', label: 'rehearsal on development seeds, not the pre-registered result' };
   return { kind: 'loaded', label: `saved ${split || ''} report` };
+}
+
+function LedgerNote({ raw }) {
+  const L = raw.ledger, m = raw.manifest || {};
+  const fe = L.frozen_seed_entries || [];
+  const eb = L.entries_before_freeze;
+  const before = Array.isArray(eb) ? eb.length : typeof eb === 'number' ? eb : fe.filter((e) => e.unix < m.created_unix).length;
+  const clean = !before;
+  return html`<div class=${'callout ' + (clean ? 'ok' : 'bad')} style="margin-top:12px">
+    <b>${clean ? 'Ledger clean.' : 'Ledger shows layouts drawn before the freeze.'}</b>
+    ${` Every evaluation layout ever generated is logged: ${L.entries} entries, ${fe.length} for frozen seeds, ${clean ? 'all generated after the manifest was written' : `${before} before it`} (${(m.created_at || '').replace('T', ' ').slice(0, 19)} UTC).`}
+    <div class="muted num" style="margin-top:4px;font-size:11px">ledger sha256 ${(L.sha256 || '').slice(0, 16)} · manifest code ${(m.code_sha256 || '').slice(0, 12)}</div>
+  </div>`;
+}
+
+function BlockedProofs({ raw }) {
+  const strat = raw.strata?.blocked;
+  const proven = strat ? strat.trials.filter((t) => t.b.feasibility === 'proven_infeasible').length : null;
+  return html`<p class="kicker">Blocked layouts: stop, with proof</p>
+    ${strat ? html`<p><span class="num">${proven}/${strat.trials.length}</span> blocked layouts: the corrected specification found no plan,
+      and an independent argument proves no motion can keep the cup upright there. The original specification still plans (it may tilt).</p>` : ''}
+    ${raw.blocked_reference.map((b) => html`<div class=${'callout' + (b.failure_class === 'proven_infeasible' ? ' ok' : '')} style="margin-top:6px">
+      <b>${b.scene_id} · ${b.condition}:</b> ${statusLabel({ status: b.status, plan_status: b.status === 'planning_failed' ? 'no_plan' : '' })}
+      ${b.independent?.verdict === 'proven_infeasible' ? html`<div style="margin-top:4px">${b.independent.detail?.argument || ''}</div>
+        ${(b.independent.detail?.assumptions || []).length ? html`<div class="muted" style="margin-top:4px">Assumes: ${b.independent.detail.assumptions.join('; ')}.</div>` : ''}`
+        : html`<div class="muted" style="margin-top:4px">${b.status === 'success' ? 'Plans and completes without the transport rule.' : (b.plan_reason || '').slice(0, 160)}</div>`}
+    </div>`)}`;
 }
 
 function roleText(role, rep) {
@@ -911,7 +944,7 @@ export function AboutPanel({ ctx, onClose }) {
       <li><b>The robot is a free-flying gripper.</b> Six position-controlled axes and two fingers; no arm is modelled. Objects move only through actuators and contact physics.</li>
       <li><b>Privileged state.</b> Planning and checking read simulator state (poses, contacts, bead positions). It is not visual perception.</li>
       <li><b>The demonstration</b> is ${sources[snap.demo?.source] || 'a recorded trace'}, not a video of a person.</li>
-      <li><b>The specification</b> was produced by <span class="num">${interp}</span>${isOffline ? ', the rule-based interpreter that needs no model' : ''}${spec?.history?.find((h) => h.model)?.model ? `; corrections compiled by ${spec.history.find((h) => h.model).model}` : ''}. Model output is validated against a schema before planning and never judges success.</li>
+      <li><b>The specification</b> was produced by <span class="num">${interp}</span>${isOffline ? ', the rule-based interpreter that needs no model' : ''}${spec?.history?.find((h) => h.model)?.model ? `; corrections compiled by ${spec.history.find((h) => h.model).model}` : ''}. ${snap.llm_mode === 'replay' ? ' Model responses are replayed from recordings made with that model; nothing calls a model while you browse.' : ''}${(snap.fallbacks || []).length ? ` Steps without a recording used the offline interpreter: ${snap.fallbacks.map((f) => f.step).join(', ')}.` : ''} Model output is validated against a schema before planning and never judges success.</li>
       <li><b>Success is measured</b> by an independent checker from the physics log at every step: placement, tilt per phase, bead retention, contacts.</li>
       <li><b>Evidence:</b> ${ev ? ({ final: 'the pre-registered evaluation, loaded unchanged from the evaluation output.',
         rehearsal: 'a rehearsal of the evaluation pipeline on development seeds, not the pre-registered result.',

@@ -287,6 +287,7 @@ class StudioService:
         self.trace_cache: dict[str, Optional[dict]] = {}
         self.eval_entries: dict[str, dict] = {}
         self.payload_digits = 4
+        self.fallbacks: list[dict] = []
         self.teleop = None
 
     # ------------------------------------------------------------ events
@@ -347,7 +348,14 @@ class StudioService:
         with self.lock:
             s = self.session
             ref = REPO_ROOT / "data" / "demos" / "reference_demo.json"
-            if self.mode == "live" and ref.exists():
+            pinned = REPO_ROOT / "data" / "cassettes" / "inputs" / "reference_demo.json.gz"
+            if self.mode == "live" and pinned.exists():
+                # The demonstration the recorded model responses were made from.
+                import gzip
+                s.demo = DemoTrace.model_validate_json(gzip.decompress(pinned.read_bytes()))
+                s.scene = s.demo.scene
+                s._event("demo_loaded", demo_id=s.demo.demo_id, source=s.demo.source)
+            elif self.mode == "live" and ref.exists():
                 s.load_demo(ref)
             elif self.mode == "live":
                 from ..scenes import reference_scene
@@ -371,14 +379,34 @@ class StudioService:
             visual = None
         return trace_to_rollout(s.demo, visual)
 
+    def _with_fallback(self, fn, job: Optional[Job] = None):
+        """Run an interpreter call; if replay has no recording for it, use the
+        offline rule-based interpreter instead and say so."""
+        try:
+            return fn(), None
+        except Exception as exc:  # noqa: BLE001
+            if type(exc).__name__ != "CassetteMiss" or self.mode != "live":
+                raise
+            from ..interpret import LLMClient
+            prev = getattr(self.session, "client", None)
+            self.session.client = LLMClient(mode="offline")
+            try:
+                if job is not None:
+                    self._progress(job, 0.5, "No recorded response for this request; using the offline interpreter")
+                return fn(), "offline-rules (no recorded model response for this request)"
+            finally:
+                self.session.client = prev
+
     def interpret(self) -> Job:
         def work(job):
             self._progress(job, 0.1, "Reading the demonstration")
             with self.lock:
                 if self.session.demo is None:
                     self.load_demo()
-                spec = self.session.interpret()
-            return {"version": spec.version}
+                spec, fb = self._with_fallback(self.session.interpret, job)
+                if fb:
+                    self.fallbacks.append({"step": "interpret", "used": fb})
+            return {"version": spec.version, "fallback": fb}
         return self.submit("interpret", {}, work)
 
     def commit_decisions(self, decisions: dict[str, str], note: str = "") -> dict:
@@ -406,6 +434,15 @@ class StudioService:
                                           rationale="Answered by the review decision."))
             if not ops:
                 return self.snapshot()
+            if hasattr(self.session, "confirm"):
+                # Same operation the evaluation used to confirm the proposal: goals, then rules, then order.
+                order = [g.id for g in spec.goals] + [c.id for c in spec.constraints] + [o.id for o in spec.ordering]
+                conf = [i for i in order if decisions.get(i) == "confirmed" and known[i] != "confirmed"]
+                rej = [i for i in order if decisions.get(i) == "rejected" and known[i] != "rejected"]
+                if conf or rej:
+                    self.session.confirm(confirm=conf, reject=rej, text=note)
+                    self._changed()
+                    return self.snapshot()
             text = note or "Reviewed interpretation: " + ", ".join(f"{k} {v}" for k, v in decisions.items())
             self.session.apply_ops(ops, text=text, kind="confirmation")
             self._changed()
@@ -417,7 +454,9 @@ class StudioService:
             with self.lock:
                 before = self.session.spec.version
                 try:
-                    spec, record = self.session.correct(text)
+                    (spec, record), fb = self._with_fallback(lambda: self.session.correct(text), job)
+                    if fb:
+                        self.fallbacks.append({"step": "correction", "used": fb})
                 except Exception as exc:  # noqa: BLE001 - typed outcomes from the interpreter
                     name = type(exc).__name__
                     if name == "NeedsClarification":
@@ -910,6 +949,8 @@ class StudioService:
                 "jobs": [j.public() for j in sorted(self.jobs.values(), key=lambda j: j.started)[-12:]],
                 "events": s.events[-50:],
                 "teleop_available": self.mode == "live",
+                "llm_mode": os.environ.get("MIRROR_LLM_MODE") or ("live" if os.environ.get("MODEL_API_KEY") else "offline"),
+                "fallbacks": self.fallbacks,
             }
 
 

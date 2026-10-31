@@ -65,3 +65,25 @@ def test_static_site_renders_without_console_errors(tmp_path):
         srv.terminate()
         srv.wait(timeout=10)
     assert not errors, errors
+
+
+@pytest.mark.slow
+def test_final_report_loads_without_sampling(monkeypatch):
+    final = ROOT / "results" / "eval" / "report.json"
+    if not final.exists():
+        pytest.skip("no final evaluation report")
+    import mirror.scenes as scenes
+
+    def boom(*a, **k):
+        raise AssertionError("the studio must not generate layouts for a loaded report")
+    monkeypatch.setattr(scenes, "sample_layout", boom, raising=False)
+    from mirror.studio.session_adapter import StudioService
+    svc = StudioService(backend="fixture")
+    ev = svc.load_evaluation(final.parent)
+    data = json.loads(final.read_text())
+    assert ev["final"] and set(ev["strata"]) == set(data["strata"])
+    for name, rep in data["strata"].items():
+        assert len(ev["strata"][name]["studio"]["rollout_ids"]) == len(rep["trials"])
+    rows = [r for r in svc.snapshot()["rollouts"] if "eval" in r["tags"]]
+    assert sum(r["has_frames"] for r in rows) >= 1
+    assert all(r["scene"] is not None for r in rows if r["has_frames"])

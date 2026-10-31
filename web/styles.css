@@ -290,3 +290,5 @@ svg.chart .ax { font: 10px var(--mono); fill: var(--faint); }
 .item-sub .st-confirmed { color: var(--ok); }
 .item-sub .st-proposed { color: var(--warn); }
 .item-sub .st-rejected { color: var(--faint); text-decoration: line-through; }
+.mini-none { aspect-ratio: 10 / 9; display: grid; place-items: center; background: repeating-linear-gradient(135deg, var(--viewer) 0 6px, transparent 6px 12px); color: var(--faint); font-size: var(--fs-xs); }
+.mini-none span { background: var(--surface); padding: 2px 8px; border-radius: var(--r-pill); border: 1px solid var(--line); }
