@@ -127,3 +127,36 @@ What this does not show: behaviour outside this task family, with other
 corrections, on physical hardware, or with Muse Spark as the interpreter (the
 specifications were produced from recorded development-model responses, and
 the offline rules produce the same enforced constraints).
+
+
+## Second registration: specifications compiled by Muse Spark
+
+A second evaluation was frozen (`results/eval_muse/freeze.json`, commit
+`864060d`) before any of its layouts existed: primary 50000-50059 (mixed),
+shortcut 60000-60029, blocked 50000-50004, none used anywhere before. Its
+specifications are replayed from `muse-spark-1.3` recordings
+(`data/cassettes_muse`). They differ from the first pair in prose but enforce the
+same rules and goals (`results/muse_spec_comparison.json`). Analysis plan and
+hypotheses were stated in the manifest and match the first evaluation:
+corrected beats original on violation-free success in both strata, corrected
+never loses beads, blocked 5/5 proven.
+
+| | primary: A / B | shortcut: A / B | blocked: A / B |
+|---|---|---|---|
+| Violation-free success | 33 / 60 | 3 / 30 | 0 / 0 |
+| Trials violating the corrected rule | 27 / 0 | 27 / 0 | 5 / 0 |
+| Beads lost | 104 / 0 | 103 / 0 | 21 / 0 |
+| Max cup tilt (deg) | 89.7 / 0.3 | 89.7 / 0.3 | 89.7 / n/a |
+| Planning / execution failures, timeouts | 0 / 0 | 0 / 0 | 0 / 5 planning (all proven infeasible) |
+| Exact McNemar | p = 1.49e-8 | p = 1.49e-8 | not applicable |
+
+All three hypotheses hold. Its code hash leaves out presentation-only modules
+(renderer, studio, CLI); see `mirror/evaluate/METHOD.md`. The first run attempt
+was interrupted by a machine restart after generating 90 layouts and before
+writing any result; the full run was repeated from a clean checkout of the same
+commit with the same runtime. Both attempts are in its ledger. Details:
+`results/eval_muse/RUN_NOTES.md`.
+
+Reproduce: `git checkout 864060d`, then
+`python scripts/run_eval.py final --registration muse --workers 2` in a scratch
+clone (it writes its outputs and ledger entries into `results/eval_muse`).

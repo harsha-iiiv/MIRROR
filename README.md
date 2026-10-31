@@ -22,9 +22,10 @@ model's description of what happened.
   actuators and contacts.
 * **Demonstration:** a scripted teleoperation trace through the same command
   interface a person uses in the studio. Not human-video understanding.
-* **Model:** targets Meta Model API (Muse Spark). The recorded responses that
-  reproduce the results without a key came from a development model and are
-  labelled as such; `MIRROR_LLM_MODE=record` re-records them.
+* **Model:** Meta Model API (Muse Spark, `muse-spark-1.3`). Recorded Muse Spark
+  responses in `data/cassettes_muse` replay the story and the second evaluation
+  without a key. The first evaluation's recordings came from a development model
+  and are labelled as such.
 * **Proofs are narrow.** "Infeasible" is claimed only with a geometric bound
   under stated assumptions; otherwise the planner reports that it found no
   plan, which is not a proof.
@@ -44,22 +45,29 @@ Full list: [docs/CLAIMS.md](docs/CLAIMS.md).
 
 ## Results
 
-Pre-registered evaluation on layouts generated only after the code, both
-specification versions and the seed lists were frozen
-([details](docs/EVALUATION.md), [full report](results/eval/report.md)):
+Two pre-registered evaluations, each on layouts generated only after the code,
+both specification versions and the seed lists were frozen
+([details](docs/EVALUATION.md)). The second uses specifications compiled by
+**Muse Spark** (`muse-spark-1.3`) on 95 new layouts; the first used recorded
+responses from a development model. Both specification pairs enforce the same
+rules.
 
-| | Fresh layouts (60) | Shortcut layouts (30) |
-|---|---|---|
-| Original spec: success without violating "upright during transport" | 27 / 60 | 4 / 30 |
-| Corrected spec: same | **60 / 60** | **30 / 30** |
-| Beads lost, original → corrected | 119 → 0 | 106 → 0 |
-| Unrelated objects still allowed to tilt | 32 / 32 | 25 / 25 |
-| Paired exact McNemar | p = 2.3 × 10⁻¹⁰ | p = 3.0 × 10⁻⁸ |
+| | First: fresh (60) | First: shortcut (30) | Muse Spark: fresh (60) | Muse Spark: shortcut (30) |
+|---|---|---|---|---|
+| Original spec: success without violating "upright during transport" | 27 / 60 | 4 / 30 | 33 / 60 | 3 / 30 |
+| Corrected spec: same | **60 / 60** | **30 / 30** | **60 / 60** | **30 / 30** |
+| Beads lost, original → corrected | 119 → 0 | 106 → 0 | 104 → 0 | 103 → 0 |
+| Unrelated objects still allowed to tilt | 32 / 32 | 25 / 25 | 33 / 33 | 23 / 23 |
+| Paired exact McNemar | p = 2.3 × 10⁻¹⁰ | p = 3.0 × 10⁻⁸ | p = 1.5 × 10⁻⁸ | p = 1.5 × 10⁻⁸ |
+
+Full reports: [first](results/eval/report.md), [Muse Spark](results/eval_muse/report.md)
+([run notes](results/eval_muse/RUN_NOTES.md)).
 
 No planning failures, execution failures, timeouts or obstacle contacts in
-either condition. On five layouts where the slot is the only way through, the
-original specification spills beads to finish the task; the corrected one
-stops with a proof that the rule cannot be met.
+either condition of either evaluation. On five layouts per evaluation where the
+slot is the only way through, the original specification spills beads to finish
+the task; the corrected one stops with a proof that the rule cannot be met
+(10/10 proven, each confirmed by an independent bound).
 
 ## Quick start
 
