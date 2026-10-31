@@ -136,14 +136,30 @@ understand the scene layout; the measurements are authoritative, and every
 statement in shown_by_demo must be supported by the measurements."""
 
 
+OBSERVATIONS_NOTE = """
+
+The input also includes video_observations: what a video model reported after
+watching a video of this demonstration. They can be wrong. Treat them as
+secondary evidence: a care cue may support proposing a rule (cite it in
+shown_by_demo with its times), but never propose a rule that the measurements
+contradict, and do not dismiss a measured regularity because of them."""
+
+
 def propose_messages(summary: DemoSummary, scene: SceneState,
-                     keyframes: Optional[list] = None) -> list[dict[str, Any]]:
+                     keyframes: Optional[list] = None,
+                     observations: Optional[dict] = None) -> list[dict[str, Any]]:
+    """``observations``: optional VideoObservations.prompt_view(). When absent the
+    messages are byte-identical to those of earlier versions, so existing
+    recordings keep replaying."""
     payload = {"scene": scene_inventory(scene), "demonstration": summary_payload(summary)}
+    if observations is not None:
+        payload["video_observations"] = observations
     text = "Propose the task specification for this demonstration.\n" + json.dumps(payload, indent=1, sort_keys=True)
+    system = PROPOSE_SYSTEM + (OBSERVATIONS_NOTE if observations is not None else "")
     if not keyframes:
-        return [{"role": "system", "content": PROPOSE_SYSTEM}, {"role": "user", "content": text}]
+        return [{"role": "system", "content": system}, {"role": "user", "content": text}]
     from mirror.interpret.keyframes import image_parts
-    return [{"role": "system", "content": PROPOSE_SYSTEM + KEYFRAMES_NOTE},
+    return [{"role": "system", "content": system + KEYFRAMES_NOTE},
             {"role": "user", "content": [{"type": "text", "text": text}] + image_parts(keyframes)}]
 
 

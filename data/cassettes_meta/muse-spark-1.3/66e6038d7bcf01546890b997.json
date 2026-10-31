@@ -1,0 +1,98 @@
+{
+ "key": "66e6038d7bcf01546890b997ad8517f85af85f0c8d3f2055ac0af92c432c86d7",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "Name each of these things visible in the image with one short noun phrase: cup, block, marker, tray, wall, table. Skip a kind that is not visible."
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:7b4ad7b1bc835e0b44ef8f2dfea721a9616bdcc1360284ad14906cc17b959b30"
+     }
+    ]
+   }
+  ],
+  "instructions": "You name objects in an image so that a segmentation model can find them.\nThe segmentation model matches short concrete noun phrases: colour plus\nshape works best (\"blue cube\", \"white square box\", \"red cylinder\"). Do not\nwrite instructions or questions, do not use \"and\", commas, negation or\npositions (\"on the left\"). Each phrase must pick out exactly one thing in the\nimage.",
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "sam_prompts",
+    "schema": {
+     "$defs": {
+      "NamedObject": {
+       "properties": {
+        "kind": {
+         "enum": [
+          "cup",
+          "block",
+          "marker",
+          "tray",
+          "wall",
+          "table",
+          "other"
+         ],
+         "type": "string"
+        },
+        "phrase": {
+         "description": "2-4 word noun phrase: colour + shape, e.g. 'blue cube'",
+         "type": "string"
+        },
+        "why": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "kind",
+        "phrase",
+        "why"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     },
+     "properties": {
+      "objects": {
+       "items": {
+        "$ref": "#/$defs/NamedObject"
+       },
+       "type": "array"
+      }
+     },
+     "required": [
+      "objects"
+     ],
+     "type": "object",
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"objects\": [{\"kind\": \"cup\", \"phrase\": \"white cup\", \"why\": \"Only white cup-shaped container on the tray\"}, {\"kind\": \"block\", \"phrase\": \"blue cube\", \"why\": \"Only small blue cubic block in the scene\"}, {\"kind\": \"marker\", \"phrase\": \"red cylinder\", \"why\": \"Only thin red cylindrical marker\"}, {\"kind\": \"tray\", \"phrase\": \"beige tray\", \"why\": \"Only large beige flat board holding objects\"}, {\"kind\": \"wall\", \"phrase\": \"gray wall\", \"why\": \"Only tall gray vertical divider panel\"}, {\"kind\": \"table\", \"phrase\": \"gray table\", \"why\": \"Only large gray supporting surface under tray\"}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 894,
+   "input_tokens_details": {
+    "cached_tokens": 241
+   },
+   "output_tokens": 6396,
+   "output_tokens_details": {
+    "reasoning_tokens": 6232
+   },
+   "total_tokens": 7290
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 29.26,
+ "recorded_at": "2026-10-31T21:19:49Z"
+}

@@ -1,0 +1,49 @@
+{
+ "key": "55691ea0a7186d5cc425eab8dd5adbfd058fe5abb30e5d164eeb3979f67ee8fe",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "white cup"
+     },
+     {
+      "type": "input_video",
+      "file_id": "sha256:a54c867a40afe5bd89c31fc89c16ecba18d9c40a87eb7153733862aa3b4cb71c"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "",
+  "model": "sam-3.1",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "video_frames_processed": 1233
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 31.344,
+ "recorded_at": "2026-10-31T21:14:26Z"
+}

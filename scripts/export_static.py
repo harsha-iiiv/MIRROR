@@ -32,6 +32,7 @@ import shutil
 import sys
 import time
 from pathlib import Path
+from typing import Optional
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -46,7 +47,8 @@ def log(msg: str) -> None:
     print(f"[export] {msg}", flush=True)
 
 
-def run_story(svc: StudioService, *, seeds: list[int], clarify: bool, blocked: bool) -> list[dict]:
+def run_story(svc: StudioService, *, seeds: list[int], clarify: bool, blocked: bool,
+              video: str = "auto", voice_wav: Optional[Path] = None) -> list[dict]:
     steps = []
 
     def optional(j, what):
@@ -66,9 +68,15 @@ def run_story(svc: StudioService, *, seeds: list[int], clarify: bool, blocked: b
             raise RuntimeError(f"{what} failed: {j.error}")
         return j.result
 
-    svc.load_demo()
-    log("demonstration loaded")
-    job(svc.interpret(), "interpret")
+    cap = svc.capabilities()
+    use_video = video == "on" or (video == "auto" and cap.get("video") and cap.get("bundled_video"))
+    if use_video:
+        # The story starts from the bundled demonstration video: tracking, observations, proposal.
+        job(svc.process_video("bundled"), "video demonstration (tracking, observations, proposal)")
+    else:
+        svc.load_demo()
+        log("demonstration loaded")
+        job(svc.interpret(), "interpret")
     # The human review: confirm every goal and the cup's final-upright rule, as in the evaluation.
     spec = svc.session.spec
     confirm = {g.id: "confirmed" for g in spec.goals if g.status.value != "confirmed"}
@@ -83,7 +91,12 @@ def run_story(svc: StudioService, *, seeds: list[int], clarify: bool, blocked: b
     job(svc.run(condition="demonstration layout", tags=["run"]), "run on the demonstration layout")
     svc.set_scene_preset("shortcut")
     job(svc.run(condition="changed world", tags=["world"]), "run on the shortcut layout")
-    res = job(svc.correct(REFERENCE_CORRECTION), "correction")
+    text, tid = REFERENCE_CORRECTION, None
+    if voice_wav is not None:
+        tr = job(svc.transcribe(Path(voice_wav).read_bytes()), "spoken correction: transcription")
+        text, tid = tr["text"], tr["id"]
+        log(f"transcript: {text!r}")
+    res = job(svc.correct(text, transcript_id=tid), "correction" + (" (spoken)" if tid else ""))
     if not res.get("changed"):
         raise RuntimeError(f"the reference correction did not change the specification: {res}")
     job(svc.run(condition="corrected", tags=["corrected"]), "corrected run on the shortcut layout")
@@ -115,6 +128,20 @@ def write_site(svc: StudioService, out: Path, steps: list[dict], extra: dict) ->
     snap = svc.snapshot()
     snap["jobs"] = []
     snap["static"] = True
+    media = data / "media"
+    vd = snap.get("video_demo")
+    if vd:
+        media.mkdir(exist_ok=True)
+        for view, v in vd.get("views", {}).items():
+            name = f"demo_{view}.mp4"
+            shutil.copyfile(svc.video_file(v["id"]), media / name)
+            v["file"] = name
+    for tr in snap.get("transcripts") or []:
+        src = svc.transcript_audio(tr["id"])
+        if src:
+            media.mkdir(exist_ok=True)
+            shutil.copyfile(src, media / f"{tr['id']}.wav")
+            tr["audio_file"] = f"{tr['id']}.wav"
     # Rollout files are cached as immutable; the page asks for them with ?v=<export id>.
     snap["export_id"] = hashlib.sha256(f"{time.time_ns()}:{len(snap['rollouts'])}".encode()).hexdigest()[:12]
     (data / "session.json").write_text(json.dumps(snap, separators=(",", ":")))
@@ -208,6 +235,7 @@ def header_rules(index_html: str, api_base: str = "", ws_base: str = "", generic
         ("/data/session.json", {"Cache-Control": NO_CACHE}),
         ("/data/provenance.json", {"Cache-Control": NO_CACHE}),
         ("/data/rollouts/*", {"Cache-Control": IMMUTABLE}),
+        ("/data/media/*", {"Cache-Control": "public, max-age=86400"}),
         ("/js/*", {"Cache-Control": REVALIDATE}),
         ("/styles.css", {"Cache-Control": REVALIDATE}),
     ]
@@ -299,6 +327,10 @@ def main(argv=None) -> int:
     ap.add_argument("--seed-base", type=int, default=SHOWCASE_SEEDS.start,
                     help=f"first showcase seed ({SHOWCASE_SEEDS.start}-{SHOWCASE_SEEDS.stop - 1})")
     ap.add_argument("--repo-url", default="https://github.com/harsha-iiiv/MIRROR")
+    ap.add_argument("--video", choices=["auto", "on", "off"], default="auto",
+                    help="start the story from the bundled demonstration video (auto: when available)")
+    ap.add_argument("--voice-wav", type=Path, default=None,
+                    help="speak the correction: a 16 kHz mono WAV, transcribed and then compiled")
     ap.add_argument("--api-base", default="", help="live studio server origin for the 'Live simulation' switch")
     ap.add_argument("--ws-base", default="", help="websocket origin, if different from --api-base")
     ap.add_argument("--write-config", metavar="SITE", default=None,
@@ -338,7 +370,8 @@ def main(argv=None) -> int:
             ap.error(str(exc))
     t0 = time.time()
     steps = run_story(svc, seeds=[] if args.evaluation else seeds,
-                      clarify=not args.no_clarify, blocked=not args.no_blocked)
+                      clarify=not args.no_clarify, blocked=not args.no_blocked,
+                      video=args.video, voice_wav=args.voice_wav)
     if args.evaluation:
         svc.load_evaluation(args.evaluation)
         steps.append({"step": f"loaded evaluation report {Path(args.evaluation).name}", "status": "done",

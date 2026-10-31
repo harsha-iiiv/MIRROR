@@ -89,9 +89,69 @@ def _rehearsal_ledger(args) -> None:
     os.environ["MIRROR_EVAL_LEDGER"] = str(led)
 
 
+def _prereg(args, p) -> int:
+    """Benchmarks registered in mirror.evaluate.prereg (design -> freeze -> final)."""
+    from mirror.evaluate import designs, prereg
+    name = args.registration
+    if not name or name not in prereg.REGISTRY:
+        p.error(f"{args.mode} needs --registration one of {', '.join(prereg.REGISTRY)}")
+    pp = prereg.paths(name)
+    if args.mode == "design":
+        doc = prereg.write_design(name, designs.DESIGNS[name](), audit_paths=tuple(args.audit_path),
+                                  replace=args.replace_design)
+        print(f"design {name}: {len(doc.get('seeds', []))} seeds, {len(doc.get('inputs', []))} inputs, "
+              f"audit {doc['audit']['text_files']} files clean -> {pp['design'].relative_to(ROOT)} "
+              f"(sha256 {prereg.sha256_file(pp['design'])[:16]})")
+        return 0
+    if args.mode == "rehearse":
+        design, inputs, out = designs.rehearsal_setup(name)
+        kw = {}
+        if name == "video":
+            from mirror.evaluate.bench_video import oracle_tracker
+            kw = dict(tracker=oracle_tracker, tracker_label="ground-truth masks (oracle; rehearsal only)")
+        if name in ("voice", "video", "robustness"):
+            import os
+            from mirror.meta import MetaClient
+            mc = MetaClient.from_env(cassette_dir=out / "cassettes_meta", usage_log=out / "meta_usage.jsonl")
+            kw["meta_client" if name != "robustness" else "client"] = mc
+            if name == "video":
+                from mirror.interpret import LLMClient
+                kw["spark_client"] = LLMClient.from_env(cassette_dir=out / "cassettes_llm")
+        rep = prereg.rehearse(name, design, inputs, out, **kw)
+        print(f"rehearsal {name}: {rep['status']}; report {(out / 'report.md').relative_to(ROOT)}")
+        return 0
+    if args.mode == "inputs":
+        files, prov = designs.INPUTS[name]()
+        doc = prereg.write_inputs(name, files, provenance=prov, audit_paths=tuple(args.audit_path),
+                                  replace=args.replace_design)
+        print(f"inputs {name}: {len(files)} files, ledger lines {doc['ledger_after_inputs']['lines']} -> "
+              f"{pp['inputs'].relative_to(ROOT)} (sha256 {prereg.sha256_file(pp['inputs'])[:16]})")
+        return 0
+    if args.mode == "status":
+        missing = prereg.harness_ready(name)
+        print(f"{name}: design {'yes' if pp['design'].exists() else 'no'}, "
+              f"inputs {'yes' if pp['inputs'].exists() else 'no'}, "
+              f"freeze {'yes' if pp['freeze'].exists() else 'no'}, "
+              f"ledger entries {len(prereg.Ledger(pp['ledger']).entries())}, "
+              f"harness {'ready' if not missing else 'missing ' + ', '.join(missing)}")
+        return 0
+    if args.mode == "freeze-final":
+        fz = prereg.freeze(name, audit_paths=tuple(args.audit_path), allow_missing=args.allow_missing_harness)
+        print(f"froze {name}: code {fz['code_sha256'][:12]} ({fz['code_files']} files), design "
+              f"{fz['design_sha256'][:12]} -> {pp['freeze'].relative_to(ROOT)}")
+        return 0
+    if args.mode == "final":
+        rep = prereg.run(name)
+        print(f"{name}: {rep['status']}; report {pp['report_md'].relative_to(ROOT)}")
+        return 0
+    p.error(f"mode {args.mode} does not apply to registration {name}")
+    return 2
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("mode", choices=["dev", "freeze", "eval", "blocked", "recheck", "freeze-final", "final"])
+    p.add_argument("mode", choices=["dev", "freeze", "eval", "blocked", "recheck", "design", "inputs", "freeze-final",
+                                    "final", "status", "rehearse"])
     p.add_argument("--family", default="mixed", help="scene family for dev/freeze/eval: mixed | shortcut")
     p.add_argument("--save-rollouts", action="store_true",
                    help="write playback Rollout JSON (15 Hz) to <out>/rollouts/seed<k>_<condition>.json")
@@ -99,8 +159,12 @@ def main(argv=None) -> int:
     p.add_argument("--reference-specs", action="store_true", help="use the hand-written spec pair")
     p.add_argument("--spec-source", default="replay", choices=["replay", "offline"],
                    help="freeze-final: how the pre-registered specs are built (offline only for --rehearsal)")
-    p.add_argument("--registration", default=None, choices=["muse"],
-                   help="freeze-final/final: a named second registration (own seeds, ledger, output)")
+    p.add_argument("--registration", default=None, choices=["muse", "voice", "video", "robustness"],
+                   help="design/freeze-final/final/status: a named registration (own seeds, ledger, output)")
+    p.add_argument("--replace-design", action="store_true",
+                   help="design: rewrite an uncommitted design (refused once frozen or measured)")
+    p.add_argument("--allow-missing-harness", action="store_true",
+                   help=argparse.SUPPRESS)
     p.add_argument("--audit-path", action="append", default=[],
                    help="freeze-final --registration: extra file or directory searched for the seeds")
     p.add_argument("--seeds", default="0-5")
@@ -129,6 +193,9 @@ def main(argv=None) -> int:
         rep = ev.check(log, spec, scene, condition=f"recheck under v{spec.version}")
         print(rep.model_dump_json(indent=1))
         return 0
+
+    if args.registration in ("voice", "video", "robustness") or args.mode in ("design", "inputs", "status", "rehearse"):
+        return _prereg(args, p)
 
     if args.registration:
         from mirror.evaluate.final import REGISTRATIONS

@@ -1,0 +1,27 @@
+{
+ "file": "design_amendment_1.json",
+ "registration": "video",
+ "amends_design_sha256": "31980f0adadd404d1c3939c111635781434d79f98dd4a329222266f914f2ad45",
+ "written_at": "2026-10-31T21:42:48.941906+00:00",
+ "written_unix": 1793482968.941906,
+ "rationale": "Clarifies scope; no published value is changed. Written on 31 October 2026 after seeing development-only timing numbers from one reference demonstration (video models reported grasps about 2 s early; normal video was the best input strategy for both models). No input of this registration exists yet and nothing has been measured.",
+ "adds": {
+  "threshold_scope": {
+   "found_rate_min, centroid_cm_median_max, event_detection_min, timing_s_median_max, tilt_deg_median_max": "perception estimates from sam-3.1 tracking and the reconstruction in mirror.perception; grasp/release times for these thresholds come from tracked object motion, never from the video models",
+   "signature_equal_min": "muse-spark-1.3 proposal from the video-derived trace (with the muse-spark-1.3 observations) vs from the ground-truth trace",
+   "video models": "muse-wonder-1.0 and muse-spark-1.3 observations have no pass/fail threshold; reported: event F1 at the published 0.5 s tolerance, mean absolute timing error of events matched within 2 s, relevant-object set, care cue, validator issues, latency and cost; the published decision rule (Wonder vs Spark) applies"
+  },
+  "observation": {
+   "strategy": "video",
+   "camera": "top",
+   "event_time": "t_start of each reported grasp or release event",
+   "matching": "same event type and object kind, one-to-one, closest in time first"
+  },
+  "definitions": {
+   "relevant_objects": "among cup, block, marker and tray: the kit objects grasped in the demonstration plus the tray; a model is right when the kinds it marks relevant among these four equal that set",
+   "care_cue": "a cue on the cup (or naming the cup) containing upright, level, vertical, tilt, spill or straight; expected when the cup's true tilt stayed below 15 degrees while it was held",
+   "tilt": "the in-image tilt estimated from the side view vs the cup's true 3D tilt (only the in-image component is observable from one view); frames where the estimate is missing are not scored and are counted"
+  },
+  "pending": "rendering settings (resolution, frame rate), SAM prompt procedure and frame sampling, and a spend cap are fixed in a second amendment before the inputs are made"
+ }
+}

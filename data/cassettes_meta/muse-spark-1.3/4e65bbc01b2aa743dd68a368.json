@@ -1,0 +1,890 @@
+{
+ "key": "4e65bbc01b2aa743dd68a36810b2796e28a4afcc95d080cb5a60f291413699d3",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "Describe this demonstration from its frames. The video is 82.20 seconds long."
+     },
+     {
+      "type": "input_text",
+      "text": "t = 0.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:192f4652e2199a2f5d117adf42b2733d1fc4ef605ed8b1d6af3aac44c0854051"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 1.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:319a31cb61a23cc436f19885bb21478ac9a3b0823bcf06b5fa209962c92f339d"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 2.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:61992a3ed1f96c4a9ea3ca35ac65efccbbc43c97931326c4dca7f943c641c190"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 3.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:11d1fa3da37065a83d6df5ce36351b8ab50e6a9b24de8054fa45961d9a55a1dc"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 4.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:63c33b4d12cced87c98a001fdfb3d86f71c65502aac960b289fe7365e956fd45"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 5.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:2b8ff354e96cf48aa5b1d465b5a417d31592e92d5007bdc8591a00eb57238965"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 6.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:5f81306f8776e9a49f802f5baeedeb143b8d9b227313ddc140b4cb5b2805a79d"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 7.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:514da94b4de13511d70f3475375453a5875b972c6917d32e670c12de7ad9fe01"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 8.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:92629d9aa494017d78193112d47a22f964de702041d644e59b40268f857cf04e"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 9.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:31fb7e9cc996b25b0a2a2697cafa23930ae2efb8e5415510d6bdc1cea113cb93"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 10.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:1cfd2739efa76b5abadb9bbe2c58a72c4838d7a61a717ee069310da641fd89df"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 11.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:45f183d1f37ebeda8891c0eef0558e4f904054b28303d17370eca5052635dcf5"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 12.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:872694fdbbb1740f9ec3e1891fba4cabd16e8d2d19471deb1a86c8f8128708b6"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 13.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:e81ee8c190b433ca371ba7346c4f61dca6be084561627bced551dc513da78c9f"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 14.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:23b49279c0806cd5ab3bedb66d089e015f15d61750a1402f3a9e38f90fce5342"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 15.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:5751df9fd13d2d1f5d3c47fb489c661e140e7eeeb0f3b7d18ba21f66bdcad6cc"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 16.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:3f553469dfa3f8f7e11e8fa8d32479ed995e9d585ca33a54471f4eefdd923a2f"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 17.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:d2cc1836ba1ea3cb677f45490d6c56b3d5364bffb7377666a3a2e50dbe7c2987"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 18.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:133231ebf4307f0615178037ad713fb20bd5680bb9824dc02f56b19c73d1a753"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 19.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:a7ad5a35eca4703fbd17a7e26b0b18fe526229bf581c9bdd11becca478decfc8"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 20.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:2716e28ca4f84fa2df120084f0a408c5ed987aac35694f02294a9600d848c8b7"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 21.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:c14e7a3015926217867b29b17b8696c116c646cfd36756d8299e8cf63bad6dd5"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 22.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:2c3a8079f851149e66aefc0ec52e77d9e3965d0582a336e046ec1fecf1295187"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 23.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:879ec7db71e70b546420e8d7d206283de7d5f2104e355eda99e99726f07803c8"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 24.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:28a46010d41effbe106bf6e36ee129109dd68e44a3ddda73a5537ffeaa3e82b1"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 25.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:e6810e221914863848a3aafdfb6cb29e0883a4d370ad99f0d82b8436e628d4d1"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 26.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:074470b33ec01d66159f958f0a9d9b2ec7f5486b09b38abc17db4f85b6144bc2"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 27.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:931ad452423b7d757cf85a5115102259fb13f7d6f6d661f2b33aa87ae22fe3f0"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 28.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:c96a11a0bec35f605f15f07f59ef7c19cbbc35e658142b095e531117cc83ff98"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 29.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:b420e069c98464d8ad319f2e8431c09f04f9f7b73b2ebee2d0e7d9266f995ae0"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 30.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:7a91e90863c5cf78ab60f6fae0b22c8ec080065b1f973d4ad01610479fe8631c"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 31.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:fbe8c1ff0c59f2df3b5b83b9dae06cf512162bb1e4ea25645f8c84e627548baa"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 32.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:3d585d76d7224771cca9d421f1dd0a807f8a7a9493e1eda7b13c15328ca4da12"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 33.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:a4e898a64426cdc1e1682262f4af609bfbdfd669278a5dcdd96e778e159e75eb"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 34.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:cd0e9fe77d6c2e4f662f4c31007d85d78bd2f9c13b6a9306f63bf6e905beb405"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 35.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:215d7075b76db6f9827de91e55c55c8fa2773b28292470e94cb4a0d03cea0d0b"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 36.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:789aeb43e42533ed4c85ac4dd49b303613f752512e9d1a5aae46215ff1815913"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 37.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:53061c8a9074ff53515c48589fb353b2500b7b2b62d8cd6528880c07ab0d86a5"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 38.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:6006d81ea630a7ca16b3a192dbae3383fa346c63869b966bd3faa1962ee2fb0b"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 39.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:b30f45afecab8566513a0c2861d2537737c10c2cf7a6b1797fa200e419d4de97"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 40.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:3582d7184a942941ac538ac8349db80b8f38556d620483406e912da0947eaea2"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 41.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:e75e748699cd6da54477c9b3665f7251949044e1f096fa655375c3b6405f1af7"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 42.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:66896175a1414eda360ff65fc0e138d6795975f95a5b03223a881f8e92958163"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 43.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:4d6e893c5981ad3ddd4f83f376b964ec907cbc8ad042fc12b5dbb97735be9fc0"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 44.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:5c5f88ea400518309eb3746ff47d88a4381ce9a5c99d2135eba11f72faf0c7fc"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 45.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:114e111c49578938d54d5771edd6dc328b30dfd36d2258fef8bc80560315ba2d"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 46.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:7e6732082e5d7ca30b8e93870c0cd1f3578ed4c5d36a22f578e7daf908a0b0e5"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 47.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:d9625d9fae64e049d79b7f2eb7511d1f787de2eb967d352398a0dd95242bb926"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 48.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:a2ee07eb24e77f016253430c8d89f7e926d3b7b239c5a5e363dd64d7d77a8919"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 49.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:d174bd209e0adb2daa3269cd60684b056868e1e50794246d6a4478102967e6d8"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 50.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:955140182ad06175f2fdb0a6542bb7a7ab4e8be8cc255877a63801d5c6c97b57"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 51.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:4d52884ca703f47f204a194a1e5325bf63ba3697cc1b7383f5dfd16f3447f6a6"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 52.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:30dd0386da97f42e49aed7ef6c92896396b319e6303692a2a387e9614e55bbe7"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 53.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:5369e6afd8a5e7c26b9b1ce18b85699fe3036df808f7a4407a0cf717ac2218f7"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 54.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:a5e8e922396c1f63973be7c68c03585536dce9f0a3d0838b5bcf92c830f8ee3a"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 55.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:170e25e177df4dabb0bc9a2d210e7bda1105e1308eb5063e4a9d1d46f566a3d0"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 56.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:670742538fced07ff5fb50aac5522c48cbd1641ef52e9d7fdd258b7542c9e791"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 57.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:8d78b66fdc4c1ac9eb5f63519560163b211ff87b74fae41b8feb4a78ec5897d4"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 58.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:e59f608d7ecabaa01d1c3fed1b5eb97e4dc29ce5664bc7cbc2344bb730a0f51d"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 59.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:5cba2156dfc2f8dcf85f3a97c7ee09bd86b35ac1c52d4d7ff80684ffca22ce11"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 60.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:bbbb70dba10f3a3b9b32a10d759a303da11a10ac3bf895c899844bbcfcae6186"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 61.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:49400fba0e5a91ab562213ab39a41a3634e89796fa62c1d434f12a07d10e9927"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 62.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:5a7e2fd211dc830a7bed401b76abd0776f0b7bb330f5b79910a7de073fa4ed16"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 63.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:2bf0acb414fdf8aff5620b7518cdbfc790d205252b8d7d86c5da61c4a9b401e8"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 64.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:e1670a5af344f4eb8053f0aaaecb366243fa021c0b97a3e7c79f3b540f3600f5"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 65.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:0a418f769de019402229dffaa4d56dbe844aae0bf03b57023264d8a35cd2ffca"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 66.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:13b7e70a1d7bbe587b6ab618c7e7f4a36d3be0f051dc26ed5940214b32973762"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 67.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:652f637da4dec4149db8064c9970c65686143f2aedfb2e5f1dfe83a8719f262c"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 68.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:efb9e65df988542abcde6f3467c86fe3d8f3f729070de496c16c9ebf88a3bbbf"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 69.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:eb303fbbed60d4eae0d4bcc19ae5e68d417f1c6bf0d6a5e34d0ad9610783a9bd"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 70.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:f9c64b262d073e10183a126e728c8d3f6470583b3f2fbadfee8f1df1af2f506d"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 71.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:942c5d7df9c18448ecf8c959f7ce1bdc5d3ff24d49700359ff4bb2d1d8739973"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 72.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:464b744b0ed9b76185187bbfdd2f0041d0f487e29dfc2eee6df864ce67958920"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 73.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:ab2f2027300c66d2189d8f443fd91b0f9fbd303084ad9065caa794e67274557a"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 74.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:ed507e074bcf17bbcf2a6493ec8a777e16e582fa5f621d593507a893178e36ea"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 75.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:150c2561ffd1a1d860ebd18fb0368db7f57597bd6306c4040afee25eb62fd36f"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 76.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:edec5babc558f2d994d9c54cc025de624df79f85d11c5ecce2e285ab1ee6a67a"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 77.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:f43ee251706ccb934d1282205bc0e5fe5d7a834d73adcc104928d7b0fb20aaca"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 78.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:3acd24017456eb553e44cd97addb3099a05dd98632bb173c6e8c5f514ed34656"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 79.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:1f69aa222e63bf455cedb9307ee9cdea096476d208952700355c604c27aade8c"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 80.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:54bbe3890629ffa58a84542f6caa01e5d3c5c8da9fead0c84e4604eeb42c9b1f"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 81.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:eaf36dc96033b93053bf02f9f7990119532dee8e13eca18f814b243bc4ce6979"
+     },
+     {
+      "type": "input_text",
+      "text": "t = 82.00 s"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/jpeg;base64,sha256:a9ceba7eb0e6351be6b915ff45f657ef10b298127cefb63eb7c7b0d65dfb8502"
+     }
+    ]
+   }
+  ],
+  "instructions": "You watch a video of a tabletop demonstration: objects are packed into a\ndestination tray. Report only what the video shows.\n\nVocabulary of object kinds: cup (open-top container), block, marker (standing\ncylinder), tray (destination), wall (obstacle), gripper (the hand or robot\ngripper), other.\n\nReport:\n- objects: every distinct object, its kind, a short visual description, whether\n  it matters to the task and why.\n- events: grasp, release and carry of each object, with times in seconds from\n  the start of the video. A carry spans from grasp to release.\n- care_cues: behaviour that suggests a requirement, such as keeping an object\n  level, slowing down, or keeping distance from something, with the times where\n  the video shows it and what shows it. Report none if you see none.\n- uncertainties: what the video does not settle (for example why an object was\n  carried a certain way).\nDo not guess numbers you cannot see; describe evidence instead.\n\nThe input is a sequence of still frames from the video, in time order, each\npreceded by its time in seconds. Use those times for events and cues.",
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "video_observations",
+    "schema": {
+     "$defs": {
+      "CareCue": {
+       "properties": {
+        "object": {
+         "enum": [
+          "cup",
+          "block",
+          "marker",
+          "tray",
+          "wall",
+          "gripper",
+          "other"
+         ],
+         "type": "string"
+        },
+        "cue": {
+         "description": "the careful behaviour, e.g. 'kept level while passing the wall'",
+         "type": "string"
+        },
+        "t_start": {
+         "type": "number"
+        },
+        "t_end": {
+         "type": "number"
+        },
+        "evidence": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "object",
+        "cue",
+        "t_start",
+        "t_end",
+        "evidence"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      },
+      "ObservationUncertainty": {
+       "properties": {
+        "about": {
+         "type": "string"
+        },
+        "question": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "about",
+        "question"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      },
+      "ObservedEvent": {
+       "properties": {
+        "type": {
+         "enum": [
+          "grasp",
+          "release",
+          "carry"
+         ],
+         "type": "string"
+        },
+        "object": {
+         "enum": [
+          "cup",
+          "block",
+          "marker",
+          "tray",
+          "wall",
+          "gripper",
+          "other"
+         ],
+         "type": "string"
+        },
+        "t_start": {
+         "description": "seconds from the start of the video",
+         "type": "number"
+        },
+        "t_end": {
+         "description": "seconds from the start of the video; equal to t_start for an instant",
+         "type": "number"
+        },
+        "evidence": {
+         "description": "what in the video shows it",
+         "type": "string"
+        }
+       },
+       "required": [
+        "type",
+        "object",
+        "t_start",
+        "t_end",
+        "evidence"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      },
+      "ObservedObject": {
+       "properties": {
+        "kind": {
+         "description": "closest kind from the vocabulary",
+         "enum": [
+          "cup",
+          "block",
+          "marker",
+          "tray",
+          "wall",
+          "gripper",
+          "other"
+         ],
+         "type": "string"
+        },
+        "description": {
+         "description": "what it looks like in the video, e.g. 'small white open box'",
+         "type": "string"
+        },
+        "relevant": {
+         "description": "true if the task acts on it or it shapes the motion",
+         "type": "boolean"
+        },
+        "reason": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "kind",
+        "description",
+        "relevant",
+        "reason"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     },
+     "description": "What the model returns (strict schema).",
+     "properties": {
+      "summary": {
+       "description": "one sentence: what the person or robot does",
+       "type": "string"
+      },
+      "objects": {
+       "items": {
+        "$ref": "#/$defs/ObservedObject"
+       },
+       "type": "array"
+      },
+      "events": {
+       "items": {
+        "$ref": "#/$defs/ObservedEvent"
+       },
+       "type": "array"
+      },
+      "care_cues": {
+       "items": {
+        "$ref": "#/$defs/CareCue"
+       },
+       "type": "array"
+      },
+      "uncertainties": {
+       "items": {
+        "$ref": "#/$defs/ObservationUncertainty"
+       },
+       "type": "array"
+      }
+     },
+     "required": [
+      "summary",
+      "objects",
+      "events",
+      "care_cues",
+      "uncertainties"
+     ],
+     "type": "object",
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"care_cues\": [{\"cue\": \"carried around the north end of the wall rather than crossing over it\", \"evidence\": \"gripper with cup moves north then east around the top end of the vertical wall to reach the tray\", \"object\": \"wall\", \"t_end\": 15.0, \"t_start\": 10.0}, {\"cue\": \"carried around the north end of the wall rather than crossing over it\", \"evidence\": \"gripper with blue block moves north then east around the top end of the vertical wall to reach the tray\", \"object\": \"wall\", \"t_end\": 45.0, \"t_start\": 40.0}, {\"cue\": \"carried around the north end of the wall rather than crossing over it\", \"evidence\": \"gripper with red marker moves north then east around the top end of the vertical wall to reach the tray\", \"object\": \"wall\", \"t_end\": 73.0, \"t_start\": 69.0}], \"events\": [{\"evidence\": \"t=1 frame shows black gripper moved from center to contact with white-yellow cup at bottom-left and remains in contact after\", \"object\": \"cup\", \"t_end\": 1.0, \"t_start\": 1.0, \"type\": \"grasp\"}, {\"evidence\": \"cup moves with gripper from bottom-left north then around the wall to over the tray\", \"object\": \"cup\", \"t_end\": 23.0, \"t_start\": 1.0, \"type\": \"carry\"}, {\"evidence\": \"t=23 frame shows white-yellow cup separate in tray below gripper, whereas in t=22 it was still attached\", \"object\": \"cup\", \"t_end\": 23.0, \"t_start\": 23.0, \"type\": \"release\"}, {\"evidence\": \"t=33-34 frames show gripper adjacent then contacting blue cube; blue moves with gripper from t=34 onward\", \"object\": \"block\", \"t_end\": 33.0, \"t_start\": 33.0, \"type\": \"grasp\"}, {\"evidence\": \"blue cube moves with gripper from left side around north end of wall to over the tray\", \"object\": \"block\", \"t_end\": 53.0, \"t_start\": 33.0, \"type\": \"carry\"}, {\"evidence\": \"t=53 frame shows blue cube separate in tray to right of cup while gripper is above\", \"object\": \"block\", \"t_end\": 53.0, \"t_start\": 53.0, \"type\": \"release\"}, {\"evidence\": \"t=60 frame shows gripper in contact with red cylinder on left side; red moves with gripper after\", \"object\": \"marker\", \"t_end\": 60.0, \"t_start\": 60.0, \"type\": \"grasp\"}, {\"evidence\": \"red cylinder moves with gripper north then around the wall to over the tray on the right\", \"object\": \"marker\", \"t_end\": 80.0, \"t_start\": 60.0, \"type\": \"carry\"}, {\"evidence\": \"t=80 frame shows red cylinder separate in tray while gripper moves east away\", \"object\": \"marker\", \"t_end\": 80.0, \"t_start\": 80.0, \"type\": \"release\"}], \"objects\": [{\"description\": \"small white square frame with yellow center seen at bottom-left then in tray\", \"kind\": \"cup\", \"reason\": \"picked and placed into tray\", \"relevant\": true}, {\"description\": \"small blue cube\", \"kind\": \"block\", \"reason\": \"picked and placed into tray\", \"relevant\": true}, {\"description\": \"small red upright cylinder\", \"kind\": \"marker\", \"reason\": \"picked and placed into tray\", \"relevant\": true}, {\"description\": \"large gray square open container on right side\", \"kind\": \"tray\", \"reason\": \"destination where all objects are placed\", \"relevant\": true}, {\"description\": \"thin vertical gray barrier in middle of table\", \"kind\": \"wall\", \"reason\": \"obstacle that shapes path, crossed around north end\", \"relevant\": true}, {\"description\": \"black rectangular gripper with small light tips\", \"kind\": \"gripper\", \"reason\": \"actor that grasps and carries objects\", \"relevant\": true}], \"summary\": \"A robot gripper picks a cup, a blue block, and a red marker from the left side one by one, carries each around the wall, and places them into the tray on the right.\", \"uncertainties\": [{\"about\": \"order of placement\", \"question\": \"Does the task require cup then block then marker, or is any order acceptable?\"}, {\"about\": \"path around wall\", \"question\": \"Why go around the north end rather than the south end, and is crossing over the wall prohibited?\"}, {\"about\": \"placement in tray\", \"question\": \"Does the final position or orientation inside the tray matter?\"}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 16431,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 4881,
+   "output_tokens_details": {
+    "reasoning_tokens": 3805
+   },
+   "total_tokens": 21312
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 18.717,
+ "recorded_at": "2026-10-31T21:09:52Z"
+}

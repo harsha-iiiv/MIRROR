@@ -1,0 +1,18 @@
+{
+ "key": "065170d36d42696cef5906c884df3c698b15ccb9caba98cc2125934ba535b53f",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:2e5ec5120b5cd386706992de394771f805849e1ade200a859eea64cc11947cb1"
+ },
+ "response": {
+  "id": "file-29071108145855571",
+  "bytes": 10741,
+  "status": "uploaded",
+  "filename": "keyframes_clip.mp4"
+ },
+ "blobs": [],
+ "latency_s": 2.131,
+ "recorded_at": "2026-10-31T20:47:05Z"
+}

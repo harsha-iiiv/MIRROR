@@ -1,0 +1,18 @@
+{
+ "key": "0550837ec6bdaeaebfc7e60ab17d598124e73ebeeefff6fbf83377fe8250e156",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:118069836c83b36e8329740b6e9d5d43263ca1268d4648fe107ba52a9d225b44"
+ },
+ "response": {
+  "id": "file-4502147790001559",
+  "bytes": 650892,
+  "status": "uploaded",
+  "filename": "top_x4.mp4"
+ },
+ "blobs": [],
+ "latency_s": 5.689,
+ "recorded_at": "2026-10-31T21:14:36Z"
+}

@@ -1,0 +1,49 @@
+{
+ "key": "7069cf166cd742c81d8ddb765ac19dfaa9b65e9b0295edd53bd25797b423c36c",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "white cup"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:7b4ad7b1bc835e0b44ef8f2dfea721a9616bdcc1360284ad14906cc17b959b30"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 0.69,
+ "recorded_at": "2026-10-31T21:19:50Z"
+}

@@ -1,0 +1,14 @@
+{
+ "file": "reference_correction.wav",
+ "sha256": "aa0010202f2e145d3504d86ef1924b0a09193bd56b9ed3e498d14d2520fc90fe",
+ "bytes": 171564,
+ "text": "This container must remain upright throughout transport, not just at the destination.",
+ "engine": "ElevenLabs text-to-speech, used only to make sample audio",
+ "model_id": "eleven_v4_turbo",
+ "voice_id": "CwhRBWXzGAHq8TQ4Fs17",
+ "voice_label": "ElevenLabs premade voice 'Roger' (US English, male)",
+ "output": "pcm_16000 (16 kHz, mono, 16-bit) wrapped as WAV",
+ "created": "2026-10-31",
+ "purpose": "Sample spoken correction for the studio's recorded session; not part of any benchmark.",
+ "not_in_benchmark": "Voice not used by the spoken-correction benchmark; sha256 differs from every file and recorded hash under results/eval_voice/."
+}

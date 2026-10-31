@@ -142,3 +142,19 @@ substitutes another model's; `mirror doctor` lists recordings per model and
 directory. The Muse specification pair built like the frozen one has identical
 enforced constraints, goals, selectors and parameters
 (`results/muse_spec_comparison.json`).
+
+## Video observations and spoken corrections
+
+`video_observe.observe(video, model)` asks Muse Spark or Muse Wonder (through
+`mirror.meta`) for structured observations of a demonstration video: objects,
+grasp/release/carry events with times, cues of care and open questions. Code
+checks them against the clip and lists problems in `issues`. They are model
+evidence, never used to grade a run; `propose_spec(..., observations=...)` adds
+them to the proposal prompt (without them the request is unchanged). Both
+models appear to sample about one frame per second, so event times are coarse.
+
+`voice.transcribe(wav)` uses Muse Voice Transcribe (PUSH_TO_TALK) and
+`Session.correct_audio` compiles the transcript like typed text, logging the
+transcript and its provenance. CLI: `mirror correct --audio file.wav`.
+The test recording `tests/meta/fixtures/correction_espeak.wav` was synthesized
+with espeak-ng.

@@ -1,0 +1,36 @@
+{
+ "key": "eeaf51b8cacaf540ea3ab20f16cb7d20827f3dc41e8f1ab1ffbca5b6c20cd143",
+ "model": "muse-image-1.0",
+ "endpoint": "/images/edits",
+ "request": {
+  "model": "muse-image-1.0",
+  "prompt": "Make the lighting dimmer, as if at dusk. Keep every object, its position, size and shape unchanged.",
+  "n": 1,
+  "output_format": "png",
+  "images": [
+   {
+    "image_url": "data:image/png;base64,sha256:0b988927ab5da514eba4c367c37ae137aa4f620cbb466b95d2a303def2e5020c"
+   }
+  ]
+ },
+ "response": {
+  "created": 1793479424,
+  "output_format": "png",
+  "background": "opaque",
+  "usage": {
+   "input_tokens": 17742,
+   "output_tokens": 1244,
+   "total_tokens": 18986
+  },
+  "n_images": 1
+ },
+ "blobs": [
+  {
+   "file": "eeaf51b8cacaf540ea3ab20f_0.png",
+   "sha256": "74514499c4bf8aa56c568fa33cdd57dc1ecd0bd5196e5ba5f0d24fc49b775212",
+   "bytes": 1408017
+  }
+ ],
+ "latency_s": 16.402,
+ "recorded_at": "2026-10-31T20:43:44Z"
+}

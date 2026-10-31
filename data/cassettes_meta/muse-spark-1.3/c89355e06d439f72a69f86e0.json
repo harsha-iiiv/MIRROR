@@ -1,0 +1,98 @@
+{
+ "key": "c89355e06d439f72a69f86e02e693925e7a3eff3d3de8b77ce6a15dbe67b7842",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "Name each of these things visible in the image with one short noun phrase: cup, block, marker, tray, wall, table. Skip a kind that is not visible. A first attempt gave: cup: 'white square cup'; block: 'blue cube'; marker: 'red cylinder'; tray: 'gray rectangular tray'; wall: 'gray wall'; table: 'beige table'. These did not match exactly one object: 'white square cup' (cup) matched 0 objects; 'red cylinder' (marker) matched 0 objects; 'gray rectangular tray' (tray) matched 0 objects; 'gray wall' (wall) matched 0 objects. Give new phrases for those kinds only."
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:1e9903726520e68c8411c58f09a0fde3b09febac33b9dd116e4ae032277d065d"
+     }
+    ]
+   }
+  ],
+  "instructions": "You name objects in an image so that a segmentation model can find them.\nThe segmentation model matches short concrete noun phrases: colour plus\nshape works best (\"blue cube\", \"white square box\", \"red cylinder\"). Do not\nwrite instructions or questions, do not use \"and\", commas, negation or\npositions (\"on the left\"). Each phrase must pick out exactly one thing in the\nimage.",
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "sam_prompts",
+    "schema": {
+     "$defs": {
+      "NamedObject": {
+       "properties": {
+        "kind": {
+         "enum": [
+          "cup",
+          "block",
+          "marker",
+          "tray",
+          "wall",
+          "table",
+          "other"
+         ],
+         "type": "string"
+        },
+        "phrase": {
+         "description": "2-4 word noun phrase: colour + shape, e.g. 'blue cube'",
+         "type": "string"
+        },
+        "why": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "kind",
+        "phrase",
+        "why"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     },
+     "properties": {
+      "objects": {
+       "items": {
+        "$ref": "#/$defs/NamedObject"
+       },
+       "type": "array"
+      }
+     },
+     "required": [
+      "objects"
+     ],
+     "type": "object",
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"objects\": [{\"kind\": \"cup\", \"phrase\": \"white square box\", \"why\": \"uses common shape box instead of cup to match the small white container\"}, {\"kind\": \"marker\", \"phrase\": \"orange cylinder\", \"why\": \"corrects color from red to orange while keeping cylinder shape\"}, {\"kind\": \"tray\", \"phrase\": \"gray rectangular box\", \"why\": \"uses common shape box instead of tray to match the large gray container\"}, {\"kind\": \"wall\", \"phrase\": \"gray line\", \"why\": \"uses common shape line instead of wall to match the thin divider\"}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 1005,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 2494,
+   "output_tokens_details": {
+    "reasoning_tokens": 2357
+   },
+   "total_tokens": 3499
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 10.309,
+ "recorded_at": "2026-10-31T21:19:15Z"
+}

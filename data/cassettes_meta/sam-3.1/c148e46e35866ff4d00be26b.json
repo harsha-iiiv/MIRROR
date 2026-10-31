@@ -1,0 +1,49 @@
+{
+ "key": "c148e46e35866ff4d00be26b6776e74159885b226e6fcd92a76fb35d514352c6",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "robot gripper"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:404b5d4902be14bde4787852068c85f10c99e39f2780cc9f6156554803f41da2"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 1.318,
+ "recorded_at": "2026-10-31T21:17:30Z"
+}

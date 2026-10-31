@@ -1,0 +1,43 @@
+{
+ "key": "1b79762a4171d30e5fcf6a74f767592e9ed5fa495074aabcb3ba2d76fc4acc21",
+ "model": "muse-image-1.0",
+ "endpoint": "/images/edits",
+ "request": {
+  "model": "muse-image-1.0",
+  "prompt": "Make the white cup look glossy, like glazed ceramic with bright specular highlights. Keep every object exactly where it is, with the same size, shape and outline, and keep the camera viewpoint and framing unchanged.",
+  "n": 1,
+  "output_format": "webp",
+  "images": [
+   {
+    "image_url": "data:image/png;base64,sha256:68ffb9346bb79167871e290c4d49723627458425250a53a37aca84581ce8d6c8"
+   }
+  ],
+  "reasoning_strength": "low",
+  "tool_enablement": {
+   "enable_web_search": false,
+   "enable_image_search": false,
+   "enable_shell": false
+  },
+  "size": "1024x576"
+ },
+ "response": {
+  "created": 1793482604,
+  "output_format": "webp",
+  "background": "opaque",
+  "usage": {
+   "input_tokens": 4871,
+   "output_tokens": 567,
+   "total_tokens": 5438
+  },
+  "n_images": 1
+ },
+ "blobs": [
+  {
+   "file": "1b79762a4171d30e5fcf6a74_0.webp",
+   "sha256": "75076ed63fb4155ff089df441b62b12796ffac72f37b25138ff647e0e6a67d32",
+   "bytes": 24776
+  }
+ ],
+ "latency_s": 6.027,
+ "recorded_at": "2026-10-31T21:36:45Z"
+}

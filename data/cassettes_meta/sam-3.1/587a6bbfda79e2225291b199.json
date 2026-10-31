@@ -1,0 +1,49 @@
+{
+ "key": "587a6bbfda79e2225291b199744f872a5cec3db5cac1705723990690f808fcd8",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "wooden table"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:4546bd31328a1ccc691edc726c460cf8669af044f4034ebf2fda34a3e5d46337"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 0.661,
+ "recorded_at": "2026-10-31T21:17:46Z"
+}

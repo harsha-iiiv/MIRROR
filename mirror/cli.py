@@ -372,6 +372,45 @@ def cmd_story(args, out: Out) -> int:
     return 0
 
 
+def cmd_correct(args, out: Out) -> int:
+    """Propose, apply the scripted review, then one correction (typed or spoken)."""
+    from mirror.interpret import NeedsClarification, spec_diff
+    trace = load_demo(args.demo)
+    session = make_session(trace, out)
+    with_fallback(session, session.interpret, out)
+    review(session, out)
+    before = session.spec
+    try:
+        if args.audio:
+            from mirror.interpret.voice import TASK_KEYWORDS
+            kw = TASK_KEYWORDS if args.keywords else None
+
+            def step():
+                return session.correct_audio(args.audio, keywords=kw)
+            new, record, tr = with_fallback(session, step, out)
+            how = "recording" if tr.from_cassette else "live"
+            out(f'Heard ({tr.model}, {how}, {tr.latency_s:.1f} s): "{tr.text}"')
+            if tr.converted:
+                out(f"  audio {tr.converted}")
+        else:
+            new, record = with_fallback(session, lambda: session.correct(args.text), out)
+            out(f'Typed: "{args.text}"')
+    except NeedsClarification as q:
+        out(f"MIRROR asks: {q.question}")
+        return 1
+    out(f"Compiled by: {record.model}  -> spec v{new.version}")
+    for d in spec_diff(before, new):
+        if d["change"] == "added":
+            out(f"  + {d['id']}: {d['after'].get('description') or d['after'].get('question', '')}")
+        elif d["change"] == "removed":
+            out(f"  - {d['id']}")
+        else:
+            out(f"  ~ {d['id']}.{d['change']}: {json.dumps(d['before'])} -> {json.dumps(d['after'])}")
+    if args.json:
+        out(new.model_dump_json(indent=1))
+    return 0
+
+
 def cmd_eval(args, out: Out) -> int:
     if not RUN_EVAL.exists():
         raise SystemExit(f"evaluation script not found: {RUN_EVAL}")
@@ -513,6 +552,15 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--correction", default=REFERENCE_CORRECTION)
     s.add_argument("--frame-hz", type=float, default=30.0)
     s.set_defaults(func=cmd_story)
+
+    co = sub.add_parser("correct", help="one correction, typed (--text) or spoken (--audio file.wav)")
+    co.add_argument("--demo", default=str(DEMO_PATH))
+    g = co.add_mutually_exclusive_group(required=True)
+    g.add_argument("--audio", help="WAV recording of the spoken correction (Muse Voice Transcribe)")
+    g.add_argument("--text", help="typed correction")
+    co.add_argument("--keywords", action="store_true", help="bias transcription towards task words")
+    co.add_argument("--json", action="store_true", help="also print the corrected spec as JSON")
+    co.set_defaults(func=cmd_correct)
 
     e = sub.add_parser("eval", help="evaluation runs (arguments go to scripts/run_eval.py)")
     e.add_argument("eval_args", nargs=argparse.REMAINDER,

@@ -1,0 +1,18 @@
+{
+ "key": "dcbc18cf79abda1c5f8a3b43f8a26f72aa134d8068af8b7d5295673724947a17",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:940ff5117beb1bbffb70d29c0cf35ac1f2c2aaf44367842418132f6190c0ffbf"
+ },
+ "response": {
+  "id": "file-1105141729015590",
+  "bytes": 78595,
+  "status": "uploaded",
+  "filename": "top_10s.mp4"
+ },
+ "blobs": [],
+ "latency_s": 1.859,
+ "recorded_at": "2026-10-31T21:14:43Z"
+}

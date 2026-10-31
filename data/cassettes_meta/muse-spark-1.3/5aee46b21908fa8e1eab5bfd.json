@@ -1,0 +1,58 @@
+{
+ "key": "5aee46b21908fa8e1eab5bfd2be07461e1267aa83923a2c4196b018be3bc4f94",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "Reply with the word ok."
+     }
+    ]
+   }
+  ],
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "result",
+    "schema": {
+     "type": "object",
+     "properties": {
+      "answer": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "answer"
+     ],
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"answer\": \"ok\"}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 14,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 217,
+   "output_tokens_details": {
+    "reasoning_tokens": 202
+   },
+   "total_tokens": 231
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 1.976,
+ "recorded_at": "2026-10-31T20:42:48Z"
+}

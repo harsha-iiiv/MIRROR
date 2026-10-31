@@ -1,0 +1,49 @@
+{
+ "key": "0eab2ae6258b3ebfbf586b005193293c4ff193199e634504a3bfe4670e25ff69",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "yellow balls"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:cc55f649eb8c18e5e7c3e0a22ee712f4a8c1f10c38740f2ab408778e25e19080"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 0.873,
+ "recorded_at": "2026-10-31T21:15:20Z"
+}

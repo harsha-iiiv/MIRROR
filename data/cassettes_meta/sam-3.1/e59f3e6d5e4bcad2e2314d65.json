@@ -1,0 +1,49 @@
+{
+ "key": "e59f3e6d5e4bcad2e2314d6534e05d618ebeae79938c2600c6bc55bf10192ab6",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "<0f>1<|box;x1=289;y1=331;x2=395;y2=396;w=960;h=540|>,2<|box;x1=311;y1=210;x2=400;y2=265;w=960;h=540|>,3<|box;x1=383;y1=143;x2=465;y2=201;w=960;h=540|>,4<|box;x1=565;y1=90;x2=760;y2=215;w=960;h=540|>,5<|box;x1=468;y1=91;x2=548;y2=539;w=960;h=540|>,6<|box;x1=270;y1=320;x2=377;y2=435;w=960;h=540|>,7<|box;x1=167;y1=9;x2=821;y2=539;w=960;h=540|>"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:404b5d4902be14bde4787852068c85f10c99e39f2780cc9f6156554803f41da2"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "<0f>1<|box;x1=273;y1=334;x2=365;y2=396;w=960;h=540;c=0.609375|><|mask;x=0;y=0;c=0.609375;data=63,93,!!!!#:E{.q/_aUPmi3Rc5n^cK9id:%Lu$@(m9r?2!kHcU((eV_9pJ62uJJlrBtXxrtJMxxXt2TO*U_Ci-a`&HKQC!#OpP7)QxtybY[_ISUVn.v3WEI1H8ycQNAz&iqi]S&Am1Taf_Xuw3|>,2<|box;x1=314;y1=226;x2=341;y2=251;w=960;h=540;c=0.8203125|><|mask;x=0;y=0;c=0.8203125;data=26,28,!!!!!6K+I7_p5[#QaS3S5&C7-sbL8-|>,3<|box;x1=385;y1=170;x2=407;y2=196;w=960;h=540;c=0.58984375|><|mask;x=0;y=0;c=0.58984375;data=27,23,!!!!!@I4]iZ@zgK##xrn(PQwj+_Hh`rN0A7dWW9|>,4<|box;x1=542;y1=84;x2=776;y2=220;w=960;h=540;c=0.326171875|><|mask;x=0;y=0;c=0.326171875;data=137,235,!!!!(7AgpCq%jAgc^Hmd7n41v45%F!hdYhrKrTMZe_#=3wZEXx_Eicb7)k8qrI%hI3(5)*5KC%G]M6'#J#[+O/^+-RGdM*mZ^sDEa`+_.an&l$8[@?-SisrdG]&j'jS3jAunIDhSU)6?a]EdMf(6:8XlJAlw%3EJxd0@fKDHLYFy6&vOFL&M&@yf`K/JKF_R%GQHWZ9wx'M*?mG/e[roR)K4'g+LeE8js''0zu39jed=cG@[rC@K:IHZH:(arN-cc2:p^]J{coZH1`kkm:o!wpR&sSepHjGBg?Xsybojso?kbndI+[Sy{z^myAE&gxPh2S4dl5X3VmoV9D_ZElZa(PP^q@C8NHG@Qhdx=F4646WFbO_O?&ZH2.yb9RS*Z*EdmP0vyub3][)PuLgFZx:N#l_i.1SMK[1U(wLr(W#1J`l2Mn)jP{Q$12jg_$#p43'%]P4M^&i)/[mNJ0mD'u$saI]pPas`AMl-gj)T3[+KaVM?N`&gY?#$82lF:s:.EYgugR#pqa(H)2Wq7kRZ[zCMK3coq_&vjRg/[8O9^^M+:)@V${(0%_DN@likV2:(:M{E1P&05aF@6Ut8U)dr?TgEqQOdSR3X]ttQemT*lcwB^OoY5:65Is:{7oz-+UN`8_1ZcDe^vuGVc#[fG.$@pxaMvx?BjixP0|>,5<|box;x1=470;y1=129;x2=489;y2=539;w=960;h=540;c=0.86328125|><|mask;x=0;y=0;c=0.86328125;data=411,20,!!!!!wJ=N_wITSfFNL3oGlx?UZJ@J%'1a+60tnAwE:gif{JUeCO(*c_!Fb+R-&_p7u:ig0D@ng'QrVTGEHk]rx)*I/qn#_jXCZ-PKhbfdN|>,6<|box;x1=272;y1=337;x2=364;y2=420;w=960;h=540;c=0.9296875|><|mask;x=0;y=0;c=0.9296875;data=84,93,!!!!#*HGos*jNwJ#5zmqxAn04{hy_FQuMqd7DMhz8UFajF*.'#H`7MjTSxmrZO!Oniw^u81&4s%9HIB+dYw'{AAf(fvb@Y?BOir$Nt8Q*^grgtxx_b&+dx-pZ!!|>,7<|box;x1=170;y1=27;x2=788;y2=526;w=960;h=540;c=0.984375|><|mask;x=0;y=0;c=0.984375;data=500,619,!!!!*sDq$n.)z1diqrnDQ5`H9/(9lX]-:eUaSC`Hd0Ai#bg4ecG!3M+^UwJpxMB+WB0x@H:9fcMWGtJVYAPo9+._wglf[:fC*7[W6TNe(B1O^G1CUO]Xh1udT`gc.r1x@'0*Nq$o)p8v(G(jr_:Ydb%4R91mE%whn+CIHSV342IYpmgZ@Ap9avHSt#PbG0haMd4*G@YEzqtv{MbxuDe]lh+v5tGo5D_l&!cH0V@SUHpr)+&Dx@S0:o=?Wl@PsvL.ZJz+uI/T'b`-cFzNNr&O)wO6FQ]6=^gVv%dn0kwQG=AIPBYsp.=4U'Mb]-bS:K)@]SKL!IQw/i+/2OCsj7Ha#aiej&9J(ArEvCi)d^iqGe59NK40rm!.LHotg_*wrVc1DOZ!?kl1K_EcMnz6Po72?9-/b=ab?xD*q?I0lF!AA+ejE!-uz`_rf[nn0vfcKX2&YVK-dV[b*8++*i{u:5_M]N1RsVeMkm(1Yg-j*y)#@*ev4_d7Kkd-{lx8d3kC4iZ*^l]/]f3l$%1f[@BP6]Mt'P*0axg+ZOF'+0GJlv+kWFsiJ&w-ZUJ^]M?c[{v2[o%3L$d)hS$#/6-q(B!(GqJ_5wNta0DG=-ivuW3(adbucM!e!Vs4@K-lJkJ+W49QUEWA8O_nu?PgK)DDT9u2'bEu!avTJFqlP]x^/UQO_(wB5YCH.8&R=zPkm*uHjIk0Lx!?zdXvYSji+rn'pZJ._]yw+oS4pU'RaY$&3738H0EM@O_u$SHK)*x`QXTi_:F)&V'tiprVyc+XF-m`tXjNV+ehE*%H9SlNRMPw[v{rOrMa/]alWcg'*_vt9wLV.IO%k[Mn[*!*Mu/&R82o0wS%kU!HfO2MLd)^D_O^(8s)^/Y@UTP@x]V0TD+jN2F^7v$x('I{((E]#ETkcYnX*0scb0&=%:pW#sB2r8ghehQXHx)z+zm3O*{cY(!$qtA|>\n",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 1.153,
+ "recorded_at": "2026-10-31T21:20:07Z"
+}

@@ -1,0 +1,43 @@
+{
+ "key": "95170016d648147084c3540d679250e3016e899d288862701ed7fb96f9ca2858",
+ "model": "muse-image-1.0",
+ "endpoint": "/images/edits",
+ "request": {
+  "model": "muse-image-1.0",
+  "prompt": "Replace the table surface and the background with a dark walnut wood tabletop with visible grain. Keep every object exactly where it is, with the same size, shape and outline, and keep the camera viewpoint and framing unchanged.",
+  "n": 1,
+  "output_format": "webp",
+  "images": [
+   {
+    "image_url": "data:image/png;base64,sha256:cdefef694eb997bb271d34d8d6df488203e96242ad00a4b11881618e8b753406"
+   }
+  ],
+  "reasoning_strength": "low",
+  "tool_enablement": {
+   "enable_web_search": false,
+   "enable_image_search": false,
+   "enable_shell": false
+  },
+  "size": "1024x576"
+ },
+ "response": {
+  "created": 1793482366,
+  "output_format": "webp",
+  "background": "opaque",
+  "usage": {
+   "input_tokens": 4875,
+   "output_tokens": 642,
+   "total_tokens": 5517
+  },
+  "n_images": 1
+ },
+ "blobs": [
+  {
+   "file": "95170016d648147084c3540d_0.webp",
+   "sha256": "a172e2197c55d78dd7660457c9a27b634f0995975e47274258677523eabea825",
+   "bytes": 235618
+  }
+ ],
+ "latency_s": 8.31,
+ "recorded_at": "2026-10-31T21:32:46Z"
+}

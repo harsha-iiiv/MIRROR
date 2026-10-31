@@ -1,0 +1,88 @@
+{
+ "key": "641e37eb4ad89f15279e4e325725f25061f848e9fc7e7615041c0def63cafe50",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "Each numbered magenta rectangle should outline one thing: 1: cup; 2: block; 3: marker; 4: tray; 5: wall; 6: table. For each number, say whether the outlined region is mainly that thing."
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:eac2cfbb82212f6387abef473168114ec2fbca9c708fa0ab88355fa02b6e88ab"
+     }
+    ]
+   }
+  ],
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "box_checks",
+    "schema": {
+     "$defs": {
+      "BoxCheck": {
+       "properties": {
+        "index": {
+         "type": "integer"
+        },
+        "correct": {
+         "description": "true if the outlined region is mainly the named kind",
+         "type": "boolean"
+        },
+        "reason": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "index",
+        "correct",
+        "reason"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     },
+     "properties": {
+      "checks": {
+       "items": {
+        "$ref": "#/$defs/BoxCheck"
+       },
+       "type": "array"
+      }
+     },
+     "required": [
+      "checks"
+     ],
+     "type": "object",
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"checks\": [{\"correct\": true, \"index\": 1, \"reason\": \"Rectangle 1 tightly encloses the small white cup standing on the tray.\"}, {\"correct\": true, \"index\": 2, \"reason\": \"Rectangle 2 tightly encloses the small blue block on the tray.\"}, {\"correct\": true, \"index\": 3, \"reason\": \"Rectangle 3 tightly encloses the thin orange marker standing on the tray.\"}, {\"correct\": true, \"index\": 4, \"reason\": \"Rectangle 4 encloses the tan flat board, which is the tray, filling most of the box area.\"}, {\"correct\": true, \"index\": 5, \"reason\": \"Rectangle 5 encloses the large gray vertical plane, which is the wall.\"}, {\"correct\": true, \"index\": 6, \"reason\": \"Rectangle 6 encloses the large gray surrounding surface, which is the table, which dominates the area.\"}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 709,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 3212,
+   "output_tokens_details": {
+    "reasoning_tokens": 3001
+   },
+   "total_tokens": 3921
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 14.446,
+ "recorded_at": "2026-10-31T21:21:58Z"
+}

@@ -1,0 +1,18 @@
+{
+ "key": "e17293474ffe7d1186557a828d11988b6e06d7b3149304796895b07d5dba0fe3",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:83da533e86c7446bf43965a0f7940df2fbbc082d33bc391d6d69ba2034882ce3"
+ },
+ "response": {
+  "id": "file-1799407307926603",
+  "bytes": 1357868,
+  "status": "uploaded",
+  "filename": "demonstration_overview.mp4"
+ },
+ "blobs": [],
+ "latency_s": 3.389,
+ "recorded_at": "2026-10-31T20:48:53Z"
+}

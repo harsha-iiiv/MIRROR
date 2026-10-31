@@ -1,0 +1,49 @@
+{
+ "key": "a03161e316b191f002525bc44d6e68e375dc01fcb75ed93916b1179cf967ad7c",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "orange cylinder"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:85b0eb2068510a44cc424e7641b1f2a4e49969effcf8a3fd61e106e5fe1b4350"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "<0f>0<|box;x1=396;y1=241;x2=405;y2=284;w=960;h=540;c=0.7697842121124268|><|mask;x=0;y=0;c=0.7697842121124268;data=44,10,!!!!!2NWX=vp*[DsM4XO6m:Ng|>\n",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 1.115,
+ "recorded_at": "2026-10-31T21:15:12Z"
+}

@@ -1,0 +1,18 @@
+{
+ "key": "f29fb9c4e5e92bdf7850db697d44f71cc4f3e3ee059fb913ac5a79b052578114",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:382a7a9c3283c0848a2d3adc94b46cd3c1fe970f8d676b21f0064fb18cf94cb8"
+ },
+ "response": {
+  "id": "file-990880963405327",
+  "bytes": 253182,
+  "status": "uploaded",
+  "filename": "top_2s.mp4"
+ },
+ "blobs": [],
+ "latency_s": 4.085,
+ "recorded_at": "2026-10-31T21:18:36Z"
+}

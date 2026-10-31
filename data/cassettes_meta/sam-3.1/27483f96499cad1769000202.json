@@ -1,0 +1,49 @@
+{
+ "key": "27483f96499cad1769000202dcd765410efb22ce88b518bde7e9295f22dcbebf",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "white square box"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:1e9903726520e68c8411c58f09a0fde3b09febac33b9dd116e4ae032277d065d"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "<0f>0<|box;x1=321;y1=346;x2=362;y2=380;w=960;h=540;c=0.6332378387451172|><|mask;x=0;y=0;c=0.6332378387451172;data=35,42,!!!!!5H3^@)'1.OPVl`1A9DO1a!!!|>\n",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 0.888,
+ "recorded_at": "2026-10-31T21:19:16Z"
+}

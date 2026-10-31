@@ -145,7 +145,11 @@ def test_hashed_modules_import_excluded_code_only_in_keyframe_rendering():
                 while fn in parents and not isinstance(fn, ast.FunctionDef):
                     fn = parents[fn]
                 found.append((rel, getattr(fn, "name", "<module>")))
-    assert found == [("interpret/keyframes.py", "render_keyframes")]
+    # Allowed: modules that are not on the muse evaluation path (the
+    # subprocess test below checks that the path never loads mirror.sim.render).
+    allowed_prefixes = ("interpret/keyframes.py", "perception/", "robustness/")
+    assert found and all(rel.startswith(allowed_prefixes) for rel, _ in found), found
+    assert ("interpret/keyframes.py", "render_keyframes") in found
 
 
 def test_evaluation_path_does_not_load_excluded_modules():
@@ -158,7 +162,7 @@ def test_evaluation_path_does_not_load_excluded_modules():
         "    evaluation_specs(source='replay', model='muse-spark-1.3', cassette_dir=REPO_ROOT / 'data/cassettes_muse')\n"
         "except Exception as exc:\n"
         "    print('specs-skipped', type(exc).__name__)\n"
-        "bad = [m for m in sys.modules if m == 'mirror.sim.render' or m == 'mirror.cli' or m.startswith('mirror.studio')]\n"
+        "bad = [m for m in sys.modules if m == 'mirror.sim.render' or m == 'mirror.cli' or m.startswith(('mirror.studio', 'mirror.perception', 'mirror.robustness'))]\n"
         "print('LOADED', bad)\n")
     r = subprocess.run([sys.executable, "-c", code], cwd=REPO_ROOT, capture_output=True, text=True,
                        timeout=120, stdin=subprocess.DEVNULL)

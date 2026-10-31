@@ -1,0 +1,88 @@
+{
+ "key": "8b239588f028bf8fe9d03d886c12af45cdcc9af81e11bf47d2e7aa4a106f494b",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "Each numbered magenta rectangle should outline one thing: 1: cup; 2: block; 3: marker; 4: tray; 5: wall; 6: table. For each number, say whether the outlined region is mainly that thing."
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:f034e3be2e77640cc08380292969f05e31fe8ccacdd73fc88a47ce9623f062dc"
+     }
+    ]
+   }
+  ],
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "box_checks",
+    "schema": {
+     "$defs": {
+      "BoxCheck": {
+       "properties": {
+        "index": {
+         "type": "integer"
+        },
+        "correct": {
+         "description": "true if the outlined region is mainly the named kind",
+         "type": "boolean"
+        },
+        "reason": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "index",
+        "correct",
+        "reason"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     },
+     "properties": {
+      "checks": {
+       "items": {
+        "$ref": "#/$defs/BoxCheck"
+       },
+       "type": "array"
+      }
+     },
+     "required": [
+      "checks"
+     ],
+     "type": "object",
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"checks\": [{\"correct\": true, \"index\": 1, \"reason\": \"Box 1 tightly encloses the small gray container with yellow interior, which is the cup; the region is mainly that cup.\"}, {\"correct\": true, \"index\": 2, \"reason\": \"Box 2 tightly encloses the small solid blue cube, which is the block.\"}, {\"correct\": true, \"index\": 3, \"reason\": \"Box 3 tightly encloses the small brown-reddish object, which is the marker.\"}, {\"correct\": true, \"index\": 4, \"reason\": \"Box 4 tightly encloses the flat gray rectangular object, which is the tray.\"}, {\"correct\": false, \"index\": 5, \"reason\": \"Box 5 encloses a thin vertical gray strip on the tabletop, not a wall surface; it is not mainly wall.\"}, {\"correct\": true, \"index\": 6, \"reason\": \"Box 6 encloses the large beige surface that dominates the area, which is the tabletop, with only small objects on it.\"}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 709,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 4432,
+   "output_tokens_details": {
+    "reasoning_tokens": 4193
+   },
+   "total_tokens": 5141
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 18.816,
+ "recorded_at": "2026-10-31T21:21:33Z"
+}

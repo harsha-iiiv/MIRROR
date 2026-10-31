@@ -39,6 +39,7 @@ class Session:
     clarification: Any = None
     clarification_candidates: list = field(default_factory=list)
     events: list[dict] = field(default_factory=list)
+    meta_client: Any = None  # mirror.meta.MetaClient for speech; created from the environment when needed
 
     # ------------------------------------------------------------ helpers
     def _client(self):
@@ -115,6 +116,23 @@ class Session:
             self.specs.append(new_spec)
         self._event("correction", version=new_spec.version, text=text)
         return new_spec, record
+
+    def correct_audio(self, wav: str | Path | bytes, focus_kind: Optional[str] = None,
+                      keywords: Optional[list[str]] = None):
+        """A spoken correction: transcribe it with Muse Voice Transcribe, then
+        compile the transcript exactly like typed text. Returns
+        (spec, record, transcript); the transcript and its provenance are logged."""
+        from .interpret.voice import transcribe
+        if self.meta_client is None:
+            from .meta import MetaClient
+            self.meta_client = MetaClient.from_env()
+        transcript = transcribe(wav, self.meta_client, keywords=keywords)
+        self._event("voice_transcribed", text=transcript.text, model=transcript.model,
+                    audio_sha256=transcript.source_sha256, converted=transcript.converted,
+                    latency_s=round(transcript.latency_s, 3), from_cassette=transcript.from_cassette,
+                    keywords=transcript.keywords)
+        new_spec, record = self.correct(transcript.text, focus_kind)
+        return new_spec, record, transcript
 
     def clarify(self, focus_kind: Optional[str] = None) -> Any:
         from .interpret import make_clarification
