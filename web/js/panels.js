@@ -94,6 +94,53 @@ export function ReportView({ r, compact = false }) {
   </div>`;
 }
 
+// Plain-language route names; the raw planner id stays available as a tooltip.
+const OBJ_PREFIX = /^((?:cup|block|marker)_\d+):\s*/;
+export function humanRoute(raw, short = false) {
+  if (!raw) return '';
+  let s = String(raw).trim();
+  const m0 = s.match(/^route=([^;]+)/);
+  if (m0) s = m0[1];
+  let obj = '';
+  const mo = s.match(OBJ_PREFIX);
+  if (mo) { obj = mo[1].replace(/_\d+$/, ''); s = s.slice(mo[0].length); }
+  let transit = false;
+  if (s.startsWith('transit:')) { transit = true; s = s.slice(8); }
+  const p = s.split(':');
+  const last = p[p.length - 1];
+  const mm = last.match(/^(pitched|rolled|tilted)([+-]?\d+(?:\.\d+)?)$/);
+  const paths = short
+    ? { direct: 'straight', around: 'around', through_slot: 'slot', over: 'over', rrt: 'search', detour: 'detour' }
+    : { direct: 'straight across', around: 'around the wall', through_slot: 'through the slot', over: 'over the wall',
+        rrt: 'free-space search', detour: 'detour' };
+  const path = paths[p[0]] || s;
+  let mode = '';
+  if (mm) {
+    const a = Math.round(Math.abs(parseFloat(mm[2])));
+    mode = a >= 80 ? (short ? 'on side' : `on its side (${a}°)`) : (short ? `${a}°` : `tilted ${a}°`);
+  } else if (last === 'upright' || p[0] === 'around' || p[0] === 'direct' || p[0] === 'over') {
+    mode = 'upright';
+  }
+  const txt = path + (mode && !transit ? ', ' + mode : '');
+  return (obj ? obj + ': ' : '') + (transit ? (short ? 'empty, ' : 'empty gripper, ') + path : txt);
+}
+
+export function Route({ raw, short = false }) {
+  if (!raw) return '–';
+  return html`<span class="route" title=${raw}>${humanRoute(raw, short)}</span>`;
+}
+
+// Distinct object-carrying routes of a run (transit moves of the empty gripper left out).
+function carriedRoutes(rep) {
+  const out = [];
+  for (const x of rep?.route_labels || []) {
+    const raw = String(x).replace(/^route=/, '');
+    if (/^(?:(?:cup|block|marker)_\d+:\s*)?transit:/.test(raw)) continue;
+    if (!out.includes(raw)) out.push(raw);
+  }
+  return out;
+}
+
 export function routeOf(r, objId) {
   const t = (r?.plan?.transport || []).find((x) => x.object_id === objId);
   return t ? t.route : null;
@@ -101,8 +148,9 @@ export function routeOf(r, objId) {
 
 function routesText(r) {
   const t = r?.plan?.transport;
-  if (t?.length) return t.map((x) => `${x.object_id}: ${x.route}`).join(' · ');
-  return (r?.report?.route_labels || []).join(', ');
+  if (t?.length) return html`${t.map((x, i) => html`${i ? ' · ' : ''}<span title=${x.route}>${x.object_id.replace(/_\d+$/, '')}: ${humanRoute(x.route)}</span>`)}`;
+  const c = carriedRoutes(r?.report);
+  return c.length ? html`${c.map((x, i) => html`${i ? ' · ' : ''}<${Route} raw=${x} />`)}` : '';
 }
 
 function NoPlan({ rep, plan }) {
@@ -129,9 +177,10 @@ function RoutesView({ plan }) {
   return html`<div><h3>Routes considered</h3><ul class="list routes">
     ${plan.routes.map((r) => html`<li>
       <${Chip} status=${r.feasible ? 'success' : 'planning_failed'}>${r.feasible ? 'feasible' : 'rejected'}<//>
-      <span class="lab">${r.object_id ? r.object_id + ' · ' : ''}${r.label}</span>
+      <span class="lab" title=${r.label}>${r.object_id ? r.object_id.replace(/_\d+$/, '') + ' · ' : ''}${humanRoute(r.label)}</span>
       <span class="spacer"></span>
-      <span class="muted" style="font-size:12px">${r.feasible ? (r.cost != null ? `cost ${fmtNum(r.cost, 2)}` : '') : r.rejected_reason || ''}</span>
+      ${r.feasible ? html`<span class="muted" style="font-size:12px">${r.cost != null ? `cost ${fmtNum(r.cost, 2)}` : ''}</span>`
+        : html`<span class="why">${r.rejected_reason || ''}</span>`}
     </li>`)}</ul></div>`;
 }
 
@@ -562,7 +611,7 @@ function BeforeAfterStrip({ a, b }) {
     <div class="ba-stats">
       ${stat('Cup max tilt while carried', fmtNum(ca?.max_transport_tilt_deg) + '°', fmtNum(cb?.max_transport_tilt_deg) + '°', (ca?.max_transport_tilt_deg || 0) > TOL)}
       ${stat('Beads kept', ca ? `${ca.beads_in_container}/${ca.beads_total}` : '–', cb ? `${cb.beads_in_container}/${cb.beads_total}` : '–', ca && ca.beads_in_container < ca.beads_total)}
-      ${routeOf(a, ca?.object_id) || routeOf(b, cb?.object_id) ? stat('Cup route', routeOf(a, ca?.object_id) || '–', routeOf(b, cb?.object_id) || '–', false) : ''}
+      ${routeOf(a, ca?.object_id) || routeOf(b, cb?.object_id) ? stat('Cup route', html`<${Route} raw=${routeOf(a, ca?.object_id)} />`, html`<${Route} raw=${routeOf(b, cb?.object_id)} />`, false) : ''}
     </div>
     <p class="faint" style="font-size:12px;margin-top:8px">Measured by the checker from the simulator log of each run, not reported by the model.</p>`;
 }
@@ -583,7 +632,7 @@ function BeforeAfter({ a, b }) {
   const ca = cupOutcome(a.report), cb = cupOutcome(b.report);
   const row = (lab, x, y, bad) => html`<tr><td>${lab}</td><td class=${'n ' + (bad ? 'bad-t' : '')}>${x}</td><td class="n">${y}</td></tr>`;
   return html`<table class="t"><thead><tr><th></th><th class="n">before (v${a.spec_version})</th><th class="n">after (v${b.spec_version})</th></tr></thead><tbody>
-    ${row('Cup route', routeOf(a, ca?.object_id) || (a.report.route_labels || [])[0] || '–', routeOf(b, cb?.object_id) || (b.report.route_labels || [])[0] || '–')}
+    ${row('Cup route', html`<${Route} raw=${routeOf(a, ca?.object_id) || carriedRoutes(a.report)[0]} />`, html`<${Route} raw=${routeOf(b, cb?.object_id) || carriedRoutes(b.report)[0]} />`)}
     ${row('Cup max carry tilt', fmtNum(ca?.max_transport_tilt_deg) + '°', fmtNum(cb?.max_transport_tilt_deg) + '°', (ca?.max_transport_tilt_deg || 0) > TOL)}
     ${row('Beads kept', ca ? `${ca.beads_in_container}/${ca.beads_total}` : '–', cb ? `${cb.beads_in_container}/${cb.beads_total}` : '–', ca && ca.beads_in_container < ca.beads_total)}
     ${row('Simulated time', fmtNum(a.report.execution_time_s) + ' s', fmtNum(b.report.execution_time_s) + ' s')}
@@ -614,7 +663,7 @@ function ClarifyCard({ ctx }) {
           <${MiniMap} scene=${r?.scene || snap.scene} trace=${tr} />
           ${focus ? html`<div class="faint" style="font-size:11px;padding:2px 10px 0">path of ${focus}</div>` : ''}
           <div class="meta"><b>${k.label && k.label.length <= 2 ? 'Behaviour ' + k.label : (k.label || 'Behaviour ' + String.fromCharCode(65 + i))}</b>
-            <span class="muted">${(k.routes || []).slice(0, 3).join(', ') || k.summary || ''}</span>
+            <span class="muted">${(k.routes || []).length ? html`${(k.routes || []).slice(0, 3).map((x, j) => html`${j ? ' · ' : ''}<${Route} raw=${x} />`)}` : (k.summary || '')}</span>
             ${r ? (() => {
               const fo = (r.report.outcomes || []).find((o) => o.object_id === focus);
               const co = cupOutcome(r.report);
@@ -764,6 +813,7 @@ function EvidencePanel({ ctx }) {
                 ${cup ? html`<span class="num muted">${fmtNum(cup.max_transport_tilt_deg, 0)}° · ${cup.beads_in_container}/${cup.beads_total}</span>` : ''}
                 ${broke ? html`<span class="bad-t">breaks v${vb}</span>` : ''}
                 ${cell?.trial?.feasibility === 'proven_infeasible' ? html`<span class="ok-t">proven impossible</span>` : ''}
+                ${carriedRoutes(rep).length ? html`<span class="ev-route" title=${carriedRoutes(rep).join('\n')}>${[...new Set(carriedRoutes(rep).map((x) => humanRoute(x, true)))].join(' · ')}</span>` : ''}
 </div>
             </button>`;
           })}</div>`)}</div>
@@ -903,6 +953,30 @@ function storyAction(ctx) {
   }
 }
 
+// One line of results per stratum, from the loaded report's own metrics.
+function StoryResult({ raw }) {
+  if (!raw) return null;
+  const strata = raw.strata ? Object.entries(raw.strata) : [['', raw]];
+  const parts = [];
+  for (const [name, rep] of strata) {
+    const role = raw.roles?.[name];
+    if (role === 'blocked') {
+      const n = (rep.trials || []).length;
+      const k = (rep.trials || []).filter((t) => t.b?.feasibility === 'proven_infeasible').length;
+      if (n) parts.push(html`<span>blocked layouts: <b class="num">${k}/${n}</b> stopped with proof</span>`);
+      continue;
+    }
+    const m = rep.metrics || {};
+    const a = m.original?.violation_free_success, b = m.corrected?.violation_free_success;
+    const n = (rep.trials || []).length;
+    if (a == null || b == null || !n) continue;
+    const label = role === 'stratum' ? 'shortcut layouts' : role === 'primary' ? 'fresh layouts' : `${name || 'paired'} layouts`;
+    parts.push(html`<span>${label}: <b class="num">${a}/${n} → ${b}/${n}</b></span>`);
+  }
+  if (!parts.length) return null;
+  return html`<div class="story-res">Done without breaking the rule, original → corrected: ${parts.map((x, i) => html`${i ? ' · ' : ''}${x}`)}</div>`;
+}
+
 export function StoryBar({ ctx }) {
   const order = STEPS.map((x) => x.key);
   const ix = order.indexOf(ctx.step);
@@ -912,7 +986,8 @@ export function StoryBar({ ctx }) {
   const enabled = stepState(ctx.snap);
   return html`<div class="story" role="region" aria-label="Guided story">
     <div class="story-ix num" aria-label=${`Step ${ix + 1} of ${order.length}`}>${ix + 1}<span class="faint">/${order.length}</span></div>
-    <div class="story-text"><b>${st.title}${/[.?!]$/.test(st.title) ? '' : '.'}</b> <span>${st.text}</span></div>
+    <div class="story-text"><b>${st.title}${/[.?!]$/.test(st.title) ? '' : '.'}</b> <span>${st.text}</span>
+      ${ctx.step === 'evidence' ? html`<${StoryResult} raw=${ctx.snap.evaluation} />` : ''}</div>
     <div class="story-act">
       <button class="btn ghost small" disabled=${ix === 0} onClick=${() => ctx.setStep(order[ix - 1])}>Back</button>
       ${act ? html`<button class="btn primary" disabled=${!!busy || (act.label.startsWith('Next') && !enabled[order[ix + 1]]?.enabled)}

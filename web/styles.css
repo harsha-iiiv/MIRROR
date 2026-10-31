@@ -81,7 +81,9 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .viewer { position: relative; min-height: 0; background: var(--viewer); overflow: hidden; }
 .viewer canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .viewer:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); border-radius: 0; }
-.viewer .label3d { font: 500 var(--fs-xs)/1 var(--font); color: var(--text); background: color-mix(in srgb, var(--surface) 82%, transparent); border: 1px solid var(--line); padding: 2px 6px; border-radius: var(--r-pill); pointer-events: none; white-space: nowrap; transform: translateY(-14px); }
+.viewer .label3d { pointer-events: none; }
+.label3d > span { display: inline-block; font: 500 var(--fs-xs)/1 var(--font); color: var(--text); background: color-mix(in srgb, var(--surface) 82%, transparent); border: 1px solid var(--line); padding: 2px 6px; border-radius: var(--r-pill); white-space: nowrap; transition: transform .15s; }
+@media (prefers-reduced-motion: reduce) { .label3d > span { transition: none; } }
 .v-head { position: absolute; left: var(--s3); top: var(--s3); right: var(--s3); display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s2); pointer-events: none; }
 .v-head > * { pointer-events: auto; }
 .v-title { background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line); border-radius: var(--r-md); padding: 6px 10px; backdrop-filter: blur(6px); max-width: 60%; }
@@ -292,3 +294,10 @@ svg.chart .ax { font: 10px var(--mono); fill: var(--faint); }
 .item-sub .st-rejected { color: var(--faint); text-decoration: line-through; }
 .mini-none { aspect-ratio: 10 / 9; display: grid; place-items: center; background: repeating-linear-gradient(135deg, var(--viewer) 0 6px, transparent 6px 12px); color: var(--faint); font-size: var(--fs-xs); }
 .mini-none span { background: var(--surface); padding: 2px 8px; border-radius: var(--r-pill); border: 1px solid var(--line); }
+.story-res { font-size: var(--fs-sm); color: var(--muted); margin-top: 2px; }
+.story-res b { color: var(--text); font-weight: 600; }
+.ev-route { display: block; font-size: 10.5px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.route { text-decoration: underline dotted var(--line-strong); text-underline-offset: 3px; }
+.routes li { flex-wrap: wrap; row-gap: 2px; }
+.routes li .lab { flex: 1 1 auto; min-width: 0; }
+.routes li .why { flex-basis: 100%; padding-left: 74px; font-size: 12px; color: var(--muted); }

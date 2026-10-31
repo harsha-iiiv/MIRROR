@@ -118,8 +118,10 @@ export class Viewer {
         this.onTick(this.t, this.playing);
       }
       if (this.controls.update() || this.dirty) {
+        this._sizeBeads();
         this.renderer.render(this.scene, this.camera);
         this.labels.render(this.scene, this.camera);
+        this._declutterLabels();
         this.dirty = false;
       }
     };
@@ -187,6 +189,11 @@ export class Viewer {
           this.tableMat = this.tableMat || new THREE.MeshStandardMaterial({ roughness: 0.95 });
           this.tableMat.color.set(document.documentElement.dataset.theme === 'dark' ? '#26262b' : '#f4f3f0');
           mat = this.tableMat;
+        } else if (isBead(b.name)) {
+          // Beads are a few millimetres across; draw them bright and never smaller than a few pixels.
+          this.beadMat = this.beadMat || new THREE.MeshStandardMaterial({ color: '#ff2bd6', emissive: '#ff2bd6',
+            emissiveIntensity: 0.75, roughness: 0.4 });
+          mat = this.beadMat;
         } else {
           const [r, gg, bb, a0] = g.rgba;
           // Tall static walls are drawn translucent so the robot stays visible behind them.
@@ -198,6 +205,7 @@ export class Viewer {
         const m = geomMesh(g, mat);
         if (m) {
           grp.add(m);
+          if (isBead(b.name)) { m.userData.beadR = Math.max(1e-4, g.size[0]); m.userData.basePos = m.position.clone(); }
           if (isTable) this._addGrid(grp);
           if (b.static && !isTable && g.type === 'box') {
             this.edgeMat = this.edgeMat || new THREE.LineBasicMaterial({ transparent: true, opacity: 0.55 });
@@ -214,7 +222,9 @@ export class Viewer {
       if (this.showLabels && (trayIds.has(b.name) || objIds.has(b.name))) {
         const div = document.createElement('div');
         div.className = 'label3d';
-        div.textContent = objIds.has(b.name) ? objIds.get(b.name).kind : 'tray';
+        const span = document.createElement('span');
+        span.textContent = objIds.has(b.name) ? objIds.get(b.name).kind : 'tray';
+        div.appendChild(span);
         const lab = new CSS2DObject(div);
         const top = objIds.has(b.name) ? this._halfHeight(objIds.get(b.name)) + 0.012 : 0.05;
         lab.position.set(0, 0, top);
@@ -231,6 +241,60 @@ export class Viewer {
       this.bodies.set(b.name, grp);
     }
     this.dirty = true;
+  }
+
+  // Beads that left the table top (they come to rest on the floor plane, out of view).
+  beadsOffTable() {
+    let n = 0;
+    for (const [, g] of this.bodies) if (g.userData.isBead && g.visible && g.position.z < -0.05) n++;
+    return n;
+  }
+
+  // Scale each bead sphere about its own centre so it spans at least MIN_PX on screen.
+  // Positions are untouched; the legend says beads are drawn enlarged.
+  _sizeBeads() {
+    const MIN_PX = 6;
+    const h = this.renderer.domElement.clientHeight || 1;
+    const k = h / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
+    const wp = new THREE.Vector3();
+    for (const [, grp] of this.bodies) {
+      if (!grp.userData.isBead || !grp.visible) continue;
+      for (const m of grp.children) {
+        const r = m.userData.beadR;
+        if (!r) continue;
+        m.getWorldPosition(wp);
+        const d = Math.max(1e-3, wp.distanceTo(this.camera.position));
+        m.scale.setScalar(Math.max(1, (MIN_PX / 2) / ((r * k) / d)));
+      }
+    }
+  }
+
+  // Nudge overlapping labels apart vertically in screen space (anchors stay put).
+  _declutterLabels() {
+    if (!this.showLabels) return;
+    const items = [];
+    for (const [, grp] of this.bodies) {
+      for (const o of grp.children) {
+        if (!o.isCSS2DObject || !o.visible || !grp.visible) continue;
+        const span = o.element.firstChild;
+        if (!span) continue;
+        span.style.transform = '';
+        const r = o.element.getBoundingClientRect();
+        if (r.width) items.push({ span, x0: r.left, x1: r.right, y0: r.top, y1: r.bottom });
+      }
+    }
+    items.sort((a, b) => b.y0 - a.y0);           // lowest first; others move up out of its way
+    const placed = [];
+    for (const it of items) {
+      let dy = 0;
+      for (let pass = 0; pass < 6; pass++) {
+        const hit = placed.find((p) => it.x0 < p.x1 + 2 && it.x1 > p.x0 - 2 && it.y0 + dy < p.y1 + 2 && it.y1 + dy > p.y0 - 2);
+        if (!hit) break;
+        dy = hit.y0 - 2 - it.y1;
+      }
+      if (dy) it.span.style.transform = `translateY(${Math.round(dy)}px)`;
+      placed.push({ ...it, y0: it.y0 + dy, y1: it.y1 + dy });
+    }
   }
 
   _halfHeight(o) {

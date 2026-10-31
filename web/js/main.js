@@ -362,7 +362,11 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
         ${payload?.t?.length ? html`<div class="v-legend">
           <span><i class="grad"></i>container path by tilt: within ${15}° → over</span>
           ${ghostOn && opts.ghost ? html`<span><i style="background:var(--faint)"></i>${ghostText(snap, display.ghost)}</span>` : ''}
-          ${payload.beads_hidden ? html`<span>beads not recorded in demo trace</span>` : ''}
+          ${payload.beads_hidden ? html`<span>beads not recorded in demo trace</span>`
+            : html`<span><i style="background:#ff2bd6;border-radius:50%;width:8px;height:8px"></i>beads, drawn enlarged at their true positions${(() => {
+              const off = t >= 0 ? viewerRef.current?.beadsOffTable?.() || 0 : 0;
+              return off ? html` · <b class="bad-t">${off} fell off the table</b>` : '';
+            })()}</span>`}
         </div>` : ''}
         ${tool ? html`<div class="v-hint">${tool === 'obstacle' ? 'Click the table to place a box' : 'Drag the tray or an object'}</div>` : ''}
       </div>
