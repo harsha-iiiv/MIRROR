@@ -82,3 +82,29 @@ def test_demonstration_renders_without_beads(tmp_path):
     assert any(f.phase == "transport:cup_0" for f in frames)
     p = render_stills((vis, frames), [9.0], tmp_path, width=320, height=180)
     assert imageio.imread(p[0]).std() > 10
+
+
+def test_playback_carries_forward_bodies_missing_from_compact_frames():
+    from mirror.contracts import Pose, RolloutFrame
+    from mirror.sim.render import _Playback
+    p = lambda x: Pose(pos=(x, 0.0, 0.0))
+    frames = [RolloutFrame(t=0.0, bodies={"a": p(0.0), "b": p(1.0)}, gripper_width=0.09, phase="move"),
+              RolloutFrame(t=0.1, bodies={"a": p(0.5)}, gripper_width=0.09, phase="move"),
+              RolloutFrame(t=0.2, bodies={"b": p(2.0)}, gripper_width=0.09, phase="move")]
+    play = _Playback(frames)
+    f = play.at(0.25)          # skips nothing: every recorded frame is applied in order
+    assert f.bodies["a"].pos[0] == 0.5 and f.bodies["b"].pos[0] == 2.0
+    assert play.at(0.25) is f
+
+
+@needs_gl
+def test_segments_follow_camera_and_stacking(short_rollout, tmp_path):
+    from mirror.sim.render import Segment, hstack_images, segment_images, write_video
+    a = Segment(short_rollout, t_start=6.0, t_end=7.0, camera="follow", trail_objects=["cup_0"])
+    b = Segment(short_rollout, t_start=6.0, t_end=6.5, speed=0.25, camera="side", label="replay 0.25x",
+                hold_end=0.1)
+    imgs = list(hstack_images(segment_images(a, width=160, height=96, fps=10),
+                              segment_images(b, width=160, height=96, fps=10), gap=4))
+    assert len(imgs) == max(11, 21 + 1) and imgs[0].shape == (96, 324, 3)
+    out = write_video(imgs, tmp_path / "s.mp4", fps=10)
+    assert out.stat().st_size > 500

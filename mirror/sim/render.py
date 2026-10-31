@@ -43,7 +43,14 @@ CAMERAS = {
     "overview": dict(lookat=(0.0, -0.02, 0.06), distance=1.22, azimuth=-58.0, elevation=-36.0),
     "side": dict(lookat="slot", distance=1.05, azimuth=148.0, elevation=-24.0),
     "top": dict(lookat=(0.0, 0.0, 0.0), distance=1.45, azimuth=90.0, elevation=-89.0),
+    # Tracks one object (default the cup) at close range; the look-at point is
+    # low-pass filtered (time constant ``smooth`` seconds of simulated time).
+    "follow": dict(lookat="follow", target="cup_0", distance=0.50, azimuth=-62.0, elevation=-22.0,
+                   smooth=0.25),
 }
+TABLE_RGBA = (0.86, 0.80, 0.71, 1.0)      # warm light wood (display only)
+FLOOR_RGBA = (0.93, 0.91, 0.88, 1.0)
+OUTLINE_RGB = (40, 16, 32)               # soft dark outline around visible beads
 WALL_ALPHA = 0.62     # walls drawn translucent so paths behind them stay visible
 
 
@@ -94,6 +101,10 @@ def display_xml(visual: VisualScene, bead_rgba=BEAD_RGBA, wall_alpha: float = WA
                 rgba, extra = bead_rgba, ' material="bead"'
             elif g.name and "/seg" in g.name:
                 rgba = (*g.rgba[:3], wall_alpha)
+            elif g.name == "table":
+                rgba = TABLE_RGBA
+            elif g.name == "floor":
+                rgba = FLOOR_RGBA
             geoms.append(f'<geom type="{t}" size="{_f(g.size)}" pos="{_f(g.pos)}" quat="{_f(g.quat)}" '
                          f'rgba="{_f(rgba)}" contype="0" conaffinity="0"{extra}/>')
         if body.static:
@@ -108,7 +119,7 @@ def display_xml(visual: VisualScene, bead_rgba=BEAD_RGBA, wall_alpha: float = WA
     <map znear="0.01"/>
   </visual>
   <asset>
-    <texture name="sky" type="skybox" builtin="gradient" rgb1="0.97 0.97 0.96" rgb2="0.86 0.87 0.88" width="64" height="64"/>
+    <texture name="sky" type="skybox" builtin="gradient" rgb1="0.98 0.97 0.95" rgb2="0.89 0.87 0.84" width="64" height="64"/>
     <material name="bead" emission="0.45" specular="0.3"/>
   </asset>
   <worldbody>
@@ -144,14 +155,23 @@ class RolloutRenderer:
 
     def __init__(self, visual: VisualScene, frames: Sequence[RolloutFrame], *,
                  camera: Union[str, dict] = "overview", width: int = WIDTH, height: int = HEIGHT,
-                 shadows: bool = True, bead_rgba=BEAD_RGBA, wall_alpha: float = WALL_ALPHA):
+                 shadows: bool = True, bead_rgba=BEAD_RGBA, wall_alpha: float = WALL_ALPHA,
+                 outline: bool = True):
         self.model = mujoco.MjModel.from_xml_string(display_xml(visual, bead_rgba, wall_alpha))
+        self.model.vis.global_.offwidth = max(int(width), int(self.model.vis.global_.offwidth))
+        self.model.vis.global_.offheight = max(int(height), int(self.model.vis.global_.offheight))
         self.view = mujoco.MjData(self.model)
         self.renderer = mujoco.Renderer(self.model, height, width, max_geom=20000)
         self.shadows = shadows
+        self.outline = outline
         self._adr = {}
         for j in range(self.model.njnt):
             self._adr[self.model.body(self.model.jnt_bodyid[j]).name] = int(self.model.jnt_qposadr[j])
+        self._bead_geoms = np.array([g for g in range(self.model.ngeom)
+                                     if "/bead" in self.model.body(self.model.geom_bodyid[g]).name], dtype=int)
+        self.follow: Optional[dict] = None
+        self._look: Optional[np.ndarray] = None
+        self._look_t: Optional[float] = None
         self.cam = self._camera(camera, visual, frames)
 
     # -- camera
@@ -185,6 +205,10 @@ class RolloutRenderer:
         cfg = dict(CAMERAS[camera]) if isinstance(camera, str) else dict(camera)
         cam = mujoco.MjvCamera()
         look = cfg.get("lookat", "scene")
+        if look == "follow":
+            self.follow = {"target": cfg.get("target", "cup_0"), "smooth": float(cfg.get("smooth", 0.25))}
+            first = next((f for f in frames if self.follow["target"] in f.bodies), None)
+            look = first.bodies[self.follow["target"]].pos if first else (0.0, 0.0, 0.05)
         if look == "slot":
             look = self._slot_point(visual, frames)
         elif look == "scene":
@@ -218,18 +242,78 @@ class RolloutRenderer:
                                 np.eye(3).flatten(), np.asarray(rgba, dtype=np.float32))
             mujoco.mjv_connector(g, mujoco.mjtGeom.mjGEOM_CAPSULE, radius, p0, p1)
             g.emission = 0.35
+            g.segid = scn.ngeom          # keeps segmentation rendering well defined
             scn.ngeom += 1
+
+    def _update_follow(self, frame: RolloutFrame) -> None:
+        tgt = self.follow["target"]
+        if tgt not in frame.bodies:
+            return
+        p = np.asarray(frame.bodies[tgt].pos, dtype=float)
+        if self._look is None or self._look_t is None or frame.t < self._look_t:
+            self._look = p.copy()
+        else:
+            a = 1.0 - math.exp(-max(0.0, frame.t - self._look_t) / max(1e-6, self.follow["smooth"]))
+            self._look = self._look + a * (p - self._look)
+        self._look_t = frame.t
+        self.cam.lookat[:] = self._look
+
+    def reset_follow(self) -> None:
+        self._look = None
+        self._look_t = None
 
     def render(self, frame: RolloutFrame, trails: Optional[dict] = None,
                trail_radius: float = 0.0045) -> np.ndarray:
         self._pose(frame)
+        if self.follow is not None:
+            self._update_follow(frame)
         self.renderer.update_scene(self.view, camera=self.cam)
         self.renderer.scene.flags[mujoco.mjtRndFlag.mjRND_SHADOW] = int(self.shadows)
         for obj, pts in (trails or {}).items():
             thin = pts and pts[0] and pts[0][0][1] == NEUTRAL_TRAIL
             for seg in pts:
                 self._add_trail(seg, trail_radius * (0.55 if thin else 1.0))
-        return self.renderer.render()
+        img = self.renderer.render()
+        if self.outline and len(self._bead_geoms):
+            img = self._outline_beads(img)
+        return img
+
+    def _outline_beads(self, img: np.ndarray) -> np.ndarray:
+        """Draw a soft dark ring around the visible pixels of every bead. The
+        beads themselves keep their true size; only visible pixels are used,
+        so hidden beads get no outline."""
+        from scipy import ndimage
+
+        r = self.renderer
+        scn = r.scene
+        # Translucent geoms would blend segment ids; draw them opaque for this pass.
+        saved = []
+        for i in range(scn.ngeom):
+            g = scn.geoms[i]
+            if g.rgba[3] < 1.0:
+                saved.append((i, float(g.rgba[3])))
+                g.rgba[3] = 1.0
+        r.enable_segmentation_rendering()
+        try:
+            seg = r.render()
+        except IndexError:
+            return img          # undecodable segment image: draw this frame without outlines
+        finally:
+            r.disable_segmentation_rendering()
+            for i, a in saved:
+                scn.geoms[i].rgba[3] = a
+        is_geom = seg[:, :, 1] == int(mujoco.mjtObj.mjOBJ_GEOM)
+        mask = is_geom & np.isin(seg[:, :, 0], self._bead_geoms)
+        if not mask.any():
+            return img
+        scale = max(1, img.shape[0] // 540)
+        inner = ndimage.binary_dilation(mask, iterations=scale)
+        outer = ndimage.binary_dilation(inner, iterations=scale)
+        out = img.astype(np.float32)
+        col = np.array(OUTLINE_RGB, dtype=np.float32)
+        for ring, alpha in ((inner & ~mask, 0.85), (outer & ~inner, 0.40)):
+            out[ring] = (1 - alpha) * out[ring] + alpha * col
+        return out.astype(np.uint8)
 
     def close(self) -> None:
         self.renderer.close()
@@ -310,27 +394,37 @@ def _overlay(img: np.ndarray, title: str, lines: list[str], legend: bool,
 # ----------------------------------------------------------------- video
 
 class _Playback:
-    """Steps through frames at output times, accumulating carried-object trails."""
+    """Steps through frames at output times, accumulating carried-object
+    trails. Frames may list only the bodies that moved since the previous
+    frame (compact rollouts); every recorded frame up to the playback time is
+    applied in order, so the returned frame carries the latest recorded pose
+    of every body."""
 
     def __init__(self, frames: Sequence[RolloutFrame], highlight: Optional[Sequence[str]] = None):
         self.frames = frames
         self.highlight = None if highlight is None else set(highlight)
         self.trails: dict[str, list[list[tuple]]] = {}
+        self.state: dict = {}
         self.k = 0
         self.last_obj = None
+        self._current: Optional[RolloutFrame] = None
 
     def at(self, t_target: float) -> RolloutFrame:
         frames = self.frames
+        advanced = False
         while self.k < len(frames) and frames[self.k].t <= t_target + 1e-9:
             f = frames[self.k]
+            self.state.update(f.bodies)
+            advanced = True
             obj = _carried(f)
-            if obj and obj in f.bodies:
-                tilt = _tilt_deg(f.bodies[obj].quat)
+            if obj and obj in self.state:
+                pose = self.state[obj]
+                tilt = _tilt_deg(pose.quat)
                 segs = self.trails.setdefault(obj, [])
                 if obj != self.last_obj or not segs:
                     segs.append([])
                 col = tilt_rgba(tilt) if self.highlight is None or obj in self.highlight else NEUTRAL_TRAIL
-                p = np.asarray(f.bodies[obj].pos, dtype=float)
+                p = np.asarray(pose.pos, dtype=float)
                 seg = segs[-1]
                 if seg and seg[-1][1] == col and len(seg) > 1 and \
                         np.linalg.norm(p - seg[-2][0]) < TRAIL_SPACING:
@@ -339,7 +433,13 @@ class _Playback:
                     seg.append((p, col))
             self.last_obj = obj
             self.k += 1
-        return frames[max(0, self.k - 1)]
+        if advanced or self._current is None:
+            f = frames[max(0, self.k - 1)]
+            if not self.state:
+                self.state.update(f.bodies)
+            self._current = RolloutFrame.model_construct(t=f.t, bodies=dict(self.state),
+                                                         gripper_width=f.gripper_width, phase=f.phase)
+        return self._current
 
 
 def _caption_lines(f: RolloutFrame, t0: float, visual: VisualScene) -> list[str]:
@@ -476,6 +576,134 @@ def _with_fingers(f: RolloutFrame) -> RolloutFrame:
         p = np.asarray(g.pos) + R @ np.array([0.0, sgn * half, 0.0])
         bodies[name] = type(g)(pos=tuple(float(v) for v in p), quat=g.quat)
     return RolloutFrame(t=f.t, bodies=bodies, gripper_width=f.gripper_width, phase=f.phase)
+
+
+# ------------------------------------------------------------- composition
+
+from dataclasses import dataclass, field  # noqa: E402
+from itertools import zip_longest  # noqa: E402
+from typing import Iterator  # noqa: E402
+
+
+@dataclass
+class Segment:
+    """One stretch of one recorded rollout, played at ``speed``.
+
+    Times are seconds from the rollout's first frame. Every image shows a
+    recorded frame (the latest one at or before the playback time); nothing
+    is interpolated or re-simulated, so a slow replay holds recorded frames.
+    """
+    source: object                       # Rollout, path, or (VisualScene, frames)
+    t_start: float = 0.0
+    t_end: Optional[float] = None
+    speed: float = 1.0
+    camera: Union[str, dict] = "overview"
+    trail: bool = True
+    trail_objects: Optional[Sequence[str]] = None
+    title: Optional[str] = None
+    label: Optional[str] = None          # extra caption line, e.g. "replay 0.25x"
+    caption: bool = True
+    hold_start: float = 0.0              # seconds of the first image repeated
+    hold_end: float = 0.0
+    extra_lines: list = field(default_factory=list)
+    legend: bool = True                  # show the trail colour legend
+    lines: str = "full"                  # caption lines: "full", "beads" or "none"
+
+
+def segment_images(seg: Segment, *, width: int = WIDTH, height: int = HEIGHT, fps: float = FPS,
+                   shadows: bool = True) -> Iterator[np.ndarray]:
+    visual, frames, info = _load(seg.source)
+    if not frames:
+        raise ValueError("no frames to render")
+    t0 = frames[0].t
+    t_end = frames[-1].t - t0 if seg.t_end is None else min(seg.t_end, frames[-1].t - t0)
+    rr = RolloutRenderer(visual, frames, camera=seg.camera, width=width, height=height, shadows=shadows)
+    title = _default_title(info) if seg.title is None else seg.title
+    play = _Playback(frames, seg.trail_objects)
+    label = _legend_label(seg.trail_objects)
+    try:
+        if rr.follow is not None:   # settle the follow filter on the second before the segment
+            for f in frames:
+                if t0 + seg.t_start - 1.0 <= f.t <= t0 + seg.t_start:
+                    rr._update_follow(f)
+        n = int(math.floor((t_end - seg.t_start) / seg.speed * fps)) + 1
+        img = None
+        for i in range(max(1, n)):
+            f = play.at(t0 + seg.t_start + i * seg.speed / fps)
+            img = rr.render(f, play.trails if seg.trail else None)
+            if seg.caption:
+                lines = _caption_lines(f, t0, visual) if seg.lines == "full" else []
+                if seg.lines == "beads":
+                    lines = [l for l in _caption_lines(f, t0, visual) if l.startswith("beads")]
+                lines += list(seg.extra_lines)
+                if seg.label:
+                    lines = [seg.label] + lines
+                img = _overlay(img, title or "", lines, legend=seg.trail and seg.legend, legend_label=label)
+            reps = 1
+            if i == 0:
+                reps += int(round(seg.hold_start * fps))
+            for _ in range(reps):
+                yield img
+        for _ in range(int(round(seg.hold_end * fps))):
+            yield img
+    finally:
+        rr.close()
+
+
+def write_video(images: Iterable[np.ndarray], out_mp4: Union[str, Path], fps: float = FPS) -> Path:
+    """Encode images to H.264 (yuv420p)."""
+    import imageio.v2 as imageio
+
+    out_mp4 = Path(out_mp4)
+    out_mp4.parent.mkdir(parents=True, exist_ok=True)
+    with imageio.get_writer(out_mp4, fps=fps, codec="libx264", quality=8,
+                            pixelformat="yuv420p", macro_block_size=8) as w:
+        for img in images:
+            w.append_data(img)
+    return out_mp4
+
+
+def concat_images(*streams: Iterable[np.ndarray]) -> Iterator[np.ndarray]:
+    for st in streams:
+        yield from st
+
+
+def _hold_last(streams):
+    last = [None] * len(streams)
+    for imgs in zip_longest(*streams):
+        for k, im in enumerate(imgs):
+            if im is not None:
+                last[k] = im
+        yield last
+
+
+def hstack_images(*streams: Iterable[np.ndarray], gap: int = 4) -> Iterator[np.ndarray]:
+    """Side by side; a stream that ends early holds its last image."""
+    for imgs in _hold_last(streams):
+        h = imgs[0].shape[0]
+        sep = np.full((h, gap, 3), 255, dtype=np.uint8)
+        parts = []
+        for k, im in enumerate(imgs):
+            parts += ([sep] if k else []) + [im]
+        yield np.concatenate(parts, axis=1)
+
+
+def grid_images(streams: Sequence[Iterable[np.ndarray]], cols: int, gap: int = 4) -> Iterator[np.ndarray]:
+    """Grid of equally sized streams, row-major; finished streams hold."""
+    for imgs in _hold_last(list(streams)):
+        h, w = imgs[0].shape[:2]
+        rows = []
+        for r0 in range(0, len(imgs), cols):
+            row = imgs[r0:r0 + cols]
+            row = row + [np.full((h, w, 3), 255, np.uint8)] * (cols - len(row))
+            parts = []
+            for k, im in enumerate(row):
+                parts += ([np.full((h, gap, 3), 255, np.uint8)] if k else []) + [im]
+            rows.append(np.concatenate(parts, axis=1))
+        out = []
+        for k, row in enumerate(rows):
+            out += ([np.full((gap, row.shape[1], 3), 255, np.uint8)] if k else []) + [row]
+        yield np.concatenate(out, axis=0)
 
 
 def main(argv=None) -> None:
