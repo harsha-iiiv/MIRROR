@@ -20,9 +20,15 @@ class Mode:
         return abs(math.degrees(self.pitch))
 
 
+def pitched(deg: float) -> Mode:
+    return Mode(f"pitched{'+' if deg > 0 else '-'}{abs(deg):g}", math.radians(deg))
+
+
 UPRIGHT = Mode("upright", 0.0)
-PITCHED_POS = Mode("pitched+90", math.pi / 2)
-PITCHED_NEG = Mode("pitched-90", -math.pi / 2)
+PITCHED_POS = pitched(90)
+PITCHED_NEG = pitched(-90)
+# Upright first, then increasing tilt; each tilt in both pitch directions.
+DEFAULT_MODES = (UPRIGHT,) + tuple(pitched(s * d) for d in (30, 45, 60, 90) for s in (1, -1))
 
 
 @dataclass(frozen=True)
@@ -38,7 +44,7 @@ class PlannerConfig:
     tray_wall_clearance: float = 0.006
     place_grid_step: float = 0.010
     slot_extra_clearance: float = 0.005  # added to rotation clearance in front of a slot
-    modes: tuple = (UPRIGHT, PITCHED_POS, PITCHED_NEG)
+    modes: tuple = DEFAULT_MODES
     level_dedupe: float = 0.008
     lazy_iterations: int = 300
     # sampling-based fallback (RRT-Connect over position, yaw and modes)

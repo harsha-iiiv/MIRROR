@@ -1,5 +1,6 @@
 """Interpretation: demonstration summary, task proposal, corrections and
 clarification. See docs/CONTRACTS.md."""
+from mirror.interpret.auto import describe_client, resolve_client
 from mirror.interpret.clarify import apply_answer, make_clarification, planned_carry_tilts
 from mirror.interpret.correct import compile_correction
 from mirror.interpret.diff import spec_diff
@@ -16,7 +17,7 @@ __all__ = [
     "summarize_demo", "propose_spec", "propose_spec_detailed", "Interpretation",
     "compile_correction", "make_clarification", "apply_answer", "planned_carry_tilts",
     "validate_spec", "apply_ops", "confirm_items", "spec_diff",
-    "LLMClient", "LLMError", "CassetteMiss", "OFFLINE_LABEL",
+    "LLMClient", "LLMError", "resolve_client", "describe_client", "CassetteMiss", "OFFLINE_LABEL",
     "DemoSummary", "ObjectSummary", "Regularity", "Clarification", "CandidateDigest", "Difference",
     "InterpretError", "NeedsClarification", "CorrectionRejected",
 ]

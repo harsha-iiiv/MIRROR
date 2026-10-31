@@ -10,6 +10,7 @@ which are also what ``scripts/export_static.py`` writes to disk.
 from __future__ import annotations
 
 import importlib
+import json
 import os
 import threading
 import time
@@ -452,6 +453,9 @@ class StudioService:
                 else:
                     clar = self.session.clarify()
                     cd = _dump(clar)
+                    for c in cd.get("candidates", []):
+                        if c.get("rollout_id"):
+                            self.tags[c["rollout_id"]] = ["candidate"]
                 self.clarification = cd
             return {"clarification": cd.get("id") if isinstance(cd, dict) else None}
         return self.submit("clarify", {}, work)
@@ -511,7 +515,7 @@ class StudioService:
             else:
                 rep = self._paired_eval_live(job, a, b, seeds, split)
             self.evaluation = rep
-            return {"pairs": len(rep.get("pairs", [])) if isinstance(rep, dict) else None}
+            return {"pairs": len(rep.get("pairs") or rep.get("trials") or []) if isinstance(rep, dict) else None}
         return self.submit("evaluate", {"seeds": seeds, "split": split}, work)
 
     def _runtime_dir(self) -> Path:
@@ -546,37 +550,93 @@ class StudioService:
                                           f"({int(time.time() - t0)} s, estimate {int(est)} s)")
         th = threading.Thread(target=ticker, daemon=True)
         th.start()
+        import inspect
+        kw = {}
+        if "rollout_dir" in inspect.signature(paired_eval).parameters:
+            kw["rollout_dir"] = run_dir / "rollouts"
         try:
             rep = paired_eval(a, b, seeds, split=split, manifest_path=manifest if split == "eval" else None,
-                              workers=workers, log_dir=run_dir / "logs")
+                              workers=workers, log_dir=run_dir / "logs", **kw)
         finally:
             done.set()
-        out = _dump(rep)
-        out["spec_a"], out["spec_b"] = a.version, b.version
-        studio = {"rollout_ids": {}, "scenes": {}, "run_dir": run_dir.name}
-        for t in rep.trials:
-            scene = sample_layout(t.seed, split)
-            studio["scenes"][str(t.seed)] = scene.model_dump(mode="json")
+        return self._register_evaluation(_dump(rep), run_dir, a.version, b.version,
+                                         log_dir=run_dir / "logs", rollout_dir=run_dir / "rollouts")
+
+    def _register_evaluation(self, out: dict, base: Path, va: Optional[int], vb: Optional[int], *,
+                             log_dir: Optional[Path] = None, rollout_dir: Optional[Path] = None) -> dict:
+        """Make every trial of an evaluation report replayable in the viewer."""
+        from ..scenes import sample_layout
+        from ..contracts import RolloutReport as _RR
+        split = out.get("split", "eval")
+        out["spec_a"] = va if va is not None else out.get("manifest", {}).get("spec_a", {}).get("version")
+        out["spec_b"] = vb if vb is not None else out.get("manifest", {}).get("spec_b", {}).get("version")
+        studio = {"rollout_ids": {}, "scenes": {}, "run_dir": base.name}
+
+        def resolve(rel: Optional[str], default_dir: Optional[Path]) -> Optional[str]:
+            if not rel:
+                return None
+            pth = Path(rel)
+            for cand in ([pth] if pth.is_absolute() else [base / pth] + ([default_dir / pth.name] if default_dir else [])):
+                if cand.exists():
+                    return str(cand)
+            return None
+
+        for t in out.get("trials", []):
+            seed = int(t["seed"])
+            try:
+                scene = sample_layout(seed, split)
+            except Exception:  # noqa: BLE001 - keep the report even if layouts cannot be rebuilt
+                scene = None
+            if scene is not None and scene.scene_id != t.get("scene_id", scene.scene_id):
+                scene = None
+            if scene is not None:
+                studio["scenes"][str(seed)] = scene.model_dump(mode="json")
             ids = {}
-            for key, rec, spec in (("a", t.a, a), ("b", t.b, b)):
-                rid = f"e{t.seed}{key}"
+            for key in ("a", "b"):
+                rec = t[key]
+                rid = f"e{seed}{key}"
                 ids[key] = rid
-                self.eval_entries[rid] = {"scene": scene, "log_path": rec.log_path, "report": rec.report,
-                                          "spec_version": spec.version, "seed": t.seed, "condition": rec.condition}
+                self.eval_entries[rid] = {
+                    "scene": scene, "report": _RR.model_validate(rec["report"]),
+                    "log_path": resolve(rec.get("log_path"), log_dir),
+                    "rollout_path": resolve(rec.get("rollout_path"), rollout_dir),
+                    "spec_version": out["spec_a"] if key == "a" else out["spec_b"],
+                    "seed": seed, "condition": rec.get("condition", "")}
                 self.tags[rid] = ["eval"]
-            studio["rollout_ids"][str(t.seed)] = ids
+                self.trace_cache.pop(rid, None)
+                self.payload_cache.pop(rid, None)
+            studio["rollout_ids"][str(seed)] = ids
         out["studio"] = studio
         return out
 
+    def load_evaluation(self, report_path: str | Path) -> dict:
+        """Show a saved evaluation report (JSON written by the evaluation package)."""
+        path = Path(report_path)
+        if path.is_dir():
+            cands = sorted(path.glob("*.json"), key=lambda p: (p.name != "report.json", p.name))
+            path = next(p for p in cands if '"trials"' in p.read_text()[:200000])
+        data = json.loads(path.read_text())
+        with self.lock:
+            self.evaluation = self._register_evaluation(data, path.parent, None, None,
+                                                        log_dir=path.parent / "logs", rollout_dir=path.parent / "rollouts")
+            self._changed()
+            return self.evaluation
+
     def _eval_rollout(self, rid: str) -> Rollout:
         e = self.eval_entries[rid]
+        if e.get("rollout_path"):
+            r = Rollout.model_validate_json(Path(e["rollout_path"]).read_text())
+            if r.visual is None and e["scene"] is not None:
+                vd = self.visual_for(e["scene"])
+                r.visual = VisualScene.model_validate(vd) if vd else None
+            return r
         visual = None
         try:
             from ..sim import SimEnv
             visual = SimEnv(e["scene"]).visual_scene()
         except Exception:  # noqa: BLE001
             visual = None
-        if not e["log_path"] or not Path(e["log_path"]).exists():
+        if e["scene"] is None or not e["log_path"] or not Path(e["log_path"]).exists():
             return Rollout(report=e["report"], visual=visual)
         from ..statelog import StateLog
         return statelog_to_rollout(StateLog.load(e["log_path"]), e["report"], visual)
@@ -675,17 +735,22 @@ class StudioService:
         from ..sim import Teleop
         from ..scenes import reference_scene
         with self.lock:
-            scene = self.session.scene or reference_scene("demo")
+            scene = (self.session.demo.scene if self.session.demo is not None else None) or reference_scene("demo")
             self.teleop = Teleop(scene)
-            return {"visual": self.visual_for(scene)}
+            vis = self.teleop.visual_scene() if hasattr(self.teleop, "visual_scene") else None
+            frame = self.teleop.advance(0.05)
+            return {"visual": _dump(vis) if vis is not None else self.visual_for(scene),
+                    "scene": scene.model_dump(mode="json"), "frame": _frame_dict(frame, self.teleop)}
 
     def teleop_step(self, dpos, drot, grip, seconds: float = 1 / 15) -> dict:
         if self.teleop is None:
             raise RuntimeError("teleoperation not started")
         self.teleop.command(tuple(dpos), tuple(drot), grip)
         f = self.teleop.advance(seconds)
-        return {"t": f.t, "width": f.gripper_width, "phase": f.phase,
-                "bodies": {k: list(v.pos) + list(v.quat) for k, v in f.bodies.items()}}
+        return _frame_dict(f, self.teleop)
+
+    def teleop_cancel(self) -> None:
+        self.teleop = None
 
     def teleop_finish(self) -> dict:
         if self.teleop is None:
@@ -708,7 +773,7 @@ class StudioService:
             if rollout_id in self.eval_entries:
                 e = self.eval_entries[rollout_id]
                 payload = compact_rollout(self._eval_rollout(rollout_id), extra={
-                    "kind": "eval", "scene": e["scene"].model_dump(mode="json"), "plan": None})
+                    "kind": "eval", "scene": e["scene"].model_dump(mode="json") if e["scene"] else None, "plan": None})
                 self.payload_cache[rollout_id] = payload
                 return payload
             if rollout_id == "demo":
@@ -742,13 +807,14 @@ class StudioService:
             for rid, e in self.eval_entries.items():
                 if rid not in self.trace_cache:
                     try:
-                        self.trace_cache[rid] = trace_summary(self._eval_rollout(rid), e["scene"])
+                        self.trace_cache[rid] = trace_summary(self._eval_rollout(rid), e["scene"]) if e["scene"] else None
                     except Exception:  # noqa: BLE001 - a missing log only loses the minimap path
                         self.trace_cache[rid] = None
+                has = bool(e.get("rollout_path") or (e["log_path"] and e["scene"] is not None))
                 rollouts.append({"id": rid, "report": e["report"].model_dump(mode="json"),
-                                 "scene_id": e["scene"].scene_id, "spec_version": e["spec_version"],
-                                 "scene": e["scene"].model_dump(mode="json"), "plan": None,
-                                 "tags": ["eval"], "has_frames": bool(e["log_path"]), "trace": self.trace_cache[rid]})
+                                 "scene_id": e["report"].scene_id, "spec_version": e["spec_version"],
+                                 "scene": e["scene"].model_dump(mode="json") if e["scene"] else None, "plan": None,
+                                 "tags": ["eval"], "has_frames": has, "trace": self.trace_cache[rid]})
             demo = None
             if s.demo is not None:
                 d = s.demo
@@ -799,6 +865,17 @@ def trace_summary(rollout: Rollout, scene: SceneState, points: int = 90) -> Opti
         tilt = math.degrees(math.acos(max(-1.0, min(1.0, zz))))
         pts.append([round(p.pos[0], 3), round(p.pos[1], 3), round(p.pos[2], 3), round(tilt, 1)])
     return {"object_id": cup, "points": pts}
+
+
+def _frame_dict(f: RolloutFrame, teleop=None) -> dict:
+    held = None
+    if teleop is not None and hasattr(teleop, "held_object"):
+        try:
+            held = teleop.held_object()
+        except Exception:  # noqa: BLE001
+            held = None
+    return {"t": f.t, "width": f.gripper_width, "phase": f.phase, "held": held,
+            "bodies": {k: [round(x, 5) for x in list(v.pos) + list(v.quat)] for k, v in f.bodies.items()}}
 
 
 def _plan_summary(plan: Optional[PlanResult]) -> Optional[dict]:

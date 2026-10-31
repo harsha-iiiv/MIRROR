@@ -30,7 +30,10 @@ from mirror.scenes.objects import make_block, make_box, make_cup, make_marker, m
 from mirror.scenes.reference import default_gripper_start, default_workspace
 
 EVAL_SEED_BASE = 10_000
+SHORTCUT_EVAL_SEED_BASE = 20_000
 SPLITS = ("dev", "eval", "blocked")
+FAMILIES = ("mixed", "shortcut")
+SHORTCUT_SLOT_JITTER = 0.03      # m, slot centre offset from the cup-to-tray line
 
 # Planar half extent of the gripper (palm) plus a carried object, for the
 # route check, and the minimum free distance around an object for a grasp.
@@ -42,13 +45,18 @@ _FAR = WORLD.workspace_y[1] + 0.10
 _GRID = 0.01
 
 
-def _check_seed(seed: int, split: str) -> None:
+def _check_seed(seed: int, split: str, family: str = "mixed") -> None:
     if split not in SPLITS:
         raise ValueError(f"split must be one of {SPLITS}, got {split!r}")
+    if family not in FAMILIES:
+        raise ValueError(f"family must be one of {FAMILIES}, got {family!r}")
+    if split == "blocked" and family != "mixed":
+        raise ValueError("the blocked split has a single family (its slot is always the only opening)")
     if split == "dev" and seed >= EVAL_SEED_BASE:
         raise ValueError(f"dev seeds must be below {EVAL_SEED_BASE} (got {seed})")
-    if split == "eval" and seed < EVAL_SEED_BASE:
-        raise ValueError(f"eval seeds start at {EVAL_SEED_BASE} (got {seed})")
+    base = SHORTCUT_EVAL_SEED_BASE if family == "shortcut" else EVAL_SEED_BASE
+    if split == "eval" and seed < base:
+        raise ValueError(f"{family} eval seeds start at {base} (got {seed})")
 
 
 def _wall_extent(ob: ObstacleSpec) -> tuple[float, float, float]:
@@ -159,17 +167,45 @@ def validate_layout(scene: SceneState) -> list[str]:
     return problems
 
 
-def sample_layout(seed: int, split: str) -> SceneState:
-    """Deterministic random layout for ``split`` in {"dev", "eval", "blocked"}."""
-    _check_seed(seed, split)
-    rng = np.random.default_rng([seed, SPLITS.index(split), 0x6D6972])
+def sample_layout(seed: int, split: str, family: str = "mixed") -> SceneState:
+    """Deterministic random layout for ``split`` in {"dev", "eval", "blocked"}.
+
+    family="mixed" (default) is the standard distribution; its composition,
+    per drawn layout before the validity check:
+      * slot present with probability 0.65;
+      * given a slot: with probability 0.75 the wall's open end is on the side
+        away from mid_y (the mean of the cup's and the tray's y), otherwise
+        the side is a fair coin; so the open end is on the far side with
+        probability 0.875;
+      * given a slot: its centre is at mid_y (clipped to the admissible
+        range) with probability 0.7, otherwise uniform over that range;
+      * without a slot the open end side is a fair coin;
+      * open-end width uniform in [0.20, 0.30] m; zero, one or two extra
+        boxes with probabilities 0.4, 0.4, 0.2.
+    Empirical shares after validation are listed in mirror/scenes/README.md.
+
+    family="shortcut" always cuts a slot whose centre lies within
+    SHORTCUT_SLOT_JITTER of the point where the straight line from the cup
+    to the tray crosses the wall (clipped to the admissible range). Every
+    other choice, including the open-end side (a fair coin), follows the
+    mixed rules. The family is defined by geometry only.
+
+    Seeds: dev seeds are below EVAL_SEED_BASE for both families; eval seeds
+    start at EVAL_SEED_BASE for "mixed" and at SHORTCUT_EVAL_SEED_BASE for
+    "shortcut". The blocked split has only the mixed family.
+    """
+    _check_seed(seed, split, family)
+    if family == "mixed":
+        rng = np.random.default_rng([seed, SPLITS.index(split), 0x6D6972])
+    else:
+        rng = np.random.default_rng([seed, SPLITS.index(split), 0x6D6972, FAMILIES.index(family)])
     ws = default_workspace()
     for attempt in range(500):
-        scene = _draw(rng, seed, split, ws)
+        scene = _draw(rng, seed, split, ws) if family == "mixed" else _draw_shortcut(rng, seed, split, ws)
         if not validate_layout(scene):
             note = scene.notes + f" (accepted after {attempt + 1} draw{'s' if attempt else ''})"
             return scene.model_copy(update={"notes": note})
-    raise RuntimeError(f"could not sample a valid {split} layout for seed {seed}")
+    raise RuntimeError(f"could not sample a valid {split} {family} layout for seed {seed}")
 
 
 def _draw(rng: np.random.Generator, seed: int, split: str, ws) -> SceneState:
@@ -254,3 +290,80 @@ def _draw(rng: np.random.Generator, seed: int, split: str, ws) -> SceneState:
     return SceneState(scene_id=f"{split}_{seed}", seed=seed, split=split, objects=objs, trays=[tray],
                       obstacles=obstacles, workspace=ws, gripper_start=default_gripper_start(),
                       notes="Sampled layout: " + ", ".join(desc) + ".")
+
+
+def _draw_shortcut(rng: np.random.Generator, seed: int, split: str, ws) -> SceneState:
+    """A layout whose wall slot lies on the straight cup-to-tray line."""
+    u = rng.uniform
+    wall_x = float(u(-0.04, 0.04))
+    y_lo, y_hi = ws.y_range
+    objs, pts = _draw_objects(rng, ws, wall_x)
+    ohx = TRAY.inner_half[0] + TRAY.wall_thickness
+    ohy = TRAY.inner_half[1] + TRAY.wall_thickness
+    tx = float(u(wall_x + 0.04 + ohx, ws.x_range[1] - 0.03 - ohx))
+    ty = float(u(y_lo + 0.03 + ohy, y_hi - 0.03 - ohy))
+    tray = make_tray("tray_0", tx, ty)
+    cx, cy = pts[0]
+    side = int(rng.choice([-1, 1]))
+    gap = float(u(0.20, 0.30))
+    y0, y1 = (-_FAR, y_hi - gap) if side > 0 else (y_lo + gap, _FAR)
+    L = WORLD.slot_length
+    lo_lim = max(y0, y_lo) + 0.02 + L / 2
+    hi_lim = min(y1, y_hi) - 0.02 - L / 2
+    if side > 0:
+        hi_lim = min(hi_lim, y1 - 0.12 - L / 2)
+    else:
+        lo_lim = max(lo_lim, y0 + 0.12 + L / 2)
+    t = (wall_x - cx) / (tx - cx)
+    y_cross = cy + t * (ty - cy)
+    c = y_cross + float(u(-SHORTCUT_SLOT_JITTER, SHORTCUT_SLOT_JITTER))
+    slots = []
+    if hi_lim > lo_lim:
+        c = min(max(c, lo_lim), hi_lim)
+        slots.append((c - L / 2, c + L / 2))
+    obstacles = [make_wall("wall_0", wall_x, y0, y1, slots=slots)]
+    obstacles += _draw_boxes(rng, ws, wall_x)
+    n_boxes = len(obstacles) - 1
+    if slots:
+        slot_txt = (f"slot at y {slots[0][0]:+.2f}..{slots[0][1]:+.2f} "
+                    f"(cup-to-tray line crosses the wall at y {y_cross:+.2f})")
+    else:
+        slot_txt = "no admissible slot position"
+    desc = [f"wall open at its {'+' if side > 0 else '-'}y end ({gap:.2f} m)", slot_txt,
+            f"{n_boxes} extra box{'es' if n_boxes != 1 else ''}"]
+    return SceneState(scene_id=f"{split}_shortcut_{seed}", seed=seed, split=split, objects=objs,
+                      trays=[tray], obstacles=obstacles, workspace=ws,
+                      gripper_start=default_gripper_start(),
+                      notes="Sampled layout (shortcut family): " + ", ".join(desc) + ".")
+
+
+def _draw_objects(rng, ws, wall_x):
+    u = rng.uniform
+    y_lo, y_hi = ws.y_range
+    objs, pts = [], []
+    for oid, fn in (("cup_0", make_cup), ("block_0", make_block), ("marker_0", make_marker)):
+        for _ in range(200):
+            x = float(u(ws.x_range[0] + 0.06, wall_x - 0.13))
+            y = float(u(y_lo + 0.07, y_hi - 0.07))
+            if all(math.dist((x, y), p) >= OBJECT_SPACING for p in pts):
+                break
+        pts.append((x, y))
+        objs.append(fn(oid, x, y) if oid.startswith("marker")
+                    else fn(oid, x, y, float(u(-math.pi / 4, math.pi / 4))))
+    return objs, pts
+
+
+def _draw_boxes(rng, ws, wall_x):
+    u = rng.uniform
+    y_lo, y_hi = ws.y_range
+    out = []
+    n_boxes = int(rng.choice([0, 1, 2], p=[0.4, 0.4, 0.2]))
+    for k in range(n_boxes):
+        half = (float(u(0.03, 0.06)), float(u(0.03, 0.06)), float(u(0.03, 0.06)))
+        if rng.choice([-1, 1]) < 0:
+            bx = float(u(ws.x_range[0] + half[0], wall_x - 0.08 - half[0]))
+        else:
+            bx = float(u(wall_x + 0.08 + half[0], ws.x_range[1] - half[0]))
+        by = float(u(y_lo + half[1], y_hi - half[1]))
+        out.append(make_box(f"box_{k}", bx, by, half, float(u(-math.pi / 2, math.pi / 2))))
+    return out

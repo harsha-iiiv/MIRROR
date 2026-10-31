@@ -228,8 +228,8 @@ svg.mini { display: block; width: 100%; height: auto; background: var(--viewer);
 .tool span { font-size: var(--fs-xs); color: var(--muted); }
 .tool:disabled { opacity: 0.45; cursor: default; }
 .timeline { list-style: none; padding: 0; margin: 0; }
-.timeline li { display: grid; grid-template-columns: 56px 1fr; gap: var(--s2); padding: 6px 0; border-bottom: 1px solid var(--line); }
-.timeline button { all: unset; cursor: pointer; display: contents; }
+.timeline li { border-bottom: 1px solid var(--line); }
+.timeline button { display: grid; grid-template-columns: 56px 1fr; gap: var(--s2); width: 100%; padding: 6px 4px; border: 0; background: none; text-align: left; cursor: pointer; border-radius: var(--r-sm); }
+.timeline button:hover { background: var(--surface-2); }
 .timeline .t { font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); padding-top: 1px; }
-.timeline li:hover { background: var(--surface-2); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

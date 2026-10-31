@@ -39,6 +39,7 @@ def test_certificate_bound_holds_on_sampled_orientations():
     the cup within 15 deg of upright, the palm and the cup floor meet the plane
     and span at least the certified height."""
     cert = cached_plan("blocked", "corr").infeasibility
+    assert cert["scope"] == "any_motion"
     e_min = cert["quantities"]["min_vertical_span_m"]
     cup = make_cup("cup_0", 0, 0)
     gm = grasp_model(cup)
@@ -59,14 +60,32 @@ def test_certificate_bound_holds_on_sampled_orientations():
     assert worst >= e_min - 1e-9
 
 
-def test_loose_tilt_limit_gives_no_certificate():
+def test_loose_tilt_limit_gives_only_a_planner_model_result():
     spec = corrected_spec()
     spec.constraints[1].params["max_tilt_deg"] = 60.0
-    r = plan(spec, reference_scene("blocked"), config=PlannerConfig(rrt_iterations=200))
-    # 60 deg still bans the 90 deg modes, but impossibility is not established
+    r = plan(spec, reference_scene("blocked"), config=PlannerConfig(rrt_iterations=100))
     assert r.status == "no_plan"
-    assert r.infeasibility is None
+    cert = r.infeasibility
+    assert cert["proven"] is False and cert["scope"] == "planner_model"
+    q = cert["quantities"]
+    assert q["min_envelope_height_lower_bound_m"] > q["tallest_opening_m"] == pytest.approx(0.10)
     assert "not a proof" in r.reason
+
+
+def test_min_envelope_height_bound_holds_on_random_orientations():
+    from mirror.plan.certificate import min_envelope_height
+    from mirror.plan.se3 import rot_y, rot_z
+    cup = make_cup("cup_0", 0, 0)
+    gm = grasp_model(cup)
+    lb, hmin, _, slack = min_envelope_height(gm, "cup_0", 45.0)
+    assert 0 < slack < 0.002 and lb <= hmin
+    env = make_envelope(gm.width, gm.held("cup_0", 0.0))
+    rng = np.random.default_rng(1)
+    for _ in range(2000):
+        R = rot_z(rng.uniform(-math.pi, math.pi)) @ rot_y(math.radians(45.0) * rng.random()) \
+            @ rot_z(rng.uniform(-math.pi, math.pi))
+        lo, hi = env.vertical_extent(R)
+        assert hi - lo >= lb
 
 
 def test_marker_upright_rule_is_not_certified():
@@ -78,7 +97,9 @@ def test_marker_upright_rule_is_not_certified():
     cfg = PlannerConfig(rrt_iterations=200)
     r = plan(spec, reference_scene("blocked"), config=cfg)
     assert r.status == "no_plan"
-    assert r.infeasibility is None  # the thin marker section defeats this proof
+    # the thin marker section defeats the any-motion proof; only the planner-model result remains
+    assert r.infeasibility["proven"] is False and r.infeasibility["scope"] == "planner_model"
+    assert r.infeasibility["object_id"] == "marker_0"
     assert "marker_0" in r.reason and "not a proof" in r.reason
 
 

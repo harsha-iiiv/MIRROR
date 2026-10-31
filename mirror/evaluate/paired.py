@@ -18,7 +18,7 @@ from . import checker as _chk
 from .checker import spec_hash
 from .feasibility import classify_planning_failure, feasibility
 from .grounding import select
-from .models import ConditionMetrics, EvalReport, FreezeManifest, PairedTrial, TrialRecord
+from .models import ConditionMetrics, EvalReport, FinalReport, FreezeManifest, PairedTrial, TrialRecord
 from .stats import paired_binary, paired_continuous
 from .trial import execute_trial, tilt_trace
 
@@ -54,7 +54,7 @@ def _spec_ref(spec: TaskSpec) -> dict:
 
 
 def freeze(spec_a: TaskSpec, spec_b: TaskSpec, seeds: Sequence[int], split: str,
-           path: Path | str, config: Optional[dict] = None) -> FreezeManifest:
+           path: Path | str, config: Optional[dict] = None, family: str = "mixed") -> FreezeManifest:
     """Write the freeze manifest. Must happen before any evaluation layout is
     generated; ``paired_eval`` refuses the eval split without it."""
     path = Path(path)
@@ -65,7 +65,7 @@ def freeze(spec_a: TaskSpec, spec_b: TaskSpec, seeds: Sequence[int], split: str,
     m = FreezeManifest(created_at=_dt.datetime.fromtimestamp(now, _dt.timezone.utc).isoformat(),
                        created_unix=now, split=split, seeds=[int(s) for s in seeds],
                        spec_a=_spec_ref(spec_a), spec_b=_spec_ref(spec_b),
-                       code_sha256=digest, code_files=n, config=dict(config or {}))
+                       code_sha256=digest, code_files=n, config=dict(config or {}), family=family)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(m.model_dump_json(indent=1))
     return m
@@ -75,17 +75,55 @@ class FreezeError(RuntimeError):
     pass
 
 
+class FamilyUnsupported(RuntimeError):
+    pass
+
+
+def _accepts_family(fn) -> bool:
+    import inspect
+    try:
+        params = inspect.signature(fn).parameters
+    except (TypeError, ValueError):
+        return False
+    return "family" in params or any(p.kind == p.VAR_KEYWORD for p in params.values())
+
+
+def make_layout_fn(family: str = "mixed", layout_fn: Optional[Callable] = None) -> Callable[[int, str], SceneState]:
+    """Layout generator for one scene family. The standard sampler is used
+    unless ``layout_fn`` is given. A non-default family requires a sampler
+    that accepts ``family=``; otherwise this fails before anything runs."""
+    if layout_fn is None:
+        from mirror.scenes import sample_layout as layout_fn  # noqa: N813
+    if _accepts_family(layout_fn):
+        return lambda seed, split: layout_fn(seed, split, family=family)
+    if family != "mixed":
+        raise FamilyUnsupported(f"the layout sampler does not accept family={family!r} yet; "
+                                f"the {family!r} stratum cannot be generated")
+    return lambda seed, split: layout_fn(seed, split)
+
+
 def verify_manifest(path: Path | str, spec_a: TaskSpec, spec_b: TaskSpec,
-                    seeds: Sequence[int], split: str) -> FreezeManifest:
+                    seeds: Sequence[int], split: str, family: str = "mixed") -> FreezeManifest:
+    """Check that the manifest freezes exactly these specs, the current code
+    and (for multi-stratum manifests) a stratum with this split, family and
+    seed list."""
     path = Path(path)
     if not path.exists():
         raise FreezeError(f"no freeze manifest at {path}; run freeze() before generating {split} layouts")
     m = FreezeManifest.model_validate_json(path.read_text())
     problems = []
-    if m.split != split:
-        problems.append(f"manifest split {m.split!r} != {split!r}")
-    if sorted(m.seeds) != sorted(int(s) for s in seeds):
-        problems.append("seeds differ from the manifest")
+    want = sorted(int(s) for s in seeds)
+    if m.strata:
+        if not any(st["split"] == split and st.get("family", "mixed") == family
+                   and sorted(st["seeds"]) == want for st in m.strata):
+            problems.append(f"no frozen stratum with split {split!r}, family {family!r} and these seeds")
+    else:
+        if m.split != split:
+            problems.append(f"manifest split {m.split!r} != {split!r}")
+        if m.family != family:
+            problems.append(f"manifest family {m.family!r} != {family!r}")
+        if sorted(m.seeds) != want:
+            problems.append("seeds differ from the manifest")
     if m.spec_a != _spec_ref(spec_a):
         problems.append("specification A differs from the frozen version")
     if m.spec_b != _spec_ref(spec_b):
@@ -95,6 +133,33 @@ def verify_manifest(path: Path | str, spec_a: TaskSpec, spec_b: TaskSpec,
         problems.append("code under mirror/ changed since the freeze")
     if problems:
         raise FreezeError("; ".join(problems))
+    return m
+
+
+def freeze_strata(spec_a: TaskSpec, spec_b: TaskSpec, strata: list[dict], path: Path | str, *,
+                  kind: str = "final", config: Optional[dict] = None,
+                  spec_provenance: Optional[dict] = None) -> FreezeManifest:
+    """Write one manifest covering several strata (each: name, role, split,
+    family, seeds). Written once, before any of their layouts is generated."""
+    path = Path(path)
+    if path.exists():
+        raise FileExistsError(f"{path} exists; a freeze manifest is written once")
+    names = [st["name"] for st in strata]
+    if len(set(names)) != len(names):
+        raise ValueError("stratum names must be unique")
+    digest, n = code_hash()
+    now = time.time()
+    clean = [dict(name=st["name"], role=st.get("role", "stratum"), split=st["split"],
+                  family=st.get("family", "mixed"), seeds=[int(x) for x in st["seeds"]],
+                  description=st.get("description", "")) for st in strata]
+    m = FreezeManifest(created_at=_dt.datetime.fromtimestamp(now, _dt.timezone.utc).isoformat(),
+                       created_unix=now, split="+".join(sorted({st["split"] for st in clean})),
+                       seeds=[x for st in clean for x in st["seeds"]],
+                       spec_a=_spec_ref(spec_a), spec_b=_spec_ref(spec_b), code_sha256=digest,
+                       code_files=n, config=dict(config or {}), kind=kind, strata=clean,
+                       spec_provenance=dict(spec_provenance or {}))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(m.model_dump_json(indent=1))
     return m
 
 
@@ -134,7 +199,7 @@ def _record(condition, rollout, log, plan, spec, scene, rules, interventions=0) 
                     m = _chk._phase_mask(ctx, k, c.phase)
                     if m.any():
                         max_tilt = max(max_tilt, float(ctx.tilt[m, k].max()))
-                trace.setdefault(oid, tilt_trace(log, oid))
+                trace.setdefault(oid, tilt_trace(log, oid, hz=10.0))
         over = float(sum(v.t_end - v.t_start + log.dt for v in corr))
     beads_total = sum(o.beads_total for o in rep.outcomes)
     beads_in = sum(o.beads_in_container for o in rep.outcomes)
@@ -183,12 +248,90 @@ def obstacle_contacts(log) -> list[dict]:
     return out
 
 
+ROLLOUT_HZ = 15.0
+ROLLOUT_MAX_BYTES = 400_000
+
+
+def _round(x, nd=4):
+    if isinstance(x, float):
+        return round(x, nd)
+    if isinstance(x, list):
+        return [_round(v, nd) for v in x]
+    if isinstance(x, tuple):
+        return [_round(v, nd) for v in x]
+    if isinstance(x, dict):
+        return {k: _round(v, nd) for k, v in x.items()}
+    return x
+
+
+POS_TOL = 2e-4    # m: a body is re-listed once it moves more than this
+QUAT_TOL = 1e-3
+
+
+def compact_rollout(rollout, *, max_bytes: int = ROLLOUT_MAX_BYTES) -> tuple[str, list[str]]:
+    """Serialise a Rollout for playback.
+
+    Numbers are rounded to 4 decimals and a body is listed in a frame only
+    when it has moved (more than 0.2 mm or 0.001 in quaternion components)
+    since the pose last listed for it; the first and last frames list every
+    body. A body absent from a frame keeps its last listed pose. If the result
+    is still larger than ``max_bytes``, bead bodies are additionally listed
+    only on every 2nd (then 4th, 8th) frame. Returns (json, notes)."""
+    from mirror.contracts import Rollout
+    data = _round(rollout.model_dump(mode="json"))
+    frames = data.get("frames", [])
+    full = [dict(fr["bodies"]) for fr in frames]
+
+    def encode(bead_every: int):
+        last: dict[str, dict] = {}
+        for i, fr in enumerate(frames):
+            keep = {}
+            for name, pose in full[i].items():
+                prev = last.get(name)
+                edge = i == 0 or i == len(frames) - 1
+                moved = prev is None or any(abs(a - b) > POS_TOL for a, b in zip(pose["pos"], prev["pos"])) \
+                    or any(abs(a - b) > QUAT_TOL for a, b in zip(pose["quat"], prev["quat"]))
+                if "/bead" in name and bead_every > 1 and i % bead_every and not edge:
+                    moved = False
+                if edge or moved:
+                    keep[name] = pose
+                    last[name] = pose
+            fr["bodies"] = keep
+        return json.dumps(data, separators=(",", ":"))
+
+    notes = ["bodies are listed only when they move; an absent body keeps its last listed pose"]
+    text = encode(1)
+    for every in (2, 4, 8):
+        if len(text) <= max_bytes:
+            break
+        text = encode(every)
+        notes = notes[:1] + [f"bead bodies listed at most every {every}th frame"]
+    if len(text) > max_bytes:
+        notes.append(f"{len(text)} bytes after thinning (target {max_bytes})")
+    data["report"]["notes"] = data["report"]["notes"] + ["playback: " + n for n in notes]
+    text = json.dumps(data, separators=(",", ":"))
+    Rollout.model_validate_json(text)   # the export stays a valid Rollout
+    return text, notes
+
+
+def expand_frames(frames: list[dict]) -> list[dict]:
+    """Inverse of the body omission in compact_rollout: every frame with
+    every body (carrying the last listed pose forward)."""
+    cur: dict[str, dict] = {}
+    out = []
+    for fr in frames:
+        cur.update(fr["bodies"])
+        out.append(dict(fr, bodies=dict(cur)))
+    return out
+
+
 def _job(args):
-    (seed, condition, scene, spec, rules, planner, env_factory, log_dir, max_sim_time) = args
+    (seed, condition, scene, spec, rules, planner, env_factory, log_dir, max_sim_time,
+     rollout_dir) = args
+    hz = ROLLOUT_HZ if rollout_dir else 30.0
     rollout, log, plan = execute_trial(scene, spec, condition=condition, planner=planner,
                                        env_factory=env_factory, max_sim_time=max_sim_time,
-                                       extra_rules=rules)
-    rollout.frames = []  # playback frames are not kept in evaluation records
+                                       extra_rules=rules, frame_hz=hz)
     interventions = int(log.meta.get("interventions", 0)) if log is not None else 0
     rec = _record(condition, rollout, log, plan, spec, scene, rules, interventions)
     if log_dir is not None and log is not None:
@@ -196,6 +339,14 @@ def _job(args):
         p.parent.mkdir(parents=True, exist_ok=True)
         log.save(p)
         rec.log_path = p.name
+    if rollout_dir is not None:
+        rollout.report = rec.report
+        text, _ = compact_rollout(rollout)
+        p = Path(rollout_dir) / f"seed{seed}_{condition}.json"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(text)
+        rec.rollout_path = f"rollouts/{p.name}"
+    rec.report = rec.report.model_copy()
     return seed, condition, rec
 
 
@@ -256,7 +407,9 @@ def paired_eval(spec_a: TaskSpec, spec_b: TaskSpec, seeds: Sequence[int], split:
                 layout_fn: Optional[Callable[[int, str], SceneState]] = None,
                 planner=None, env_factory=None, max_sim_time: float = 120.0,
                 conditions: tuple[str, str] = ("original", "corrected"),
-                n_boot: int = 10_000, include_blocked: bool = False) -> EvalReport:
+                n_boot: int = 10_000, include_blocked: bool = False, family: str = "mixed",
+                rollout_dir: Optional[Path | str] = None, stratum: str = "",
+                require_manifest: bool = False) -> EvalReport:
     """Run spec A and spec B on the identical initial scene for every seed.
 
     For split "eval" a freeze manifest (see ``freeze``) must already exist and
@@ -266,26 +419,25 @@ def paired_eval(spec_a: TaskSpec, spec_b: TaskSpec, seeds: Sequence[int], split:
     workers = max(1, min(int(workers), MAX_WORKERS))
     seeds = [int(s) for s in seeds]
     notes: list[str] = []
-    if split == "eval":
+    layout = make_layout_fn(family, layout_fn)   # fails here if the family is unsupported
+    if split == "eval" or require_manifest:
         if manifest_path is None:
-            raise FreezeError("the eval split requires a freeze manifest (manifest_path)")
-        manifest = verify_manifest(manifest_path, spec_a, spec_b, seeds, split)
+            raise FreezeError(f"the {split} split requires a freeze manifest (manifest_path)")
+        manifest = verify_manifest(manifest_path, spec_a, spec_b, seeds, split, family)
     else:
         if manifest_path is not None and Path(manifest_path).exists():
-            manifest = verify_manifest(manifest_path, spec_a, spec_b, seeds, split)
+            manifest = verify_manifest(manifest_path, spec_a, spec_b, seeds, split, family)
         else:
             digest, n = code_hash()
             manifest = FreezeManifest(created_at=_dt.datetime.now(_dt.timezone.utc).isoformat(),
                                       created_unix=time.time(), split=split, seeds=seeds,
                                       spec_a=_spec_ref(spec_a), spec_b=_spec_ref(spec_b),
-                                      code_sha256=digest, code_files=n,
+                                      code_sha256=digest, code_files=n, family=family,
                                       config={"note": "development run; not frozen in advance"})
-    if layout_fn is None:
-        from mirror.scenes import sample_layout as layout_fn  # noqa: N813
     layouts_generated = time.time()
     if split == "eval" and layouts_generated < manifest.created_unix:
         raise FreezeError("layout generation precedes the freeze manifest")
-    scenes = {s: layout_fn(s, split) for s in seeds}
+    scenes = {s: layout(s, split) for s in seeds}
     rules = corrected_rules(spec_a, spec_b)
     if not rules:
         notes.append("specification B enforces no rule beyond A; corrected-rule metrics are empty")
@@ -294,7 +446,8 @@ def paired_eval(spec_a: TaskSpec, spec_b: TaskSpec, seeds: Sequence[int], split:
     for s in seeds:
         for cond, spec in zip(conditions, (spec_a, spec_b)):
             jobs.append((s, cond, scenes[s], spec, rules, planner, env_factory,
-                         str(log_dir) if log_dir else None, max_sim_time))
+                         str(log_dir) if log_dir else None, max_sim_time,
+                         str(rollout_dir) if rollout_dir else None))
     results = {}
     if workers == 1:
         for j in jobs:
@@ -346,10 +499,13 @@ def paired_eval(spec_a: TaskSpec, spec_b: TaskSpec, seeds: Sequence[int], split:
                            rules=rules, conditions=conditions,
                            max_sim_time=max_sim_time) if include_blocked else []
     return EvalReport(
+        title=f"MIRROR paired evaluation{': ' + stratum if stratum else ''}",
         split=split, manifest=manifest,
         corrected_rules=[c.model_dump(mode="json") for c in rules],
         scope_objects=scope_objs,
         config=dict(workers=workers, max_sim_time=max_sim_time, conditions=list(conditions),
+                    family=family, stratum=stratum,
+                    rollout_hz=ROLLOUT_HZ if rollout_dir else None,
                     planner=_name(planner, "mirror.plan.plan"),
                     executor=_name(env_factory, "mirror.sim.SimEnv(seed=0)"),
                     checker=_chk.CHECKER_ID, n_boot=n_boot,

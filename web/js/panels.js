@@ -130,15 +130,95 @@ function RoutesView({ plan }) {
 
 function RunButton({ ctx, label, tags = [], condition, spec_version = null, primary = true, busyKey = 'run' }) {
   const job = ctx.busy[busyKey];
+  if (ctx.isStatic) return null;
   return html`<button class=${'btn ' + (primary ? 'primary' : '')} disabled=${!!job || ctx.isStatic}
     title=${ctx.isStatic ? 'Needs the live studio' : ''}
     onClick=${() => ctx.action(busyKey, () => api.post('run', { spec_version, condition, tags })).then(() => ctx.setPick(null))}>${label}</button>`;
+}
+
+function RunsList({ ctx, filter = () => true, title = 'Runs in this session' }) {
+  const rs = ctx.snap.rollouts.filter((r) => !isAux(r) && filter(r));
+  if (!rs.length) return null;
+  const cur = ctx.display?.id;
+  return html`<div class="sec"><p class="kicker">${title}</p><ul class="list">${[...rs].reverse().map((r) => html`<li>
+    <button class="btn ghost" style="width:100%;text-align:left;padding:0;border-radius:4px" aria-pressed=${cur === r.id} onClick=${() => ctx.setPick(r.id)}>
+      <div class="row"><span class="num muted" style="font-size:11px;width:34px">${r.id}</span>
+        <span style=${cur === r.id ? 'color:var(--accent);font-weight:550' : 'color:var(--text)'}>${r.report.condition || sceneLabel(r.scene_id)}</span>
+        <span class="spacer"></span><${Chip} status=${r.report.status}>${statusLabel(r.report)}<//></div>
+      <div class="muted" style="font-size:11px;margin-left:42px">spec v${r.spec_version} · ${sceneLabel(r.scene_id)}</div>
+    </button></li>`)}</ul></div>`;
+}
+
+// Keyboard teleoperation of the simulated gripper (live studio only).
+const KEYS = {
+  KeyW: [[1, 0, 0], [0, 0, 0]], KeyS: [[-1, 0, 0], [0, 0, 0]], KeyA: [[0, 1, 0], [0, 0, 0]], KeyD: [[0, -1, 0], [0, 0, 0]],
+  KeyR: [[0, 0, 1], [0, 0, 0]], KeyF: [[0, 0, -1], [0, 0, 0]], KeyQ: [[0, 0, 0], [0, 0, 1]], KeyE: [[0, 0, 0], [0, 0, -1]],
+  KeyT: [[0, 0, 0], [0, 1, 0]], KeyG: [[0, 0, 0], [0, -1, 0]],
+};
+
+function TeleopCard({ ctx, onDone }) {
+  const [state, setState] = useState({ t: 0, held: null, open: true });
+  const [err, setErr] = useState(null);
+  useEffect(() => {
+    let alive = true, conn = null, timer = null, open = true, gripCmd = null, waiting = false;
+    const down = new Set();
+    const onKey = (e) => {
+      if (/input|textarea/i.test(document.activeElement?.tagName)) return;
+      if (KEYS[e.code]) { e.preventDefault(); e.type === 'keydown' ? down.add(e.code) : down.delete(e.code); }
+      if (e.code === 'Space' && e.type === 'keydown' && !e.repeat) { e.preventDefault(); e.stopPropagation(); open = !open; gripCmd = open ? 0.09 : 0.0; }
+    };
+    (async () => {
+      try {
+        const init = await api.post('teleop/start');
+        if (!alive) return;
+        ctx.viewer.current.showLive(init.visual, init.scene, init.frame);
+        conn = api.connect((m) => {
+          if (m.type === 'teleop_frame') {
+            waiting = false;
+            ctx.viewer.current.applyBodies(m.frame.bodies);
+            setState({ t: m.frame.t, held: m.frame.held, open });
+          }
+        });
+        window.addEventListener('keydown', onKey, true);
+        window.addEventListener('keyup', onKey, true);
+        timer = setInterval(() => {
+          if (waiting) return;
+          const dp = [0, 0, 0], dr = [0, 0, 0];
+          for (const k of down) { KEYS[k][0].forEach((v, i) => (dp[i] += v * 0.012)); KEYS[k][1].forEach((v, i) => (dr[i] += v * 0.06)); }
+          waiting = true;
+          conn.send({ type: 'teleop', dpos: dp, drot: dr, grip: gripCmd });
+          gripCmd = null;
+          setTimeout(() => { waiting = false; }, 400);
+        }, 66);
+      } catch (e) { setErr(String(e.message || e)); }
+    })();
+    return () => {
+      alive = false;
+      clearInterval(timer);
+      window.removeEventListener('keydown', onKey, true);
+      window.removeEventListener('keyup', onKey, true);
+      conn && conn.close();
+    };
+  }, []);
+  return html`<div class="callout" style="margin-top:12px">
+    <b>Teleoperating the simulated gripper</b>
+    <div class="muted" style="margin-top:4px">W/S and A/D move in the table plane, R/F up and down, Q/E yaw, T/G pitch, Space opens or closes the jaw.
+      Physics runs as you drive; nothing is scripted.</div>
+    <div class="row" style="margin-top:8px"><span class="num">${fmtT(state.t)}</span>
+      <span class="muted">jaw ${state.open ? 'open' : 'closing'}</span>
+      <span class="muted">${state.held ? 'holding ' + state.held : 'holding nothing'}</span></div>
+    ${err ? html`<div class="err">${err}</div>` : ''}
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" onClick=${async () => { await ctx.action('teleop', () => api.post('teleop/finish')); onDone(); }}>Use as the demonstration</button>
+      <button class="btn ghost" onClick=${async () => { await api.post('teleop/cancel'); onDone(); ctx.setPick('demo'); }}>Cancel</button>
+    </div></div>`;
 }
 
 // ---------------------------------------------------------------- 1 Watch
 
 function WatchPanel({ ctx }) {
   const { snap } = ctx;
+  const [teleop, setTeleop] = useState(false);
   const d = snap.demo;
   const sources = { teleop_scripted: 'Scripted teleoperation in simulation', teleop_keyboard: 'Keyboard teleoperation in simulation',
     replay: 'Replayed trace', video_grounded: 'Human video grounded to simulator objects' };
@@ -157,11 +237,13 @@ function WatchPanel({ ctx }) {
             aria-label=${`${e.type} ${e.object_id} at ${fmtT(e.t)}, jump`}><span class="t">${fmtT(e.t)}</span>
             <span>${cap(e.type)} <b>${e.object_id}</b></span></button></li>`)}</ol>
         <div class="row" style="margin-top:16px">
-          ${snap.specs.length ? html`<button class="btn primary" onClick=${() => ctx.setStep('interpret')}>See the interpretation</button>`
+          ${snap.specs.length && snap.specs[0].demo_id === d.demo_id ? html`<button class="btn primary" onClick=${() => ctx.setStep('interpret')}>See the interpretation</button>`
             : html`<button class="btn primary" disabled=${!!ctx.busy.interpret || ctx.isStatic}
               onClick=${async () => { await ctx.action('interpret', () => api.post('interpret')); ctx.setStep('interpret'); }}>Interpret this demonstration</button>`}
         </div>
-        <${JobLine} job=${ctx.busy.interpret} />`
+        <${JobLine} job=${ctx.busy.interpret} />
+        ${snap.teleop_available && !ctx.isStatic ? (teleop ? html`<${TeleopCard} ctx=${ctx} onDone=${() => setTeleop(false)} />`
+          : html`<div class="row" style="margin-top:8px"><button class="btn ghost small" onClick=${() => setTeleop(true)}>Record your own with the keyboard</button></div>`) : ''}`
       : html`<p>No demonstration loaded.</p>
         <div class="row"><button class="btn primary" disabled=${ctx.isStatic || !!ctx.busy.demo}
           onClick=${() => ctx.action('demo', () => api.post('demo/load'))}>Load the reference demonstration</button></div>`}
@@ -260,7 +342,8 @@ function RunPanel({ ctx }) {
     </div>
     ${r ? html`<div class="sec"><${ReportView} r=${r} /></div>
       <div class="sec"><p class="lede">Success here could be a recording. Change the world and see whether it replans.</p>
-        <button class="btn primary" onClick=${() => ctx.setStep('world')}>Change the world</button></div>` : ''}`;
+        <button class="btn primary" onClick=${() => ctx.setStep('world')}>Change the world</button></div>` : ''}
+    <${RunsList} ctx=${ctx} />`;
 }
 
 // ---------------------------------------------------------------- 4 World
@@ -283,7 +366,7 @@ function WorldPanel({ ctx }) {
     <div class="sec">
       <${Head} n="4" kicker="Change the world" title="Rearrange, then replan"
         lede="Move the tray, open a slot in the wall or add an obstacle. The robot cannot replay the demonstration; it has to plan again." />
-      <h3>Layouts</h3>
+      ${ro ? html`<p class="faint" style="font-size:12px">Recorded session: the layout editor needs the live studio. The recorded runs are listed below.</p>` : html`<h3>Layouts</h3>
       <div class="tools-grid">${presets.map(([k, t, s]) => html`<button class="tool" aria-pressed=${sc?.scene_id === k} disabled=${ro}
         onClick=${() => preset(k)}><b>${t}</b><span>${s}</span></button>`)}</div>
       <h3>Edit</h3>
@@ -297,8 +380,8 @@ function WorldPanel({ ctx }) {
           <b>Slot ${hasSlot ? 'on' : 'off'}</b><span>${hasSlot ? 'Close the slot' : 'Cut a slot on the direct line'}</span></button>
       </div>
       ${sc?.obstacles?.some((o) => o.kind === 'box') ? html`<div class="row" style="margin-top:8px">${sc.obstacles.filter((o) => o.kind === 'box').map((o) => html`
-        <button class="btn small" disabled=${ro} onClick=${() => ctx.action('scene', () => api.post('scene', { edit: { remove_obstacle: o.id } }))}>Remove ${o.id}</button>`)}</div>` : ''}
-      <div style="margin-top:14px"><${MiniMap} scene=${sc} label="current layout" /></div>
+        <button class="btn small" disabled=${ro} onClick=${() => ctx.action('scene', () => api.post('scene', { edit: { remove_obstacle: o.id } }))}>Remove ${o.id}</button>`)}</div>` : ''}`}
+      <div style="margin-top:14px"><${MiniMap} scene=${r?.scene || sc} trace=${r?.trace} label="current layout" /></div>
       <div class="row" style="margin-top:12px">
         <span class="muted" style="font-size:12px">${sceneLabel(sc?.scene_id)}</span><span class="spacer"></span>
         <${RunButton} ctx=${ctx} label=${`Replan and run v${spec?.version}`} condition=${'v' + spec?.version + ' · ' + (sc?.scene_id || '')} tags=${['world']} />
@@ -308,7 +391,8 @@ function WorldPanel({ ctx }) {
     ${r ? html`<div class="sec"><${ReportView} r=${r} /></div>` : ''}
     ${r && /slot|pitch|tilt/i.test(routeOf(r, cupOutcome(r.report)?.object_id) || (r.plan?.transport ? '' : (r.report.route_labels || []).join(' '))) ? html`<div class="sec">
       <p class="lede">It took the short way: through the slot, with the cup on its side.</p>
-      <button class="btn primary" onClick=${() => ctx.setStep('correct')}>That is not what I meant</button></div>` : ''}`;
+      <button class="btn primary" onClick=${() => ctx.setStep('correct')}>That is not what I meant</button></div>` : ''}
+    <${RunsList} ctx=${ctx} />`;
 }
 
 // -------------------------------------------------------------- 5 Correct

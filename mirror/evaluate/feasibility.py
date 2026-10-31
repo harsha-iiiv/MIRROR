@@ -48,9 +48,8 @@ def _side(wall: ObstacleSpec, p) -> float:
 
 def _required(spec: TaskSpec, scene: SceneState) -> list[str]:
     ids: list[str] = []
-    for g in spec.goals:
-        if g.status == Status.confirmed:
-            ids += [i for i in select(g.object, spec, scene) if i not in ids]
+    for g in spec.active_goals():
+        ids += [i for i in select(g.object, spec, scene) if i not in ids]
     return ids
 
 

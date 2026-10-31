@@ -136,8 +136,8 @@ class LLMClient:
 
     # ------------------------------------------------------------ setup ---
     @classmethod
-    def from_env(cls, **overrides: Any) -> "LLMClient":
-        env = os.environ
+    def from_env(cls, env: Optional[Any] = None, **overrides: Any) -> "LLMClient":
+        env = os.environ if env is None else env
         key = env.get("MODEL_API_KEY") or None
         mode = env.get("MIRROR_LLM_MODE") or ("live" if key else "offline")
         kw: dict[str, Any] = dict(

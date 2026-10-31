@@ -214,7 +214,11 @@ class Session:
 
 
 def chosen_routes(plan: PlanResult) -> list[str]:
-    """Route label of every transport step, as "<object_id>:<label>"."""
+    """Route label of every object transport, as "<object_id>:<label>"."""
+    flagged = [f"{r.object_id}:{r.label}" for r in plan.routes
+               if r.chosen and not r.label.startswith("transit:")]
+    if flagged:
+        return flagged
     out = []
     for s in plan.steps:
         if s.kind != "transport":

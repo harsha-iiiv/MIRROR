@@ -24,6 +24,7 @@ export async function getRollout(id) {
 }
 
 export function forgetRollouts() { rolloutCache.clear(); }
+export function forget(id) { rolloutCache.delete(id); }
 
 export async function post(path, body = {}) {
   if (isStatic) throw new Error('This is a static export: actions need the live studio.');

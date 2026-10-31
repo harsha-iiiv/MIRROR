@@ -7,11 +7,13 @@ from .checker import GROUND_TRUTH_USE
 from .models import EvalReport
 
 
-def write_report(report: EvalReport, out_dir: Path | str) -> dict[str, Path]:
+def write_report(report: EvalReport, out_dir: Path | str, *, write_json: bool = True) -> dict[str, Path]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    paths = {"json": out / "report.json", "markdown": out / "report.md"}
-    paths["json"].write_text(report.model_dump_json(indent=1))
+    paths = {"markdown": out / "report.md"}
+    if write_json:
+        paths["json"] = out / "report.json"
+        paths["json"].write_text(report.model_dump_json())
     (out / "manifest.json").write_text(report.manifest.model_dump_json(indent=1))
     figs = _figures(report, out)
     paths.update(figs)
@@ -236,3 +238,100 @@ def _figures(r: EvalReport, out: Path) -> dict[str, Path]:
         fig.savefig(figs["tilt_traces"], dpi=150)
         plt.close(fig)
     return figs
+
+
+def _rng(seeds) -> str:
+    seeds = sorted(seeds)
+    if seeds and seeds == list(range(seeds[0], seeds[-1] + 1)) and len(seeds) > 2:
+        return f"{seeds[0]}-{seeds[-1]}"
+    return ", ".join(map(str, seeds))
+
+
+def write_final_report(final, out_dir: Path | str) -> dict[str, Path]:
+    """Combined JSON + Markdown, plus a per-stratum Markdown report with figures."""
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    paths = {"json": out / "report.json", "markdown": out / "report.md"}
+    paths["json"].write_text(final.model_dump_json())
+    (out / "manifest.json").write_text(final.manifest.model_dump_json(indent=1))
+    for name, rep in final.strata.items():
+        write_report(rep, out / name, write_json=False)
+    paths["markdown"].write_text(final_markdown(final))
+    return paths
+
+
+def final_markdown(f) -> str:
+    m = f.manifest
+    L = [f"# {f.title}", ""] + [f"> {n}" for n in f.notes] + [""]
+    L += ["## Pre-registration", "",
+          f"- Freeze manifest written {m.created_at}, before any of these layouts was generated.",
+          f"- Code sha256 `{m.code_sha256[:16]}` over {m.code_files} source files.",
+          f"- Spec A (original) `{m.spec_a['spec_id']}` v{m.spec_a['version']} `{m.spec_a['sha256'][:16]}`; "
+          f"spec B (corrected) v{m.spec_b['version']} `{m.spec_b['sha256'][:16]}`.", ""]
+    p = f.spec_provenance or {}
+    if p:
+        L += [f"- Specifications: {p.get('source', '')}; interpreter `{p.get('interpreter')}`; "
+              f"offline interpreter agrees: {p.get('offline_agrees')}.",
+              f"- Correction text: \"{p.get('correction_text', '')}\"", ""]
+    L += ["| stratum | role | split | family | seeds | n |", "|---|---|---|---|---|---|"]
+    for st in m.strata:
+        L.append(f"| {st['name']} | {st['role']} | {st['split']} | {st['family']} | {_rng(st['seeds'])} | "
+                 f"{len(st['seeds'])} |")
+    L.append("")
+    names = list(f.strata)
+    L += ["## Results side by side", "",
+          "| Metric | " + " | ".join(f"{n}: A / B" for n in names) + " |",
+          "|---|" + "---|" * len(names)]
+
+    def row(label, fn):
+        cells = []
+        for n in names:
+            r = f.strata[n]
+            ca, cb = r.config["conditions"]
+            cells.append(f"{fn(r.metrics[ca], r)} / {fn(r.metrics[cb], r)}")
+        L.append(f"| {label} | " + " | ".join(cells) + " |")
+
+    nz = lambda x, s="{:.1f}": "n/a" if x is None else s.format(x)
+    row("Scenes", lambda c, r: str(c.n))
+    row("Executed in simulation", lambda c, r: str(c.executed))
+    row("Task completion", lambda c, r: str(c.completion))
+    row("Violation-free success", lambda c, r: str(c.violation_free_success))
+    row("Trials violating corrected rule", lambda c, r: str(c.corrected_rule_violations))
+    row("Max corrected-object tilt (deg)", lambda c, r: nz(c.max_tilt_deg_max))
+    row("Beads lost (total)", lambda c, r: str(c.beads_lost_total))
+    row("Obstacle-contact trials", lambda c, r: str(c.obstacle_contact_trials))
+    row("Planning failures", lambda c, r: str(c.planning_failures))
+    row("Execution failures", lambda c, r: str(c.execution_failures))
+    row("Timeouts", lambda c, r: str(c.timeouts))
+    row("Feasible scenes wrongly rejected", lambda c, r: f"{c.feasible_scenes_wrongly_rejected}/{c.feasible_scenes_known}")
+    L.append("")
+    L += ["## Paired statistics per stratum", ""]
+    for n in names:
+        r = f.strata[n]
+        v = r.paired["violation_free_success"]
+        ce = r.paired.get("correction_exercised", {})
+        L += [f"**{n}** ({f.roles.get(n, '')}): correction exercised in {ce.get('n', 0)}/{ce.get('of', 0)} "
+              f"scenes. Violation-free success A {v['rate_a']:.2f}, B {v['rate_b']:.2f}; "
+              f"difference {v['diff']:+.2f} (bootstrap 95% CI {_fmt_ci(v['diff_ci95_bootstrap'])}); "
+              f"pairs only-A {v['only_a']}, only-B {v['only_b']}; exact McNemar p = {v['mcnemar_p_exact']:.4g}. "
+              f"{v['power_note']}. Scope: {r.scope['verdict']}. [Details]({n}/report.md)", ""]
+    blk = [n for n in names if f.roles.get(n) == "blocked"]
+    for n in blk:
+        r = f.strata[n]
+        L += [f"## Blocked stratum ({n})", "",
+              "| seed | A status | B status | B classification | independent analysis (B) |",
+              "|---|---|---|---|---|"]
+        for t in r.trials:
+            L.append(f"| {t.seed} | {t.a.report.status} | {t.b.report.status} | {t.b.failure_class or '-'} | "
+                     f"{t.b.feasibility} |")
+        L.append("")
+    if f.blocked_reference:
+        L += ["## Blocked reference scene", "", "| condition | status | classification | independent |",
+              "|---|---|---|---|"]
+        for x in f.blocked_reference:
+            L.append(f"| {x['condition']} | {x['status']} | {x['failure_class'] or '-'} | "
+                     f"{x['independent']['verdict']} |")
+        L.append("")
+    L += [f"Wall time {f.wall_time_s:.0f} s. Finite simulated trials; not formal verification and not "
+          f"evidence of physical deployment.", ""]
+    return "\n".join(L)

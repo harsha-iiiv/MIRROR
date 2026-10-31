@@ -104,3 +104,25 @@ def slot_plan(scene: SceneState, *, tilt_deg: float, slot_z: float = 0.14,
         tx, ty = scene.trays[0].pose.pos[:2]
         steps += place_steps(scene, "cup_0", tx - 0.04, ty)
     return plan_of(scene, steps, f"cup through the slot at {tilt_deg:.0f} deg")
+
+
+def touching_scene():
+    """Demo scene with the block pressed against the cup, so a short rollout
+    exercises object-object, gripper-object and table contacts."""
+    from mirror.scenes import reference_scene
+    from mirror.scenes.objects import make_block
+    s = reference_scene("demo").model_copy(deep=True)
+    cup = next(o for o in s.objects if o.id == "cup_0")
+    x, y, _ = cup.pose.pos
+    s.objects = [o if o.id != "block_0" else make_block("block_0", x + 0.0498, y) for o in s.objects]
+    s.scene_id = "touching"
+    return s
+
+
+def short_rollout_plan(scene: SceneState) -> PlanResult:
+    steps = pick_steps(scene, "cup_0")
+    o = next(o for o in scene.objects if o.id == "cup_0")
+    x, y, _ = o.pose.pos
+    steps.append(PlanStep(kind="transport", object_id="cup_0", max_speed=0.2,
+                          waypoints=[Pose(pos=(x + 0.05, y + 0.05, SAFE_Z), quat=pitched(30))]))
+    return plan_of(scene, steps, "short regression rollout")

@@ -270,10 +270,10 @@ def _required_objects(ctx: _Ctx) -> tuple[list[str], dict[str, object], bool]:
     req: list[str] = []
     trays: dict[str, object] = {}
     all_bound = True
-    confirmed = [g for g in ctx.spec.goals if g.status == Status.confirmed]
+    confirmed = ctx.spec.active_goals()   # goals are pursued unless a human rejected them
     for g in ctx.spec.goals:
-        if g.status != Status.confirmed:
-            ctx.notes.append(f"goal {g.id} is {g.status.value}; not required")
+        if g.status == Status.rejected:
+            ctx.notes.append(f"goal {g.id} is rejected; not required")
     for g in confirmed:
         ids = select(g.object, ctx.spec, ctx.scene)
         tray, note = destination_tray(g.target, ctx.scene)
@@ -291,7 +291,7 @@ def _required_objects(ctx: _Ctx) -> tuple[list[str], dict[str, object], bool]:
                 req.append(i)
                 trays[i] = tray
     if not confirmed:
-        ctx.notes.append("specification has no confirmed goal; completion cannot be established")
+        ctx.notes.append("specification has no active goal; completion cannot be established")
         all_bound = False
     return req, trays, all_bound
 
@@ -311,10 +311,11 @@ def check(log: StateLog, spec: TaskSpec, scene: SceneState, *,
     """Check a rollout's step log against ``spec`` in ``scene``.
 
     Only ``spec.enforced_constraints()`` can make the status
-    ``constraint_violated``. Rules from ``extra_rules`` (for example the
+    ``constraint_violated``. Required objects are those named by
+    ``spec.active_goals()``. Rules from ``extra_rules`` (for example the
     constraints of a newer specification version) and, with
     ``include_unenforced``, the spec's own proposed or rejected constraints are
-    checked as well but reported separately (see ``advisory_violations``) and
+    checked as well and reported in ``RolloutReport.advisory_violations``; they
     never change the status.
     """
     ctx = _context(log, spec, scene)
@@ -354,9 +355,9 @@ def check(log: StateLog, spec: TaskSpec, scene: SceneState, *,
 
     adv = advisory_violations(log, spec, scene, extra_rules=extra_rules,
                               include_unenforced=include_unenforced, _ctx=ctx)
-    for v in adv:
-        notes.append(f"advisory (not enforced in v{spec.version}): {v.constraint_id} on {v.object_id} "
-                     f"{v.t_start:.2f}-{v.t_end:.2f} s peak {v.peak:.1f}")
+    if adv:
+        notes.append(f"{len(adv)} advisory violation(s) of rules not enforced in v{spec.version}; "
+                     f"see advisory_violations")
 
     rid = rollout_id or hashlib.sha1(
         f"{scene.scene_id}|{spec.spec_id}|{spec.version}|{condition}|{log.n}".encode()).hexdigest()[:12]
@@ -365,7 +366,8 @@ def check(log: StateLog, spec: TaskSpec, scene: SceneState, *,
         condition=condition, status=status,
         plan_status=plan.status if plan else "", plan_reason=plan.reason if plan else "",
         route_labels=chosen_routes(plan) if plan else [],
-        outcomes=outcomes, violations=violations, forbidden_contacts=contacts,
+        outcomes=outcomes, violations=violations, advisory_violations=adv,
+        forbidden_contacts=contacts,
         completion=completion, planning_time_s=plan.planning_time_s if plan else 0.0,
         execution_time_s=float(log.t[-1] - log.t[0]) if log.n else 0.0,
         physics_steps=log.n, checker=CHECKER_ID, ground_truth_use=list(GROUND_TRUTH_USE),

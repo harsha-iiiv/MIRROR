@@ -79,6 +79,138 @@ def bottom_inscribed_radius(obj: ObjectSpec) -> float:
 
 def certify(spec: TaskSpec, g, scene: SceneState, obj: ObjectSpec, gm: GraspModel, tray: TraySpec,
             banned: dict, allowed: list, cfg) -> Optional[dict]:
+    """Return the strongest infeasibility record that can be established:
+    a proof for any motion (``proven: True``), else a result scoped to the
+    planner's passage primitive (``proven: False``, ``scope: planner_model``),
+    else None."""
+    c = _any_motion(spec, g, scene, obj, gm, tray)
+    if c is not None:
+        return c
+    return _planner_model(spec, g, scene, obj, gm, tray)
+
+
+def _separating_walls(scene: SceneState, obj: ObjectSpec, tray: TraySpec):
+    objxy = np.array(obj.pose.pos[:2], float)
+    Rt = quat_to_mat(tray.pose.quat)
+    tp = np.array(tray.pose.pos, float)
+    hx, hy = tray.inner_half
+    tray_pts = [tp[:2] + (Rt @ np.array([sx * hx, sy * hy, 0.0]))[:2] for sx in (-1, 1) for sy in (-1, 1)]
+    for w in scene.obstacles:
+        if w.kind != "wall":
+            continue
+        p, R = wall_frame(w)
+        n = R[:2, 0]
+        t2 = w.thickness / 2
+        so = float(n @ (objxy - p[:2]))
+        st = [float(n @ (q - p[:2])) for q in tray_pts]
+        if (so < -t2 and all(x > t2 for x in st)) or (so > t2 and all(x < -t2 for x in st)):
+            yield w, p, R
+
+
+def min_envelope_height(gm: GraspModel, obj_id: str, alpha_deg: float, step_deg: float = 0.25):
+    """Lower bound on the vertical extent of the gripper-plus-object envelope
+    over every orientation whose tilt is at most alpha.
+
+    Orientations are Rz(yaw) Ry(beta) Rz(spin) with beta in [0, alpha]; the
+    vertical extent does not depend on yaw, and the envelope is symmetric
+    under a half turn of spin. A grid with spacing ``step_deg`` in beta and
+    spin puts every orientation within theta = step/2 + step/2 (rotation
+    angle) of a grid point; no envelope point moves more than reach * theta,
+    so the extent drops by at most 2 * reach * theta between grid points.
+    Returns (lower_bound, grid_minimum, argmin_deg, slack)."""
+    from .collision import make_envelope
+    env = make_envelope(gm.width, gm.held(obj_id, 0.0))
+    n_b = max(1, int(math.ceil(alpha_deg / step_deg)))
+    betas = np.radians(np.linspace(0.0, alpha_deg, n_b + 1))
+    spins = np.radians(np.arange(0.0, 180.0, step_deg))
+    B, S = np.meshgrid(betas, spins, indexing="ij")
+    B, S = B.ravel(), S.ravel()
+    # third row of Ry(beta) Rz(spin)
+    r20 = -np.sin(B) * np.cos(S)
+    r21 = np.sin(B) * np.sin(S)
+    r22 = np.cos(B)
+    row = np.stack([r20, r21, r22], axis=1)
+    lo = np.full(len(B), np.inf)
+    hi = np.full(len(B), -np.inf)
+    for b in env.boxes:
+        cz = row @ b.c
+        ext = np.abs(row @ b.R) @ b.h
+        lo = np.minimum(lo, cz - ext)
+        hi = np.maximum(hi, cz + ext)
+    h = hi - lo
+    k = int(np.argmin(h))
+    theta = math.radians(step_deg)  # step/2 in beta + step/2 in spin
+    slack = 2.0 * env.reach * theta
+    return float(h[k] - slack), float(h[k]), (math.degrees(B[k]), math.degrees(S[k])), slack
+
+
+def _planner_model(spec, g, scene, obj, gm, tray) -> Optional[dict]:
+    alpha_deg, cids = _alpha_limit(spec, g, obj.id)
+    if alpha_deg is None or alpha_deg >= 90.0:
+        return None
+    a = math.radians(alpha_deg)
+    H = 2.0 * float(object_half(obj)[2])
+    g_model = H / 2.0 - gm.tcp_offset_z
+    u_bot = H - g_model  # bottom centre below the TCP along the object's axis
+    off = u_bot * math.sin(a)
+    ws = scene.workspace
+    ws_pts = [np.array([x, y]) for x in ws.x_range for y in ws.y_range]
+    for w, p, R in _separating_walls(scene, obj, tray):
+        al = R[:2, 1]
+        along = [float(al @ (q - p[:2])) for q in ws_pts]
+        need_lo, need_hi = min(along) - off, max(along) + off
+        if not (-w.length / 2 <= need_lo and need_hi <= w.length / 2):
+            continue
+        z_bot_max = ws.z_range[1] - u_bot * math.cos(a)
+        if not z_bot_max < float(w.height):
+            continue
+        if not w.slots:
+            continue  # the any-motion argument covers walls without openings
+        tallest = max(s.z_max - s.z_min for s in w.slots)
+        lb, hmin, arg, slack = min_envelope_height(gm, obj.id, alpha_deg)
+        if not lb > tallest:
+            continue
+        return {
+            "proven": False,
+            "scope": "planner_model",
+            "kind": "slot_height_over_tilt_interval",
+            "object_id": obj.id,
+            "constraint_ids": cids,
+            "wall_id": w.id,
+            "statement": (f"Any motion must carry the bottom of {obj.id} through an opening of {w.id}. "
+                          f"The planner crosses an opening by a straight horizontal pass at a fixed "
+                          f"orientation, which needs the whole gripper-and-{obj.kind} envelope to fit the "
+                          f"opening's height. Over every orientation within {alpha_deg:g} deg of upright the "
+                          f"envelope is at least {lb:.3f} m tall; the tallest opening is {tallest:.3f} m. "
+                          "Motions that rotate or move diagonally inside the opening are not covered, so this "
+                          "is not a proof that no motion exists."),
+            "quantities": {
+                "max_tilt_deg": alpha_deg,
+                "min_envelope_height_lower_bound_m": round(lb, 6),
+                "min_envelope_height_on_grid_m": round(hmin, 6),
+                "argmin_tilt_and_spin_deg": [round(arg[0], 3), round(arg[1], 3)],
+                "discretisation_slack_m": round(slack, 6),
+                "tallest_opening_m": round(tallest, 6),
+                "wall_along_range_m": [-w.length / 2, w.length / 2],
+                "required_along_range_m": [round(need_lo, 6), round(need_hi, 6)],
+                "highest_bottom_point_m": round(z_bot_max, 6),
+            },
+            "assumptions": [
+                "rigid top grasp as planned (TCP on the object's axis)",
+                "TCP stays inside the workspace box",
+                "an opening is crossed by a straight horizontal pass at a fixed orientation (the planner's primitive)",
+                "envelope = palm, fingers and the held object's box from mirror/geometry.py",
+            ],
+            "not_covered": ["passes that rotate or move diagonally inside the opening",
+                            "other grasp types", "physical effects such as slip"],
+            "method": "dense sweep over tilt and spin with a stated discretisation bound "
+                      "(see min_envelope_height in mirror/plan/certificate.py)",
+        }
+    return None
+
+
+def _any_motion(spec: TaskSpec, g, scene: SceneState, obj: ObjectSpec, gm: GraspModel,
+                tray: TraySpec) -> Optional[dict]:
     alpha_deg, cids = _alpha_limit(spec, g, obj.id)
     if alpha_deg is None or alpha_deg >= 44.0:
         return None
@@ -143,6 +275,7 @@ def certify(spec: TaskSpec, g, scene: SceneState, obj: ObjectSpec, gm: GraspMode
                 continue
         return {
             "proven": True,
+            "scope": "any_motion",
             "kind": "separating_wall_slot_clearance",
             "object_id": obj.id,
             "constraint_ids": cids,

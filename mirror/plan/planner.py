@@ -234,8 +234,8 @@ def build_core(spec: TaskSpec, scene: SceneState, cfg: PlannerConfig = DEFAULT_C
         op = ObjectPlan(obj, gm, gy, grasp_tcp, pre, pl, transit, transport, banned, allowed)
         if not any(c.feasible for c in transport):
             proof = cert_mod.certify(spec, g, scene, obj, gm, tray, banned, allowed, cfg)
-            if proof is not None:
-                op.infeasibility = proof
+            op.infeasibility = proof
+            if proof is not None and proof.get("proven"):
                 transport.append(Candidate("rrt", "rrt", False,
                                            reason="not attempted: infeasibility is proven (see certificate)"))
             elif allow_rrt:
@@ -330,15 +330,19 @@ def _split_transport(wps: list[Waypoint]):
 def assemble(core: Core, choices: dict[str, int]) -> PlanResult:
     cfg = core.cfg
     routes: list[RouteOption] = []
+    executable = core.status == "ok" and not any(op.failure or op.obj.id not in choices for op in core.objects)
     for op in core.objects:
-        for c in op.transit:
+        ft = feasible_sorted(op.transit) if executable else []
+        transit_pick = ft[0] if ft else None
+        for i, c in enumerate(op.transit):
             routes.append(RouteOption(label=c.label, object_id=op.obj.id, feasible=c.feasible,
                                       cost=None if c.cost is None else round(c.cost, 6),
-                                      rejected_reason=c.reason))
-        for c in op.transport:
+                                      rejected_reason=c.reason, chosen=(i == transit_pick)))
+        pick = choices.get(op.obj.id) if executable else None
+        for i, c in enumerate(op.transport):
             routes.append(RouteOption(label=c.label, object_id=op.obj.id, feasible=c.feasible,
                                       cost=None if c.cost is None else round(c.cost, 6),
-                                      rejected_reason=c.reason))
+                                      rejected_reason=c.reason, chosen=(i == pick)))
     base = dict(spec_version=core.spec.version, scene_id=core.scene.scene_id, planner=PLANNER_NAME,
                 routes=routes, object_order=list(core.order))
     if core.status != "ok":
@@ -354,16 +358,17 @@ def assemble(core: Core, choices: dict[str, int]) -> PlanResult:
             if rej:
                 msg += " [" + "; ".join(rej) + "]"
             msgs.append(msg)
-            if op.infeasibility is not None and proof is None:
+            if op.infeasibility is not None and (proof is None or (op.infeasibility.get("proven")
+                                                                  and not proof.get("proven"))):
                 proof = op.infeasibility
-        if proof is None:
+        if proof is None or not proof.get("proven"):
             msgs.append("the planner found no plan; this is not a proof that none exists")
         return PlanResult(status="no_plan", reason=" | ".join(msgs), infeasibility=proof,
                           planning_time_s=round(time.perf_counter() - core.t0, 4), **base)
     steps: list[PlanStep] = []
     summary = []
     for op in core.objects:
-        tr = min((op.transit[i] for i in feasible_sorted(op.transit)), key=lambda c: (c.cost, c.label))
+        tr = op.transit[feasible_sorted(op.transit)[0]]
         mv = [_pose(w.pos, w.R) for w in tr.waypoints[1:]]
         if not steps and core.start_R is not None and tilt_deg_of(mat_to_quat(core.start_R)) > 1.0:
             mv.insert(0, _pose(core.start_pos, tr.waypoints[0].R))

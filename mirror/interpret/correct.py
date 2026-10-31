@@ -30,7 +30,7 @@ def _scene_kinds(context: Optional[dict[str, Any]]) -> Optional[set[str]]:
 def _model_context(context: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
     if not context:
         return None
-    out = {k: v for k, v in context.items() if k not in ("scene", "kind")}
+    out = {k: v for k, v in context.items() if k not in ("scene", "kind") and v is not None}
     return out or None
 
 

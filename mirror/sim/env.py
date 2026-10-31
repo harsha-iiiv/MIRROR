@@ -90,13 +90,22 @@ class _Recorder:
         self.held = np.full(capacity, -1, dtype=np.int32)
         self.phase: list[str] = []
         self.beads = {cid: np.zeros((capacity, len(b), 3)) for cid, b in idx.bead_bodies.items()}
-        self.contacts: list[ContactRecord] = []
-        self.frames: list[RolloutFrame] = []
+        self._raw_contacts: list[tuple[int, list]] = []   # (step, [(obj, other, depth)])
+        self._raw_frames: list[tuple] = []                 # (t, phase, width, positions, quats)
+        self._frames_built: list[RolloutFrame] = []
         self.frame_period = frame_every * float(env.model.opt.timestep) if isinstance(frame_every, int) else float(frame_every)
         self._next_frame = -1.0
         self.obj_bodies = np.array([idx.object_body[o] for o in idx.object_ids], dtype=int)
         self.frame_bodies = [b for b in idx.dynamic_bodies if env.model.body_geomnum[b] > 0]
         self.frame_names = [idx.body_names[b] for b in self.frame_bodies]
+        # One gather per step: objects, then the gripper, then every bead.
+        self._bead_slices = []
+        gather = list(self.obj_bodies) + [idx.gripper_body]
+        for cid, bodies in idx.bead_bodies.items():
+            self._bead_slices.append((cid, len(gather), len(gather) + len(bodies)))
+            gather += list(bodies)
+        self._gather = np.array(gather, dtype=int)
+        self._fb = np.array(self.frame_bodies, dtype=int)
 
     def grow(self):
         extra = self.cap
@@ -112,32 +121,49 @@ class _Recorder:
     def record(self, t: float, phase: str, held: int, contacts: list[tuple[str, str, float]]):
         if self.n >= self.cap:
             self.grow()
-        d = self.env.data
+        env = self.env
         i = self.n
+        K = self.K
+        xp = env._xpos[self._gather]
         self.t[i] = t
-        self.obj_pos[i] = d.xpos[self.obj_bodies]
-        self.obj_quat[i] = d.xquat[self.obj_bodies]
-        gb = self.env.index.gripper_body
-        self.g_pos[i] = d.xpos[gb]
-        self.g_quat[i] = d.xquat[gb]
-        self.width[i] = self.env.jaw_width()
+        self.obj_pos[i] = xp[:K]
+        self.obj_quat[i] = env._xquat[self.obj_bodies]
+        self.g_pos[i] = xp[K]
+        self.g_quat[i] = env._xquat[env.index.gripper_body]
+        self.width[i] = env.jaw_width()
         self.held[i] = held
         self.phase.append(phase)
-        for cid, bodies in self.env.index.bead_bodies.items():
-            self.beads[cid][i] = d.xpos[bodies]
-        for obj, other, depth in contacts:
-            self.contacts.append(ContactRecord(step=i, object_id=obj, other=other, depth=depth))
+        for cid, a, b in self._bead_slices:
+            self.beads[cid][i] = xp[a:b]
+        if contacts:
+            self._raw_contacts.append((i, contacts))
         if t >= self._next_frame - 1e-9:
             self.add_frame(t, phase)
             self._next_frame = (t if self._next_frame < 0 else self._next_frame) + self.frame_period
         self.n += 1
 
     def add_frame(self, t: float, phase: str):
-        d = self.env.data
-        bodies = {nm: Pose(pos=_pose_tuple(d.xpos[b]), quat=_pose_tuple(d.xquat[b]))
-                  for nm, b in zip(self.frame_names, self.frame_bodies)}
-        self.frames.append(RolloutFrame(t=float(t), bodies=bodies,
-                                        gripper_width=float(self.env.jaw_width()), phase=phase))
+        env = self.env
+        fb = self._fb
+        self._raw_frames.append((float(t), phase, float(env.jaw_width()),
+                                 env._xpos[fb].tolist(), env._xquat[fb].tolist()))
+
+    @property
+    def frames(self) -> list[RolloutFrame]:
+        """Playback frames, built on demand from the raw samples."""
+        built = self._frames_built
+        names = self.frame_names
+        for t, phase, width, ps, qs in self._raw_frames[len(built):]:
+            bodies = {nm: Pose.model_construct(pos=tuple(p), quat=tuple(q))
+                      for nm, p, q in zip(names, ps, qs)}
+            built.append(RolloutFrame.model_construct(t=t, bodies=bodies, gripper_width=width,
+                                                      phase=phase))
+        return built
+
+    @property
+    def contacts(self) -> list[ContactRecord]:
+        return [ContactRecord(step=i, object_id=o, other=x, depth=dep)
+                for i, recs in self._raw_contacts for o, x, dep in recs]
 
     def to_log(self, meta: dict) -> StateLog:
         n = self.n
@@ -174,9 +200,14 @@ class SimEnv:
                 self._is_bead_geom[g] = True
             elif owner == "gripper":
                 self._is_gripper_geom[g] = True
+        self._pair_cache: dict[tuple[int, int], object] = {}
+        # Views into MjData buffers (they stay valid for the life of self.data).
+        d = self.data
+        self._qpos, self._xpos, self._xquat, self._ctrl = d.qpos, d.xpos, d.xquat, d.ctrl
         self._oi_list = self._obj_index_of_geom.tolist()
         self._grip_list = self._is_gripper_geom.tolist()
         self._robot_q = np.array(idx.robot_qposadr, dtype=int)
+        self._finger_qa = tuple(idx.finger_qposadr)
         self._finger_q = np.array(idx.finger_qposadr, dtype=int)
         self._robot_act = np.array(idx.robot_actuators, dtype=int)
         self._finger_act = np.array(idx.finger_actuators, dtype=int)
@@ -210,8 +241,8 @@ class SimEnv:
 
     # ------------------------------------------------------ state reads ---
     def jaw_width(self) -> float:
-        q = self.data.qpos
-        a, b = self.index.finger_qposadr
+        a, b = self._finger_qa
+        q = self._qpos
         return float(q[a] + q[b])
 
     def gripper_pose(self) -> Pose:
@@ -225,50 +256,71 @@ class SimEnv:
     def sim_time(self) -> float:
         return float(self.data.time) - self._t0
 
+    def _pair_info(self, a: int, b: int):
+        """Classification of a geom pair, computed once per pair and cached:
+        (records, object touching the left finger, object touching the right
+        finger), or None for pairs that are not logged (beads)."""
+        if self._is_bead_geom[a] or self._is_bead_geom[b]:
+            return None
+        oi, grip = self._oi_list, self._grip_list
+        labels, oids = self.index.geom_label, self.index.object_ids
+        fl, fr = self.index.finger_l_geom, self.index.finger_r_geom
+        ia, ib = oi[a], oi[b]
+        left = right = -1
+        if ib >= 0:
+            if a == fl: left = ib
+            elif a == fr: right = ib
+        if ia >= 0:
+            if b == fl: left = ia
+            elif b == fr: right = ia
+        if ia >= 0 and ib >= 0:
+            pairs = ((oids[ia], oids[ib]), (oids[ib], oids[ia]))
+        elif ia >= 0:
+            pairs = ((oids[ia], labels[b]),)
+        elif ib >= 0:
+            pairs = ((oids[ib], labels[a]),)
+        elif grip[a] and not grip[b]:
+            pairs = (("gripper", labels[b]),)
+        elif grip[b] and not grip[a]:
+            pairs = (("gripper", labels[a]),)
+        else:
+            pairs = ()
+        return pairs, left, right
+
     def _contacts(self) -> tuple[int, list[tuple[str, str, float]]]:
-        """(held object index or -1, contact records for this step)."""
+        """(held object index or -1, contact records for this step).
+
+        One record per (object, other) with the maximum penetration depth, in
+        order of first occurrence. Geom-pair classification is cached, so the
+        per-step cost is one dictionary lookup per active contact.
+        """
         d = self.data
         n = d.ncon
         if n == 0:
             return -1, []
-        g1 = d.contact.geom1[:n]
-        g2 = d.contact.geom2[:n]
-        keep = ~(self._is_bead_geom[g1] | self._is_bead_geom[g2])
-        if not keep.any():
-            return -1, []
-        g1 = g1[keep].tolist()
-        g2 = g2[keep].tolist()
-        dist = d.contact.dist[:n][keep].tolist()
-        oi = self._oi_list
-        grip = self._grip_list
-        labels = self.index.geom_label
-        oids = self.index.object_ids
-        fl, fr = self.index.finger_l_geom, self.index.finger_r_geom
+        c = d.contact
+        g1 = c.geom1[:n].tolist()
+        g2 = c.geom2[:n].tolist()
+        dist = c.dist[:n].tolist()
+        cache = self._pair_cache
+        info_of = self._pair_info
         left, right = set(), set()
         out: dict[tuple[str, str], float] = {}
+        get = out.get
         for a, b, dd in zip(g1, g2, dist):
-            depth = -dd if dd < 0.0 else 0.0
-            ia, ib = oi[a], oi[b]
-            if ib >= 0:
-                if a == fl: left.add(ib)
-                elif a == fr: right.add(ib)
-            if ia >= 0:
-                if b == fl: left.add(ia)
-                elif b == fr: right.add(ia)
-            if ia >= 0 and ib >= 0:
-                pairs = ((oids[ia], oids[ib]), (oids[ib], oids[ia]))
-            elif ia >= 0:
-                pairs = ((oids[ia], labels[b]),)
-            elif ib >= 0:
-                pairs = ((oids[ib], labels[a]),)
-            elif grip[a] and not grip[b]:
-                pairs = (("gripper", labels[b]),)
-            elif grip[b] and not grip[a]:
-                pairs = (("gripper", labels[a]),)
-            else:
+            key = (a, b)
+            try:
+                info = cache[key]
+            except KeyError:
+                info = cache[key] = info_of(a, b)
+            if info is None:
                 continue
+            pairs, l, r = info
+            if l >= 0: left.add(l)
+            if r >= 0: right.add(r)
+            depth = -dd if dd < 0.0 else 0.0
             for pr in pairs:
-                if depth >= out.get(pr, -1.0):
+                if depth >= get(pr, -1.0):
                     out[pr] = depth
         both = left & right
         held = min(both) if both else -1
@@ -277,15 +329,15 @@ class SimEnv:
     # --------------------------------------------------------- control ---
     def _apply_ctrl(self) -> None:
         """Write the current reference to the actuators (the only command path)."""
-        d = self.data
+        ctrl = self._ctrl
         y, r, p = self._ref_angles
-        d.ctrl[self._robot_act] = (self._ref_pos[0], self._ref_pos[1], self._ref_pos[2], y, r, p)
+        ctrl[self._robot_act] = (self._ref_pos[0], self._ref_pos[1], self._ref_pos[2], y, r, p)
         # The jaw command moves toward its target at a bounded rate so that the
         # fingers meet an object slowly (no tunnelling through thin walls).
         step = JAW_SPEED * float(self.model.opt.timestep)
         self._jaw_cmd += min(max(self._jaw_target - self._jaw_cmd, -step), step)
         half = min(max(self._jaw_cmd / 2.0, FINGER_RANGE[0]), FINGER_RANGE[1])
-        d.ctrl[self._finger_act] = half
+        ctrl[self._finger_act] = half
 
     def _set_reference(self, pos, quat) -> None:
         ws = self.scene.workspace
@@ -305,7 +357,7 @@ class SimEnv:
         mujoco.mj_step(self.model, self.data)
 
     def _tracking_error(self) -> tuple[float, float]:
-        q = self.data.qpos[self._robot_q]
+        q = self._qpos[self._robot_q].tolist()
         rp = self._ref_pos
         y, r, p = self._ref_angles
         dx, dy, dz = q[0] - rp[0], q[1] - rp[1], q[2] - rp[2]

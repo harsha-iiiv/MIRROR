@@ -60,6 +60,11 @@ def test_cup_envelope_heights_match_reference_geometry():
     assert hi - lo == pytest.approx(0.170, abs=1e-6)   # cup bottom to palm top, carried upright
     lo, hi = env.vertical_extent(gripper_rot(0.0, math.pi / 2))
     assert hi - lo == pytest.approx(0.060, abs=1e-6)   # on its side: the cup's width dominates
+    # pitched 45 deg: highest palm corner above the lowest cup corner, from the box geometry
+    lo, hi = env.vertical_extent(gripper_rot(0.0, math.pi / 4))
+    c = math.cos(math.pi / 4)
+    expected = (0.025 + 0.095) * c + (0.075 + 0.030) * c   # palm (x 0.025, z 0.095) to cup (x 0.03, z -0.075)
+    assert hi - lo == pytest.approx(expected, abs=1e-6)
 
 
 def test_slerp_endpoints():

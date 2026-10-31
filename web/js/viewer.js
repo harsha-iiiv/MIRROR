@@ -185,6 +185,7 @@ export class Viewer {
         let mat;
         if (isTable) {
           this.tableMat = this.tableMat || new THREE.MeshStandardMaterial({ roughness: 0.95 });
+          this.tableMat.color.set(document.documentElement.dataset.theme === 'dark' ? '#26262b' : '#f4f3f0');
           mat = this.tableMat;
         } else {
           const [r, gg, bb, a0] = g.rgba;
@@ -274,6 +275,26 @@ export class Viewer {
         grp.position.set(p[0], p[1] + side * 0.051, p[2] + (side ? 0.02 : 0));
         grp.quaternion.copy(q4(sceneState.gripper_start.quat));
       }
+    }
+    this.dirty = true;
+  }
+
+  // Live teleoperation: show bodies from one frame ({name: [x,y,z,w,x,y,z]}).
+  showLive(visual, sceneState, frame) {
+    this.payload = null; this.ghost = null; this.playing = false;
+    this.sceneState = sceneState;
+    this._buildVisual(visual, sceneState);
+    this._clearOverlay();
+    if (frame) this.applyBodies(frame.bodies);
+  }
+
+  applyBodies(bodies) {
+    for (const [name, s] of Object.entries(bodies || {})) {
+      const g = this.bodies.get(name);
+      if (!g || !s) continue;
+      g.visible = true;
+      g.position.set(s[0], s[1], s[2]);
+      g.quaternion.set(s[4], s[5], s[6], s[3]);
     }
     this.dirty = true;
   }

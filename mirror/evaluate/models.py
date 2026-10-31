@@ -22,6 +22,10 @@ class FreezeManifest(_M):
     code_sha256: str                     # over mirror/**/*.py
     code_files: int
     config: dict[str, Any] = Field(default_factory=dict)
+    kind: str = "paired"                 # "paired" | "final" | "rehearsal"
+    family: str = "mixed"                # single-stratum manifests
+    strata: list[dict[str, Any]] = Field(default_factory=list)   # name, role, split, family, seeds
+    spec_provenance: dict[str, Any] = Field(default_factory=dict)
 
 
 class TrialRecord(_M):
@@ -41,6 +45,7 @@ class TrialRecord(_M):
     interventions: int = 0
     tilt_trace: dict[str, list[list[float]]] = Field(default_factory=dict)  # object -> [[t, tilt], ...]
     log_path: Optional[str] = None
+    rollout_path: Optional[str] = None
 
 
 class PairedTrial(_M):
@@ -93,3 +98,17 @@ class EvalReport(_M):
     wall_time_s: float = 0.0
     notes: list[str] = Field(default_factory=list)
     simplifications: list[str] = Field(default_factory=list)
+
+
+class FinalReport(_M):
+    """Pre-registered evaluation: every stratum from one freeze manifest."""
+    title: str = "MIRROR pre-registered evaluation"
+    manifest: FreezeManifest
+    spec_provenance: dict[str, Any] = Field(default_factory=dict)
+    strata: dict[str, EvalReport]
+    roles: dict[str, str] = Field(default_factory=dict)         # stratum name -> role
+    blocked_reference: list[dict[str, Any]] = Field(default_factory=list)
+    started_at: str = ""
+    finished_at: str = ""
+    wall_time_s: float = 0.0
+    notes: list[str] = Field(default_factory=list)

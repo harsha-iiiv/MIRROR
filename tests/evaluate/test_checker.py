@@ -65,13 +65,16 @@ def test_recheck_old_rollout_under_newer_spec_is_advisory(scene, slot_log):
     assert r.status == "success"
     adv = advisory_violations(slot_log, make_spec(), scene, extra_rules=newer.constraints)
     assert [a.constraint_id for a in adv] == ["c_upright_transport"]
-    assert any("advisory" in n for n in r.notes)
+    assert [a.constraint_id for a in r.advisory_violations] == ["c_upright_transport"]
+    assert r.advisory_violations[0].peak > 85 and not r.violations
 
 
 def test_unenforced_proposed_rule_reported_only_on_request(scene, slot_log):
     spec = make_spec(marker_rule=True)
     r = check(slot_log, spec, scene)
-    assert r.status == "success" and not any("advisory" in n for n in r.notes)
+    assert r.status == "success" and not r.advisory_violations
+    r2 = check(slot_log, spec, scene, include_unenforced=True)
+    assert r2.status == "success" and {a.object_id for a in r2.advisory_violations} == {"marker_0"}
     adv = advisory_violations(slot_log, spec, scene, include_unenforced=True)
     assert {a.object_id for a in adv} == {"marker_0"}
 
@@ -183,3 +186,16 @@ def test_check_is_pure(scene, slot_log):
     check(slot_log, spec, scene)
     assert np.array_equal(before, slot_log.obj_pos)
     assert spec.model_dump() == dump
+
+
+def test_proposed_goals_are_pursued_rejected_goals_are_not(scene, upright_log):
+    from mirror.contracts import Status
+    spec = make_spec()
+    spec.goals[0].status = Status.proposed          # cup goal still required (D1)
+    b = LogBuilder(scene)
+    b.wait(0.5)                                      # nothing moved
+    assert check(b.build(), spec, scene).status == "task_incomplete"
+    for g in spec.goals:
+        g.status = Status.rejected
+    r = check(upright_log, spec, scene)
+    assert r.status == "task_incomplete" and any("no active goal" in n for n in r.notes)

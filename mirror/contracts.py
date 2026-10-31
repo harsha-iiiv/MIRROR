@@ -323,6 +323,7 @@ class RouteOption(_Model):
     feasible: bool
     cost: Optional[float] = None
     rejected_reason: Optional[str] = None  # e.g. "violates c_upright_transport"
+    chosen: bool = False  # the route the plan actually uses for this object
 
 
 class PlanResult(_Model):

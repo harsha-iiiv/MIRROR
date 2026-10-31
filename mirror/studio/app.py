@@ -143,6 +143,11 @@ def create_app(service: Optional[StudioService] = None) -> FastAPI:
     def teleop_start():
         return guard(svc.teleop_start)
 
+    @app.post("/api/teleop/cancel")
+    def teleop_cancel():
+        svc.teleop_cancel()
+        return {"ok": True}
+
     @app.post("/api/teleop/finish")
     def teleop_finish():
         return guard(svc.teleop_finish)

@@ -164,11 +164,11 @@ export function chooseDisplay(snap, step, pick, tool) {
   }
   if (tool) return { ...res, sub: 'Editing the layout' };
   if (step === 'run') {
-    const r = latest(rs, (x) => x.scene_id === demoScene && !isAux(x)) || latest(rs, (x) => !isAux(x));
+    const r = latest(rs, (x) => x.tags.includes('run') && x.scene_id === demoScene) || latest(rs, (x) => x.scene_id === demoScene && !isAux(x)) || latest(rs, (x) => !isAux(x));
     return r ? asRollout(r) : res;
   }
   if (step === 'world') {
-    const r = latest(rs, (x) => x.scene_id === sceneId && !isAux(x));
+    const r = latest(rs, (x) => x.scene_id === sceneId && x.tags.includes('world')) || latest(rs, (x) => x.scene_id === sceneId && !isAux(x));
     if (r) return asRollout(r);
     return { ...res, sub: sceneId === demoScene ? 'Change the layout, then replan' : 'Not yet run in this layout' };
   }
@@ -242,7 +242,11 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
   useEffect(() => { if (viewerRef.current) viewerRef.current.speed = speed; }, [speed]);
 
   // Load what the stage should show.
-  const key = display.kind === 'scene' ? `scene:${snap.scene?.scene_id}:${snap.revision}` : `${display.id}|${display.ghost || ''}`;
+  const key = display.kind === 'scene' ? `scene:${snap.scene?.scene_id}:${snap.revision}`
+    : display.kind === 'demo' ? `demo:${snap.demo?.demo_id}:${snap.demo?.duration}` : `${display.id}|${display.ghost || ''}`;
+  const lastDemo = useRef(null);
+  if (display.kind === 'demo' && lastDemo.current && lastDemo.current !== key) api.forget('demo');
+  if (display.kind === 'demo') lastDemo.current = key;
   useEffect(() => {
     const v = viewerRef.current;
     if (!v) return;
@@ -277,10 +281,15 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
 
   useEffect(() => {
     const onKey = (e) => {
-      if (/input|textarea|select/i.test(document.activeElement?.tagName) && document.activeElement.type !== 'range') return;
+      const a = document.activeElement;
+      const onViewer = a === el.current;
+      if (a && a !== document.body && !onViewer) return;   // buttons, inputs and the scrubber keep their own keys
       const v = viewerRef.current;
       if (!v || !v.payload) return;
-      if (e.code === 'Space' && document.activeElement?.type !== 'range') { e.preventDefault(); v.toggle(); }
+      if (e.code === 'Space') { e.preventDefault(); v.toggle(); }
+      else if (onViewer && (e.code === 'ArrowRight' || e.code === 'ArrowLeft')) {
+        e.preventDefault(); v.pause(); v.setTime(v.t + (e.code === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 5 : 1));
+      } else if (onViewer && e.code === 'Home') { e.preventDefault(); v.setTime(0); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -295,7 +304,7 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
 
   return html`
     <section class="stage" aria-label="Simulation playback">
-      <div class="viewer" ref=${el} tabindex="0" aria-label="3D view. Drag to orbit, scroll to zoom. Space plays or pauses.">
+      <div class="viewer" ref=${el} tabindex="0" aria-label="3D view. Drag to orbit, scroll to zoom. Space plays or pauses; arrow keys step one second.">
         <div class="v-head">
           ${display.title ? html`<div class="v-title"><div class="t1">${display.title}</div><div class="t2">${display.sub}</div></div>` : html`<span></span>`}
           <div class="v-tools">
@@ -310,7 +319,7 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
         ${loadErr ? html`<div class="v-empty err">${loadErr}</div>` : ''}
         ${payload?.t?.length ? html`<div class="v-legend">
           <span><i class="grad"></i>container path by tilt: within ${15}° → over</span>
-          ${ghostOn && opts.ghost ? html`<span><i style="background:var(--faint)"></i>previous behaviour</span>` : ''}
+          ${ghostOn && opts.ghost ? html`<span><i style="background:var(--faint)"></i>${ghostText(snap, display.ghost)}</span>` : ''}
           ${payload.beads_hidden ? html`<span>beads not recorded in demo trace</span>` : ''}
         </div>` : ''}
         ${tool ? html`<div class="v-hint">${tool === 'obstacle' ? 'Click the table to place a box' : 'Drag the tray or an object'}</div>` : ''}
@@ -334,6 +343,13 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
         </select>
       </div>
     </section>`;
+}
+
+function ghostText(snap, id) {
+  const g = (snap.rollouts || []).find((r) => r.id === id);
+  if (!g) return 'previous behaviour';
+  const c = cupOutcome(g.report);
+  return `previous behaviour (v${g.spec_version})` + (c ? ` · cup ${c.max_transport_tilt_deg.toFixed(0)}° · beads ${c.beads_in_container}/${c.beads_total}` : '');
 }
 
 function stageEvents(display, snap, payload) {

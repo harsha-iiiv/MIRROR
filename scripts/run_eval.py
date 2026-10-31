@@ -1,15 +1,25 @@
 #!/usr/bin/env python
 """Run MIRROR evaluations.
 
-  run_eval.py dev     --seeds 0-5 --out results/dev
-  run_eval.py freeze  --seeds 0-19 --manifest results/eval/freeze.json
-  run_eval.py eval    --manifest results/eval/freeze.json --out results/eval
+Pre-registered evaluation (primary, shortcut stratum and blocked split from one
+manifest, one combined report):
+  run_eval.py freeze-final --manifest results/eval/freeze.json
+  run_eval.py final        --manifest results/eval/freeze.json --out results/eval --save-rollouts
+Rehearsal of the same pipeline on development seeds:
+  run_eval.py freeze-final --rehearsal --manifest results/rehearsal/freeze.json
+  run_eval.py final        --manifest results/rehearsal/freeze.json --out results/rehearsal
+
+Other modes:
+  run_eval.py dev     --seeds 0-5 [--family shortcut] --out results/dev [--save-rollouts]
+  run_eval.py freeze  --seeds 0-19 --manifest results/eval1/freeze.json
+  run_eval.py eval    --manifest results/eval1/freeze.json --out results/eval1
   run_eval.py blocked --out results/blocked
   run_eval.py recheck --log steplog.npz --scene scene.json --spec spec.json
 
-Specifications default to the hand-written reference pair
-(mirror.evaluate.specs); pass --spec-a/--spec-b JSON files (TaskSpec) to
-evaluate specifications exported from an authoring session.
+Specifications default to the pre-registered pair (recorded-model replay on the
+pinned reference demonstration, checked against the offline interpreter).
+--reference-specs uses the hand-written pair; --spec-a/--spec-b load TaskSpec
+JSON files exported from an authoring session.
 """
 from __future__ import annotations
 
@@ -39,8 +49,11 @@ def parse_seeds(text: str) -> list[int]:
 
 
 def load_specs(args) -> tuple[TaskSpec, TaskSpec]:
-    from mirror.evaluate.specs import reference_specs
-    a, b = reference_specs()
+    from mirror.evaluate.specs import evaluation_specs, reference_specs
+    if getattr(args, "reference_specs", False):
+        a, b = reference_specs()
+    else:
+        a, b, _ = evaluation_specs()
     if args.spec_a:
         a = TaskSpec.model_validate_json(Path(args.spec_a).read_text())
     if args.spec_b:
@@ -60,7 +73,12 @@ def eval_seeds(seeds: list[int]) -> list[int]:
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("mode", choices=["dev", "freeze", "eval", "blocked", "recheck"])
+    p.add_argument("mode", choices=["dev", "freeze", "eval", "blocked", "recheck", "freeze-final", "final"])
+    p.add_argument("--family", default="mixed", help="scene family for dev/freeze/eval: mixed | shortcut")
+    p.add_argument("--save-rollouts", action="store_true",
+                   help="write playback Rollout JSON (15 Hz) to <out>/rollouts/seed<k>_<condition>.json")
+    p.add_argument("--rehearsal", action="store_true", help="freeze-final on development seeds")
+    p.add_argument("--reference-specs", action="store_true", help="use the hand-written spec pair")
     p.add_argument("--seeds", default="0-5")
     p.add_argument("--out", default=None)
     p.add_argument("--manifest", default=None)
@@ -88,6 +106,43 @@ def main(argv=None) -> int:
         print(rep.model_dump_json(indent=1))
         return 0
 
+    if args.mode == "freeze-final":
+        from mirror.evaluate.final import freeze_final, rehearsal_strata
+        if not args.manifest:
+            p.error("--manifest is required")
+        if args.spec_a or args.spec_b or args.reference_specs:
+            p.error("freeze-final uses the pre-registered specifications only")
+        m = freeze_final(args.manifest, strata=rehearsal_strata() if args.rehearsal else None,
+                         kind="rehearsal" if args.rehearsal else "final",
+                         config={"workers": min(args.workers, 2), "max_sim_time": args.max_sim_time})
+        for st in m.strata:
+            print(f"  {st['name']:<9} {st['split']:<8} {st['family']:<9} {len(st['seeds'])} seeds")
+        print(f"froze {m.kind}: code {m.code_sha256[:12]}, A {m.spec_a['sha256'][:12]}, "
+              f"B {m.spec_b['sha256'][:12]} -> {args.manifest}")
+        return 0
+
+    if args.mode == "final":
+        from mirror.evaluate.final import run_final
+        from mirror.evaluate.models import FreezeManifest
+        if not args.manifest:
+            p.error("final requires --manifest (run freeze-final first)")
+        kind = FreezeManifest.model_validate_json(Path(args.manifest).read_text()).kind
+        out = Path(args.out or ROOT / "results" / ("rehearsal" if kind == "rehearsal" else "eval"))
+        if kind == "rehearsal" and out.resolve() == (ROOT / "results" / "eval").resolve():
+            p.error("a rehearsal manifest cannot write into results/eval")
+        f = run_final(args.manifest, workers=args.workers, save_rollouts=args.save_rollouts,
+                      out_dir=out, n_boot=args.n_boot, max_sim_time=args.max_sim_time,
+                      log_root=(ROOT / "results" / "tmp" / out.name / "logs") if args.save_logs else None)
+        paths = ev.write_final_report(f, out)
+        for name, r in f.strata.items():
+            ca, cb = r.config["conditions"]
+            v = r.paired["violation_free_success"]
+            print(f"{name:<9} n={len(r.trials):<3} violation-free success {ca} "
+                  f"{r.metrics[ca].violation_free_success}, {cb} {r.metrics[cb].violation_free_success} | "
+                  f"exercised {r.paired['correction_exercised']['n']} | McNemar p={v['mcnemar_p_exact']:.4g}")
+        print(f"report: {paths['markdown']}")
+        return 0
+
     spec_a, spec_b = load_specs(args)
     if args.mode == "blocked":
         out = Path(args.out or ROOT / "results" / "blocked")
@@ -104,7 +159,8 @@ def main(argv=None) -> int:
         if not args.manifest:
             p.error("--manifest is required")
         m = ev.freeze(spec_a, spec_b, eval_seeds(seeds), "eval", args.manifest,
-                      config={"workers": min(args.workers, 2), "max_sim_time": args.max_sim_time})
+                      config={"workers": min(args.workers, 2), "max_sim_time": args.max_sim_time},
+                      family=args.family)
         print(f"froze {len(m.seeds)} eval seeds, code {m.code_sha256[:12]}, "
               f"A {m.spec_a['sha256'][:12]}, B {m.spec_b['sha256'][:12]} -> {args.manifest}")
         return 0
@@ -114,10 +170,12 @@ def main(argv=None) -> int:
         if not args.manifest:
             p.error("eval requires --manifest (run freeze first)")
         from mirror.evaluate.models import FreezeManifest
-        seeds = FreezeManifest.model_validate_json(Path(args.manifest).read_text()).seeds
+        fm = FreezeManifest.model_validate_json(Path(args.manifest).read_text())
+        seeds, args.family = fm.seeds, fm.family
     out = Path(args.out or ROOT / "results" / split)
     rep = ev.paired_eval(spec_a, spec_b, seeds, split=split, manifest_path=args.manifest,
-                         workers=args.workers,
+                         workers=args.workers, family=args.family,
+                         rollout_dir=(out / "rollouts") if args.save_rollouts else None,
                          log_dir=(ROOT / "results" / "tmp" / out.name / "logs") if args.save_logs else None,
                          max_sim_time=args.max_sim_time, n_boot=args.n_boot,
                          include_blocked=not args.no_blocked)
@@ -132,4 +190,9 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    from mirror.evaluate import FamilyUnsupported, FreezeError
+    try:
+        raise SystemExit(main())
+    except (FamilyUnsupported, FreezeError) as exc:
+        print(f"refused: {exc}", file=sys.stderr)
+        raise SystemExit(3)
