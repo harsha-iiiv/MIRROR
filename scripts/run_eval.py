@@ -99,6 +99,10 @@ def main(argv=None) -> int:
     p.add_argument("--reference-specs", action="store_true", help="use the hand-written spec pair")
     p.add_argument("--spec-source", default="replay", choices=["replay", "offline"],
                    help="freeze-final: how the pre-registered specs are built (offline only for --rehearsal)")
+    p.add_argument("--registration", default=None, choices=["muse"],
+                   help="freeze-final/final: a named second registration (own seeds, ledger, output)")
+    p.add_argument("--audit-path", action="append", default=[],
+                   help="freeze-final --registration: extra file or directory searched for the seeds")
     p.add_argument("--seeds", default="0-5")
     p.add_argument("--out", default=None)
     p.add_argument("--manifest", default=None)
@@ -126,8 +130,28 @@ def main(argv=None) -> int:
         print(rep.model_dump_json(indent=1))
         return 0
 
+    if args.registration:
+        from mirror.evaluate.final import REGISTRATIONS
+        reg = REGISTRATIONS[args.registration]
+        args.manifest = args.manifest or str(ROOT / reg["manifest"])
+        args.out = args.out or str(ROOT / reg["out"])
+        if Path(args.manifest).resolve() != (ROOT / reg["manifest"]).resolve():
+            p.error(f"registration {args.registration} uses {reg['manifest']}")
     if args.mode in ("freeze-final", "final") and args.manifest:
         _rehearsal_ledger(args)
+
+    if args.mode == "freeze-final" and args.registration:
+        from mirror.evaluate.final import freeze_registration
+        if args.rehearsal or args.spec_source != "replay":
+            p.error("a registration freezes replayed specifications on its own seeds")
+        m = freeze_registration(args.registration, audit_paths=tuple(args.audit_path),
+                                config={"workers": min(args.workers, 2), "max_sim_time": args.max_sim_time})
+        for st in m.strata:
+            print(f"  {st['name']:9s} {st['split']:8s} {st['family']:9s} {st['seeds'][0]}-{st['seeds'][-1]}")
+        io = m.config["freeze_io"]
+        print(f"froze registration {args.registration}: A {m.spec_a['sha256'][:12]}, B {m.spec_b['sha256'][:12]}, "
+              f"network {io['network_connections']}, layouts {io['layouts_sampled']} -> {args.manifest}")
+        return 0
 
     if args.mode == "freeze-final":
         from mirror.evaluate.final import freeze_final, rehearsal_strata

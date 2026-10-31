@@ -108,7 +108,7 @@ def test_manifest_mismatches_are_refused(tmp_path, monkeypatch):
         verify_manifest(p, a, tweaked, [10001], "eval")
     with pytest.raises(FreezeError, match="seeds"):
         verify_manifest(p, a, b, [10001, 10002], "eval")
-    monkeypatch.setattr(paired_mod, "code_hash", lambda root=None: ("0" * 64, 1))
+    monkeypatch.setattr(paired_mod, "code_hash", lambda root=None, exclude=(): ("0" * 64, 1))
     with pytest.raises(FreezeError, match="code"):
         verify_manifest(p, a, b, [10001], "eval")
 

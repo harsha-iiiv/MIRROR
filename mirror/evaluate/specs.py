@@ -101,8 +101,21 @@ def _recorded_models(cassette_dir: Path) -> list[str]:
     return models
 
 
-def evaluation_specs(*, cassette_dir: Path | None = None, source: str = "replay"
-                     ) -> tuple[TaskSpec, TaskSpec, dict]:
+def _rel(p: Path) -> str:
+    try:
+        return Path(p).resolve().relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return Path(p).name
+
+
+def signature(spec: TaskSpec) -> dict:
+    """What the evaluator reads from a specification: enforced constraints
+    (id, type, phase, selector, parameters) and active goals. Prose ignored."""
+    return _signature(spec)
+
+
+def evaluation_specs(*, cassette_dir: Path | None = None, source: str = "replay",
+                     model: str | None = None) -> tuple[TaskSpec, TaskSpec, dict]:
     """(original, corrected, provenance) built by replaying recorded model
     responses on the pinned reference demonstration. Raises
     SpecAgreementError unless the offline interpreter produces identical
@@ -128,12 +141,16 @@ def evaluation_specs(*, cassette_dir: Path | None = None, source: str = "replay"
             enforced_corrected=[x.id for x in c.enforced_constraints()])
     if source != "replay":
         raise ValueError(f"unknown spec source {source!r}")
-    models = [os.environ["MIRROR_LLM_MODEL"]] if os.environ.get("MIRROR_LLM_MODEL") else []
-    models += [m for m in _recorded_models(cassette_dir) if m not in models]
-    replay, errors = None, []
+    if model:                       # a registration names its model: no fallback
+        models = [model]
+    else:
+        models = [os.environ["MIRROR_LLM_MODEL"]] if os.environ.get("MIRROR_LLM_MODEL") else []
+        models += [m for m in _recorded_models(cassette_dir) if m not in models]
+    replay, errors, client = None, [], None
     for m in models:
         try:
-            replay = _build(trace, LLMClient(mode="replay", model=m, cassette_dir=cassette_dir))
+            client = LLMClient(mode="replay", model=m, cassette_dir=cassette_dir)
+            replay = _build(trace, client)
             break
         except Exception as exc:  # cassette miss for this model id
             errors.append(f"{m}: {type(exc).__name__}: {exc}")
@@ -154,5 +171,10 @@ def evaluation_specs(*, cassette_dir: Path | None = None, source: str = "replay"
         confirmed_rules=list(CONFIRM_RULES), correction_ops=[o.op for o in record.diff],
         offline_agrees=True, offline_interpreter=offline[0].interpreter,
         enforced_original=[c.id for c in original.enforced_constraints()],
-        enforced_corrected=[c.id for c in corrected.enforced_constraints()])
+        enforced_corrected=[c.id for c in corrected.enforced_constraints()],
+        cassette_dir=_rel(cassette_dir), requested_model=client.model,
+        requests=[dict(call=u["call"], key=u["key"], requested_model=u["requested_model"],
+                       reported_model=u["model"], from_cassette=u["from_cassette"],
+                       cassette_file=next((_rel(p) for p in sorted(cassette_dir.rglob(f"{u['key']}*.json"))), None))
+                  for u in client.usage])
     return original, corrected, prov

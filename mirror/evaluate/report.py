@@ -40,7 +40,8 @@ def markdown(r: EvalReport, figs: dict | None = None) -> str:
           f"- Manifest created {m.created_at}" + (" (written before layouts were generated)" if r.split == "eval" else ""),
           f"- Spec A `{m.spec_a['spec_id']}` v{m.spec_a['version']} sha256 `{m.spec_a['sha256'][:16]}`",
           f"- Spec B `{m.spec_b['spec_id']}` v{m.spec_b['version']} sha256 `{m.spec_b['sha256'][:16]}`",
-          f"- Code sha256 `{m.code_sha256[:16]}` over {m.code_files} source files",
+          f"- Code sha256 `{m.code_sha256[:16]}` over {m.code_files} source files"
+          + (f" (presentation-only paths not hashed: {', '.join(m.code_exclude)})" if m.code_exclude else ""),
           f"- Seeds: {', '.join(map(str, m.seeds))}", ""]
     L += ["## Corrected rules (enforced in B, not in A)", ""]
     if r.corrected_rules:
@@ -265,7 +266,8 @@ def final_markdown(f) -> str:
     L = [f"# {f.title}", ""] + [f"> {n}" for n in f.notes] + [""]
     L += ["## Pre-registration", "",
           f"- Freeze manifest written {m.created_at}, before any of these layouts was generated.",
-          f"- Code sha256 `{m.code_sha256[:16]}` over {m.code_files} source files.",
+          f"- Code sha256 `{m.code_sha256[:16]}` over {m.code_files} source files"
+          + (f" (presentation-only paths not hashed: {', '.join(m.code_exclude)})." if m.code_exclude else "."),
           f"- Spec A (original) `{m.spec_a['spec_id']}` v{m.spec_a['version']} `{m.spec_a['sha256'][:16]}`; "
           f"spec B (corrected) v{m.spec_b['version']} `{m.spec_b['sha256'][:16]}`.", ""]
     p = f.spec_provenance or {}

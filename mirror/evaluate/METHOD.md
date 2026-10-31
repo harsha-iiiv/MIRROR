@@ -134,3 +134,32 @@ report notes prefixed `playback:`. The checker never uses these frames.
 
 Finite simulated trials are not formal verification and not evidence of
 physical deployment.
+
+
+## Second registration: specifications compiled by Muse Spark
+
+`run_eval.py freeze-final --registration muse` freezes a second pre-registered
+evaluation without generating any layout: seeds primary 50000-50059 (mixed),
+shortcut 60000-60029, blocked 50000-50004; its own ledger
+`results/eval_muse/ledger.jsonl` and output `results/eval_muse`. The pair is
+replayed from the muse-spark-1.3 recordings in `data/cassettes_muse` (per-request
+keys and the model id each recording reports go into the manifest) and checked
+against the offline interpreter. The first registration's pair is rebuilt from
+its recordings, must reproduce that manifest's hashes, and the evaluator
+signatures (enforced constraints and active goals) are compared and recorded.
+Before freezing, every ledger, report and other text output under `results/`
+(plus any `--audit-path`) is searched for the seed numbers; any hit refuses.
+Network connections and layout sampling are refused and counted during the
+freeze (both must be zero). The analysis plan and hypothesis are recorded in
+the manifest; the plan is the first registration's, unchanged.
+
+Code hash for this registration: every `.py` under `mirror/` except the
+presentation-only paths `mirror/sim/render.py`, `mirror/studio/**` and
+`mirror/cli.py` (recorded in the manifest as `code_exclude`). They render
+videos, the studio interface and the command-line narrative; none of them can
+change a rollout, a check or a statistic. No hashed module imports them on the
+evaluation path: the only reference is a lazy import inside
+`interpret.keyframes.render_keyframes` (optional prompt images), which neither
+`evaluation_specs` nor `run_final` calls; a test checks both the imports and
+that the evaluation path loads none of the excluded modules. The first
+registration hashed all of `mirror/` and is unchanged.

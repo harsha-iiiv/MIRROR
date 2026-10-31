@@ -29,6 +29,7 @@ HASHED_GROUPS = {
     "scripts": ("scripts", ("*.py",)),
     "demos": ("data/demos", ("*",)),
     "cassettes": ("data/cassettes", ("*",)),
+    "cassettes_muse": ("data/cassettes_muse", ("*",)),
 }
 MAX_WORKERS = 2
 DEFAULT_EXECUTOR_LABEL = "mirror.sim.SimEnv (deterministic physics; seed unused)"
@@ -46,9 +47,23 @@ SIMPLIFICATIONS = [
 
 # ------------------------------------------------------------ freezing ---
 
-def code_hash(root: Path = PACKAGE_ROOT) -> tuple[str, int]:
+def _excluded(rel: str, exclude) -> bool:
+    for pat in exclude:
+        if pat.endswith("/**"):
+            if rel.startswith(pat[:-2]):
+                return True
+        elif rel == pat:
+            return True
+    return False
+
+
+def code_hash(root: Path = PACKAGE_ROOT, exclude: tuple = ()) -> tuple[str, int]:
+    """sha256 over mirror/**/*.py (paths relative to mirror/ and bytes).
+    ``exclude`` lists presentation-only paths left out ("sim/render.py",
+    "studio/**"); the first registration used no exclusions."""
     h = hashlib.sha256()
-    files = sorted(p for p in root.rglob("*.py") if "__pycache__" not in p.parts)
+    files = sorted(p for p in root.rglob("*.py") if "__pycache__" not in p.parts
+                   and not _excluded(p.relative_to(root).as_posix(), exclude))
     for p in files:
         h.update(p.relative_to(root).as_posix().encode())
         h.update(b"\0")
@@ -188,7 +203,7 @@ def verify_manifest(path: Path | str, spec_a: TaskSpec, spec_b: TaskSpec,
             m.config = dict(m.config, file_drift="changed during the rehearsal: " + ", ".join(drift))
         else:
             problems.append("changed since the freeze: " + ", ".join(drift))
-    digest, _ = code_hash()
+    digest, _ = code_hash(exclude=tuple(m.code_exclude)) if m.code_exclude else code_hash()
     if digest != m.code_sha256:
         if allow_code_drift and m.kind == "rehearsal":
             m.config = dict(m.config, code_drift=f"code changed during the rehearsal (now {digest[:12]})")
@@ -202,7 +217,8 @@ def verify_manifest(path: Path | str, spec_a: TaskSpec, spec_b: TaskSpec,
 def freeze_strata(spec_a: TaskSpec, spec_b: TaskSpec, strata: list[dict], path: Path | str, *,
                   kind: str = "final", config: Optional[dict] = None,
                   spec_provenance: Optional[dict] = None,
-                  ledger_at_freeze: Optional[dict] = None) -> FreezeManifest:
+                  ledger_at_freeze: Optional[dict] = None,
+                  code_exclude: tuple = ()) -> FreezeManifest:
     """Write one manifest covering several strata (each: name, role, split,
     family, seeds). Written once, before any of their layouts is generated."""
     path = Path(path)
@@ -211,7 +227,7 @@ def freeze_strata(spec_a: TaskSpec, spec_b: TaskSpec, strata: list[dict], path: 
     names = [st["name"] for st in strata]
     if len(set(names)) != len(names):
         raise ValueError("stratum names must be unique")
-    digest, n = code_hash()
+    digest, n = code_hash(exclude=tuple(code_exclude)) if code_exclude else code_hash()
     now = time.time()
     clean = [dict(name=st["name"], role=st.get("role", "stratum"), split=st["split"],
                   family=st.get("family", "mixed"), seeds=[int(x) for x in st["seeds"]],
@@ -222,7 +238,8 @@ def freeze_strata(spec_a: TaskSpec, spec_b: TaskSpec, strata: list[dict], path: 
                        spec_a=_spec_ref(spec_a), spec_b=_spec_ref(spec_b), code_sha256=digest,
                        code_files=n, config=dict(config or {}), kind=kind, strata=clean,
                        spec_provenance=dict(spec_provenance or {}), file_hashes=file_hashes(),
-                       versions=runtime_versions(), ledger_at_freeze=dict(ledger_at_freeze or {}))
+                       versions=runtime_versions(), ledger_at_freeze=dict(ledger_at_freeze or {}),
+                       code_exclude=list(code_exclude))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(m.model_dump_json(indent=1))
     return m

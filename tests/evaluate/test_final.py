@@ -19,7 +19,7 @@ def _frozen_tree(monkeypatch):
     """Other work on the repository must not make these tests flaky: hash a
     fixed tree. Tests that need real hashing patch again on top."""
     from mirror.evaluate import paired as pm
-    monkeypatch.setattr(pm, "code_hash", lambda root=None: ("c" * 64, 1))
+    monkeypatch.setattr(pm, "code_hash", lambda root=None, exclude=(): ("c" * 64, 1))
     monkeypatch.setattr(pm, "file_hashes", lambda: {"scripts": {"path": "scripts", "sha256": "s", "files": 1}})
 
 
@@ -161,7 +161,7 @@ def test_code_drift_tolerated_only_for_rehearsal(tmp_path, monkeypatch):
     st = rehearsal_strata(1, 1, 1)
     freeze_strata(a, b, st, tmp_path / "r.json", kind="rehearsal")
     freeze_strata(a, b, st, tmp_path / "f.json", kind="final")
-    monkeypatch.setattr(pm, "code_hash", lambda root=None: ("1" * 64, 1))
+    monkeypatch.setattr(pm, "code_hash", lambda root=None, exclude=(): ("1" * 64, 1))
     m = verify_manifest(tmp_path / "r.json", a, b, [0], "dev", "mixed", allow_code_drift=True)
     assert "code_drift" in m.config
     with pytest.raises(FreezeError, match="code"):
@@ -247,7 +247,7 @@ def test_manifest_records_versions_and_file_hashes(tmp_path, monkeypatch):
     monkeypatch.undo()
     m = freeze_strata(a, b, rehearsal_strata(1, 1, 1), tmp_path / "g.json", kind="final")
     assert {"scripts", "demos", "cassettes"} <= set(m.file_hashes)
-    monkeypatch.setattr(pm, "code_hash", lambda root=None: (m.code_sha256, m.code_files))
+    monkeypatch.setattr(pm, "code_hash", lambda root=None, exclude=(): (m.code_sha256, m.code_files))
     monkeypatch.setattr(pm, "file_hashes", lambda: {k: dict(v, sha256="0") for k, v in m.file_hashes.items()})
     with pytest.raises(FreezeError, match="scripts"):
         verify_manifest(tmp_path / "g.json", a, b, [0], "dev", "mixed")

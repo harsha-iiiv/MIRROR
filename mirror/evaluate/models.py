@@ -21,6 +21,7 @@ class FreezeManifest(_M):
     spec_b: dict[str, Any]
     code_sha256: str                     # over mirror/**/*.py
     code_files: int
+    code_exclude: list[str] = Field(default_factory=list)   # presentation-only paths left out of the hash
     config: dict[str, Any] = Field(default_factory=dict)
     kind: str = "paired"                 # "paired" | "final" | "rehearsal"
     family: str = "mixed"                # single-stratum manifests
