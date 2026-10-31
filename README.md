@@ -25,6 +25,25 @@ model's description of what happened.
 | **"You misunderstood this"** | *"This container must remain upright throughout transport, not just at the destination."* The compiler turns that into one scoped change: an upright rule for the cup during transport. The old trajectory is re-checked and rejected under the new rule. The new plan goes around the wall. |
 | **Somewhere new** | Original and corrected specifications are frozen, then run from identical initial states on fresh layouts. Every attempt is reported. In a layout where the slot is the only way through, the robot stops and shows why, instead of breaking the rule. |
 
+## Results
+
+Pre-registered evaluation on layouts generated only after the code, both
+specification versions and the seed lists were frozen
+([details](docs/EVALUATION.md), [full report](results/eval/report.md)):
+
+| | Fresh layouts (60) | Shortcut layouts (30) |
+|---|---|---|
+| Original spec: success without violating "upright during transport" | 27 / 60 | 4 / 30 |
+| Corrected spec: same | **60 / 60** | **30 / 30** |
+| Beads lost, original → corrected | 119 → 0 | 106 → 0 |
+| Unrelated objects still allowed to tilt | 32 / 32 | 25 / 25 |
+| Paired exact McNemar | p = 2.3 × 10⁻¹⁰ | p = 3.0 × 10⁻⁸ |
+
+No planning failures, execution failures, timeouts or obstacle contacts in
+either condition. On five layouts where the slot is the only way through, the
+original specification spills beads to finish the task; the corrected one
+stops with a proof that the rule cannot be met.
+
 ## Quick start
 
 ```bash

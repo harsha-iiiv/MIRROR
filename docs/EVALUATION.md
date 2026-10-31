@@ -68,4 +68,39 @@ python scripts/run_eval.py final --manifest results/eval/freeze.json --out resul
 
 ## Results
 
-Results are written to `results/eval/report.md` after the frozen run.
+Frozen at commit `ac021f3` (manifest `results/eval/freeze.json`) before any
+evaluation layout was generated; full report in
+[`results/eval/report.md`](../results/eval/report.md).
+
+| Metric | Primary (60, mixed) original / corrected | Stratum (30, shortcut) original / corrected | Blocked (5) original / corrected |
+|---|---|---|---|
+| Executed in simulation | 60 / 60 | 30 / 30 | 5 / 0 |
+| Task completion | 60 / 60 | 30 / 30 | 5 / 0 |
+| Success without violating the corrected rule | 27 / 60 | 4 / 30 | 0 / 0 |
+| Trials violating the corrected rule | 33 / 0 | 26 / 0 | 5 / 0 |
+| Maximum cup tilt during transport | 89.8° / 0.3° | 89.8° / 0.3° | 89.7° / not executed |
+| Beads lost | 119 / 0 | 106 / 0 | 22 / 0 |
+| Obstacle or floor contacts | 0 / 0 | 0 / 0 | 0 / 0 |
+| Planning failures / execution failures / timeouts | 0 / 0 / 0 both | 0 / 0 / 0 both | corrected: 5 planning failures, all proven infeasible |
+| Feasible scenes wrongly rejected | 0 of 33 / 0 of 33 | 0 of 17 / 0 of 17 | n/a |
+
+* **Primary:** the correction mattered in 33 of 60 layouts. Violation-free
+  success rose from 0.45 to 1.00 (difference +0.55, bootstrap 95% CI
+  [0.42, 0.68]); all 33 discordant pairs favour the corrected specification,
+  exact McNemar p = 2.3 × 10⁻¹⁰.
+* **Shortcut stratum:** the correction mattered in 26 of 30 layouts;
+  0.13 → 1.00 (+0.87, CI [0.73, 0.97]), McNemar p = 3.0 × 10⁻⁸.
+* **Scope:** every case where the original specification carried the block or
+  marker tilted was still tilted under the corrected one (32 of 32 primary,
+  25 of 25 stratum). The correction did not spread to objects it does not name.
+* **Blocked:** the original specification completes the task by tilting the
+  cup through the slot. The corrected specification stops before moving, in
+  all five layouts, with a proof that the planner's certificate and the
+  evaluator's independently written bound agree on.
+* **Ledger:** 95 evaluation layouts were generated, all after the freeze, all
+  by the frozen runner.
+
+What this does not show: behaviour outside this task family, with other
+corrections, on physical hardware, or with Muse Spark as the interpreter (the
+specifications were produced from recorded development-model responses, and
+the offline rules produce the same enforced constraints).
