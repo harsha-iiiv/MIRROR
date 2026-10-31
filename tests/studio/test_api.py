@@ -6,12 +6,20 @@ from fastapi.testclient import TestClient
 
 from mirror.studio.app import create_app
 from mirror.studio.session_adapter import REFERENCE_CORRECTION, StudioService
+from mirror.studio.sessions import SessionManager
+
+
+def fixture_manager(**kw):
+    return SessionManager(lambda sid, m: StudioService(backend="fixture", session_id=sid, gate=m.gate,
+                                                       budget=m.budget, one_job=True, private_runtime=True), **kw)
 
 
 @pytest.fixture()
 def client():
-    svc = StudioService(backend="fixture")
-    with TestClient(create_app(svc)) as c:
+    with TestClient(create_app(fixture_manager())) as c:
+        sid = c.post("/api/session").json()["session"]
+        c.headers.update({"X-Mirror-Session": sid})
+        c.sid = sid
         yield c
 
 
@@ -27,7 +35,7 @@ def wait(c, job, timeout=30):
 
 def test_full_story(client):
     c = client
-    assert c.get("/api/health").json()["mode"] == "fixture"
+    assert c.get("/api/health").json()["ok"]
     s = c.post("/api/demo/load").json()
     assert s["demo"]["events"]
     assert wait(c, c.post("/api/interpret").json())["status"] == "done"
@@ -113,6 +121,7 @@ def test_evaluation_and_clarification(client):
     assert c.post("/api/evaluate", json={"seeds": [9000], "split": "eval"}).status_code == 403
     assert c.post("/api/evaluate", json={"seeds": [10000]}).status_code == 403
     assert c.post("/api/evaluate", json={"seeds": [30000]}).status_code == 403
+    assert c.post("/api/evaluate", json={"seeds": list(range(9000, 9007))}).status_code == 422
     j = wait(c, c.post("/api/evaluate", json={"seeds": [9000, 9001]}).json())
     assert j["status"] == "done"
     ev = c.get("/api/state").json()["evaluation"]
@@ -121,7 +130,7 @@ def test_evaluation_and_clarification(client):
 
 def test_websocket_announces_state_changes(client):
     c = client
-    with c.websocket_connect("/ws") as ws:
+    with c.websocket_connect(f"/ws?session={c.sid}") as ws:
         assert ws.receive_json()["type"] == "hello"
         c.post("/api/demo/load")
         msg = ws.receive_json()

@@ -9,6 +9,35 @@ import { PANELS, STEPS, stepState, correctionVersion, StoryBar, AboutPanel } fro
 
 const html = htm.bind(h);
 
+// Decide recorded or live before loading any data.
+const READY = api.init();
+
+function useLiveStatus() {
+  const [s, setS] = useState({ ...api.live });
+  useEffect(() => api.onLiveStatus(setS), []);
+  return s;
+}
+
+// Recorded pages with a configured server get a switch; the choice lives in the URL (?live=1).
+function LiveSwitch({ status }) {
+  if (!api.config.recordings || !api.config.liveAvailable) return null;
+  // On only while the live server is actually in use; if it could not be reached the
+  // page shows recordings, the switch reads off, and turning it on tries again.
+  const on = api.config.wantLive && !['unavailable', 'busy'].includes(status.state);
+  const label = { connecting: 'connecting…', waking: 'waking up…', live: 'on', unavailable: 'unavailable', busy: 'busy', off: 'off' }[status.state] || '';
+  return html`<a class=${'live-switch ' + status.state} role="switch" aria-checked=${on ? 'true' : 'false'}
+    href=${api.liveHref(!on)} title=${on ? 'Back to the recorded session' : 'Run the studio on the live simulation server'}>
+    <span class="knob" aria-hidden="true"></span>Live simulation<span class="state">${label}</span></a>`;
+}
+
+function LiveNote({ status, onClose }) {
+  const text = status.notice || (['unavailable', 'busy'].includes(status.state) ? status.detail : '');
+  if (!text) return null;
+  return html`<div class="live-note" role="status"><span>${text}</span>
+    ${['unavailable', 'busy'].includes(status.state) ? html`<a class="btn small" href=${api.liveHref(true)}>Try again</a>` : ''}
+    <button class="iconbtn" aria-label="Dismiss" onClick=${onClose}>✕</button></div>`;
+}
+
 const Icon = {
   play: html`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>`,
   pause: html`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor"/></svg>`,
@@ -25,12 +54,17 @@ function useStudio() {
     try { setSnap(await api.getState()); setError(null); } catch (e) { setError(String(e.message || e)); }
   }, []);
   useEffect(() => {
-    refresh();
-    const conn = api.connect((msg) => {
-      if (msg.type === 'state') { clearTimeout(timer.current); timer.current = setTimeout(refresh, 60); }
-      if (msg.type === 'job') setJobs((j) => ({ ...j, [msg.job.id]: msg.job }));
-    });
-    return () => conn.close();
+    let conn = null, gone = false;
+    READY.then(() => {
+      if (gone) return;
+      refresh();
+      conn = api.connect((msg) => {
+        if (msg.type === 'state') { clearTimeout(timer.current); timer.current = setTimeout(refresh, 60); }
+        if (msg.type === 'job') setJobs((j) => ({ ...j, [msg.job.id]: msg.job }));
+      });
+    }, (e) => setError(String(e.message || e)));
+    const off = api.onSessionReset(() => { setJobs({}); refresh(); });
+    return () => { gone = true; off(); conn && conn.close(); };
   }, [refresh]);
   return { snap, error, jobs, setJobs, refresh, setError };
 }
@@ -45,6 +79,8 @@ function App() {
   const [opts, setOpts] = useState({ labels: true, trace: true, ghost: true });
   const [story, setStory] = useState(localStorage.getItem('mirror-story') !== 'off');
   const [about, setAbout] = useState(false);
+  const liveStatus = useLiveStatus();
+  const [noteHidden, setNoteHidden] = useState(false);
   const toggleStory = (on) => { localStorage.setItem('mirror-story', on ? 'on' : 'off'); setStory(on); };
   const viewerRef = useRef(null);
 
@@ -100,7 +136,9 @@ function App() {
   };
 
   if (!snap) {
-    return html`<div class="boot">${error ? html`<span class="err">Could not load the studio: ${error}</span>` : 'Loading studio…'}</div>`;
+    const msg = { connecting: 'Connecting to the live simulation…', waking: 'Live server waking up… this can take up to a minute.' }[liveStatus.state];
+    return html`<div class="boot">${error ? html`<span class="err">Could not load the studio: ${error}</span>` : (msg || 'Loading studio…')}
+      ${!error && liveStatus.state === 'waking' && api.config.recordings ? html`<div style="margin-top:10px"><a class="btn small" href=${api.liveHref(false)}>Watch the recordings instead</a></div>` : ''}</div>`;
   }
 
   const cur = step || 'watch';
@@ -124,8 +162,10 @@ function App() {
               title=${s.title} aria-label=${`Step ${i + 1}: ${s.short}`}><span class="ix" aria-hidden="true">${i + 1}</span>${s.short}</button>`)}
         </nav>
         <div class="top-right">
-          <span class=${'badge ' + (api.isStatic ? '' : snap.mode)}
-            title=${modeTitle(snap)}>${api.isStatic ? 'recorded session' : snap.mode === 'live' ? 'live simulation' : 'fixture data'}</span>
+          <${LiveSwitch} status=${liveStatus} />
+          ${api.config.recordings && api.config.liveAvailable && snap.mode !== 'fixture' ? ''
+            : html`<span class=${'badge ' + (api.isStatic ? '' : snap.mode)}
+            title=${modeTitle(snap)}>${api.isStatic ? 'recorded session' : snap.mode === 'live' ? 'live simulation' : 'fixture data'}</span>`}
           ${!story ? html`<button class="iconbtn" onClick=${() => toggleStory(true)} title="Show the guided story">Story</button>` : ''}
           <button class="iconbtn" aria-expanded=${about} onClick=${() => setAbout(!about)}>About</button>
           <button class="iconbtn" onClick=${toggleTheme} aria-label=${'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme'}>${theme === 'dark' ? Icon.sun : Icon.moon}</button>
@@ -133,7 +173,8 @@ function App() {
       </header>
       <div class="banner" role="status">${snap.mode === 'fixture' ? html`<b>Fixture data.</b> ${(snap.missing_packages || []).length
         ? `The simulator packages are not available (${snap.missing_packages.slice(0, 3).join(', ')}${snap.missing_packages.length > 3 ? ', …' : ''}), so`
-        : 'The studio was started on fixtures, so'} motion here is key-framed for interface development. It is not evidence.` : ''}</div>
+        : 'The studio was started on fixtures, so'} motion here is key-framed for interface development. It is not evidence.` : ''}
+        ${!noteHidden ? html`<${LiveNote} status=${liveStatus} onClose=${() => setNoteHidden(true)} />` : ''}</div>
       ${story ? html`<${StoryBar} ctx=${ctx} />` : ''}
       ${about ? html`<${AboutPanel} ctx=${ctx} onClose=${() => setAbout(false)} />` : ''}
       <main class="main">

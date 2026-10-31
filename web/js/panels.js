@@ -44,10 +44,28 @@ const specV = (snap, v) => snap.specs.find((s) => s.version === v);
 
 // ------------------------------------------------------------ shared bits
 
+const ORD = (n) => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
+
 function JobLine({ job }) {
   if (!job) return null;
+  if (job.status === 'queued' && job.queue_position > 0) {
+    return html`<div class="job queued" role="status" aria-live="polite">Waiting for a free simulator: you are ${ORD(job.queue_position)} in line.
+      <span class="faint">Other visitors' runs are in progress.</span>
+      <div class="progress"><div class="indet"></div></div></div>`;
+  }
   return html`<div class="job" role="status" aria-live="polite">${job.message ? job.message.split('\n')[0] : job.kind}…
     <div class="progress"><div style=${`width:${Math.round(100 * (job.progress || 0.04))}%`}></div></div></div>`;
+}
+
+// Says when a step fell back to the offline interpreter, and why.
+function FallbackNote({ snap, steps }) {
+  const fb = (snap.fallbacks || []).filter((f) => steps.includes(f.step));
+  if (!fb.length) return null;
+  const last = fb[fb.length - 1];
+  const why = (last.used || '').replace(/^offline-rules\s*\(?/, '').replace(/\)$/, '');
+  return html`<div class="callout" role="status" style="margin:8px 0">
+    <b>Offline interpreter used${last.version ? ` for v${last.version}` : ''}.</b>
+    The rule-based interpreter produced this instead of ${snap.llm?.model || 'the model'}${why ? `: ${why}` : ''}.</div>`;
 }
 
 function Head({ n, kicker, title, lede }) {
@@ -358,6 +376,7 @@ function InterpretPanel({ ctx }) {
           : html`<${Chip} status="accent">spec v${spec.version}<//>`}
         <span class="muted" style="font-size:12px">interpreter: ${spec.interpreter || 'unknown'}</span></div>
       ${spec.version === 1 && snap.specs.length > 1 ? html`<p class="faint" style="font-size:12px;margin-top:6px">v1 is the proposal as the interpreter made it.</p>` : ''}
+      <${FallbackNote} snap=${snap} steps=${['interpret']} />
       <h3>Goals</h3>
       <ul class="list">${spec.goals.map((g) => html`<${ItemRow} id=${g.id} readonly=${true}
         title=${`${cap(selectorText(g.object))} ends inside the ${g.target} tray`} status=${g.status} prov=${provText(g.provenance)} />`)}</ul>
@@ -552,6 +571,7 @@ function CorrectPanel({ ctx }) {
       <${Head} n="5" kicker="You misunderstood this" title="Correct one rule"
         lede=${cv ? '' : 'Say what was wrong in plain words. MIRROR compiles it into a scoped change to the specification.'} />
       ${cv && rec ? html`<blockquote class="quote">“${rec.text}”<span class="faint"> → spec v${cv}</span></blockquote>` : ''}
+      <${FallbackNote} snap=${snap} steps=${['correction', 'answer']} />
       ${!ctx.isStatic && (!cv || again) ? input : ''}
       ${!ctx.isStatic && cv && !again ? html`<button class="btn ghost small" onClick=${() => setAgain(true)}>Correct something else</button>` : ''}
     </div>
@@ -757,7 +777,8 @@ function EvalSummary({ ev, va, vb }) {
 
 function EvidencePanel({ ctx }) {
   const { snap } = ctx;
-  const [n, setN] = useState(8);
+  const seedCap = snap.limits?.max_eval_seeds || 24;
+  const [n, setN] = useState(Math.min(8, seedCap));
   const raw = snap.evaluation;
   const strataNames = raw?.strata ? Object.keys(raw.strata) : null;
   const [stratum, setStratum] = useState(null);
@@ -781,7 +802,7 @@ function EvidencePanel({ ctx }) {
       ${raw ? html`<div class="row" style="margin-bottom:6px"><${Chip} status=${final ? 'accent' : ''}>${evInfo.label}<//></div>` : ''}
       ${!ctx.isStatic && !raw?.strata && evInfo.kind !== 'final' ? html`<div class="row">
         <label class="muted" for="nseeds" style="font-size:12px">Showcase layouts</label>
-        <input id="nseeds" class="num-in" type="number" min="1" max="24" value=${n} onInput=${(e) => setN(Math.max(1, Math.min(24, parseInt(e.target.value || '1', 10))))} />
+        <input id="nseeds" class="num-in" type="number" min="1" max=${seedCap} value=${n} onInput=${(e) => setN(Math.max(1, Math.min(seedCap, parseInt(e.target.value || '1', 10))))} />
         <span class="muted num" style="font-size:12px">dev seeds ${seeds[0]}–${seeds[seeds.length - 1]}</span>
         <span class="spacer"></span>
         <button class=${ctx.story ? 'btn' : 'btn primary'} disabled=${!!job || specs.length < 2}
@@ -940,8 +961,11 @@ function storyAction(ctx) {
         return { label: 'Replan with the correction', busy: 'run', run: () => post('run', 'run', { condition: 'corrected', tags: ['corrected'] }) };
       return { label: nextLabel, run: go('evidence') };
     case 'evidence':
-      if (!snap.evaluation) return { label: 'Run 8 fresh showcase layouts', busy: 'evaluate',
-        run: () => post('evaluate', 'evaluate', { seeds: Array.from({ length: 8 }, (_, i) => 9000 + i), split: 'dev' }) };
+      if (!snap.evaluation) {
+        const k = Math.min(8, snap.limits?.max_eval_seeds || 8);
+        return { label: `Run ${k} fresh showcase layouts`, busy: 'evaluate',
+          run: () => post('evaluate', 'evaluate', { seeds: Array.from({ length: k }, (_, i) => 9000 + i), split: 'dev' }) };
+      }
       if (!rs.some((r) => isBlockedScene(r.scene_id))) return { label: 'Try the blocked layout', busy: 'run', run: async () => {
         await post('scene', 'scene', { preset: 'blocked' });
         await post('run', 'run', { condition: 'blocked layout', tags: ['blocked'] });
@@ -991,7 +1015,7 @@ export function StoryBar({ ctx }) {
     <div class="story-act">
       <button class="btn ghost small" disabled=${ix === 0} onClick=${() => ctx.setStep(order[ix - 1])}>Back</button>
       ${act ? html`<button class="btn primary" disabled=${!!busy || (act.label.startsWith('Next') && !enabled[order[ix + 1]]?.enabled)}
-        onClick=${act.run}>${busy ? (busy.message?.split('\n')[0] || 'Working') + '…' : act.label}</button>` : ''}
+        onClick=${act.run}>${busy ? (busy.status === 'queued' && busy.queue_position ? `Waiting: ${ORD(busy.queue_position)} in line` : (busy.message?.split('\n')[0] || 'Working') + '…') : act.label}</button>` : ''}
       <button class="iconbtn" aria-label="Hide the guided story" title="Explore freely" onClick=${() => ctx.toggleStory(false)}>✕</button>
     </div>
   </div>`;
@@ -1019,7 +1043,7 @@ export function AboutPanel({ ctx, onClose }) {
       <li><b>The robot is a free-flying gripper.</b> Six position-controlled axes and two fingers; no arm is modelled. Objects move only through actuators and contact physics.</li>
       <li><b>Privileged state.</b> Planning and checking read simulator state (poses, contacts, bead positions). It is not visual perception.</li>
       <li><b>The demonstration</b> is ${sources[snap.demo?.source] || 'a recorded trace'}, not a video of a person.</li>
-      <li><b>The specification</b> was produced by <span class="num">${interp}</span>${isOffline ? ', the rule-based interpreter that needs no model' : ''}${spec?.history?.find((h) => h.model)?.model ? `; corrections compiled by ${spec.history.find((h) => h.model).model}` : ''}. ${snap.llm_mode === 'replay' ? ' Model responses are replayed from recordings made with that model; nothing calls a model while you browse.' : ''}${(snap.fallbacks || []).length ? ` Steps without a recording used the offline interpreter: ${snap.fallbacks.map((f) => f.step).join(', ')}.` : ''} Model output is validated against a schema before planning and never judges success.</li>
+      <li><b>The specification</b> was produced by <span class="num">${interp}</span>${isOffline ? ', the rule-based interpreter that needs no model' : ''}${spec?.history?.find((h) => h.model)?.model ? `; corrections compiled by ${spec.history.find((h) => h.model).model}` : ''}. ${snap.llm_mode === 'replay' ? ' Model responses are replayed from recordings made with that model; nothing calls a model while you browse.' : ''}${(snap.fallbacks || []).length ? ` These steps used the offline interpreter instead: ${snap.fallbacks.map((f) => f.step).join(', ')}.` : ''}${snap.llm?.mode === 'live' ? ` Live model requests (${snap.llm.model}) are limited to ${snap.llm.calls_per_session} per visitor and ${snap.llm.calls_per_hour} per hour for the server${snap.llm.calls_remaining_session != null ? `; ${snap.llm.calls_remaining_session} left in this session` : ''}. Past that, or if the model fails, the offline interpreter is used and the step says so.` : ''} Model output is validated against a schema before planning and never judges success.</li>
       <li><b>Success is measured</b> by an independent checker from the physics log at every step: placement, tilt per phase, bead retention, contacts.</li>
       <li><b>Evidence:</b> ${ev ? ({ final: 'the pre-registered evaluation, loaded unchanged from the evaluation output.',
         rehearsal: 'a rehearsal of the evaluation pipeline on development seeds, not the pre-registered result.',

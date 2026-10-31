@@ -84,3 +84,13 @@ regenerating layouts. A rehearsal report is labelled as a rehearsal.
 * Before any rollout exists, a layout preview places objects at their initial poses
   and hides beads.
 * The fixture backend's motion and bead spill are key-framed, not simulated.
+
+
+## Public server
+
+Each visitor gets a session (`POST /api/session`; the id goes in the `X-Mirror-Session`
+header and as `?session=` on the websocket). Sessions, simulation jobs and model requests
+are capped, origins are checked, and `GET /api/health` reports the limits; see
+`mirror/studio/sessions.py`. A static export can switch to a live server when its
+`config.js` names one (`apiBase`); the switch is kept in the URL as `?live=1`.
+Deployment steps and every setting: `deploy/README.md`.

@@ -38,6 +38,14 @@ SHOWCASE_SPLIT = "dev"
 SHOWCASE_SEEDS = range(9000, 9100)
 
 
+def max_eval_seeds() -> int:
+    """Largest showcase run one request may ask for (public server guard)."""
+    try:
+        return max(1, int(os.environ.get("MIRROR_MAX_EVAL_SEEDS") or 6))
+    except ValueError:
+        return 6
+
+
 class EvaluationFenceError(RuntimeError):
     """Raised when a request would generate or run evaluation-split layouts."""
 
@@ -247,18 +255,38 @@ class Job:
         self.error: Optional[str] = None
         self.started = time.time()
         self.finished: Optional[float] = None
+        self.queue_position = 0     # > 0 while waiting for a free simulator
 
     def public(self) -> dict:
         return {"id": self.id, "kind": self.kind, "params": self.params, "status": self.status,
                 "progress": round(self.progress, 3), "message": self.message, "result": self.result,
-                "error": self.error, "started": self.started, "finished": self.finished}
+                "error": self.error, "started": self.started, "finished": self.finished,
+                "queue_position": self.queue_position}
+
+
+# Jobs that run the simulator (the expensive part); they share the server's job gate.
+SIM_JOB_KINDS = {"run", "clarify", "evaluate"}
+
+
+def _is_model_error(exc: BaseException) -> bool:
+    try:
+        from ..interpret import LLMError
+    except Exception:  # noqa: BLE001
+        return False
+    return isinstance(exc, LLMError)
+
+
+def _budget_exc():
+    from .sessions import BudgetExceeded
+    return BudgetExceeded
 
 
 # ------------------------------------------------------------- service ---
 
 
 class StudioService:
-    def __init__(self, backend: Optional[str] = None):
+    def __init__(self, backend: Optional[str] = None, *, session_id: Optional[str] = None, gate=None,
+                 budget=None, one_job: bool = False, private_runtime: bool = False):
         backend = (backend or os.environ.get("MIRROR_STUDIO_BACKEND", "auto")).lower()
         ok, missing = packages_available()
         self.missing = missing
@@ -289,6 +317,17 @@ class StudioService:
         self.payload_digits = 4
         self.fallbacks: list[dict] = []
         self.teleop = None
+        self.session_id = session_id
+        self.gate = gate              # shared simulation job gate (public server)
+        self.budget = budget          # shared model-call budget (public server)
+        self.one_job = one_job        # refuse a second job while one is queued or running
+        self.private_runtime = private_runtime
+        self.closed = False
+        if self.mode == "live" and (gate is not None or budget is not None):
+            from .sessions import make_client
+            client = make_client(budget, session_id or "local")
+            if client is not None:
+                self.session.client = client
 
     # ------------------------------------------------------------ events
     def subscribe(self, fn: Callable[[dict], None]) -> Callable[[], None]:
@@ -307,12 +346,41 @@ class StudioService:
         self._emit({"type": "state", "revision": self.revision})
 
     # ------------------------------------------------------------- jobs
+    def busy(self) -> bool:
+        return any(j.status in ("queued", "running") for j in self.jobs.values())
+
+    def close(self, reason: str = "") -> None:
+        """End this session: stop accepting work and release its resources."""
+        self.closed = True
+        self._emit({"type": "expired", "reason": reason})
+        self.listeners.clear()
+        self.executor.shutdown(wait=False, cancel_futures=True)
+        if self.private_runtime and hasattr(self, "_rt"):
+            import shutil
+            shutil.rmtree(self._rt, ignore_errors=True)
+
     def submit(self, kind: str, params: dict, fn: Callable[[Job], Any]) -> Job:
+        if self.closed:
+            raise RuntimeError("this session has ended")
+        if self.one_job and self.busy():
+            from .sessions import SessionBusy
+            raise SessionBusy("a job is already running in this session; wait for it to finish")
         job = Job(kind, params)
         self.jobs[job.id] = job
+        gated = self.gate is not None and kind in SIM_JOB_KINDS
 
         def runner():
+            if gated:
+                job.message = "Waiting for a free simulator"
+                ok = self.gate.acquire(job, notify=lambda j: self._emit({"type": "job", "job": j.public()}),
+                                       cancelled=lambda: self.closed)
+                if not ok:
+                    job.status = "error"
+                    job.error = "session ended while waiting"
+                    job.finished = time.time()
+                    return
             job.status = "running"
+            job.message = ""
             self._emit({"type": "job", "job": job.public()})
             try:
                 job.result = fn(job)
@@ -322,6 +390,9 @@ class StudioService:
                 job.status = "error"
                 job.error = f"{type(exc).__name__}: {exc}"
                 job.message = traceback.format_exc(limit=4)
+            finally:
+                if gated:
+                    self.gate.release()
             job.finished = time.time()
             self._emit({"type": "job", "job": job.public()})
             self._changed()
@@ -380,20 +451,28 @@ class StudioService:
         return trace_to_rollout(s.demo, visual)
 
     def _with_fallback(self, fn, job: Optional[Job] = None):
-        """Run an interpreter call; if replay has no recording for it, use the
-        offline rule-based interpreter instead and say so."""
+        """Run an interpreter call. If the model cannot be used (no recording in
+        replay mode, budget used up, or any model error), run the offline
+        rule-based interpreter instead and return the reason."""
         try:
             return fn(), None
         except Exception as exc:  # noqa: BLE001
-            if type(exc).__name__ != "CassetteMiss" or self.mode != "live":
+            if self.mode != "live" or not _is_model_error(exc):
                 raise
+            name = type(exc).__name__
+            if name == "CassetteMiss":
+                why = "no recorded model response for this request"
+            elif isinstance(exc, _budget_exc()):
+                why = str(exc)
+            else:
+                why = "model request failed: " + str(exc).split("\n")[0][:160]
             from ..interpret import LLMClient
             prev = getattr(self.session, "client", None)
             self.session.client = LLMClient(mode="offline")
             try:
                 if job is not None:
-                    self._progress(job, 0.5, "No recorded response for this request; using the offline interpreter")
-                return fn(), "offline-rules (no recorded model response for this request)"
+                    self._progress(job, 0.5, f"Using the offline interpreter ({why})")
+                return fn(), f"offline-rules ({why})"
             finally:
                 self.session.client = prev
 
@@ -405,7 +484,7 @@ class StudioService:
                     self.load_demo()
                 spec, fb = self._with_fallback(self.session.interpret, job)
                 if fb:
-                    self.fallbacks.append({"step": "interpret", "used": fb})
+                    self.fallbacks.append({"step": "interpret", "used": fb, "version": spec.version})
             return {"version": spec.version, "fallback": fb}
         return self.submit("interpret", {}, work)
 
@@ -456,7 +535,7 @@ class StudioService:
                 try:
                     (spec, record), fb = self._with_fallback(lambda: self.session.correct(text), job)
                     if fb:
-                        self.fallbacks.append({"step": "correction", "used": fb})
+                        self.fallbacks.append({"step": "correction", "used": fb, "version": spec.version})
                 except Exception as exc:  # noqa: BLE001 - typed outcomes from the interpreter
                     name = type(exc).__name__
                     if name == "NeedsClarification":
@@ -570,9 +649,11 @@ class StudioService:
     def answer(self, text: str) -> Job:
         def work(job):
             with self.lock:
-                spec, record = self.session.answer(text)
+                (spec, record), fb = self._with_fallback(lambda: self.session.answer(text), job)
+                if fb:
+                    self.fallbacks.append({"step": "answer", "used": fb, "version": spec.version})
                 self.clarification = None
-            return {"version": spec.version, "record": _dump(record)}
+            return {"version": spec.version, "record": _dump(record), "fallback": fb}
         return self.submit("answer", {"text": text}, work)
 
     def evaluate(self, seeds: list[int], spec_a: Optional[int] = None, spec_b: Optional[int] = None,
@@ -596,7 +677,12 @@ class StudioService:
         if not hasattr(self, "_rt"):
             import tempfile
             base = os.environ.get("MIRROR_STUDIO_RUNTIME")
-            self._rt = Path(base) if base else Path(tempfile.mkdtemp(prefix="mirror-studio-"))
+            if self.private_runtime:
+                root = Path(base) if base else Path(tempfile.gettempdir())
+                root.mkdir(parents=True, exist_ok=True)
+                self._rt = Path(tempfile.mkdtemp(prefix="session-", dir=root))
+            else:
+                self._rt = Path(base) if base else Path(tempfile.mkdtemp(prefix="mirror-studio-"))
             self._rt.mkdir(parents=True, exist_ok=True)
         return self._rt
 
@@ -897,6 +983,12 @@ class StudioService:
             self.payload_cache[rollout_id] = payload
             return payload
 
+    def _llm_public(self) -> Optional[dict]:
+        if self.budget is None and self.gate is None:
+            return None
+        from .sessions import llm_public
+        return llm_public(self.budget, self.session_id)
+
     def snapshot(self) -> dict:
         with self.lock:
             s = self.session
@@ -950,7 +1042,10 @@ class StudioService:
                 "events": s.events[-50:],
                 "teleop_available": self.mode == "live",
                 "llm_mode": os.environ.get("MIRROR_LLM_MODE") or ("live" if os.environ.get("MODEL_API_KEY") else "offline"),
+                "llm": self._llm_public(),
                 "fallbacks": self.fallbacks,
+                "limits": {"max_eval_seeds": max_eval_seeds(), "one_job_at_a_time": self.one_job,
+                           "showcase_seeds": [SHOWCASE_SEEDS.start, SHOWCASE_SEEDS.stop - 1]},
             }
 
 

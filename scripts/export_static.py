@@ -115,6 +115,8 @@ def write_site(svc: StudioService, out: Path, steps: list[dict], extra: dict) ->
     snap = svc.snapshot()
     snap["jobs"] = []
     snap["static"] = True
+    # Rollout files are cached as immutable; the page asks for them with ?v=<export id>.
+    snap["export_id"] = hashlib.sha256(f"{time.time_ns()}:{len(snap['rollouts'])}".encode()).hexdigest()[:12]
     (data / "session.json").write_text(json.dumps(snap, separators=(",", ":")))
     ids = [r["id"] for r in snap["rollouts"]] + (["demo"] if snap.get("demo") else [])
     svc.payload_digits = 3          # 1 mm and 0.001 quaternion steps: smaller files, same picture
@@ -138,12 +140,153 @@ def write_site(svc: StudioService, out: Path, steps: list[dict], extra: dict) ->
         **extra,
     }
     (data / "provenance.json").write_text(json.dumps(prov, indent=1))
-    cfg = {"static": True, "base": "data/"}
+    cfg = {"static": True, "base": "data/", "apiBase": extra.get("api_base") or "",
+           "wsBase": extra.get("ws_base") or ""}
     if extra.get("repo_url"):
         cfg["repo"] = extra["repo_url"]
-    (out / "config.js").write_text("window.MIRROR_CONFIG = " + json.dumps(cfg) + ";\n")
+    (out / "config.js").write_text(config_js(cfg))
+    write_hosting_files(out, cfg["apiBase"], cfg["wsBase"])
     (out / ".nojekyll").write_text("")
     log(f"wrote {out} ({len(ids)} rollouts, {total / 1e6:.1f} MB of playback data)")
+
+
+
+
+WEB_DIR = ROOT / "web"
+NO_CACHE = "no-cache"
+IMMUTABLE = "public, max-age=31536000, immutable"
+REVALIDATE = "public, max-age=0, must-revalidate"
+CDN_SCRIPTS = ("https://cdn.jsdelivr.net", "https://esm.sh")
+
+
+def inline_script_hashes(index_html: str) -> list[str]:
+    """CSP hashes of the page's inline scripts (the import map)."""
+    import base64
+    import hashlib
+    import re
+    out = []
+    for m in re.finditer(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", index_html, re.S):
+        out.append("'sha256-" + base64.b64encode(hashlib.sha256(m.group(1).encode()).digest()).decode() + "'")
+    return out
+
+
+def header_rules(index_html: str, api_base: str = "", ws_base: str = "", generic: bool = False) -> list:
+    """Response headers for the static site, as (path pattern, {header: value}) pairs."""
+    if generic:
+        connect = ["'self'", "https:", "wss:"]
+    else:
+        connect = ["'self'"]
+        if api_base:
+            connect += [api_base, ws_base or "ws" + api_base[4:]]
+    csp = "; ".join([
+        "default-src 'self'",
+        "script-src 'self' " + " ".join(inline_script_hashes(index_html) + list(CDN_SCRIPTS)),
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob:",
+        "font-src 'self'",
+        "connect-src " + " ".join(connect),
+        "worker-src 'self' blob:",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+    ])
+    security = {
+        "Content-Security-Policy": csp,
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Strict-Transport-Security": "max-age=31536000",
+    }
+    return [
+        ("/*", security),
+        ("/", {"Cache-Control": NO_CACHE}),
+        ("/index.html", {"Cache-Control": NO_CACHE}),
+        ("/config.js", {"Cache-Control": NO_CACHE}),
+        ("/data/session.json", {"Cache-Control": NO_CACHE}),
+        ("/data/provenance.json", {"Cache-Control": NO_CACHE}),
+        ("/data/rollouts/*", {"Cache-Control": IMMUTABLE}),
+        ("/js/*", {"Cache-Control": REVALIDATE}),
+        ("/styles.css", {"Cache-Control": REVALIDATE}),
+    ]
+
+
+def netlify_toml(rules: list, generic: bool = False) -> str:
+    lines = ["# Netlify configuration for the MIRROR studio static site.",
+             "# The site is prebuilt by scripts/export_static.py; Netlify only serves it.",
+             "# Rollout files are immutable per export (the page requests them with ?v=<export id>);",
+             "# the page, its configuration and the session index are always revalidated."]
+    if generic:
+        lines.append("# This copy allows any https/wss API; the exporter writes a copy limited to the configured server.")
+    lines += ["", "[build]", '  publish = "."', '  command = ""', ""]
+    for path, headers in rules:
+        lines.append("[[headers]]")
+        lines.append(f'  for = "{path}"')
+        lines.append("  [headers.values]")
+        for k, v in headers.items():
+            lines.append(f"    {k} = {json.dumps(v)}")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def netlify_headers_file(rules: list) -> str:
+    out = ["# Netlify _headers (same rules as netlify.toml; used for drag-and-drop deploys)"]
+    for path, headers in rules:
+        out.append(path)
+        out += [f"  {k}: {v}" for k, v in headers.items()]
+    return "\n".join(out) + "\n"
+
+
+def write_hosting_files(out: Path, api_base: str = "", ws_base: str = "") -> None:
+    rules = header_rules((WEB_DIR / "index.html").read_text(), api_base, ws_base)
+    (out / "netlify.toml").write_text(netlify_toml(rules))
+    (out / "_headers").write_text(netlify_headers_file(rules))
+
+CONFIG_PREFIX = "window.MIRROR_CONFIG = "
+CONFIG_HEADER = ("// MIRROR studio configuration (written by scripts/export_static.py).\n"
+                 "// apiBase: origin of a live studio server for the 'Live simulation' switch;\n"
+                 "// leave empty to publish the recordings only.\n")
+
+
+def config_js(cfg: dict) -> str:
+    """The config.js file for a static site."""
+    return CONFIG_HEADER + CONFIG_PREFIX + json.dumps(cfg, indent=1) + ";\n"
+
+
+def parse_config_js(text: str) -> dict:
+    """Read a config.js written by config_js (comments allowed before the assignment)."""
+    body = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("//")).strip()
+    if not body.startswith(CONFIG_PREFIX) or not body.endswith(";"):
+        raise ValueError("config.js must be a single 'window.MIRROR_CONFIG = {...};' assignment")
+    cfg = json.loads(body[len(CONFIG_PREFIX):-1])
+    if not isinstance(cfg, dict):
+        raise ValueError("MIRROR_CONFIG must be an object")
+    return cfg
+
+
+def check_origin(url: str, schemes: tuple) -> str:
+    """'' or a bare origin (optionally with a path) such as https://studio.example.org."""
+    from urllib.parse import urlparse
+    url = (url or "").strip().rstrip("/")
+    if not url:
+        return ""
+    u = urlparse(url)
+    if u.scheme not in schemes or not u.netloc or u.query or u.fragment or "@" in u.netloc:
+        raise ValueError(f"not a valid {'/'.join(schemes)} origin: {url!r}")
+    return url
+
+
+def write_config(site: Path, api_base: str, ws_base: str = "") -> dict:
+    """Point an existing static site at a live server (or clear it) without re-exporting."""
+    path = Path(site) / "config.js"
+    cfg = parse_config_js(path.read_text())
+    cfg["apiBase"] = check_origin(api_base, ("https", "http"))
+    cfg["wsBase"] = check_origin(ws_base, ("wss", "ws"))
+    path.write_text(config_js(cfg))
+    write_hosting_files(Path(site), cfg["apiBase"], cfg["wsBase"])
+    return cfg
 
 
 def main(argv=None) -> int:
@@ -156,11 +299,24 @@ def main(argv=None) -> int:
     ap.add_argument("--seed-base", type=int, default=SHOWCASE_SEEDS.start,
                     help=f"first showcase seed ({SHOWCASE_SEEDS.start}-{SHOWCASE_SEEDS.stop - 1})")
     ap.add_argument("--repo-url", default="https://github.com/harsha-iiiv/MIRROR")
+    ap.add_argument("--api-base", default="", help="live studio server origin for the 'Live simulation' switch")
+    ap.add_argument("--ws-base", default="", help="websocket origin, if different from --api-base")
+    ap.add_argument("--write-config", metavar="SITE", default=None,
+                    help="only rewrite SITE/config.js with --api-base/--ws-base, then exit")
     ap.add_argument("--no-clarify", action="store_true")
     ap.add_argument("--no-blocked", action="store_true")
     ap.add_argument("--evaluation", default=None,
                     help="show a saved evaluation report (JSON file or its folder) instead of running one")
     args = ap.parse_args(argv)
+    try:
+        api_base = check_origin(args.api_base, ("https", "http"))
+        ws_base = check_origin(args.ws_base, ("wss", "ws"))
+    except ValueError as exc:
+        ap.error(str(exc))
+    if args.write_config:
+        cfg = write_config(Path(args.write_config), api_base, ws_base)
+        log(f"wrote {Path(args.write_config) / 'config.js'}: apiBase={cfg['apiBase'] or '(none)'}")
+        return 0
     if args.backend == "fixture" and not args.allow_fixture:
         ap.error("fixture data is placeholder motion, not simulation; pass --allow-fixture to export it anyway")
     if os.environ.get("MIRROR_LLM_MODE") == "replay" and not os.environ.get("MIRROR_LLM_MODEL"):
@@ -190,7 +346,8 @@ def main(argv=None) -> int:
         log(f"loaded evaluation report {args.evaluation}")
     write_site(svc, Path(args.out), steps, {"showcase_seeds": [] if args.evaluation else seeds,
                                             "evaluation": Path(args.evaluation).name if args.evaluation else None,
-                                            "repo_url": args.repo_url, "wall_time_s": round(time.time() - t0, 1)})
+                                            "repo_url": args.repo_url, "api_base": api_base, "ws_base": ws_base,
+                                            "wall_time_s": round(time.time() - t0, 1)})
     failed = [s["step"] for s in steps if s["status"] != "done"]
     if failed:
         log("incomplete export, failed steps: " + "; ".join(failed))

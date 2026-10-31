@@ -8,7 +8,8 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-OWNED = [ROOT / "mirror" / "studio", ROOT / "web", ROOT / "tests" / "studio", ROOT / "scripts" / "export_static.py"]
+OWNED = [ROOT / "mirror" / "studio", ROOT / "web", ROOT / "tests" / "studio", ROOT / "scripts" / "export_static.py",
+         ROOT / "deploy"]
 
 
 def _files():

@@ -1,5 +1,6 @@
 """Slow studio checks: real simulation in the loop, and a headless browser."""
 import json
+import os
 import socket
 import subprocess
 import sys
@@ -87,3 +88,55 @@ def test_final_report_loads_without_sampling(monkeypatch):
     rows = [r for r in svc.snapshot()["rollouts"] if "eval" in r["tags"]]
     assert sum(r["has_frames"] for r in rows) >= 1
     assert all(r["scene"] is not None for r in rows if r["has_frames"])
+
+
+@pytest.mark.slow
+def test_live_switch_connects_and_falls_back(tmp_path):
+    """A recorded site with apiBase set: switch to the live server, then lose it."""
+    pw = pytest.importorskip("playwright.sync_api")
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import export_static as ex
+    out = tmp_path / "site"
+    subprocess.run([sys.executable, str(ROOT / "scripts" / "export_static.py"), "--backend", "fixture",
+                    "--allow-fixture", "--seeds", "0", "--no-clarify", "--out", str(out)], check=True, timeout=120,
+                   cwd=ROOT, stdin=subprocess.DEVNULL, capture_output=True)
+    web_port, api_port = _free_port(), _free_port()
+    ex.write_config(out, f"http://127.0.0.1:{api_port}")
+    cfg = ex.parse_config_js((out / "config.js").read_text())
+    cfg["wakeTimeoutMs"] = 6000
+    (out / "config.js").write_text(ex.config_js(cfg))
+    env = dict(os.environ, MIRROR_STUDIO_BACKEND="fixture", MIRROR_LLM_MODE="offline",
+               MIRROR_CORS_ORIGINS=f"http://127.0.0.1:{web_port}")
+    web = subprocess.Popen([sys.executable, "-m", "http.server", str(web_port), "--bind", "127.0.0.1"], cwd=out,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+    api = subprocess.Popen([sys.executable, "-m", "uvicorn", "mirror.studio.app:app", "--host", "127.0.0.1",
+                            "--port", str(api_port)], cwd=ROOT, env=env,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+    errors = []
+    try:
+        time.sleep(3.0)
+        with pw.sync_playwright() as p:
+            b = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
+            pg = b.new_page(viewport={"width": 1280, "height": 800})
+            pg.on("pageerror", lambda e: errors.append(str(e)))
+            pg.goto(f"http://127.0.0.1:{web_port}/", wait_until="networkidle", timeout=60_000)
+            sw = pg.locator(".live-switch")
+            assert sw.get_attribute("aria-checked") == "false"
+            sw.click()
+            pg.wait_for_url("**live=1**", timeout=20_000)
+            pg.locator(".live-switch.live").wait_for(timeout=30_000)
+            pg.get_by_text("The demonstration").first.wait_for(timeout=30_000)
+            pg.locator(".story .btn.primary").click()               # interpret on the server
+            pg.get_by_text("What MIRROR thinks matters").wait_for(timeout=30_000)
+            api.terminate()
+            api.wait(timeout=10)
+            pg.reload()
+            pg.get_by_text("Live server unavailable, showing recordings.").wait_for(timeout=30_000)
+            assert pg.locator(".live-switch").get_attribute("aria-checked") == "false"
+            pg.get_by_text("The demonstration").first.wait_for(timeout=30_000)
+            b.close()
+    finally:
+        for proc in (web, api):
+            proc.terminate()
+            proc.wait(timeout=10)
+    assert not errors, errors

@@ -1,0 +1,48 @@
+# systemd unit for the MIRROR studio live server.
+# Install: sudo cp deploy/mirror-studio.service /etc/systemd/system/ && sudo systemctl daemon-reload
+# The server keeps visitor sessions in memory, so it runs as a single process.
+[Unit]
+Description=MIRROR studio live simulation server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mirror
+Group=mirror
+WorkingDirectory=/opt/mirror
+EnvironmentFile=/etc/mirror/mirror.env
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/mirror/.venv/bin/python -m uvicorn mirror.studio.app:app \
+    --host 127.0.0.1 --port 8000 --workers 1 \
+    --proxy-headers --forwarded-allow-ips 127.0.0.1 \
+    --timeout-keep-alive 30 --no-server-header
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+
+# Resource limits for a 4-core, 7 GB machine (leave room for the tunnel and the system).
+MemoryMax=6G
+TasksMax=512
+LimitNOFILE=8192
+
+# Hardening: the service writes only to its state directory.
+StateDirectory=mirror
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+RestrictNamespaces=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target
