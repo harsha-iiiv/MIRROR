@@ -14,6 +14,23 @@ model's description of what happened.
 
 > *"I corrected it once, and the correction changed what it did somewhere else."*
 
+## Scope at a glance
+
+* **Simulation only.** MuJoCo physics; no physical robot, no sim-to-real claim.
+* **Robot:** a free-flying parallel-jaw gripper on six actuated axes (no arm
+  body). Grasps are friction grasps; objects are never moved by anything but
+  actuators and contacts.
+* **Demonstration:** a scripted teleoperation trace through the same command
+  interface a person uses in the studio. Not human-video understanding.
+* **Model:** targets Meta Model API (Muse Spark). The recorded responses that
+  reproduce the results without a key came from a development model and are
+  labelled as such; `MIRROR_LLM_MODE=record` re-records them.
+* **Proofs are narrow.** "Infeasible" is claimed only with a geometric bound
+  under stated assumptions; otherwise the planner reports that it found no
+  plan, which is not a proof.
+
+Full list: [docs/CLAIMS.md](docs/CLAIMS.md).
+
 ## The story in one scene
 
 | Step | What happens |
@@ -54,7 +71,7 @@ pip install -e ".[dev]"
 mirror doctor            # checks MuJoCo and the model configuration
 mirror story             # runs the whole narrative above and prints a transcript
 mirror studio            # opens the interactive studio at http://127.0.0.1:8000
-pytest -q -m "not slow"  # fast test suite
+python -m pytest -q -m "not slow"  # fast test suite
 ```
 
 ### Model configuration

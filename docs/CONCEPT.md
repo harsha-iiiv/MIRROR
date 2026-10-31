@@ -161,11 +161,11 @@ The checker reads simulator trajectories, not the model's explanation. Evaluate 
 
 Simulator ground truth may be used for planning, control and evaluation, but record exactly where it is used. Do not represent privileged object poses as model-derived visual perception. Finite simulation tests do not constitute formal verification or physical safety guarantees.
 
-## 6. Parallel agent-team plan
+## 6. Workstreams and interfaces
 
 | Workstream | Responsibility | Main output |
 |---|---|---|
-| Integration lead | Own shared interfaces, reproducibility and the working end-to-end path | Integrated runnable system |
+| Integration | Shared interfaces, reproducibility and the working end-to-end path | Integrated runnable system |
 | Simulation and control | Robot model, scenes, teleoperation, actuation, contacts and reset behavior | Reliable MuJoCo execution environment |
 | Interpretation and compiler | Demonstration interpretation, uncertainty, clarification and scoped corrections | Validated, versioned task specifications |
 | Planning | Task sequencing, collision-aware motion and constraint-aware replanning | Plans with explicit success/failure status |
@@ -174,7 +174,7 @@ Simulator ground truth may be used for planning, control and evaluation, but rec
 
 Agree on shared contracts before independent implementation: **DemoTrace, SceneState, TaskSpec, PlanResult and RolloutReport**. Specify units, coordinate frames, identifiers, constraint semantics and failure states.
 
-Build one thin end-to-end path early. Integrate continuously instead of producing disconnected subsystem demos. Use agent capacity to deepen reliability and evaluation before expanding the task catalogue.
+Build one thin end-to-end path early. Integrate continuously instead of producing disconnected subsystem demos. Deepen reliability and evaluation before expanding the task catalogue.
 
 
 ## 7. Evaluation that makes the claim credible
@@ -267,4 +267,4 @@ MIRROR turns a demonstration into a task specification you can inspect and corre
 
 ---
 
-**Project scope:** MuJoCo only. **Development approach:** parallel agent teams. **Core proof:** a confirmed correction changes executed behavior in fresh simulated environments.
+**Project scope:** MuJoCo only. **Core proof:** a confirmed correction changes executed behavior in fresh simulated environments.

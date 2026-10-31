@@ -61,10 +61,33 @@ violation-free success, Wilson and bootstrap intervals.
 
 ## How to reproduce
 
+The published registration (`results/eval/freeze.json`) and its ledger stay
+as they are. `freeze-final` is for registering a *new* experiment on untouched
+seeds; run on the published seed list it correctly refuses, because those
+layouts now exist in the ledger.
+
+The evaluated code is tagged `eval-final` (commit `e23fac1`). Later commits
+change only rendering, the studio and documentation, so check out that tag
+first: `git checkout eval-final`. To re-run the published evaluation against
+the frozen manifest, with the
+same library versions recorded in the manifest, write to disposable output
+and an isolated ledger:
+
 ```bash
-python scripts/run_eval.py freeze-final --manifest results/eval/freeze.json
-python scripts/run_eval.py final --manifest results/eval/freeze.json --out results/eval --workers 2
+MIRROR_EVAL_LEDGER=results/tmp/repro-ledger.jsonl \
+  python scripts/run_eval.py final --manifest results/eval/freeze.json \
+  --out results/tmp/reproduced --workers 2 --save-rollouts
 ```
+
+The runner re-checks the specification, source, script, data and version
+hashes before every stratum and refuses if anything differs. The simulator is
+deterministic, so a matching environment reproduces the per-seed outcomes.
+
+To audit without re-running: the per-seed pairs are in
+`results/eval/<stratum>/report.json`, the ledger in `results/eval/ledger.jsonl`
+(every entry is later than the manifest's `created_unix`), and a committed
+rollout can be re-checked under any specification with
+`python scripts/run_eval.py recheck --log <steplog.npz> --scene <scene.json> --spec <spec.json>`.
 
 ## Results
 
