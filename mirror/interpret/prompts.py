@@ -1,0 +1,145 @@
+"""Prompt text for the model-backed interpreter.
+
+The prompts carry the task vocabulary and the honesty rules. Output format is
+enforced by the JSON schema (structured output), not by the prompt.
+"""
+from __future__ import annotations
+
+import json
+from typing import Any, Optional
+
+from mirror.contracts import SceneState, TaskSpec
+from mirror.interpret.types import DemoSummary
+
+VOCABULARY = """\
+Task family: packing a kit of rigid objects into a destination tray on a table.
+Objects: cup (open-top container that may hold loose beads), block, marker (standing cylinder).
+Goal type: an object ends at rest inside the destination tray.
+Rule types:
+  upright: the object's axis stays within max_tilt_deg of vertical (default 15).
+  forbidden_contact: the object must not touch contact_with groups
+    (obstacle, table_outside_tray, other_objects).
+  keep_clearance: the object stays at least min_clearance_m from obstacles.
+Phases: final (once placed and settled), transport (from grasp until release of that object),
+  always (every moment of the task).
+Ordering: one object kind must be packed before another."""
+
+PROPOSE_SYSTEM = VOCABULARY + """
+
+You interpret one demonstration of this task for a simulated robot. You receive
+deterministic measurements of the demonstration and the scene inventory, never
+raw video. Propose a task specification that a human will review.
+
+Rules:
+1. Separate evidence from inference. shown_by_demo cites measured values from the
+   input; assumption states what you are inferring beyond them.
+2. A consistent behaviour is not automatically a requirement. It may be incidental:
+   a route forced by where the wall is, or an order that was simply convenient.
+3. Every regularity (R1, R2, ...) must either appear in regularity_ids of an object,
+   rule or ordering, or be listed in dismissed with a reason.
+4. Propose only rules the demonstration itself satisfies, and only where the
+   behaviour plausibly matters for the objects involved. Do not turn an observed
+   margin into a rule (for example a clearance equal to the closest distance the
+   demonstration happened to keep); dismiss it with a reason instead.
+5. Each proposed rule and ordering gets one short, concrete question the human can
+   answer with "required" or "incidental", and your lean.
+6. include_in_task is true only for objects that ended inside the tray.
+7. Do not invent objects, coordinates, routes or robot commands. Use null for
+   parameters that do not apply to a rule type.
+8. summary is one plain sentence describing the task."""
+
+CORRECT_SYSTEM = VOCABULARY + """
+
+You compile a person's correction of a robot task specification into edit
+operations. A deterministic compiler applies them, assigns identifiers and
+statuses, and checks them, so describe intent precisely.
+
+Actions:
+  require_rule  the rule must hold (creates it, or confirms and updates an existing one).
+                Needs rule.type, rule.object_kind and rule.phase.
+  relax_rule    the rule is not required (rejects matching rules; phase null means
+                every phase of that rule type for that object).
+  confirm_item / reject_item  confirm or reject an existing goal, rule or ordering by target_id.
+  require_order / relax_order  before_kind must be packed before after_kind
+                (relax_order with both kinds null relaxes every ordering).
+  add_goal / remove_goal  whether goal_kind must end in the tray.
+
+Rules:
+1. Scope: apply each change only to the objects the person names. Use
+   object_kind null (every object) only if they explicitly say all or every.
+2. Resolve references from the text and context ("this container" is the cup).
+   If a pronoun or description could mean more than one object in the task and the
+   context does not settle it, use outcome "clarify" with a question and options.
+3. If the person mentions an object that is not in the scene, use outcome "clarify"
+   and ask which object they meant.
+4. If the correction contradicts itself, use outcome "clarify".
+5. If it is not about goals, orientation, contact, clearance or ordering, use
+   outcome "reject" and explain in interpretation.
+6. Keep existing rules unless the person changes them. "Not just at the destination"
+   keeps the destination rule and adds the transport rule.
+7. If an orientation requirement has no stated phase, use transport.
+8. Never output coordinates or robot commands. Use null for fields that do not apply.
+9. interpretation restates, in one sentence, what you understood."""
+
+
+def scene_inventory(scene: SceneState) -> dict[str, Any]:
+    return {
+        "objects": [{"id": o.id, "kind": o.kind, "beads_inside": o.beads} for o in scene.objects],
+        "trays": [t.id for t in scene.trays],
+        "obstacles": [{"id": ob.id, "kind": ob.kind, "slots": len(ob.slots)} for ob in scene.obstacles],
+    }
+
+
+def summary_payload(summary: DemoSummary) -> dict[str, Any]:
+    objs = []
+    for o in summary.objects:
+        objs.append({
+            "id": o.object_id, "kind": o.kind, "moved": o.moved,
+            "grasp_times_s": o.grasp_times, "release_times_s": o.release_times,
+            "start_tilt_deg": o.start_tilt_deg, "end_tilt_deg": o.end_tilt_deg,
+            "ended_in_tray": o.ended_in_tray,
+            "carry_duration_s": o.carry_duration_s,
+            "carry_max_tilt_deg": o.carry_max_tilt_deg, "carry_mean_tilt_deg": o.carry_mean_tilt_deg,
+            "carry_path_length_m": o.carry_path_length_m, "carry_max_height_m": o.carry_max_height_m,
+            "min_obstacle_distance_m": o.min_obstacle_distance_m, "nearest_obstacle": o.nearest_obstacle,
+            "wall_crossings": o.wall_crossings,
+        })
+    return {"demo_id": summary.demo_id, "source": summary.source, "duration_s": summary.duration_s,
+            "pick_order": summary.order, "objects": objs,
+            "regularities": [{"id": r.id, "kind": r.kind, "object_kind": r.object_kind,
+                              "statement": r.statement} for r in summary.regularities],
+            "notes": summary.notes}
+
+
+def propose_messages(summary: DemoSummary, scene: SceneState) -> list[dict[str, str]]:
+    payload = {"scene": scene_inventory(scene), "demonstration": summary_payload(summary)}
+    return [{"role": "system", "content": PROPOSE_SYSTEM},
+            {"role": "user", "content": "Propose the task specification for this demonstration.\n"
+                                        + json.dumps(payload, indent=1, sort_keys=True)}]
+
+
+def spec_view(spec: TaskSpec) -> dict[str, Any]:
+    return {
+        "version": spec.version,
+        "objects": [{"kind": b.kind, "role": b.role, "part_of_task": b.required} for b in spec.bindings],
+        "goals": [{"id": g.id, "object_kind": g.object.kind, "status": g.status.value} for g in spec.goals],
+        "rules": [{"id": c.id, "type": c.type, "object_kind": c.applies_to.kind, "phase": c.phase,
+                   "params": c.params, "status": c.status.value, "description": c.description}
+                  for c in spec.constraints],
+        "ordering": [{"id": o.id, "before_kind": o.before.kind, "after_kind": o.after.kind,
+                      "status": o.status.value} for o in spec.ordering],
+        "open_questions": [{"id": u.id, "question": u.question, "about": u.related_constraint}
+                           for u in spec.uncertainties if u.status == "open"],
+    }
+
+
+def correct_messages(spec: TaskSpec, text: str, scene_kinds: Optional[list[str]],
+                     context: Optional[dict[str, Any]]) -> list[dict[str, str]]:
+    payload: dict[str, Any] = {"specification": spec_view(spec)}
+    if scene_kinds is not None:
+        payload["objects_in_scene"] = sorted(scene_kinds)
+    if context:
+        payload["context"] = context
+    payload["correction"] = text
+    return [{"role": "system", "content": CORRECT_SYSTEM},
+            {"role": "user", "content": json.dumps(payload, indent=1, sort_keys=True)}]

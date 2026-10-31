@@ -24,7 +24,7 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-CONTRACT_VERSION = "1.0"
+CONTRACT_VERSION = "1.1"
 
 Vec3 = tuple[float, float, float]
 Quat = tuple[float, float, float, float]  # (w, x, y, z)
@@ -290,7 +290,13 @@ class TaskSpec(_Model):
     interpreter: Optional[str] = None  # model id or "offline-rules"
 
     def enforced_constraints(self) -> list[Constraint]:
+        """Constraints restrict planning and checking only once a human confirms them."""
         return [c for c in self.constraints if c.status == Status.confirmed]
+
+    def active_goals(self) -> list[Goal]:
+        """Goals are pursued unless a human rejected them. Inferred goals stay
+        ``proposed`` until reviewed, and a fresh proposal must still be plannable."""
+        return [g for g in self.goals if g.status != Status.rejected]
 
 
 CorrectionRecord.model_rebuild()
@@ -398,6 +404,10 @@ class RolloutReport(_Model):
     route_labels: list[str] = Field(default_factory=list)
     outcomes: list[ObjectOutcome] = Field(default_factory=list)
     violations: list[ViolationInterval] = Field(default_factory=list)
+    # Violations of rules that the evaluated specification does NOT enforce,
+    # e.g. a newer version's constraints when re-checking an old rollout.
+    # They never affect ``status``.
+    advisory_violations: list[ViolationInterval] = Field(default_factory=list)
     forbidden_contacts: list[dict[str, Any]] = Field(default_factory=list)
     completion: bool = False
     planning_time_s: float = 0.0

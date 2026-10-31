@@ -123,3 +123,61 @@ precomputed sessions.
 `Session` composes the packages for the studio and the CLI: load or record a
 demo, interpret, confirm, plan, execute, change the scene, correct,
 re-plan, and run the paired evaluation.
+
+## Conventions fixed during integration
+
+**Status semantics.** Everything the interpreter infers starts as `proposed`;
+only a human statement (review, correction, clarification answer) makes it
+`confirmed` or `rejected`. Constraints are enforced only when `confirmed`
+(`TaskSpec.enforced_constraints()`). Goals are pursued unless `rejected`
+(`TaskSpec.active_goals()`), so a fresh proposal is plannable.
+
+**Identifiers** are assigned by code, never by the model: goals
+`g_inside_<kind>`, constraints `c_<type>_<phase>_<kind|all>` (for example
+`c_upright_transport_cup`), ordering `o_<a>_before_<b>`, questions
+`u_<related id>`.
+
+**Types defined outside contracts.py.** `SceneIndex`, `ExecutionResult`
+(`mirror.sim`); `DemoSummary`, `Clarification` (`mirror.interpret.types`);
+`EvalReport`, `FreezeManifest`, `PairedTrial`, `TrialRecord`
+(`mirror.evaluate.models`); `Grounding`, `PlannerConfig` (`mirror.plan`).
+
+**Asking instead of guessing.** `compile_correction` and `apply_answer` raise
+`NeedsClarification` (unclear referent, object not in the scene,
+contradiction, unclear answer) or `CorrectionRejected` (unsupported or
+redundant request). The specification is unchanged in both cases. Pass
+`context={"scene": scene, "focus_kind": kind}`.
+
+**Robot wrist.** R = Rz(yaw) · Rx(roll) · Ry(pitch); pitch is about the jaw's
+closing axis (gripper local y). Limits: yaw ±270°, roll ±80°, pitch ±135°.
+Pitch +90° lays a top-grasped cup on its side with its opening toward +x.
+
+**Executor.** Trapezoidal velocity per waypoint segment (linear cap
+min(step.max_speed, 0.40 m/s), 1.0 m/s²; angular 1.2 rad/s, 4 rad/s²), stopping
+at every waypoint. A grasp step closes the jaw (0.10 m/s, 12 N per finger)
+until it stops and then requires the named object to touch both fingers. A
+release step opens to `gripper_width` (default fully open). Physics timestep
+0.004 s.
+
+**Phase labels** in `StateLog.phase` and `RolloutFrame.phase`:
+`<kind>:<object_id>`, then `settle` after the last step (until every object is
+below 0.01 m/s for 0.3 s, at most 3 s). An object is `held` only while it
+touches both finger geoms.
+
+**Execution failures.** `execution_failed` for a failed grasp, a drop (no
+two-finger hold for 0.15 s between grasp and release), sustained tracking
+error (> 20 mm or 0.25 rad for 0.3 s; the reason names the obstacle in
+contact) or an unreachable orientation; `timeout` past `max_sim_time`.
+
+**Contacts.** One record per (step, object, other) with the maximum depth.
+`object_id` is a movable object id or `gripper`; `other` is an object id,
+`table`, `tray:<id>`, `obstacle:<id>` or `gripper`. Object-object contacts are
+recorded in both directions; bead contacts are not recorded.
+
+**Scenes.** Ids `ref_demo`, `ref_shortcut`, `ref_blocked`, `<split>_<seed>`.
+`sample_layout` accepts `dev`, `eval` and `blocked`; dev seeds are below
+`EVAL_SEED_BASE` and eval seeds at or above it (enforced). `validate_layout`
+and `route_exists` are exported.
+
+**Route labels** are carried in transport step notes as `route=<label>; ...`,
+for example `route=through_slot:wall_0:0:pitched+90` or `route=around:wall_0:+y`.
