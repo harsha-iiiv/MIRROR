@@ -1,0 +1,127 @@
+{
+ "key": "873b34abb5f92755dabfee0efba0ae8bb27b18d264cad551de1f92a59fa612e4",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "You are an object grounding expert. You are given 7 images. For each image, provide the bounding box of the named object in that image: image 0: \"the white cup\"; image 1: \"the blue cube\"; image 2: \"the red cylinder\"; image 3: \"the dark grey tray\"; image 4: \"the wall\"; image 5: \"the robot gripper\"; image 6: \"the wooden table\". Coordinates are in the 0-1000 range of that image, (0,0) top-left. Set found=false if the object is not visible in that image."
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:f83abbfeec6c3bc7277413e8feaa39011d43b849f9983d101e6596d22783d55b"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:48e890e132f4856b1164b89fe5b0d7130710a5451e9a5458177ee3ea4672f248"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:d0496030cf6d690ef41b6076b3b8f1f0667ea9cb5be179c976ca693683cd7c23"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:aede44c51a177c7dc5734bd4de14de59ad7ee70a783ce0e5695a55b3d7ff09d8"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:a03e1da1999c6f0b1b558628922111e56babc228219e125d20d833965a126c3d"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:ab8f2a62ab16972fd554f941b21b61cfe524ffa22e64b230175be7ee2326e72a"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:c77add335f6bfaf64a0b09553fe2fa73899cd76697159ce8baf2695e7b689d68"
+     }
+    ]
+   }
+  ],
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "boxes",
+    "schema": {
+     "type": "object",
+     "properties": {
+      "boxes": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "image_index": {
+          "type": "integer"
+         },
+         "found": {
+          "type": "boolean"
+         },
+         "bbox": {
+          "type": "object",
+          "properties": {
+           "x_min": {
+            "type": "integer"
+           },
+           "y_min": {
+            "type": "integer"
+           },
+           "x_max": {
+            "type": "integer"
+           },
+           "y_max": {
+            "type": "integer"
+           }
+          },
+          "required": [
+           "x_min",
+           "y_min",
+           "x_max",
+           "y_max"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "image_index",
+         "found",
+         "bbox"
+        ],
+        "additionalProperties": false
+       }
+      }
+     },
+     "required": [
+      "boxes"
+     ],
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"boxes\": [{\"bbox\": {\"x_max\": 668, \"x_min\": 340, \"y_max\": 582, \"y_min\": 323}, \"found\": true, \"image_index\": 0}, {\"bbox\": {\"x_max\": 635, \"x_min\": 366, \"y_max\": 553, \"y_min\": 314}, \"found\": true, \"image_index\": 1}, {\"bbox\": {\"x_max\": 606, \"x_min\": 394, \"y_max\": 516, \"y_min\": 247}, \"found\": true, \"image_index\": 2}, {\"bbox\": {\"x_max\": 840, \"x_min\": 159, \"y_max\": 690, \"y_min\": 129}, \"found\": true, \"image_index\": 3}, {\"bbox\": {\"x_max\": 372, \"x_min\": 295, \"y_max\": 985, \"y_min\": 0}, \"found\": true, \"image_index\": 4}, {\"bbox\": {\"x_max\": 575, \"x_min\": 315, \"y_max\": 725, \"y_min\": 397}, \"found\": true, \"image_index\": 5}, {\"bbox\": {\"x_max\": 900, \"x_min\": 229, \"y_max\": 977, \"y_min\": 91}, \"found\": true, \"image_index\": 6}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 2285,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 2727,
+   "output_tokens_details": {
+    "reasoning_tokens": 2414
+   },
+   "total_tokens": 5012
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 12.657,
+ "recorded_at": "2026-10-31T22:23:42Z"
+}

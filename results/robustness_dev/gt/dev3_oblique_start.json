@@ -1,0 +1,21 @@
+{
+ "camera": "oblique",
+ "execution_status": "completed",
+ "frame_id": "dev3_oblique_start",
+ "height": 576,
+ "moment": "start",
+ "phase": "move:cup_0",
+ "pixels": {
+  "block": 608,
+  "cup": 5847,
+  "gripper": 6997,
+  "marker": 1291
+ },
+ "png_sha256": "cdefef694eb997bb271d34d8d6df488203e96242ad00a4b11881618e8b753406",
+ "renderer": "mujoco offscreen (opaque walls, shadows)",
+ "scene_id": "dev_3",
+ "seed": 3,
+ "split": "dev",
+ "t": 0.0040000000000000036,
+ "width": 1024
+}

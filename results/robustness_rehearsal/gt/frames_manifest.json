@@ -1,0 +1,113 @@
+{
+ "all_visible": true,
+ "camera_presets": {
+  "oblique": {
+   "azimuth": -90.0,
+   "distance": 0.98,
+   "elevation": -52.0,
+   "lookat": [
+    0.0,
+    0.0,
+    0.03
+   ]
+  },
+  "top": {
+   "azimuth": 90.0,
+   "distance": 1.02,
+   "elevation": -89.0,
+   "lookat": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "cameras": [
+  "top",
+  "oblique"
+ ],
+ "code": "mirror.robustness.frames.frames_for_seeds",
+ "failures": [],
+ "family": "mixed",
+ "frames": [
+  {
+   "all_visible": true,
+   "camera": "top",
+   "frame_id": "dev3_top_carry",
+   "masks": "dev3_top_carry_masks.npz",
+   "masks_sha256": "8b32058f9076a53e49468be3b9d3fb1d1b9a85e9e34ba5f45f3cac3f8c572566",
+   "moment": "carry",
+   "png": "dev3_top_carry.png",
+   "png_sha256": "8e31fb2977b5f8da9ac82f4ba53da8053089d98c237e6a56f4f07beec46cd34f",
+   "scene_id": "dev_3",
+   "seed": 3,
+   "visible_pixels": {
+    "block": 1161,
+    "cup": 1008,
+    "marker": 641
+   }
+  },
+  {
+   "all_visible": true,
+   "camera": "oblique",
+   "frame_id": "dev3_oblique_carry",
+   "masks": "dev3_oblique_carry_masks.npz",
+   "masks_sha256": "88c163f76e88f3ebc4e5f78c4981060ac40371accd347a3d8edb2c72b6c1edad",
+   "moment": "carry",
+   "png": "dev3_oblique_carry.png",
+   "png_sha256": "aa4b4d33bcee7ca1027331f205668c6f87893fa2be01bb828a0b531af1fc1bbd",
+   "scene_id": "dev_3",
+   "seed": 3,
+   "visible_pixels": {
+    "block": 836,
+    "cup": 2896,
+    "marker": 1290
+   }
+  },
+  {
+   "all_visible": true,
+   "camera": "top",
+   "frame_id": "dev8_top_carry",
+   "masks": "dev8_top_carry_masks.npz",
+   "masks_sha256": "225ff0dea1a7eaf1fab6711ab364a1dbb69d0e31fd9ad6db0addd560f5084d0a",
+   "moment": "carry",
+   "png": "dev8_top_carry.png",
+   "png_sha256": "37fcb53955fd29d20b5c79a61498fc885123c52da85c1b111d9f8b5ff2c4125d",
+   "scene_id": "dev_8",
+   "seed": 8,
+   "visible_pixels": {
+    "block": 1182,
+    "cup": 582,
+    "marker": 828
+   }
+  },
+  {
+   "all_visible": true,
+   "camera": "oblique",
+   "frame_id": "dev8_oblique_carry",
+   "masks": "dev8_oblique_carry_masks.npz",
+   "masks_sha256": "df2eaecebe6953d8d1b3bb48d99f8ca46b3aae29a17d375635d7c4c3219dc322",
+   "moment": "carry",
+   "png": "dev8_oblique_carry.png",
+   "png_sha256": "0167ecd04d2a97e1ef619eb3bfcc05ed4035f391327318cd586f187638051ffb",
+   "scene_id": "dev_8",
+   "seed": 8,
+   "visible_pixels": {
+    "block": 1720,
+    "cup": 2977,
+    "marker": 1130
+   }
+  }
+ ],
+ "height": 576,
+ "min_visible_pixels": 120,
+ "moment": "carry",
+ "mujoco_version": "3.17.0",
+ "numpy_version": "2.4.6",
+ "seeds": [
+  3,
+  8
+ ],
+ "split": "dev",
+ "width": 1024
+}

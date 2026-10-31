@@ -1,0 +1,50 @@
+{
+ "all_visible": true,
+ "camera_presets": {
+  "oblique": {
+   "azimuth": -90.0,
+   "distance": 0.98,
+   "elevation": -52.0,
+   "lookat": [
+    0.0,
+    0.0,
+    0.03
+   ]
+  }
+ },
+ "cameras": [
+  "oblique"
+ ],
+ "code": "mirror.robustness.frames.frames_for_seeds",
+ "failures": [],
+ "family": "mixed",
+ "frames": [
+  {
+   "all_visible": true,
+   "camera": "oblique",
+   "frame_id": "eval80007_oblique_carry",
+   "masks": "eval80007_oblique_carry_masks.npz",
+   "masks_sha256": "a1ca8915a34d4470cafdd54c59303dcb26ee0c447ad03897c9759ff0c8b19164",
+   "moment": "carry",
+   "png": "eval80007_oblique_carry.png",
+   "png_sha256": "209a291f89bf06750bb43aff78fdbc36dbb37274aef70d8a5704e56b9a1a2d5e",
+   "scene_id": "eval_80007",
+   "seed": 80007,
+   "visible_pixels": {
+    "block": 1447,
+    "cup": 6368,
+    "marker": 1096
+   }
+  }
+ ],
+ "height": 576,
+ "min_visible_pixels": 120,
+ "moment": "carry",
+ "mujoco_version": "3.17.0",
+ "numpy_version": "2.4.6",
+ "seeds": [
+  80007
+ ],
+ "split": "eval",
+ "width": 1024
+}

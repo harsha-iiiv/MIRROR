@@ -1,0 +1,49 @@
+{
+ "key": "cb7d683ca52ac5db26d19ccf5a69050b69127020f5e72117b3a1c7a4f5e1ac8e",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "<0f>1<|box;x1=534;y1=134;x2=680;y2=242;w=960;h=540|>,2<|box;x1=463;y1=135;x2=496;y2=539;w=960;h=540|>,3<|box;x1=165;y1=21;x2=779;y2=531;w=960;h=540|>"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:141d7eb8d0eabc24c02192406e76d666cd6fd962fa7f21b3bc499bffb51038c4"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "<0f>1<|box;x1=540;y1=128;x2=674;y2=229;w=960;h=540;c=0.98046875|><|mask;x=0;y=0;c=0.98046875;data=102,135,!!!!!SJAGE(/j)=!q&L$?:FISgGy)s:Got25RmdQFtaR&yntFbKsdevh]gC7x!!|>,2<|box;x1=471;y1=130;x2=488;y2=539;w=960;h=540;c=0.94140625|><|mask;x=0;y=0;c=0.94140625;data=410,18,!!!!!vL@%6kD9{sL@oUk2iJI+Eg@afQ(Jm_88G&B6*iEU6MF.&sU8Y3L.UASw[G)VGOFrjoA`%d#[xu]3Uqc6AP&5G7.YdbQwelc^H0Gr|>,3<|box;x1=170;y1=27;x2=788;y2=526;w=960;h=540;c=0.9765625|><|mask;x=0;y=0;c=0.9765625;data=500,619,!!!!(fDb=vaqO%7I#c]xH-hBSV%D1ct6v_VD2_n_/A(({(vYl[y3mCmZP[TAjRmT2A%W]Ke9Zz36AXsNDR.s1^y6$P415g#oxNU!05D0psH/XFE.hEGP38dGe*9*Q:lr=)?n4!!KQR@feF_YwGjtIC`:.xkKSiTVl+!boP$:wv?#)FEcH{:`=#@&8?fWVaooTx@_3{m50&2$/kIKb$Dl$7zH+uIm_Or/ux_C)d8fa)C:F'#VKE_@6A*6KH%`xN')9BmU22gqx9O=7oL4{A/n?^rHlf@PFHOv_hE!USgJ@a!MJKB^cGbgw%8k#+[8pWSDb+w$%AQc:pyhX_19%u]4@12DNf3SEonCe?CVN=dc'-sLP'w$z+&c11g&ougEka7MWY4K9DtrFRmJTj1QClj.-S8PbQs?n1i#/=1?X:M7vI&:A8^Vm0i2g%N$-ZU0cYWg9KMfbVysT`f&7//{*73KL:0lLV`_At'5tx7=OWwtCCEKWHyxoX)!_Eh.bWBuB%-FnF[OeQUE@BbC=X%j_bwI]hVjQH00:OFI{LBnTTwPS$-KIwF/a't?8OP_W)sUb2M97I:P0mZ?^GdP^h99SGsV^q9MYDeDxOSuuBAh@K?=7`9B7Mx4EY:^uPVDsE#4I^Uoa%V#@FR'PWPGM0CeN5m9yD7+`AP7iHljWbV*chi(ZQ*5-A[w[7g)LSsh`r(heqpeb_q!vEP8Un$tQo%?3!!|>\n",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 4.621,
+ "recorded_at": "2026-10-31T22:13:16Z"
+}

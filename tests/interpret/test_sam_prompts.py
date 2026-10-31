@@ -34,3 +34,23 @@ def test_side_view_unique_but_wrong_is_possible():
     tray = next(c for c in ps.choices if c.kind == "tray")
     # the tray is hidden behind the wall in this view; the phrase uniquely matched the table
     assert tray.ok and tray.phrase == "tan board"
+
+
+def test_prompts_keeps_first_accepted_phrase_per_kind():
+    """Recorded case (robustness rehearsal, dev3_top_carry, top view while carrying the
+    cup): the model named three 'blocks'; 'blue cube' (the block) and 'black block'
+    (the gripper) each matched exactly one object. The first, in the model's order,
+    must win."""
+    ps = choose_prompts(FX / "dev3_top_carry.png", "muse-spark-1.3", _replay(), kinds=("cup", "block", "marker"))
+    accepted = [c.phrase for c in ps.choices if c.kind == "block" and c.ok]
+    assert accepted == ["blue cube", "black block"]
+    assert ps.prompts() == {"block": "blue cube"}
+
+
+def test_prompts_prefers_first_attempt_over_retry():
+    from mirror.interpret.sam_prompts import PromptChoice, PromptSet
+    ps = PromptSet(model="m", frame_sha256="x", attempts=2, choices=[
+        PromptChoice(kind="cup", phrase="white box", sam_count=1, ok=True, attempt=2),
+        PromptChoice(kind="cup", phrase="open box", sam_count=1, ok=True, attempt=1),
+        PromptChoice(kind="block", phrase="cube", sam_count=2, ok=False, attempt=1)])
+    assert ps.prompts() == {"cup": "open box"}

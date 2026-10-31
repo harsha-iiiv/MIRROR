@@ -1,0 +1,199 @@
+{
+ "title": "Perception robustness: muse-image-1.0 counterfactual edits (plus local sensor edits), sam-3.1 under two prompt conditions, simulator ground-truth masks",
+ "frames": {
+  "seeds": [
+   80000,
+   80001,
+   80002,
+   80003,
+   80004,
+   80005,
+   80006,
+   80007
+  ],
+  "split": "eval",
+  "count": 8,
+  "per_seed": 1,
+  "moment": "carry",
+  "cameras": "top for even positions in the seed list, oblique for odd; a seed whose top frame leaves the cup, block or marker under frames_for_seeds' visibility minimum (ground truth only) uses its oblique frame instead; every fallback is listed in inputs.json",
+  "made_by": "mirror.robustness.frames.frames_for_seeds (executed reference task on sample_layout(seed, 'eval'), segmentation render for masks), run at the inputs stage"
+ },
+ "instructions": {
+  "instructions": [
+   {
+    "id": "light_dim",
+    "family": "lighting",
+    "kind": "model",
+    "text": "Make the scene dimly lit, as if the room lights were turned down to about a third.",
+    "params": {}
+   },
+   {
+    "id": "light_warm",
+    "family": "lighting",
+    "kind": "model",
+    "text": "Change the lighting to warm, orange-tinted evening light from a tungsten lamp.",
+    "params": {}
+   },
+   {
+    "id": "light_harsh",
+    "family": "lighting",
+    "kind": "model",
+    "text": "Light the scene with one hard spotlight from the upper left so that objects cast sharp, dark shadows.",
+    "params": {}
+   },
+   {
+    "id": "bg_wood",
+    "family": "background",
+    "kind": "model",
+    "text": "Replace the table surface and the background with a dark walnut wood tabletop with visible grain.",
+    "params": {}
+   },
+   {
+    "id": "bg_lab_bench",
+    "family": "background",
+    "kind": "model",
+    "text": "Make the surroundings look like a cluttered laboratory bench, with tools, cables and papers in the background, but leave the area around the objects clear.",
+    "params": {}
+   },
+   {
+    "id": "distractor_mug",
+    "family": "distractor",
+    "kind": "model",
+    "text": "Add a second, unrelated coffee mug standing on the table in the far corner of the image, away from all other objects.",
+    "params": {}
+   },
+   {
+    "id": "distractor_paper",
+    "family": "distractor",
+    "kind": "model",
+    "text": "Add a few loose sheets of white paper lying flat on the table in empty areas, not touching or covering any object.",
+    "params": {}
+   },
+   {
+    "id": "material_glossy_cup",
+    "family": "material",
+    "kind": "model",
+    "text": "Make the white cup look glossy, like glazed ceramic with bright specular highlights.",
+    "params": {}
+   },
+   {
+    "id": "noise_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "text": "Additive Gaussian pixel noise (sigma 12 on a 0-255 scale), fixed seed.",
+    "params": {
+     "op": "gaussian_noise",
+     "sigma": 12.0,
+     "seed": 1
+    }
+   },
+   {
+    "id": "blur_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "text": "Gaussian defocus blur (sigma 2.0 px).",
+    "params": {
+     "op": "gaussian_blur",
+     "sigma": 2.0
+    }
+   },
+   {
+    "id": "blur_motion",
+    "family": "sensor",
+    "kind": "local",
+    "text": "Horizontal motion blur over 9 px.",
+    "params": {
+     "op": "motion_blur",
+     "length": 9
+    }
+   }
+  ],
+  "keep_clause": "Keep every object exactly where it is, with the same size, shape and outline, and keep the camera viewpoint and framing unchanged.",
+  "sam_prompts": {
+   "cup": "white box",
+   "block": "blue block",
+   "marker": "orange marker"
+  }
+ },
+ "instructions_sha256": "fd517bf09b4879f3687f3fe050f6925b3b06f5c809b41951942af22ce71b42f1",
+ "scored_objects": [
+  "cup",
+  "block",
+  "marker"
+ ],
+ "prompt_conditions": {
+  "A_chooser": {
+   "procedure": "mirror.interpret.sam_prompts.choose_prompts(original frame, 'muse-spark-1.3', kinds=(cup, block, marker), retry=True, verify=False) once per original frame; its accepted phrases are reused for every edit of that frame; an object without an accepted phrase counts as not found"
+  },
+  "B_fixed": {
+   "prompts": {
+    "cup": "open box",
+    "block": "small cube",
+    "marker": "cylinder"
+   },
+   "note": "colour-free phrases from the plan track, chosen on development frames: 'cube' matched up to 5 objects in a top view, 'small cube' ranked the block first in both frames tried; for the cup, 'open box' and 'small box' both find it but can rank the tray or a box obstacle first (in a one-frame rehearsal 'open box' matched the tray); the tray has no ground-truth mask and is not scored"
+  }
+ },
+ "correction": {
+  "method": "mirror.robustness.geometry.check_geometry fits one whole-frame similarity (scale, shift) per model edit, the editor's drift, and undoes it before segmentation; uncorrected = the edit only resampled to the source size",
+  "primary": "corrected",
+  "uncorrected_for": [
+   "A"
+  ],
+  "also_reported": "uncorrected scores for condition A (both would pass the SAM cap), and every per-edit correction"
+ },
+ "measured_path": "mirror.robustness.evaluate_robustness (the plan track's function, the same path as its development rehearsal) with conditions A (chooser) and B (fixed), wrapped so that every model request is charged to the caps below; geometry verdicts (kept / weakened / moved / resized / missing / untested) as defined there",
+ "local_edits": "geometry kept by construction (the same pixels through a known kernel); no correction",
+ "edit_format": "webp",
+ "models": {
+  "edit": "muse-image-1.0",
+  "segmentation": "sam-3.1",
+  "phrases": "muse-spark-1.3"
+ },
+ "plan": [
+  "8 ground-truth frames (one per new seed) x 11 frozen instructions (8 by muse-image-1.0, 3 local and deterministic): 64 model edits.",
+  "sam-3.1 runs once per phrase on every original and edited frame, under both prompt conditions; its top match is scored against the true visible-pixel mask (the best of all matches is also recorded).",
+  "Geometry of each model edit is judged after the whole-frame correction: kept, changed (an object moved, resized or missing) or reframed (no correction brings it into register). Changed and reframed edits are reported in their own groups.",
+  "Every frame, instruction and request is reported, including failures."
+ ],
+ "metrics": [
+  "IoU of the sam-3.1 mask with the true mask; change from the unedited frame (same condition)",
+  "found rate (sam-3.1 returned a mask for the object)",
+  "centroid error in pixels at 1024x576",
+  "all of the above corrected (primary) and uncorrected, per group, condition and instruction"
+ ],
+ "thresholds": {
+  "delta_iou_median_min": -0.05,
+  "found_rate_min": 0.9,
+  "centroid_px_median_max": 4.0
+ },
+ "threshold_scope": "objects whose geometry was kept (evaluate_robustness' kept_* summary over all edits: model edits judged kept after correction, plus local edits), corrected scores, evaluated and reported for conditions A and B separately",
+ "hypotheses": [
+  "On edits that keep geometry, sam-3.1 segmentation is stable: median IoU change >= -0.05, found rate >= 0.9 and median centroid error <= 4 px (corrected), under each prompt condition."
+ ],
+ "dev_run_disclosure": "The thresholds were written in the first draft of this design (31 October 2026, before the plan track's development run) and are unchanged. That development run (3 development frames x 11 instructions, results/robustness_dev) and a one-frame rehearsal of this harness were seen before the design was finalised; the frames, prompt conditions and correction rule were chosen after seeing them, the thresholds were not.",
+ "budget_caps": {
+  "muse-image-1.0": 80,
+  "sam-3.1": 850,
+  "muse-spark-1.3:chooser": 40
+ },
+ "inputs_rule": "eval samples each seed's layout into this registration's ledger and calls frames_for_seeds; PNG frames and masks listed with sha256 in inputs.json; no model call",
+ "registration": "robustness",
+ "created_at": "2026-10-31T22:29:51.653559+00:00",
+ "created_unix": 1793485791.6535592,
+ "audit": {
+  "roots": [
+   "results",
+   "data",
+   "external:media",
+   "external:site_final",
+   "external:mirror-studio-rt",
+   "external:perception",
+   "external:probes",
+   "external:interpret"
+  ],
+  "text_files": 1832,
+  "hits": [],
+  "result": "no seed or input hash of this registration found"
+ }
+}

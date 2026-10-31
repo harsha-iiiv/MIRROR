@@ -1,0 +1,253 @@
+{
+ "registration": "robustness",
+ "design_sha256": "170ac8748af2c5ea847f83332f456907ae0361c642d273cd05c7ac53434fca2f",
+ "amendments": {},
+ "created_at": "2026-10-31T22:31:19.257862+00:00",
+ "created_unix": 1793485879.257862,
+ "files": [
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80000_top_carry.png",
+   "sha256": "740947220ff32b8b958ec4d116e2e793dc633dbae8f67d97f9fd20764a0e4518"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80001_oblique_carry.png",
+   "sha256": "1686cfbebff3a7471799186afdb707608a3f600f320c0ee4720a57bcc0daebcf"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80002_top_carry.png",
+   "sha256": "6da6e7c786fdb463ca698d0a027b38dddc4c73f748e5238a5aed469136bf3803"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80003_oblique_carry.png",
+   "sha256": "cbcf059a32248cca88109cc03fe864b08ed75fbd90ba4797f70a1e80fb6b48e3"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80004_top_carry.png",
+   "sha256": "20641c15a8d4405009e38b2ed4eabc9c7cdc55eb1658fdc78a8fc6bda0eb1002"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80005_oblique_carry.png",
+   "sha256": "c93b1a3657cd881e8b696a3babd2d5b1521c6d729248975f7a76c33e8839575a"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80006_top_carry.png",
+   "sha256": "4ee6c57ec0b513a107bd851a731f9eaf1ac6b7d36c387166886eeb79990fb9f4"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80007_oblique_carry.png",
+   "sha256": "209a291f89bf06750bb43aff78fdbc36dbb37274aef70d8a5704e56b9a1a2d5e"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80000_top_carry.json",
+   "sha256": "117ce44498a427d017b45076cc312484607e480219cb37c46430a0a9b6f7c2ef"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80000_top_carry_masks.npz",
+   "sha256": "99d5166699dec6aa0bf2c817a95bac4230fcde8c3c81ee132b0e5717426ff15d"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80001_oblique_carry.json",
+   "sha256": "abc6944d013e598f5a36b203416762397c00c3a5759a690d265484b8165492ac"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80001_oblique_carry_masks.npz",
+   "sha256": "838e9e21b7e718c166875906163d35709b3f2fe2c410772e98d1281f0e55d697"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80002_top_carry.json",
+   "sha256": "b0012e6a4caa8cc18689417a29024f3a3bdced560293a34cc820e27eb46c64bd"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80002_top_carry_masks.npz",
+   "sha256": "d2f56c09503919d6041ce970cb618d9743579d34e079ca590bb40ef37bf767c4"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80003_oblique_carry.json",
+   "sha256": "75e680834635362477db12c00d1f27f7132b9326787e5c7fb159160b629cf6e1"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80003_oblique_carry_masks.npz",
+   "sha256": "605fea46f73dbd4f17840a8b6ff074f933211a72ee39be6b4eb4e34c8e4d8b4a"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80004_top_carry.json",
+   "sha256": "c28369601dac2212ad5760cb095126349c7d53c49c8d94d3be9f93d1f6dfa779"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80004_top_carry_masks.npz",
+   "sha256": "dad8e6e23dfbbad0c226aa41ab68b78071c837fecf5239101c6097e71605b6fb"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80005_oblique_carry.json",
+   "sha256": "2c8d1cef5495c8559759f7e92992bcb1803beba7b343ccecee8a32a78cefd0bc"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80005_oblique_carry_masks.npz",
+   "sha256": "7b23f9e718a505d7403917380884500f43517991331bbf8a6626c15eae83397a"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80006_top_carry.json",
+   "sha256": "40d2eef77db893c573d34f8b1eac3c85eda1589768b23559b9fdb4903c8871c5"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80006_top_carry_masks.npz",
+   "sha256": "e8a60e98f943f06873dec1d27ba4a1510e6dd764842d4eb665d511fb476d2bce"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80007_oblique_carry.json",
+   "sha256": "2f2fd9a8e19445b94c761b95cfc2a9b3c1b834b0138c725500468ad14be66733"
+  },
+  {
+   "path": "results/eval_robustness/inputs/frames/eval80007_oblique_carry_masks.npz",
+   "sha256": "a1ca8915a34d4470cafdd54c59303dcb26ee0c447ad03897c9759ff0c8b19164"
+  },
+  {
+   "path": "results/eval_robustness/inputs/manifests/seed80000_top/frames_manifest.json",
+   "sha256": "b30a68005ed8ede8cf77b313e091962cb251a44cd44c038e99902057f1e996cb"
+  },
+  {
+   "path": "results/eval_robustness/inputs/manifests/seed80001_oblique/frames_manifest.json",
+   "sha256": "8f353a703d11a23d5a2ccfbc6652e46c6ca8df95e845011b9701ce2cebf70a07"
+  },
+  {
+   "path": "results/eval_robustness/inputs/manifests/seed80002_top/frames_manifest.json",
+   "sha256": "623c9f0ee080beda9027179015b775e651a67c63d08bddf34262089f464ce808"
+  },
+  {
+   "path": "results/eval_robustness/inputs/manifests/seed80003_oblique/frames_manifest.json",
+   "sha256": "713b48b4f31274de9e14ebf13f554d06d43dc11b96b5f8e58d184fcff106e97a"
+  },
+  {
+   "path": "results/eval_robustness/inputs/manifests/seed80004_top/frames_manifest.json",
+   "sha256": "3e592936b46003a9ed68df6ca7d059b2ebaedba1c55a815bf865bd0c93dbc3cf"
+  },
+  {
+   "path": "results/eval_robustness/inputs/manifests/seed80005_oblique/frames_manifest.json",
+   "sha256": "4480cad80f3edeecf3aa315f2a6b95649d0de2b39e2db9b01eec020ee8c904d6"
+  },
+  {
+   "path": "results/eval_robustness/inputs/manifests/seed80006_top/frames_manifest.json",
+   "sha256": "7324f4105b5c6e1b0fb23586120c33497f74590bef2435141f6c80f5460cbc72"
+  },
+  {
+   "path": "results/eval_robustness/inputs/manifests/seed80007_oblique/frames_manifest.json",
+   "sha256": "774832f939b406a65ef44b0f43a616991a25c92ad7bcb897e87e4785759ea5a8"
+  }
+ ],
+ "provenance": {
+  "frames": [
+   "eval80000_top_carry",
+   "eval80001_oblique_carry",
+   "eval80002_top_carry",
+   "eval80003_oblique_carry",
+   "eval80004_top_carry",
+   "eval80005_oblique_carry",
+   "eval80006_top_carry",
+   "eval80007_oblique_carry"
+  ],
+  "chosen": [
+   {
+    "seed": 80000,
+    "frame": "eval80000_top_carry",
+    "camera": "top",
+    "visible_pixels": {
+     "cup": 4238,
+     "block": 1144,
+     "marker": 675
+    }
+   },
+   {
+    "seed": 80001,
+    "frame": "eval80001_oblique_carry",
+    "camera": "oblique",
+    "visible_pixels": {
+     "cup": 3510,
+     "block": 1726,
+     "marker": 1503
+    }
+   },
+   {
+    "seed": 80002,
+    "frame": "eval80002_top_carry",
+    "camera": "top",
+    "visible_pixels": {
+     "cup": 432,
+     "block": 1106,
+     "marker": 945
+    }
+   },
+   {
+    "seed": 80003,
+    "frame": "eval80003_oblique_carry",
+    "camera": "oblique",
+    "visible_pixels": {
+     "cup": 1918,
+     "block": 2011,
+     "marker": 987
+    }
+   },
+   {
+    "seed": 80004,
+    "frame": "eval80004_top_carry",
+    "camera": "top",
+    "visible_pixels": {
+     "cup": 925,
+     "block": 1125,
+     "marker": 893
+    }
+   },
+   {
+    "seed": 80005,
+    "frame": "eval80005_oblique_carry",
+    "camera": "oblique",
+    "visible_pixels": {
+     "cup": 5143,
+     "block": 1017,
+     "marker": 1107
+    }
+   },
+   {
+    "seed": 80006,
+    "frame": "eval80006_top_carry",
+    "camera": "top",
+    "visible_pixels": {
+     "cup": 4793,
+     "block": 790,
+     "marker": 742
+    }
+   },
+   {
+    "seed": 80007,
+    "frame": "eval80007_oblique_carry",
+    "camera": "oblique",
+    "visible_pixels": {
+     "cup": 6368,
+     "block": 1447,
+     "marker": 1096
+    }
+   }
+  ],
+  "top_fallbacks": [],
+  "renderer": "mirror.robustness.frames.frames_for_seeds (mujoco offscreen, opaque walls)"
+ },
+ "ledger_after_inputs": {
+  "lines": 8,
+  "bytes": 943,
+  "sha256": "faba9c47b0e47d7f44338299c54fa179796639bdeec623556c98a80d863c6d30"
+ },
+ "audit": {
+  "roots": [
+   "results",
+   "data",
+   "external:media",
+   "external:site_final",
+   "external:mirror-studio-rt",
+   "external:perception",
+   "external:probes",
+   "external:interpret"
+  ],
+  "text_files": 2272,
+  "hits": [],
+  "result": "no seed or input hash of this registration found"
+ }
+}

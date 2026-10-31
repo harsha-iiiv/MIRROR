@@ -79,9 +79,9 @@ def design_voice() -> dict:
 
 
 VIDEO_SEEDS = list(range(70_000, 70_020))
-ROBUST_SEEDS = [8600, 8601, 8602]          # development layouts (perception study, no transfer claim)
-ROBUST_CAMERAS = ("top", "oblique")
-ROBUST_MOMENTS = ("carry",)
+ROBUST_SEEDS = list(range(80000, 80008))    # new seeds, one carry frame each
+SCORED_OBJECTS = ("cup", "block", "marker")
+ROBUST_FIXED_PROMPTS = {"cup": "open box", "block": "small cube", "marker": "cylinder"}
 
 
 def design_video() -> dict:
@@ -129,68 +129,157 @@ def design_robustness() -> dict:
     from mirror.robustness import instructions as ins
     payload = ins.frozen_payload()
     n_model = sum(1 for i in ins.INSTRUCTIONS if i.kind == "model")
-    n_frames = len(ROBUST_SEEDS) * len(ROBUST_CAMERAS) * len(ROBUST_MOMENTS)
-    n_prompts = len(payload["sam_prompts"])
+    n_ins = len(payload["instructions"])
+    k = len(ROBUST_SEEDS)
     return dict(
-        title="Perception robustness: muse-image-1.0 counterfactual edits (plus local sensor edits), sam-3.1 "
-              "re-run, simulator ground-truth masks",
-        frames=dict(seeds=ROBUST_SEEDS, split="dev", cameras=list(ROBUST_CAMERAS), moments=list(ROBUST_MOMENTS),
-                    count=n_frames, made_by="mirror.robustness.frames.dev_frames (executed reference task, "
-                                            "segmentation render for masks)"),
+        title="Perception robustness: muse-image-1.0 counterfactual edits (plus local sensor edits), sam-3.1 under "
+              "two prompt conditions, simulator ground-truth masks",
+        frames=dict(seeds=ROBUST_SEEDS, split="eval", count=k, per_seed=1, moment="carry",
+                    cameras="top for even positions in the seed list, oblique for odd; a seed whose top frame leaves "
+                            "the cup, block or marker under frames_for_seeds' visibility minimum (ground truth only) "
+                            "uses its oblique frame instead; every fallback is listed in inputs.json",
+                    made_by="mirror.robustness.frames.frames_for_seeds (executed reference task on "
+                            "sample_layout(seed, 'eval'), segmentation render for masks), run at the inputs stage"),
         instructions=payload, instructions_sha256=ins.instructions_sha256(),
-        models=dict(edit="muse-image-1.0", segmentation="sam-3.1"),
-        plan=[f"{n_frames} ground-truth frames x {len(payload['instructions'])} frozen instructions ({n_model} by "
-              f"muse-image-1.0, {len(payload['instructions']) - n_model} local and deterministic).",
-              "sam-3.1 runs once per prompt on every original and every edited frame (one noun phrase per call); "
-              "the highest-confidence object per prompt is scored.",
-              "check_geometry (frozen in mirror.robustness.geometry) labels each edit preserved, changed or "
-              "reframed; changed and reframed edits are reported in their own groups, never dropped.",
-              "Per object: IoU with the ground-truth mask, centroid error (px), found or not. Main measure: "
-              "IoU change from the original frame to the edited one, over edits that preserve geometry.",
-              "Every frame x instruction pair is reported, including failures."],
-        metrics=["median IoU change (edited minus original), preserved-geometry edits",
-                 "found rate on edited frames", "median centroid error (px, at 1024 x 576)",
-                 "per instruction and per family: geometry verdicts and median IoU change"],
+        scored_objects=list(SCORED_OBJECTS),
+        prompt_conditions=dict(
+            A_chooser=dict(procedure="mirror.interpret.sam_prompts.choose_prompts(original frame, 'muse-spark-1.3', "
+                                     "kinds=(cup, block, marker), retry=True, verify=False) once per original frame; "
+                                     "its accepted phrases are reused for every edit of that frame; an object "
+                                     "without an accepted phrase counts as not found"),
+            B_fixed=dict(prompts=dict(ROBUST_FIXED_PROMPTS),
+                         note="colour-free phrases from the plan track, chosen on development frames: 'cube' matched up "
+                              "to 5 objects in a top view, 'small cube' ranked the block first in both frames tried; "
+                              "for the cup, 'open box' and 'small box' both find it but can rank the tray or a box "
+                              "obstacle first (in a one-frame rehearsal 'open box' matched the tray); the tray has no "
+                              "ground-truth mask and is not scored")),
+        correction=dict(method="mirror.robustness.geometry.check_geometry fits one whole-frame similarity (scale, "
+                               "shift) per model edit, the editor's drift, and undoes it before segmentation; "
+                               "uncorrected = the edit only resampled to the source size",
+                        primary="corrected", uncorrected_for=["A"],
+                        also_reported="uncorrected scores for condition A (both would pass the SAM cap), and every "
+                                      "per-edit correction"),
+        measured_path="mirror.robustness.evaluate_robustness (the plan track's function, the same path as its "
+                      "development rehearsal) with conditions A (chooser) and B (fixed), wrapped so that every model "
+                      "request is charged to the caps below; geometry verdicts (kept / weakened / moved / resized / "
+                      "missing / untested) as defined there",
+        local_edits="geometry kept by construction (the same pixels through a known kernel); no correction",
+        edit_format="webp",
+        models=dict(edit="muse-image-1.0", segmentation="sam-3.1", phrases="muse-spark-1.3"),
+        plan=[f"{k} ground-truth frames (one per new seed) x {n_ins} frozen instructions ({n_model} by muse-image-1.0, "
+              f"{n_ins - n_model} local and deterministic): {k * n_model} model edits.",
+              "sam-3.1 runs once per phrase on every original and edited frame, under both prompt conditions; its top "
+              "match is scored against the true visible-pixel mask (the best of all matches is also recorded).",
+              "Geometry of each model edit is judged after the whole-frame correction: kept, changed (an object moved, "
+              "resized or missing) or reframed (no correction brings it into register). Changed and reframed edits "
+              "are reported in their own groups.",
+              "Every frame, instruction and request is reported, including failures."],
+        metrics=["IoU of the sam-3.1 mask with the true mask; change from the unedited frame (same condition)",
+                 "found rate (sam-3.1 returned a mask for the object)", "centroid error in pixels at 1024x576",
+                 "all of the above corrected (primary) and uncorrected, per group, condition and instruction"],
         thresholds=dict(delta_iou_median_min=-0.05, found_rate_min=0.9, centroid_px_median_max=4.0),
-        hypotheses=["On edits that keep geometry, segmentation degrades little: median IoU change >= -0.05, "
-                    "found rate >= 0.9, median centroid error <= 4 px."],
-        budget_caps={"muse-image-1.0": n_frames * n_model,
-                     "sam-3.1": n_frames * (1 + len(payload["instructions"])) * n_prompts},
-        list_source="instruction list and SAM prompts from the plan track (mirror/robustness/instructions.py, "
-                    "sha256 above); frame selection proposed by eval",
-        inputs_rule="the ground-truth frames (PNG, masks .npz, metadata JSON) rendered before the freeze and "
-                    "listed with sha256 in inputs.json; no model call",
+        threshold_scope="objects whose geometry was kept (evaluate_robustness' kept_* summary over all edits: model "
+                        "edits judged kept after correction, plus local edits), corrected scores, evaluated and "
+                        "reported for conditions A and B separately",
+        hypotheses=["On edits that keep geometry, sam-3.1 segmentation is stable: median IoU change >= -0.05, found "
+                    "rate >= 0.9 and median centroid error <= 4 px (corrected), under each prompt condition."],
+        dev_run_disclosure=("The thresholds were written in the first draft of this design (31 October 2026, before the "
+                            "plan track's development run) and are unchanged. That development run (3 development "
+                            "frames x 11 instructions, results/robustness_dev) and a one-frame rehearsal of this harness "
+                            "were seen before the design was finalised; the frames, prompt conditions and correction "
+                            "rule were chosen after seeing them, the thresholds were not."),
+        budget_caps={"muse-image-1.0": 80, "sam-3.1": 850, "muse-spark-1.3:chooser": 40},
+        inputs_rule="eval samples each seed's layout into this registration's ledger and calls frames_for_seeds; "
+                    "PNG frames and masks listed with sha256 in inputs.json; no model call",
     )
 
 
+def robust_camera(index: int) -> str:
+    return ("top", "oblique")[index % 2]
+
+
 def inputs_robustness() -> tuple[list[dict], dict]:
-    from mirror.robustness.frames import dev_frames
+    """One carry frame per new seed from the plan track's frames_for_seeds,
+    with this registration's ledger active (every eval layout it samples is
+    ledgered). Camera: top for even positions, oblique for odd; when the top
+    frame leaves the cup, block or marker under the visibility minimum (ground
+    truth only, no model), that seed uses the oblique frame instead. Every file
+    is frozen by sha256."""
+    import json as _json
+    import shutil
+    from mirror.robustness.frames import FramesNotVisible, frames_for_seeds
+    os.environ["MIRROR_EVAL_LEDGER"] = str(paths("robustness")["ledger"])
     out = paths("robustness")["out"] / "inputs" / "frames"
-    frames = dev_frames(ROBUST_SEEDS, cameras=ROBUST_CAMERAS, moments=ROBUST_MOMENTS, out_dir=out)
-    files = []
-    for g in frames:
-        for suffix in (".png", "_masks.npz", ".json"):
-            fp = out / f"{g.frame_id}{suffix}"
-            files.append(dict(frame=g.frame_id, path=fp.resolve().relative_to(REPO_ROOT).as_posix(),
-                              sha256=sha256_file(fp)))
-    return files, dict(frames=[g.frame_id for g in frames], renderer="mujoco offscreen, opaque walls")
+    stage = paths("robustness")["out"] / "inputs" / "manifests"
+    out.mkdir(parents=True, exist_ok=True)
+    stage.mkdir(parents=True, exist_ok=True)
+    chosen, fallbacks = [], []
+    for i, seed in enumerate(ROBUST_SEEDS):
+        cam = robust_camera(i)
+        tmp = stage / f"seed{seed}_{cam}"
+        try:
+            man = frames_for_seeds([seed], tmp, cameras=(cam,))
+        except FramesNotVisible as exc:
+            if cam != "top":
+                raise
+            fallbacks.append(dict(seed=seed, from_camera="top", reason=str(exc)[:300]))
+            tmp = stage / f"seed{seed}_oblique"
+            man = frames_for_seeds([seed], tmp, cameras=("oblique",))
+        (entry,) = man["frames"]
+        for name in (entry["png"], entry["masks"], entry["frame_id"] + ".json"):
+            shutil.move(str(tmp / name), str(out / name))
+        chosen.append(dict(seed=seed, frame=entry["frame_id"], camera=entry["camera"],
+                           visible_pixels=entry["visible_pixels"]))
+    files = [dict(path=fp.resolve().relative_to(REPO_ROOT).as_posix(), sha256=sha256_file(fp))
+             for fp in sorted(out.iterdir()) if fp.is_file()]
+    files.sort(key=lambda f: (not f["path"].endswith(".png"), f["path"]))      # a frame PNG first (frames dir)
+    files += [dict(path=fp.resolve().relative_to(REPO_ROOT).as_posix(), sha256=sha256_file(fp))
+              for fp in sorted(stage.rglob("*")) if fp.is_file()]
+    return files, dict(frames=[c["frame"] for c in chosen], chosen=chosen, top_fallbacks=fallbacks,
+                       renderer="mirror.robustness.frames.frames_for_seeds (mujoco offscreen, opaque walls)")
 
 
-def inputs_video() -> tuple[list[dict], dict]:
-    from mirror.perception import render_demo_video
+def inputs_video(from_dir: Optional[Path] = None) -> tuple[list[dict], dict]:
+    """Rendered demonstrations for the video seeds, each with its frozen
+    SAM_FPS tracking copies. With ``from_dir`` (renders made elsewhere, e.g.
+    on another machine with pinned versions) the demos are copied in and each
+    scene is checked against sample_layout(seed, 'eval') here."""
+    import json as _json
+    import shutil
+    from mirror.perception import load_demo_video, render_demo_video
     from mirror.scenes import sample_layout
+    from .bench_video import make_sam_copies
     os.environ["MIRROR_EVAL_LEDGER"] = str(paths("video")["ledger"])
     out = paths("video")["out"] / "inputs"
-    files, demos = [], []
+    files, demos, render_info = [], [], {}
     for seed in VIDEO_SEEDS:
         scene = sample_layout(seed, "eval")
-        man, dv = render_demo_video(scene, out / f"seed{seed}", cams=("top", "side"))
-        demos.append(dict(seed=seed, manifest=man.resolve().relative_to(REPO_ROOT).as_posix(), demo_id=dv.demo_id))
+        dst = out / f"seed{seed}"
+        if from_dir is not None:
+            src = sorted(Path(from_dir).glob(f"seed{seed}/*/video.json"))
+            if len(src) != 1:
+                raise FreezeError(f"expected one rendered demo for seed {seed} under {from_dir}, found {len(src)}")
+            shutil.copytree(src[0].parent, dst / src[0].parent.name, dirs_exist_ok=False)
+            man = dst / src[0].parent.name / "video.json"
+            rendered = _json.loads((man.parent / "scene.json").read_text())
+            if rendered != _json.loads(scene.model_dump_json()):
+                raise FreezeError(f"seed {seed}: the rendered scene differs from sample_layout(seed, 'eval')")
+            vf = Path(from_dir) / "versions.json"
+            render_info = _json.loads(vf.read_text()) if vf.exists() else {"note": "no versions.json supplied"}
+        else:
+            man, _ = render_demo_video(scene, dst, cams=("top", "side"))
+            render_info = {"machine": "local"}
+        dv, _gt = load_demo_video(man)
+        make_sam_copies(dv, man.parent)
+        demos.append(dict(seed=seed, manifest=man.resolve().relative_to(REPO_ROOT).as_posix(), demo_id=dv.demo_id,
+                          fps=dv.fps, n_frames=dv.n_frames, duration_s=dv.duration_s))
         for fp in sorted(man.parent.iterdir()):
             if fp.is_file():
                 files.append(dict(seed=seed, path=fp.resolve().relative_to(REPO_ROOT).as_posix(),
                                   sha256=sha256_file(fp)))
-    return files, dict(demos=demos, renderer="mirror.perception.render_demo_video (top, side)")
+    return files, dict(demos=demos, renderer="mirror.perception.render_demo_video (top, side)",
+                       sam_copies="every 3rd frame at 5 fps (mirror.evaluate.bench_video.make_sam_copies)",
+                       render_environment=render_info)
 
 
 INPUTS = {"voice": inputs_voice, "video": inputs_video, "robustness": inputs_robustness}
@@ -242,11 +331,12 @@ def rehearsal_setup(name: str, synth: Optional[Callable] = None) -> tuple[dict, 
         keep = set(REHEARSAL_INSTRUCTIONS)
         design["instructions"] = dict(design["instructions"],
                                       instructions=[i for i in design["instructions"]["instructions"] if i["id"] in keep])
-        design["frames"] = dict(design["frames"], seeds=[REHEARSAL_FRAME_SEED], cameras=["top"], count=1)
-        design["budget_caps"] = {"muse-image-1.0": 1, "sam-3.1": 3 * (1 + len(keep))}
+        design["frames"] = dict(design["frames"], seeds=[REHEARSAL_FRAME_SEED], split="dev", count=1)
+        design["budget_caps"] = {"muse-image-1.0": 1, "sam-3.1": 2 * 3 * (1 + len(keep)) + 12,
+                                 "muse-spark-1.3:chooser": 2}
         fdir = out / "inputs" / "frames"
         frames = load_frames(fdir) if fdir.exists() and any(fdir.glob("*.json")) else \
-            dev_frames([REHEARSAL_FRAME_SEED], cameras=("top",), moments=("carry",), out_dir=fdir)
+            dev_frames([REHEARSAL_FRAME_SEED], cameras=("oblique",), moments=("carry",), out_dir=fdir)
         files = [dict(frame=g.frame_id, path=str(fdir / f"{g.frame_id}.png"), sha256=sha256_file(fdir / f"{g.frame_id}.png"))
                  for g in frames]
         return design, dict(files=files, provenance=dict(frames=[g.frame_id for g in frames])), out
@@ -263,3 +353,39 @@ def rehearsal_setup(name: str, synth: Optional[Callable] = None) -> tuple[dict, 
 
 
 DESIGNS = {"voice": design_voice, "video": design_video, "robustness": design_robustness}
+
+
+# ---------------------------------------------------------- amendments -----
+
+def amendment2_video() -> tuple[dict, str]:
+    """(adds, rationale) for results/eval_video/design_amendment_2.json."""
+    adds = dict(
+        render=dict(width=960, height=540, fps=15, cameras=["top", "side"],
+                    overlays="none (no text, labels, paths or readouts)",
+                    machine="local, or the project VM with the pinned versions of the second registration; the "
+                            "versions file is copied into inputs.json"),
+        tracking=dict(
+            input_fps=5,
+            frames="every 3rd frame of each 15 fps render, starting at frame 0, re-encoded once at the inputs stage and "
+                   "frozen by sha256 (bench_video.make_sam_copies); the video models watch the full 15 fps top video",
+            procedure="mirror.perception.track.track_videos as frozen: muse-spark-1.3 grounding boxes on each camera's "
+                      "first frame (full frame, then a crop around the table), then one sam-3.1 video request per "
+                      "camera with box prompts for every object in mirror.perception.track.DEFAULT_OBJECTS",
+            reconstruction="mirror.perception.reconstruct.estimate, scene_from_video and trace_from_estimates as "
+                           "frozen, on the 5 fps tracks; scoring uses the ground-truth frames at the sampled times"),
+        observation_runs="one muse-wonder-1.0 and one muse-spark-1.3 observation per seed, no repeats",
+        spend_cap_usd=14.0,
+        spend_rule=("before each seed: if spent + projected full seed > cap, the seed runs without muse-wonder-1.0 "
+                    "when that fits; otherwise the run stops and the remaining seeds are listed as not run. Tracking "
+                    "is never dropped. Projection = mean measured cost of earlier full seeds; for the first seed, "
+                    "spend_projection_per_seed_usd."),
+        spend_projection_per_seed_usd={"sam-3.1": 0.17, "muse-spark-1.3": 0.18, "muse-wonder-1.0": 0.25},
+        budget_caps_amended={"muse-wonder-1.0": None, "muse-spark-1.3:video": None, "sam-3.1": None},
+        budget_note=("Request caps are replaced by the dollar cap (requests are still counted and reported). This "
+                     "changes a resource limit only; no threshold, metric, seed or decision rule changes."))
+    rationale = ("Fixes the settings amendment 1 left pending, from the lead's decision of 31 October 2026 (adopt the "
+                 "perception track's per-camera box-prompt tracking at 5 fps; $14 cap; one Wonder and one Spark run "
+                 "per seed), written before any input of this registration exists. Development numbers behind it: "
+                 "one 87 s demonstration took 14.5 min to render and 10 min to reconstruct; per-phrase SAM tracking "
+                 "was projected at about $20.6 for 20 seeds, box-prompt tracking at about $12.")
+    return adds, rationale

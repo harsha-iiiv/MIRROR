@@ -45,17 +45,27 @@ REGISTRY: dict[str, dict[str, Any]] = {
                                 "mirror.scenes"],
                   requires=[("mirror.interpret.voice", "transcribe")],
                   runner="mirror.evaluate.bench_voice:run"),
-    "video": dict(out="results/eval_video", code_exclude=PRESENTATION_ONLY,
-                  requires=[("mirror.perception", f) for f in (
-                      "render_demo_video", "load_demo_video", "track", "trace_from_video", "trace_events",
-                      "ground_truth_frames",
-                      "ground_truth_events", "ground_truth_trace", "ground_truth_relevant",
-                      "ground_truth_cup_kept_upright")] + [("mirror.interpret.video_observe", "observe")],
+    "video": dict(out="results/eval_video", code_exclude=PRESENTATION_ONLY + ("sim/render.py",),
+                  code_entries=["mirror.evaluate.prereg", "mirror.evaluate.bench_video", "mirror.evaluate.costs",
+                                "mirror.perception", "mirror.perception.track", "mirror.perception.reconstruct",
+                                "mirror.interpret.video_observe", "mirror.interpret", "mirror.meta", "mirror.contracts"],
+                  requires=[("mirror.perception", "load_demo_video"), ("mirror.perception.track", "track_videos"),
+                            ("mirror.perception.reconstruct", "estimate"),
+                            ("mirror.perception.reconstruct", "scene_from_video"),
+                            ("mirror.perception.reconstruct", "trace_from_estimates"),
+                            ("mirror.interpret.video_observe", "observe"), ("mirror.interpret", "propose_spec")],
                   runner="mirror.evaluate.bench_video:run"),
-    "robustness": dict(out="results/eval_robustness", code_exclude=PRESENTATION_ONLY,
+    "robustness": dict(out="results/eval_robustness", code_exclude=PRESENTATION_ONLY + ("sim/render.py",),
+                       code_entries=["mirror.evaluate.prereg", "mirror.evaluate.bench_robust", "mirror.evaluate.costs",
+                                     "mirror.robustness", "mirror.robustness.geometry", "mirror.robustness.local",
+                                     "mirror.robustness.frames", "mirror.robustness.instructions",
+                                     "mirror.interpret.sam_prompts", "mirror.meta"],
                        requires=[("mirror.robustness.geometry", "check_geometry"),
+                                 ("mirror.robustness.geometry", "warp_similarity"),
                                  ("mirror.robustness.local", "apply_local"),
-                                 ("mirror.robustness.frames", "GTFrame"), ("mirror.meta", "MetaClient")],
+                                 ("mirror.robustness.frames", "GTFrame"),
+                                 ("mirror.robustness.frames", "frames_for_seeds"),
+                                 ("mirror.interpret.sam_prompts", "choose_prompts"), ("mirror.meta", "MetaClient")],
                        runner="mirror.evaluate.bench_robust:run"),
 }
 
@@ -195,7 +205,8 @@ def default_audit_roots() -> list[Path]:
 
 
 def _tokens(design: dict, inputs: Optional[dict] = None) -> dict:
-    return dict(seeds=design.get("seeds", []), sha256=[f["sha256"] for f in (inputs or {}).get("files", [])])
+    seeds = list(design.get("seeds", [])) + list((design.get("frames") or {}).get("seeds", []))
+    return dict(seeds=seeds, sha256=[f["sha256"] for f in (inputs or {}).get("files", [])])
 
 
 def ledger_snapshot(path: Path) -> dict:
@@ -500,12 +511,12 @@ def execute(name: str, design: dict, inputs: dict, *, out_dir: Path, ledger_path
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     ledger = Ledger(ledger_path)
-    budget = Budget(design.get("budget_caps"))
+    budget = Budget(design.get("budget_caps_amended") or design.get("budget_caps"))
     started = time.time()
     ledger.append(kind="run_start", registration=name, rehearsal=rehearsal)
     try:
         result = _runner(name)(design, inputs, ledger=ledger, budget=budget, out_dir=out_dir, **kwargs)
-        status = "completed"
+        status = f"stopped early: {result['stopped']}" if isinstance(result, dict) and result.get("stopped") else "completed"
     except BudgetExceeded as exc:
         result, status = {"stopped": str(exc)}, "stopped: budget cap reached"
     ledger.append(kind="run_end", registration=name, status=status)

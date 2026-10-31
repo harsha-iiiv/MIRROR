@@ -99,7 +99,7 @@ def _prereg(args, p) -> int:
     if args.mode == "design":
         doc = prereg.write_design(name, designs.DESIGNS[name](), audit_paths=tuple(args.audit_path),
                                   replace=args.replace_design)
-        print(f"design {name}: {len(doc.get('seeds', []))} seeds, {len(doc.get('inputs', []))} inputs, "
+        print(f"design {name}: {len(prereg._tokens(doc)['seeds'])} seeds audited, {len(doc.get('inputs', []))} inputs, "
               f"audit {doc['audit']['text_files']} files clean -> {pp['design'].relative_to(ROOT)} "
               f"(sha256 {prereg.sha256_file(pp['design'])[:16]})")
         return 0
@@ -121,7 +121,8 @@ def _prereg(args, p) -> int:
         print(f"rehearsal {name}: {rep['status']}; report {(out / 'report.md').relative_to(ROOT)}")
         return 0
     if args.mode == "inputs":
-        files, prov = designs.INPUTS[name]()
+        files, prov = (designs.INPUTS[name](from_dir=Path(args.from_dir)) if (name == "video" and args.from_dir)
+                       else designs.INPUTS[name]())
         doc = prereg.write_inputs(name, files, provenance=prov, audit_paths=tuple(args.audit_path),
                                   replace=args.replace_design)
         print(f"inputs {name}: {len(files)} files, ledger lines {doc['ledger_after_inputs']['lines']} -> "
@@ -161,6 +162,8 @@ def main(argv=None) -> int:
                    help="freeze-final: how the pre-registered specs are built (offline only for --rehearsal)")
     p.add_argument("--registration", default=None, choices=["muse", "voice", "video", "robustness"],
                    help="design/freeze-final/final/status: a named registration (own seeds, ledger, output)")
+    p.add_argument("--from-dir", default=None,
+                   help="inputs --registration video: demos rendered elsewhere (seed<k>/<demo>/video.json + versions.json)")
     p.add_argument("--replace-design", action="store_true",
                    help="design: rewrite an uncommitted design (refused once frozen or measured)")
     p.add_argument("--allow-missing-harness", action="store_true",

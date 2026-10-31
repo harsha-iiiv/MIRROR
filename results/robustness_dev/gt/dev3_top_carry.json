@@ -1,0 +1,21 @@
+{
+ "camera": "top",
+ "execution_status": "completed",
+ "frame_id": "dev3_top_carry",
+ "height": 576,
+ "moment": "carry",
+ "phase": "transport:cup_0",
+ "pixels": {
+  "block": 1161,
+  "cup": 1008,
+  "gripper": 4979,
+  "marker": 641
+ },
+ "png_sha256": "8e31fb2977b5f8da9ac82f4ba53da8053089d98c237e6a56f4f07beec46cd34f",
+ "renderer": "mujoco offscreen (opaque walls, shadows)",
+ "scene_id": "dev_3",
+ "seed": 3,
+ "split": "dev",
+ "t": 9.403999999999364,
+ "width": 1024
+}

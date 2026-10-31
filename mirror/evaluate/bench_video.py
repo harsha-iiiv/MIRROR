@@ -77,7 +77,9 @@ def gt_cup_kept_upright(gt: dict) -> bool:
     return bool(tilts) and max(tilts) < UPRIGHT_TOL_DEG
 
 
-def est_frames(est, kinds_by_label: dict) -> list[dict]:
+def est_frames(est, kinds_by_label: dict, gt_fps: Optional[float] = None) -> list[dict]:
+    """Estimates per sampled frame; with ``gt_fps`` the frame key is the
+    ground-truth frame at the same time (tracking may run on fewer frames)."""
     rows = []
     for lab, P in est.objects.items():
         if kinds_by_label.get(lab) not in KIT:
@@ -85,9 +87,10 @@ def est_frames(est, kinds_by_label: dict) -> list[dict]:
         found = est.found[lab]
         tilt = (est.tilt_deg or {}).get(lab)
         for i in range(len(est.t)):
+            key = int(round(float(est.t[i]) * gt_fps)) if gt_fps else i
             ok = bool(found[i]) and not np.isnan(P[i][0])
             t = None if tilt is None or np.isnan(tilt[i]) else float(tilt[i])
-            rows.append(dict(frame=i, object=lab, found=ok, x=float(P[i][0]) if ok else None,
+            rows.append(dict(frame=key, object=lab, found=ok, x=float(P[i][0]) if ok else None,
                              y=float(P[i][1]) if ok else None, tilt_deg=t))
     return rows
 
@@ -103,9 +106,10 @@ def frame_errors(gt: list[dict], est: list[dict]) -> dict:
     """Found rate per kind (estimate within 5 cm), centroid errors (cm) and
     cup tilt errors (deg) over frames where the object is visible."""
     idx = {(r["frame"], r["object"]): r for r in est}
+    sampled = {r["frame"] for r in est}
     found, cerr, terr = {}, {}, []
     for g in gt:
-        if not g.get("visible", True):
+        if not g.get("visible", True) or (sampled and g["frame"] not in sampled):
             continue
         k = g.get("kind", g["object"])
         e = idx.get((g["frame"], g["object"]))
@@ -208,9 +212,43 @@ def oracle_tracker(dv, gt, root):
     return tracks_from_ground_truth(dv, gt)
 
 
+SAM_FPS = 5.0
+
+
+def sam_copy_name(cam: str) -> str:
+    return f"{cam}_sam{int(SAM_FPS)}fps.mp4"
+
+
+def make_sam_copies(dv, root: Path) -> list[Path]:
+    """Frozen inputs for tracking: each camera video keeping every
+    (fps / SAM_FPS)-th frame, starting with frame 0, re-encoded at SAM_FPS."""
+    import imageio.v2 as imageio
+    step = int(round(dv.fps / SAM_FPS))
+    out = []
+    for cam, rel in dv.videos.items():
+        dst = Path(root) / sam_copy_name(cam)
+        rd = imageio.get_reader(str(Path(root) / rel))
+        w = imageio.get_writer(dst, fps=SAM_FPS, codec="libx264", quality=8, pixelformat="yuv420p",
+                               macro_block_size=2, ffmpeg_params=["-threads", "1"])
+        try:
+            for i, frame in enumerate(rd):
+                if i % step == 0:
+                    w.append_data(frame)
+        finally:
+            w.close()
+            rd.close()
+        out.append(dst)
+    return out
+
+
 def sam_tracker(dv, gt, root, *, prompts=None, client=None):
-    import mirror.perception as perception
-    return perception.track(dv, root, prompts=prompts, client=client)
+    """sim's tracking on the frozen SAM_FPS copies of every camera."""
+    import math
+    from mirror.perception.track import _objects_from, track_videos
+    videos = {c: Path(root) / sam_copy_name(c) for c in dv.videos}
+    n = int(math.ceil(dv.n_frames / round(dv.fps / SAM_FPS)))
+    return track_videos(videos, fps=SAM_FPS, n_frames=n, objects=_objects_from(prompts), client=client,
+                        work=Path(root) / "perception_work")
 
 
 def reconstruct(dv, tracks):
@@ -242,9 +280,31 @@ def run(design: dict, inputs: dict, *, ledger, budget, out_dir: Path, meta_clien
     obs_cfg = dict(design.get("observation", {}))
     cam = obs_cfg.pop("camera", "top")
     manifests = {d["seed"]: repo_root / d["manifest"] for d in inputs["provenance"]["demos"]}
-    rows = []
+    rows, stopped = [], None
+    cap = design.get("spend_cap_usd")
+    est_seed = dict(design.get("spend_projection_per_seed_usd", {}))     # used until a seed has been measured
+    per_seed: list[dict] = []
+
+    def spent() -> float:
+        return sum(costs.record_cost(r) for r in list(meta_client.usage) + list(getattr(spark_client, "usage", [])))
+
     for seed in design["seeds"]:
         row: dict[str, Any] = dict(seed=seed)
+        skip_wonder = False
+        if cap is not None:
+            full = (np.mean([p["total"] for p in per_seed]) if per_seed else sum(est_seed.values()))
+            wonder = (np.mean([p["wonder"] for p in per_seed]) if per_seed else est_seed.get("muse-wonder-1.0", 0.0))
+            now = spent()
+            if now + full > cap:
+                if now + full - wonder <= cap:
+                    skip_wonder = True
+                    row["wonder_skipped"] = (f"spend cap: ${now:.2f} spent, a full seed is projected at ${full:.2f}; "
+                                             f"muse-wonder-1.0 dropped for this seed, tracking kept")
+                else:
+                    stopped = (f"spend cap ${cap:.2f}: ${now:.2f} spent before seed {seed}; even without "
+                               f"muse-wonder-1.0 a seed is projected at ${full - wonder:.2f}")
+                    break
+        seed_start, wonder_cost = spent(), 0.0
         try:
             dv, gt = load_demo_video(manifests[seed])
             root = manifests[seed].parent
@@ -255,12 +315,16 @@ def run(design: dict, inputs: dict, *, ledger, budget, out_dir: Path, meta_clien
             row["tracking_latency_s"] = round(time.monotonic() - t0, 1)
             ledger.append(kind="track", seed=seed, tracker=tracker_label)
             kinds = est.scene_checks.get("kinds", {})
-            row["tracking"] = frame_errors(gt_frames(gt), est_frames(est, kinds))
+            row["tracking"] = frame_errors(gt_frames(gt), est_frames(est, kinds, gt_fps=dv.fps))
+            row["tracking_frames"] = len(est.t)
             m = match_events(gt_events(gt), est_events(est), EVENT_MATCH_S)
             row["timing"] = m
             gt_rel, care_expected = gt_relevant(gt), gt_cup_kept_upright(gt)
             obs_by, row["observations"] = {}, {}
             for model, line in (("muse-wonder-1.0", "muse-wonder-1.0"), ("muse-spark-1.3", "muse-spark-1.3:video")):
+                if model == "muse-wonder-1.0" and skip_wonder:
+                    ledger.append(kind="observe_skipped", seed=seed, model=model, reason="spend cap")
+                    continue
                 budget.charge(line)
                 n0 = len(meta_client.usage)
                 t0 = time.monotonic()
@@ -270,6 +334,8 @@ def run(design: dict, inputs: dict, *, ledger, budget, out_dir: Path, meta_clien
                     o, err = None, f"{type(exc).__name__}: {exc}"[:300]
                 lat = round(time.monotonic() - t0, 1)
                 recs = meta_client.usage[n0:]
+                if model == "muse-wonder-1.0":
+                    wonder_cost = sum(costs.record_cost(r) for r in recs)
                 obs_by[model] = o
                 v = observation_view(o) if o is not None else dict(events=[], objects=[], cues=[], issues=[])
                 me = match_events(gt_events(gt), v["events"], EVENT_F1_TOL_S)
@@ -291,22 +357,22 @@ def run(design: dict, inputs: dict, *, ledger, budget, out_dir: Path, meta_clien
             row["signature_equal"] = proposal_signature(spec_v) == proposal_signature(spec_gt)
             row["signature_video"], row["signature_ground_truth"] = proposal_signature(spec_v), proposal_signature(spec_gt)
             ledger.append(kind="spec", seed=seed, signature_equal=row["signature_equal"])
-            cap = design.get("spend_cap_usd")
-            spent = sum(costs.record_cost(r) for r in list(meta_client.usage) + list(getattr(spark_client, "usage", [])))
-            if cap is not None and spent > cap:
-                from .prereg import BudgetExceeded
-                rows.append(row)
-                raise BudgetExceeded(f"spend ${spent:.2f} passed the ${cap:.2f} cap after seed {seed}")
         except Exception as exc:  # every attempt is reported
             from .prereg import BudgetExceeded
             if isinstance(exc, BudgetExceeded):
                 raise
             row["error"] = f"{type(exc).__name__}: {exc}"[:400]
             ledger.append(kind="error", seed=seed, error=row["error"])
+        row["cost_usd"] = round(spent() - seed_start, 4)
+        if not skip_wonder and "error" not in row:
+            per_seed.append(dict(total=row["cost_usd"], wonder=wonder_cost))
         rows.append(row)
+    not_run = [s for s in design["seeds"] if s not in {r["seed"] for r in rows}]
+    if stopped:
+        ledger.append(kind="stopped", reason=stopped, not_run=not_run)
     usage = costs.summarize_usage(list(meta_client.usage) + list(getattr(spark_client, "usage", [])))
     return dict(rows=rows, tracker=tracker_label, usage=usage, cost_usd=costs.total_cost(usage),
-                summary=summarize(rows, design))
+                stopped=stopped, not_run=not_run, summary=summarize(rows, design))
 
 
 def summarize(rows: list[dict], design: dict) -> dict:
@@ -322,6 +388,7 @@ def summarize(rows: list[dict], design: dict) -> dict:
         o = [r["observations"][m] for r in ok if m in r.get("observations", {})]
         good = [x for x in o if not x["error"]]
         models[m] = dict(n=len(o), errors=len(o) - len(good),
+                         skipped=sum(1 for r in ok if m == "muse-wonder-1.0" and r.get("wonder_skipped")),
                          event_f1_mean=float(np.mean([x["event_f1"] for x in o])) if o else None,
                          relevance_correct=sum(x["relevance_correct"] for x in o),
                          care_cue_when_expected=sum(x["care_cue"] for x in o if x["care_expected"]),
@@ -333,7 +400,12 @@ def summarize(rows: list[dict], design: dict) -> dict:
                          events_true=sum(x.get("events_true", 0) for x in o),
                          latency_s_median=float(np.median([x["latency_s"] for x in good])) if good else None,
                          cost_usd=round(sum(x["cost_usd"] for x in o), 4))
-    w, s = models["muse-wonder-1.0"], models["muse-spark-1.3"]
+    both = [r for r in ok if all(m in r.get("observations", {}) for m in ("muse-wonder-1.0", "muse-spark-1.3"))]
+    paired = dict(seeds=len(both))
+    for m in ("muse-wonder-1.0", "muse-spark-1.3"):
+        paired[m] = dict(event_f1_mean=float(np.mean([r["observations"][m]["event_f1"] for r in both])) if both else None,
+                         relevance_correct=sum(r["observations"][m]["relevance_correct"] for r in both))
+    w, s = paired["muse-wonder-1.0"], paired["muse-spark-1.3"]
     rule = design["decision_rule"]
     adopt_wonder = (w["event_f1_mean"] is not None and s["event_f1_mean"] is not None
                     and w["event_f1_mean"] >= s["event_f1_mean"] + rule["min_f1_gain"]
@@ -352,7 +424,7 @@ def summarize(rows: list[dict], design: dict) -> dict:
         f"median cup tilt error <= {th['tilt_deg_median_max']} deg": vals["tilt_err_deg_median"] is not None and vals["tilt_err_deg_median"] <= th["tilt_deg_median_max"],
         f"same proposal signature on >= {th['signature_equal_min']} of {n} seeds": sig >= th["signature_equal_min"],
     }
-    return dict(values=vals, models=models, adopt_wonder=adopt_wonder, threshold_checks=checks)
+    return dict(values=vals, models=models, paired=paired, adopt_wonder=adopt_wonder, threshold_checks=checks)
 
 
 def _f(x, nd=2):
@@ -393,6 +465,12 @@ def markdown(report: dict, design: dict) -> str:
                  f"{x.get('events_true', 0)} | {_f(x.get('event_mae_s'))} s | {x['relevance_correct']} | "
                  f"{x['care_cue_when_expected']} ({x['care_expected']}) | {x['validator_issues']} | "
                  f"{_f(x['latency_s_median'], 1)} s | ${x['cost_usd']:.3f} |")
+    if s["models"]["muse-wonder-1.0"].get("skipped"):
+        L += ["", f"muse-wonder-1.0 was dropped on {s['models']['muse-wonder-1.0']['skipped']} seed(s) by the spend-cap rule "
+              "(tracking coverage is never dropped); the comparison and the decision rule use the seeds where both ran."]
+    pw, ps = s["paired"]["muse-wonder-1.0"], s["paired"]["muse-spark-1.3"]
+    L += ["", f"On the {s['paired']['seeds']} seed(s) where both models ran: mean event F1 Wonder {_f(pw['event_f1_mean'], 3)}, "
+          f"Spark {_f(ps['event_f1_mean'], 3)}; relevant objects right Wonder {pw['relevance_correct']}, Spark {ps['relevance_correct']}."]
     L += ["", f"Decision rule, stated in advance: {design['decision_rule']['text']}. Outcome: "
           f"{'use muse-wonder-1.0' if s['adopt_wonder'] else 'keep muse-spark-1.3'}.", "",
           "## Pre-stated checks", ""]
@@ -409,6 +487,8 @@ def markdown(report: dict, design: dict) -> str:
                  f"{_f(o['muse-wonder-1.0']['event_f1'])}{' (error)' if o['muse-wonder-1.0']['error'] else ''} | "
                  f"{_f(o['muse-spark-1.3']['event_f1'])}{' (error)' if o['muse-spark-1.3']['error'] else ''} | "
                  f"{'yes' if r['signature_equal'] else 'no'} |")
+    if res.get("stopped"):
+        L += ["", f"**Stopped early.** {res['stopped']}. Seeds not run: {', '.join(map(str, res.get('not_run', [])))}."]
     L += ["", "## Spend", "", "| model | network calls | replayed | input tokens | output tokens | median latency | cost |",
           "|---|---|---|---|---|---|---|"]
     for m, u in res.get("usage", {}).items():

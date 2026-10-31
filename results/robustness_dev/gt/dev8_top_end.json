@@ -1,0 +1,21 @@
+{
+ "camera": "top",
+ "execution_status": "completed",
+ "frame_id": "dev8_top_end",
+ "height": 576,
+ "moment": "end",
+ "phase": "settle",
+ "pixels": {
+  "block": 1008,
+  "cup": 2262,
+  "gripper": 5925,
+  "marker": 602
+ },
+ "png_sha256": "68ffb9346bb79167871e290c4d49723627458425250a53a37aca84581ce8d6c8",
+ "renderer": "mujoco offscreen (opaque walls, shadows)",
+ "scene_id": "dev_8",
+ "seed": 8,
+ "split": "dev",
+ "t": 46.50399999999576,
+ "width": 1024
+}

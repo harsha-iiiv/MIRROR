@@ -65,8 +65,14 @@ class PromptSet(BaseModel):
     latency_s: float = 0.0
 
     def prompts(self) -> dict[str, str]:
-        """kind -> accepted phrase."""
-        return {c.kind: c.phrase for c in self.choices if c.ok}
+        """kind -> accepted phrase. If several phrases were accepted for one kind
+        (each matched exactly one object, possibly the wrong one), the first wins:
+        first attempt before the retry, then the order the model gave them."""
+        out: dict[str, str] = {}
+        for c in sorted(self.choices, key=lambda c: c.attempt):  # stable: keeps the model's order
+            if c.ok and c.kind not in out:
+                out[c.kind] = c.phrase
+        return out
 
 
 SYSTEM = """\

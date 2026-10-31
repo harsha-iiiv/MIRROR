@@ -1,0 +1,123 @@
+{
+ "key": "0de0781a2aa36c5ae600fd3615edb2a8f153401f16a363b0ddb9ca12e62921d8",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "You are an object grounding expert. You are given 6 images. For each image, provide the bounding box of the named object in that image: image 0: \"the white cup\"; image 1: \"the blue cube\"; image 2: \"the red cylinder\"; image 3: \"the wall\"; image 4: \"the robot gripper\"; image 5: \"the wooden table\". Coordinates are in the 0-1000 range of that image, (0,0) top-left. Set found=false if the object is not visible in that image."
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:2108cc7776c8de997b284be5b95070c6e0e0d4bc2014ea903cf026191ee7e884"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:0cec823100fd80428ae14cb180fd5c24067e9a0b1f62cf592d8957444f49f474"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:8401b3d6eb2b986f0a26086fb311fe65c1dd53a295eb1a06688446ae41d3f57f"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:5902c0b8a6378c38ab187ee6e56890b32720d603ff45bb1213329bada3c5661b"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:a6440ddce05205487481b87cc90ad1c6b48508992337dae42340747e25cb3697"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:3ee376062aa89e8c8605bdf03391df43b8b10bf90f6b6acc8beee6507f61ce5e"
+     }
+    ]
+   }
+  ],
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "boxes",
+    "schema": {
+     "type": "object",
+     "properties": {
+      "boxes": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "image_index": {
+          "type": "integer"
+         },
+         "found": {
+          "type": "boolean"
+         },
+         "bbox": {
+          "type": "object",
+          "properties": {
+           "x_min": {
+            "type": "integer"
+           },
+           "y_min": {
+            "type": "integer"
+           },
+           "x_max": {
+            "type": "integer"
+           },
+           "y_max": {
+            "type": "integer"
+           }
+          },
+          "required": [
+           "x_min",
+           "y_min",
+           "x_max",
+           "y_max"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "image_index",
+         "found",
+         "bbox"
+        ],
+        "additionalProperties": false
+       }
+      }
+     },
+     "required": [
+      "boxes"
+     ],
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"boxes\": [{\"bbox\": {\"x_max\": 677, \"x_min\": 336, \"y_max\": 473, \"y_min\": 164}, \"found\": true, \"image_index\": 0}, {\"bbox\": {\"x_max\": 725, \"x_min\": 485, \"y_max\": 350, \"y_min\": 59}, \"found\": true, \"image_index\": 1}, {\"bbox\": {\"x_max\": 585, \"x_min\": 430, \"y_max\": 508, \"y_min\": 222}, \"found\": true, \"image_index\": 2}, {\"bbox\": {\"x_max\": 755, \"x_min\": 90, \"y_max\": 826, \"y_min\": 317}, \"found\": true, \"image_index\": 3}, {\"bbox\": {\"x_max\": 475, \"x_min\": 140, \"y_max\": 695, \"y_min\": 454}, \"found\": true, \"image_index\": 4}, {\"bbox\": {\"x_max\": 946, \"x_min\": 203, \"y_max\": 932, \"y_min\": 221}, \"found\": true, \"image_index\": 5}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 1670,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 1398,
+   "output_tokens_details": {
+    "reasoning_tokens": 1128
+   },
+   "total_tokens": 3068
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 7.186,
+ "recorded_at": "2026-10-31T22:23:29Z"
+}

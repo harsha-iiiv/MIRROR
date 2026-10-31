@@ -55,7 +55,7 @@ def record_cost(rec: dict, *, audio_seconds: Optional[float] = None) -> float:
             secs = max(int(u.get("audio_bytes") or 0) - 44, 0) / WAV_BYTES_PER_S
         return secs / 3600.0 * p["per_hour"]
     if key == "sam-3.1":
-        frames = u.get("frames_processed") or u.get("video_frames")
+        frames = u.get("video_frames_processed") or u.get("frames_processed") or u.get("video_frames")
         if frames or "video" in (rec.get("name") or rec.get("call") or ""):
             return max(int(frames or 0), p["min_video_frames"]) * p["per_video_frame"]
         return int(u.get("images_processed") or 1) * p["per_image"]

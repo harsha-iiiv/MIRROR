@@ -1,0 +1,98 @@
+{
+ "key": "8e1676b09d1dbba7cd579deec754e4a5400eb590d005b8b9fbebc50011700b3e",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "Name each of these things visible in the image with one short noun phrase: cup, block, marker. Skip a kind that is not visible. A first attempt gave: block: 'small gray block'; block: 'blue cube'; block: 'black block'; marker: 'orange cylinder'. These did not match exactly one object: 'small gray block' (block) matched 3 objects; 'orange cylinder' (marker) matched 0 objects. Give new phrases for those kinds only."
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:8e31fb2977b5f8da9ac82f4ba53da8053089d98c237e6a56f4f07beec46cd34f"
+     }
+    ]
+   }
+  ],
+  "instructions": "You name objects in an image so that a segmentation model can find them.\nThe segmentation model matches short concrete noun phrases: colour plus\nshape works best (\"blue cube\", \"white square box\", \"red cylinder\"). Do not\nwrite instructions or questions, do not use \"and\", commas, negation or\npositions (\"on the left\"). Each phrase must pick out exactly one thing in the\nimage.",
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "sam_prompts",
+    "schema": {
+     "$defs": {
+      "NamedObject": {
+       "properties": {
+        "kind": {
+         "enum": [
+          "cup",
+          "block",
+          "marker",
+          "tray",
+          "wall",
+          "table",
+          "other"
+         ],
+         "type": "string"
+        },
+        "phrase": {
+         "description": "2-4 word noun phrase: colour + shape, e.g. 'blue cube'",
+         "type": "string"
+        },
+        "why": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "kind",
+        "phrase",
+        "why"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     },
+     "properties": {
+      "objects": {
+       "items": {
+        "$ref": "#/$defs/NamedObject"
+       },
+       "type": "array"
+      }
+     },
+     "required": [
+      "objects"
+     ],
+     "type": "object",
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"objects\": [{\"kind\": \"block\", \"phrase\": \"brown block\", \"why\": \"the top rectangular prism is the only block with warm brown gray color\"}, {\"kind\": \"marker\", \"phrase\": \"red cylinder\", \"why\": \"the small cylinder in the middle is the only red cylindrical marker\"}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 1090,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 5061,
+   "output_tokens_details": {
+    "reasoning_tokens": 4987
+   },
+   "total_tokens": 6151
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 22.335,
+ "recorded_at": "2026-10-31T22:14:35Z"
+}

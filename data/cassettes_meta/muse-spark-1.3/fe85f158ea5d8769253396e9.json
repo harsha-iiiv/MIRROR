@@ -1,0 +1,98 @@
+{
+ "key": "fe85f158ea5d8769253396e91f833c92e63abc94581ef570f065a479e9c25fcd",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "Name each of these things visible in the image with one short noun phrase: cup, block, marker. Skip a kind that is not visible. A first attempt gave: cup: 'white cup'; block: 'blue cube'; marker: 'red cylinder'. These did not match exactly one object: 'white cup' (cup) matched 0 objects. Give new phrases for those kinds only."
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:0167ecd04d2a97e1ef619eb3bfcc05ed4035f391327318cd586f187638051ffb"
+     }
+    ]
+   }
+  ],
+  "instructions": "You name objects in an image so that a segmentation model can find them.\nThe segmentation model matches short concrete noun phrases: colour plus\nshape works best (\"blue cube\", \"white square box\", \"red cylinder\"). Do not\nwrite instructions or questions, do not use \"and\", commas, negation or\npositions (\"on the left\"). Each phrase must pick out exactly one thing in the\nimage.",
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "sam_prompts",
+    "schema": {
+     "$defs": {
+      "NamedObject": {
+       "properties": {
+        "kind": {
+         "enum": [
+          "cup",
+          "block",
+          "marker",
+          "tray",
+          "wall",
+          "table",
+          "other"
+         ],
+         "type": "string"
+        },
+        "phrase": {
+         "description": "2-4 word noun phrase: colour + shape, e.g. 'blue cube'",
+         "type": "string"
+        },
+        "why": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "kind",
+        "phrase",
+        "why"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     },
+     "properties": {
+      "objects": {
+       "items": {
+        "$ref": "#/$defs/NamedObject"
+       },
+       "type": "array"
+      }
+     },
+     "required": [
+      "objects"
+     ],
+     "type": "object",
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"objects\": [{\"kind\": \"cup\", \"phrase\": \"white box\", \"why\": \"only white boxy object in the scene is the cup\"}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 1070,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 3575,
+   "output_tokens_details": {
+    "reasoning_tokens": 3533
+   },
+   "total_tokens": 4645
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 15.657,
+ "recorded_at": "2026-10-31T22:16:53Z"
+}

@@ -1,0 +1,18 @@
+{
+ "key": "66928aa66c28257154f1b86945814362839fc4c80bed1a6619f878b7264ac336",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:0a68d38ba876866a77c7141b217783298319333a71bbdce44b6b8a1f06ca1b1e"
+ },
+ "response": {
+  "id": "file-1650892453082445",
+  "bytes": 813161,
+  "status": "uploaded",
+  "filename": "side.mp4"
+ },
+ "blobs": [],
+ "latency_s": 3.789,
+ "recorded_at": "2026-10-31T22:28:59Z"
+}

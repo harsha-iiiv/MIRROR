@@ -1,0 +1,21 @@
+{
+ "camera": "oblique",
+ "execution_status": "completed",
+ "frame_id": "dev8_oblique_end",
+ "height": 576,
+ "moment": "end",
+ "phase": "settle",
+ "pixels": {
+  "block": 1196,
+  "cup": 4084,
+  "gripper": 4550,
+  "marker": 1009
+ },
+ "png_sha256": "bba78295395908aa31caa827c362b5b50b010dc1680a6a02b486c01c6d72c2d9",
+ "renderer": "mujoco offscreen (opaque walls, shadows)",
+ "scene_id": "dev_8",
+ "seed": 8,
+ "split": "dev",
+ "t": 46.50399999999576,
+ "width": 1024
+}

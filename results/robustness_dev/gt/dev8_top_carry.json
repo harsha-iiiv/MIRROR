@@ -1,0 +1,21 @@
+{
+ "camera": "top",
+ "execution_status": "completed",
+ "frame_id": "dev8_top_carry",
+ "height": 576,
+ "moment": "carry",
+ "phase": "transport:cup_0",
+ "pixels": {
+  "block": 1182,
+  "cup": 582,
+  "gripper": 4738,
+  "marker": 828
+ },
+ "png_sha256": "37fcb53955fd29d20b5c79a61498fc885123c52da85c1b111d9f8b5ff2c4125d",
+ "renderer": "mujoco offscreen (opaque walls, shadows)",
+ "scene_id": "dev_8",
+ "seed": 8,
+ "split": "dev",
+ "t": 7.903999999999529,
+ "width": 1024
+}

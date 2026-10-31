@@ -1,0 +1,22 @@
+{
+ "camera": "oblique",
+ "execution_status": "completed",
+ "family": "mixed",
+ "frame_id": "eval80007_oblique_carry",
+ "height": 576,
+ "moment": "carry",
+ "phase": "transport:cup_0",
+ "pixels": {
+  "block": 1447,
+  "cup": 6368,
+  "gripper": 6277,
+  "marker": 1096
+ },
+ "png_sha256": "209a291f89bf06750bb43aff78fdbc36dbb37274aef70d8a5704e56b9a1a2d5e",
+ "renderer": "mujoco offscreen (opaque walls, shadows)",
+ "scene_id": "eval_80007",
+ "seed": 80007,
+ "split": "eval",
+ "t": 9.003999999999408,
+ "width": 1024
+}

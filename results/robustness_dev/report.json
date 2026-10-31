@@ -1,0 +1,5117 @@
+{
+ "title": "Perception robustness: SAM 3.1 on Muse Image counterfactuals",
+ "split": "dev",
+ "created_at": "2026-10-31T21:53:23.421387+00:00",
+ "instructions_sha256": "fd517bf09b4879f3687f3fe050f6925b3b06f5c809b41951942af22ce71b42f1",
+ "instructions": [
+  "light_dim",
+  "light_warm",
+  "light_harsh",
+  "bg_wood",
+  "bg_lab_bench",
+  "distractor_mug",
+  "distractor_paper",
+  "material_glossy_cup",
+  "noise_gauss",
+  "blur_gauss",
+  "blur_motion"
+ ],
+ "prompts": {
+  "cup": "white box",
+  "block": "blue block",
+  "marker": "orange marker"
+ },
+ "frames": [
+  {
+   "camera": "oblique",
+   "execution_status": "completed",
+   "frame_id": "dev3_oblique_start",
+   "height": 576,
+   "moment": "start",
+   "phase": "move:cup_0",
+   "pixels": {
+    "block": 608,
+    "cup": 5847,
+    "gripper": 6997,
+    "marker": 1291
+   },
+   "png_sha256": "cdefef694eb997bb271d34d8d6df488203e96242ad00a4b11881618e8b753406",
+   "renderer": "mujoco offscreen (opaque walls, shadows)",
+   "scene_id": "dev_3",
+   "seed": 3,
+   "split": "dev",
+   "t": 0.0040000000000000036,
+   "width": 1024
+  },
+  {
+   "camera": "oblique",
+   "execution_status": "completed",
+   "frame_id": "dev8_oblique_carry",
+   "height": 576,
+   "moment": "carry",
+   "phase": "transport:cup_0",
+   "pixels": {
+    "block": 1720,
+    "cup": 2977,
+    "gripper": 4131,
+    "marker": 1130
+   },
+   "png_sha256": "0167ecd04d2a97e1ef619eb3bfcc05ed4035f391327318cd586f187638051ffb",
+   "renderer": "mujoco offscreen (opaque walls, shadows)",
+   "scene_id": "dev_8",
+   "seed": 8,
+   "split": "dev",
+   "t": 7.903999999999529,
+   "width": 1024
+  },
+  {
+   "camera": "top",
+   "execution_status": "completed",
+   "frame_id": "dev8_top_end",
+   "height": 576,
+   "moment": "end",
+   "phase": "settle",
+   "pixels": {
+    "block": 1008,
+    "cup": 2262,
+    "gripper": 5925,
+    "marker": 602
+   },
+   "png_sha256": "68ffb9346bb79167871e290c4d49723627458425250a53a37aca84581ce8d6c8",
+   "renderer": "mujoco offscreen (opaque walls, shadows)",
+   "scene_id": "dev_8",
+   "seed": 8,
+   "split": "dev",
+   "t": 46.50399999999576,
+   "width": 1024
+  }
+ ],
+ "edits": [
+  {
+   "frame_id": "dev3_oblique_start",
+   "instruction_id": "light_dim",
+   "family": "lighting",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 7.262,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4876,
+    "output_tokens": 732,
+    "total_tokens": 5608
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -7,
+     "dy": -1,
+     "fit_px": 1.007
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 5847,
+      "shift_px": [
+       0.0,
+       3.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.55,
+      "fit_aligned": 1.029,
+      "fit_best": 0.899,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 608,
+      "shift_px": [
+       -1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.41,
+      "fit_aligned": 0.623,
+      "fit_best": 0.351,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1291,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.395,
+      "fit_aligned": 0.388,
+      "fit_best": 0.388,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "instruction_id": "light_warm",
+   "family": "lighting",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 8.16,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4872,
+    "output_tokens": 639,
+    "total_tokens": 5511
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -6,
+     "dy": -1,
+     "fit_px": 1.237
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "weakened",
+      "pixels": 5847,
+      "shift_px": [
+       -1.0,
+       6.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.55,
+      "fit_aligned": 2.759,
+      "fit_best": 2.339,
+      "note": "outline edges partly lost but not displaced"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 608,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.41,
+      "fit_aligned": 0.335,
+      "fit_best": 0.335,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1291,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.395,
+      "fit_aligned": 0.336,
+      "fit_best": 0.336,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "instruction_id": "light_harsh",
+   "family": "lighting",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 7.248,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4876,
+    "output_tokens": 744,
+    "total_tokens": 5620
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -6,
+     "dy": 0,
+     "fit_px": 1.346
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 5847,
+      "shift_px": [
+       0.0,
+       2.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.55,
+      "fit_aligned": 1.159,
+      "fit_best": 0.946,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 608,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.41,
+      "fit_aligned": 0.448,
+      "fit_best": 0.448,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1291,
+      "shift_px": [
+       0.0,
+       -1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.395,
+      "fit_aligned": 0.699,
+      "fit_best": 0.375,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "instruction_id": "bg_wood",
+   "family": "background",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 8.31,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4875,
+    "output_tokens": 642,
+    "total_tokens": 5517
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -6,
+     "dy": -1,
+     "fit_px": 1.341
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 5847,
+      "shift_px": [
+       1.0,
+       -1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.55,
+      "fit_aligned": 0.854,
+      "fit_best": 0.374,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 608,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.41,
+      "fit_aligned": 0.391,
+      "fit_best": 0.391,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1291,
+      "shift_px": [
+       2.0,
+       -2.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.395,
+      "fit_aligned": 1.169,
+      "fit_best": 0.299,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "instruction_id": "bg_lab_bench",
+   "family": "background",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 12.691,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4886,
+    "output_tokens": 1026,
+    "total_tokens": 5912
+   },
+   "geometry": {
+    "verdict": "changed",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 0.98,
+     "dx": -5,
+     "dy": -2,
+     "fit_px": 1.368
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "missing",
+      "pixels": 5847,
+      "shift_px": [
+       -7.0,
+       -10.0
+      ],
+      "scale": 1.12,
+      "fit_original": 0.55,
+      "fit_aligned": 6.132,
+      "fit_best": 3.465,
+      "note": "no outline position is supported by edges"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 608,
+      "shift_px": [
+       0.0,
+       -1.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.41,
+      "fit_aligned": 1.031,
+      "fit_best": 0.493,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1291,
+      "shift_px": [
+       -1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.395,
+      "fit_aligned": 0.474,
+      "fit_best": 0.361,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "instruction_id": "distractor_mug",
+   "family": "distractor",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 7.685,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4881,
+    "output_tokens": 717,
+    "total_tokens": 5598
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -4,
+     "dy": 0,
+     "fit_px": 0.462
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 5847,
+      "shift_px": [
+       0.0,
+       -1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.55,
+      "fit_aligned": 0.701,
+      "fit_best": 0.491,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 608,
+      "shift_px": [
+       -1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.41,
+      "fit_aligned": 0.643,
+      "fit_best": 0.213,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1291,
+      "shift_px": [
+       0.0,
+       -1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.395,
+      "fit_aligned": 0.507,
+      "fit_best": 0.362,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "instruction_id": "distractor_paper",
+   "family": "distractor",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 6.591,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4880,
+    "output_tokens": 612,
+    "total_tokens": 5492
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -6,
+     "dy": -1,
+     "fit_px": 0.362
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 5847,
+      "shift_px": [
+       1.0,
+       -1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.55,
+      "fit_aligned": 0.427,
+      "fit_best": 0.416,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 608,
+      "shift_px": [
+       -1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.41,
+      "fit_aligned": 0.508,
+      "fit_best": 0.269,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1291,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.395,
+      "fit_aligned": 0.355,
+      "fit_best": 0.355,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "instruction_id": "material_glossy_cup",
+   "family": "material",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 5.348,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4871,
+    "output_tokens": 501,
+    "total_tokens": 5372
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -6,
+     "dy": 0,
+     "fit_px": 0.384
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "weakened",
+      "pixels": 5847,
+      "shift_px": [
+       0.0,
+       -1.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.55,
+      "fit_aligned": 2.422,
+      "fit_best": 1.692,
+      "note": "outline edges partly lost but not displaced"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 608,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.41,
+      "fit_aligned": 0.131,
+      "fit_best": 0.131,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1291,
+      "shift_px": [
+       0.0,
+       -1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.395,
+      "fit_aligned": 0.447,
+      "fit_best": 0.375,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "instruction_id": "noise_gauss",
+   "family": "sensor",
+   "kind": "local",
+   "status": "ok",
+   "latency_s": 0.067,
+   "from_cassette": false,
+   "out_size": [
+    1024,
+    576
+   ],
+   "error": "",
+   "usage": {},
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     1024,
+     576
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.141
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 5847,
+      "shift_px": [
+       0.0,
+       -1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.55,
+      "fit_aligned": 0.563,
+      "fit_best": 0.382,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 608,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.41,
+      "fit_aligned": 0.41,
+      "fit_best": 0.41,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1291,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.395,
+      "fit_aligned": 0.375,
+      "fit_best": 0.375,
+      "note": ""
+     }
+    }
+   },
+   "geometry_by_construction": "preserved"
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "instruction_id": "blur_gauss",
+   "family": "sensor",
+   "kind": "local",
+   "status": "ok",
+   "latency_s": 0.076,
+   "from_cassette": false,
+   "out_size": [
+    1024,
+    576
+   ],
+   "error": "",
+   "usage": {},
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     1024,
+     576
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.984
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 5847,
+      "shift_px": [
+       -3.0,
+       -2.0
+      ],
+      "scale": 0.94,
+      "fit_original": 0.55,
+      "fit_aligned": 1.012,
+      "fit_best": 0.877,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 608,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.41,
+      "fit_aligned": 0.407,
+      "fit_best": 0.407,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1291,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.395,
+      "fit_aligned": 0.303,
+      "fit_best": 0.303,
+      "note": ""
+     }
+    }
+   },
+   "geometry_by_construction": "preserved"
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "instruction_id": "blur_motion",
+   "family": "sensor",
+   "kind": "local",
+   "status": "ok",
+   "latency_s": 0.015,
+   "from_cassette": false,
+   "out_size": [
+    1024,
+    576
+   ],
+   "error": "",
+   "usage": {},
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     1024,
+     576
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.776
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 5847,
+      "shift_px": [
+       -3.0,
+       -1.0
+      ],
+      "scale": 0.94,
+      "fit_original": 0.55,
+      "fit_aligned": 0.963,
+      "fit_best": 0.676,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 608,
+      "shift_px": [
+       1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.41,
+      "fit_aligned": 0.492,
+      "fit_best": 0.417,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1291,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.395,
+      "fit_aligned": 0.23,
+      "fit_best": 0.23,
+      "note": ""
+     }
+    }
+   },
+   "geometry_by_construction": "preserved"
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "instruction_id": "light_dim",
+   "family": "lighting",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 6.868,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4880,
+    "output_tokens": 673,
+    "total_tokens": 5553
+   },
+   "geometry": {
+    "verdict": "changed",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 0.98,
+     "dx": -6,
+     "dy": -5,
+     "fit_px": 0.594
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "untested",
+      "pixels": 2977,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.0,
+      "fit_aligned": 0.0,
+      "fit_best": 0.0,
+      "note": "only 10 outline points lie on edges"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "moved",
+      "pixels": 1720,
+      "shift_px": [
+       2.0,
+       5.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.199,
+      "fit_aligned": 2.746,
+      "fit_best": 0.446,
+      "note": "outline best supported at shift (2, 5) px, scale 1.06"
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1130,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.377,
+      "fit_aligned": 0.657,
+      "fit_best": 0.463,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "instruction_id": "light_warm",
+   "family": "lighting",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 6.056,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4876,
+    "output_tokens": 712,
+    "total_tokens": 5588
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -8,
+     "dy": 0,
+     "fit_px": 0.764
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "untested",
+      "pixels": 2977,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.0,
+      "fit_aligned": 0.0,
+      "fit_best": 0.0,
+      "note": "only 10 outline points lie on edges"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1720,
+      "shift_px": [
+       1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.199,
+      "fit_aligned": 0.5,
+      "fit_best": 0.453,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "weakened",
+      "pixels": 1130,
+      "shift_px": [
+       3.0,
+       -5.0
+      ],
+      "scale": 0.88,
+      "fit_original": 0.377,
+      "fit_aligned": 2.559,
+      "fit_best": 2.045,
+      "note": "outline edges partly lost but not displaced"
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "instruction_id": "light_harsh",
+   "family": "lighting",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 10.113,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4880,
+    "output_tokens": 727,
+    "total_tokens": 5607
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -9,
+     "dy": -2,
+     "fit_px": 1.415
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "untested",
+      "pixels": 2977,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.0,
+      "fit_aligned": 0.0,
+      "fit_best": 0.0,
+      "note": "only 10 outline points lie on edges"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1720,
+      "shift_px": [
+       2.0,
+       1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.199,
+      "fit_aligned": 1.261,
+      "fit_best": 0.522,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1130,
+      "shift_px": [
+       1.0,
+       -1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.377,
+      "fit_aligned": 0.67,
+      "fit_best": 0.239,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "instruction_id": "bg_wood",
+   "family": "background",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 6.498,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4879,
+    "output_tokens": 643,
+    "total_tokens": 5522
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -15,
+     "dy": -2,
+     "fit_px": 1.999
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "untested",
+      "pixels": 2977,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.0,
+      "fit_aligned": 0.0,
+      "fit_best": 0.0,
+      "note": "only 10 outline points lie on edges"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1720,
+      "shift_px": [
+       2.0,
+       -1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.199,
+      "fit_aligned": 1.663,
+      "fit_best": 1.274,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1130,
+      "shift_px": [
+       -1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.377,
+      "fit_aligned": 0.524,
+      "fit_best": 0.443,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "instruction_id": "bg_lab_bench",
+   "family": "background",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 10.584,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4890,
+    "output_tokens": 1179,
+    "total_tokens": 6069
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 0.98,
+     "dx": -10,
+     "dy": -4,
+     "fit_px": 1.742
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "untested",
+      "pixels": 2977,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.0,
+      "fit_aligned": 0.0,
+      "fit_best": 0.0,
+      "note": "only 10 outline points lie on edges"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1720,
+      "shift_px": [
+       0.0,
+       2.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.199,
+      "fit_aligned": 0.964,
+      "fit_best": 0.333,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1130,
+      "shift_px": [
+       -1.0,
+       1.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.377,
+      "fit_aligned": 0.548,
+      "fit_best": 0.504,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "instruction_id": "distractor_mug",
+   "family": "distractor",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 6.991,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4885,
+    "output_tokens": 743,
+    "total_tokens": 5628
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -7,
+     "dy": -2,
+     "fit_px": 0.441
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "untested",
+      "pixels": 2977,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.0,
+      "fit_aligned": 0.0,
+      "fit_best": 0.0,
+      "note": "only 10 outline points lie on edges"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1720,
+      "shift_px": [
+       1.0,
+       1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.199,
+      "fit_aligned": 0.903,
+      "fit_best": 0.305,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1130,
+      "shift_px": [
+       1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.377,
+      "fit_aligned": 0.483,
+      "fit_best": 0.428,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "instruction_id": "distractor_paper",
+   "family": "distractor",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 6.582,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4884,
+    "output_tokens": 657,
+    "total_tokens": 5541
+   },
+   "geometry": {
+    "verdict": "changed",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 0.98,
+     "dx": -10,
+     "dy": -4,
+     "fit_px": 0.466
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "untested",
+      "pixels": 2977,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.0,
+      "fit_aligned": 0.0,
+      "fit_best": 0.0,
+      "note": "only 10 outline points lie on edges"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "moved",
+      "pixels": 1720,
+      "shift_px": [
+       0.0,
+       4.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.199,
+      "fit_aligned": 2.12,
+      "fit_best": 0.404,
+      "note": "outline best supported at shift (0, 4) px, scale 1.06"
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1130,
+      "shift_px": [
+       -1.0,
+       1.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.377,
+      "fit_aligned": 0.608,
+      "fit_best": 0.522,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "instruction_id": "material_glossy_cup",
+   "family": "material",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 6.875,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4875,
+    "output_tokens": 616,
+    "total_tokens": 5491
+   },
+   "geometry": {
+    "verdict": "changed",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -3,
+     "dy": -3,
+     "fit_px": 0.878
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "untested",
+      "pixels": 2977,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.0,
+      "fit_aligned": 0.0,
+      "fit_best": 0.0,
+      "note": "only 10 outline points lie on edges"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "resized",
+      "pixels": 1720,
+      "shift_px": [
+       1.0,
+       2.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.199,
+      "fit_aligned": 1.516,
+      "fit_best": 0.41,
+      "note": "outline best supported at shift (1, 2) px, scale 1.06"
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1130,
+      "shift_px": [
+       -1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.377,
+      "fit_aligned": 0.846,
+      "fit_best": 0.55,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "instruction_id": "noise_gauss",
+   "family": "sensor",
+   "kind": "local",
+   "status": "ok",
+   "latency_s": 0.051,
+   "from_cassette": false,
+   "out_size": [
+    1024,
+    576
+   ],
+   "error": "",
+   "usage": {},
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     1024,
+     576
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.158
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "untested",
+      "pixels": 2977,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.0,
+      "fit_aligned": 0.0,
+      "fit_best": 0.0,
+      "note": "only 10 outline points lie on edges"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1720,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.199,
+      "fit_aligned": 0.199,
+      "fit_best": 0.199,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1130,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.377,
+      "fit_aligned": 0.384,
+      "fit_best": 0.384,
+      "note": ""
+     }
+    }
+   },
+   "geometry_by_construction": "preserved"
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "instruction_id": "blur_gauss",
+   "family": "sensor",
+   "kind": "local",
+   "status": "ok",
+   "latency_s": 0.074,
+   "from_cassette": false,
+   "out_size": [
+    1024,
+    576
+   ],
+   "error": "",
+   "usage": {},
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     1024,
+     576
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.395
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "untested",
+      "pixels": 2977,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.0,
+      "fit_aligned": 0.0,
+      "fit_best": 0.0,
+      "note": "only 10 outline points lie on edges"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1720,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.199,
+      "fit_aligned": 0.142,
+      "fit_best": 0.142,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1130,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.377,
+      "fit_aligned": 0.338,
+      "fit_best": 0.338,
+      "note": ""
+     }
+    }
+   },
+   "geometry_by_construction": "preserved"
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "instruction_id": "blur_motion",
+   "family": "sensor",
+   "kind": "local",
+   "status": "ok",
+   "latency_s": 0.015,
+   "from_cassette": false,
+   "out_size": [
+    1024,
+    576
+   ],
+   "error": "",
+   "usage": {},
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     1024,
+     576
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.62
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "untested",
+      "pixels": 2977,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.0,
+      "fit_aligned": 0.0,
+      "fit_best": 0.0,
+      "note": "only 10 outline points lie on edges"
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1720,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.199,
+      "fit_aligned": 0.362,
+      "fit_best": 0.362,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 1130,
+      "shift_px": [
+       0.0,
+       -1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.377,
+      "fit_aligned": 0.311,
+      "fit_best": 0.258,
+      "note": ""
+     }
+    }
+   },
+   "geometry_by_construction": "preserved"
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "instruction_id": "light_dim",
+   "family": "lighting",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 8.357,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4876,
+    "output_tokens": 630,
+    "total_tokens": 5506
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -4,
+     "dy": 2,
+     "fit_px": 0.291
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 2262,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.612,
+      "fit_aligned": 0.679,
+      "fit_best": 0.679,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1008,
+      "shift_px": [
+       1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.504,
+      "fit_aligned": 1.073,
+      "fit_best": 0.61,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 602,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.172,
+      "fit_aligned": 0.344,
+      "fit_best": 0.344,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "instruction_id": "light_warm",
+   "family": "lighting",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 7.763,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4872,
+    "output_tokens": 739,
+    "total_tokens": 5611
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -4,
+     "dy": 2,
+     "fit_px": 0.519
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 2262,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.612,
+      "fit_aligned": 0.424,
+      "fit_best": 0.424,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1008,
+      "shift_px": [
+       6.0,
+       1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.504,
+      "fit_aligned": 0.652,
+      "fit_best": 0.335,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 602,
+      "shift_px": [
+       -1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.172,
+      "fit_aligned": 0.397,
+      "fit_best": 0.172,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "instruction_id": "light_harsh",
+   "family": "lighting",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 6.778,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4876,
+    "output_tokens": 678,
+    "total_tokens": 5554
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -1,
+     "dy": 3,
+     "fit_px": 1.482
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 2262,
+      "shift_px": [
+       0.0,
+       -1.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.612,
+      "fit_aligned": 0.809,
+      "fit_best": 0.703,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1008,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.504,
+      "fit_aligned": 0.762,
+      "fit_best": 0.358,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 602,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.172,
+      "fit_aligned": 0.586,
+      "fit_best": 0.586,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "instruction_id": "bg_wood",
+   "family": "background",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 9.212,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4875,
+    "output_tokens": 614,
+    "total_tokens": 5489
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -4,
+     "dy": 6,
+     "fit_px": 0.346
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 2262,
+      "shift_px": [
+       1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.612,
+      "fit_aligned": 0.96,
+      "fit_best": 0.893,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1008,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.504,
+      "fit_aligned": 0.669,
+      "fit_best": 0.436,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 602,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.172,
+      "fit_aligned": 0.203,
+      "fit_best": 0.203,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "instruction_id": "bg_lab_bench",
+   "family": "background",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 7.804,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4886,
+    "output_tokens": 1012,
+    "total_tokens": 5898
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -4,
+     "dy": 6,
+     "fit_px": 0.644
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 2262,
+      "shift_px": [
+       1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.612,
+      "fit_aligned": 1.132,
+      "fit_best": 0.937,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1008,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.504,
+      "fit_aligned": 0.727,
+      "fit_best": 0.395,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 602,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.172,
+      "fit_aligned": 0.381,
+      "fit_best": 0.381,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "instruction_id": "distractor_mug",
+   "family": "distractor",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 9.389,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4881,
+    "output_tokens": 557,
+    "total_tokens": 5438
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -3,
+     "dy": 3,
+     "fit_px": 0.306
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 2262,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.612,
+      "fit_aligned": 0.695,
+      "fit_best": 0.695,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1008,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.504,
+      "fit_aligned": 0.463,
+      "fit_best": 0.463,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 602,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.172,
+      "fit_aligned": 0.281,
+      "fit_best": 0.281,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "instruction_id": "distractor_paper",
+   "family": "distractor",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 8.12,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4880,
+    "output_tokens": 777,
+    "total_tokens": 5657
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -2,
+     "dy": 2,
+     "fit_px": 0.406
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 2262,
+      "shift_px": [
+       -1.0,
+       0.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.612,
+      "fit_aligned": 0.887,
+      "fit_best": 0.803,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1008,
+      "shift_px": [
+       -1.0,
+       0.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.504,
+      "fit_aligned": 0.817,
+      "fit_best": 0.552,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 602,
+      "shift_px": [
+       -1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.172,
+      "fit_aligned": 0.404,
+      "fit_best": 0.234,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "instruction_id": "material_glossy_cup",
+   "family": "material",
+   "kind": "model",
+   "status": "ok",
+   "latency_s": 6.027,
+   "from_cassette": true,
+   "out_size": [
+    2048,
+    1152
+   ],
+   "error": "",
+   "usage": {
+    "input_tokens": 4871,
+    "output_tokens": 567,
+    "total_tokens": 5438
+   },
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     2048,
+     1152
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -5,
+     "dy": 3,
+     "fit_px": 0.285
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 2262,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.612,
+      "fit_aligned": 0.612,
+      "fit_best": 0.612,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1008,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.504,
+      "fit_aligned": 0.537,
+      "fit_best": 0.537,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 602,
+      "shift_px": [
+       -1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.172,
+      "fit_aligned": 0.328,
+      "fit_best": 0.25,
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "instruction_id": "noise_gauss",
+   "family": "sensor",
+   "kind": "local",
+   "status": "ok",
+   "latency_s": 0.053,
+   "from_cassette": false,
+   "out_size": [
+    1024,
+    576
+   ],
+   "error": "",
+   "usage": {},
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     1024,
+     576
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.079
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 2262,
+      "shift_px": [
+       1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.612,
+      "fit_aligned": 0.662,
+      "fit_best": 0.59,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1008,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.504,
+      "fit_aligned": 0.512,
+      "fit_best": 0.512,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 602,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.172,
+      "fit_aligned": 0.172,
+      "fit_best": 0.172,
+      "note": ""
+     }
+    }
+   },
+   "geometry_by_construction": "preserved"
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "instruction_id": "blur_gauss",
+   "family": "sensor",
+   "kind": "local",
+   "status": "ok",
+   "latency_s": 0.081,
+   "from_cassette": false,
+   "out_size": [
+    1024,
+    576
+   ],
+   "error": "",
+   "usage": {},
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     1024,
+     576
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.672
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 2262,
+      "shift_px": [
+       -5.0,
+       5.0
+      ],
+      "scale": 1.06,
+      "fit_original": 0.612,
+      "fit_aligned": 1.834,
+      "fit_best": 1.154,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1008,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.504,
+      "fit_aligned": 0.463,
+      "fit_best": 0.463,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 602,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.172,
+      "fit_aligned": 0.295,
+      "fit_best": 0.295,
+      "note": ""
+     }
+    }
+   },
+   "geometry_by_construction": "preserved"
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "instruction_id": "blur_motion",
+   "family": "sensor",
+   "kind": "local",
+   "status": "ok",
+   "latency_s": 0.014,
+   "from_cassette": false,
+   "out_size": [
+    1024,
+    576
+   ],
+   "error": "",
+   "usage": {},
+   "geometry": {
+    "verdict": "preserved",
+    "size_in": [
+     1024,
+     576
+    ],
+    "size_out": [
+     1024,
+     576
+    ],
+    "global_shift_px": [
+     0,
+     0
+    ],
+    "registration": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.671
+    },
+    "objects": {
+     "cup": {
+      "cls": "cup",
+      "verdict": "kept",
+      "pixels": 2262,
+      "shift_px": [
+       -1.0,
+       1.0
+      ],
+      "scale": 0.88,
+      "fit_original": 0.612,
+      "fit_aligned": 1.365,
+      "fit_best": 0.87,
+      "note": ""
+     },
+     "block": {
+      "cls": "block",
+      "verdict": "kept",
+      "pixels": 1008,
+      "shift_px": [
+       -1.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.504,
+      "fit_aligned": 0.826,
+      "fit_best": 0.496,
+      "note": ""
+     },
+     "marker": {
+      "cls": "marker",
+      "verdict": "kept",
+      "pixels": 602,
+      "shift_px": [
+       0.0,
+       0.0
+      ],
+      "scale": 1.0,
+      "fit_original": 0.172,
+      "fit_aligned": 0.288,
+      "fit_best": 0.288,
+      "note": ""
+     }
+    }
+   },
+   "geometry_by_construction": "preserved"
+  }
+ ],
+ "rows": [
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "original",
+   "family": "original",
+   "instruction_id": "original",
+   "cls": "cup",
+   "gt_pixels": 5847,
+   "geometry": "original",
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9843,
+   "iou_best": 0.9843,
+   "centroid_err_px": 0.05,
+   "confidence": 0.6952381134033203
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "original",
+   "family": "original",
+   "instruction_id": "original",
+   "cls": "block",
+   "gt_pixels": 608,
+   "geometry": "original",
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9617,
+   "iou_best": 0.9617,
+   "centroid_err_px": 0.02,
+   "confidence": 0.8552036285400391
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "original",
+   "family": "original",
+   "instruction_id": "original",
+   "cls": "marker",
+   "gt_pixels": 1291,
+   "geometry": "original",
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9877,
+   "iou_best": 0.9877,
+   "centroid_err_px": 0.02,
+   "confidence": 0.8987342119216919
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "light_dim",
+   "family": "lighting",
+   "instruction_id": "light_dim",
+   "cls": "cup",
+   "gt_pixels": 5847,
+   "geometry": "kept",
+   "iou_delta": -0.9843,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "light_dim",
+   "family": "lighting",
+   "instruction_id": "light_dim",
+   "cls": "block",
+   "gt_pixels": 608,
+   "geometry": "kept",
+   "iou_delta": -0.0312,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9305,
+   "iou_best": 0.9305,
+   "centroid_err_px": 0.52,
+   "confidence": 0.8518518805503845
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "light_dim",
+   "family": "lighting",
+   "instruction_id": "light_dim",
+   "cls": "marker",
+   "gt_pixels": 1291,
+   "geometry": "kept",
+   "iou_delta": -0.9877,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "light_warm",
+   "family": "lighting",
+   "instruction_id": "light_warm",
+   "cls": "cup",
+   "gt_pixels": 5847,
+   "geometry": "weakened",
+   "iou_delta": -0.9843,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "light_warm",
+   "family": "lighting",
+   "instruction_id": "light_warm",
+   "cls": "block",
+   "gt_pixels": 608,
+   "geometry": "kept",
+   "iou_delta": -0.0448,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9169,
+   "iou_best": 0.9169,
+   "centroid_err_px": 0.7,
+   "confidence": 0.8202247023582458
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "light_warm",
+   "family": "lighting",
+   "instruction_id": "light_warm",
+   "cls": "marker",
+   "gt_pixels": 1291,
+   "geometry": "kept",
+   "iou_delta": -0.02,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9677,
+   "iou_best": 0.9677,
+   "centroid_err_px": 0.43,
+   "confidence": 0.7697842121124268
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "light_harsh",
+   "family": "lighting",
+   "instruction_id": "light_harsh",
+   "cls": "cup",
+   "gt_pixels": 5847,
+   "geometry": "kept",
+   "iou_delta": -0.9843,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "light_harsh",
+   "family": "lighting",
+   "instruction_id": "light_harsh",
+   "cls": "block",
+   "gt_pixels": 608,
+   "geometry": "kept",
+   "iou_delta": -0.0293,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9324,
+   "iou_best": 0.9324,
+   "centroid_err_px": 0.75,
+   "confidence": 0.8400000333786011
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "light_harsh",
+   "family": "lighting",
+   "instruction_id": "light_harsh",
+   "cls": "marker",
+   "gt_pixels": 1291,
+   "geometry": "kept",
+   "iou_delta": -0.0806,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9071,
+   "iou_best": 0.9071,
+   "centroid_err_px": 1.1,
+   "confidence": 0.7064220309257507
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "bg_wood",
+   "family": "background",
+   "instruction_id": "bg_wood",
+   "cls": "cup",
+   "gt_pixels": 5847,
+   "geometry": "kept",
+   "iou_delta": -0.039,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9453,
+   "iou_best": 0.9453,
+   "centroid_err_px": 1.99,
+   "confidence": 0.7460317611694336
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "bg_wood",
+   "family": "background",
+   "instruction_id": "bg_wood",
+   "cls": "block",
+   "gt_pixels": 608,
+   "geometry": "kept",
+   "iou_delta": -0.0415,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9202,
+   "iou_best": 0.9202,
+   "centroid_err_px": 0.78,
+   "confidence": 0.8400000333786011
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "bg_wood",
+   "family": "background",
+   "instruction_id": "bg_wood",
+   "cls": "marker",
+   "gt_pixels": 1291,
+   "geometry": "kept",
+   "iou_delta": -0.0931,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.8946,
+   "iou_best": 0.8946,
+   "centroid_err_px": 1.94,
+   "confidence": 0.9452055096626282
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "bg_lab_bench",
+   "family": "background",
+   "instruction_id": "bg_lab_bench",
+   "cls": "cup",
+   "gt_pixels": 5847,
+   "geometry": "missing",
+   "iou_delta": -0.5379,
+   "found_original": true,
+   "found": true,
+   "n_matches": 2,
+   "iou": 0.4464,
+   "iou_best": 0.4464,
+   "centroid_err_px": 22.97,
+   "confidence": 0.7655677795410156
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "bg_lab_bench",
+   "family": "background",
+   "instruction_id": "bg_lab_bench",
+   "cls": "block",
+   "gt_pixels": 608,
+   "geometry": "kept",
+   "iou_delta": -0.1089,
+   "found_original": true,
+   "found": true,
+   "n_matches": 2,
+   "iou": 0.8528,
+   "iou_best": 0.8528,
+   "centroid_err_px": 1.79,
+   "confidence": 0.8518518805503845
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "bg_lab_bench",
+   "family": "background",
+   "instruction_id": "bg_lab_bench",
+   "cls": "marker",
+   "gt_pixels": 1291,
+   "geometry": "kept",
+   "iou_delta": -0.0378,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9499,
+   "iou_best": 0.9499,
+   "centroid_err_px": 0.46,
+   "confidence": 0.8358974456787109
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "distractor_mug",
+   "family": "distractor",
+   "instruction_id": "distractor_mug",
+   "cls": "cup",
+   "gt_pixels": 5847,
+   "geometry": "kept",
+   "iou_delta": -0.0288,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9555,
+   "iou_best": 0.9555,
+   "centroid_err_px": 1.73,
+   "confidence": 0.7344398498535156
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "distractor_mug",
+   "family": "distractor",
+   "instruction_id": "distractor_mug",
+   "cls": "block",
+   "gt_pixels": 608,
+   "geometry": "kept",
+   "iou_delta": -0.0322,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9295,
+   "iou_best": 0.9295,
+   "centroid_err_px": 0.61,
+   "confidence": 0.8750000596046448
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "distractor_mug",
+   "family": "distractor",
+   "instruction_id": "distractor_mug",
+   "cls": "marker",
+   "gt_pixels": 1291,
+   "geometry": "kept",
+   "iou_delta": -0.0368,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9509,
+   "iou_best": 0.9509,
+   "centroid_err_px": 0.89,
+   "confidence": 0.9139785170555115
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "distractor_paper",
+   "family": "distractor",
+   "instruction_id": "distractor_paper",
+   "cls": "cup",
+   "gt_pixels": 5847,
+   "geometry": "kept",
+   "iou_delta": -0.004,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9803,
+   "iou_best": 0.9803,
+   "centroid_err_px": 0.57,
+   "confidence": 0.5428571701049805
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "distractor_paper",
+   "family": "distractor",
+   "instruction_id": "distractor_paper",
+   "cls": "block",
+   "gt_pixels": 608,
+   "geometry": "kept",
+   "iou_delta": -0.0187,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.943,
+   "iou_best": 0.943,
+   "centroid_err_px": 0.43,
+   "confidence": 0.859649121761322
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "distractor_paper",
+   "family": "distractor",
+   "instruction_id": "distractor_paper",
+   "cls": "marker",
+   "gt_pixels": 1291,
+   "geometry": "kept",
+   "iou_delta": -0.01,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9777,
+   "iou_best": 0.9777,
+   "centroid_err_px": 0.45,
+   "confidence": 0.9101123809814453
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "material_glossy_cup",
+   "family": "material",
+   "instruction_id": "material_glossy_cup",
+   "cls": "cup",
+   "gt_pixels": 5847,
+   "geometry": "weakened",
+   "iou_delta": -0.9843,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "material_glossy_cup",
+   "family": "material",
+   "instruction_id": "material_glossy_cup",
+   "cls": "block",
+   "gt_pixels": 608,
+   "geometry": "kept",
+   "iou_delta": -0.017,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9447,
+   "iou_best": 0.9447,
+   "centroid_err_px": 0.43,
+   "confidence": 0.8552036285400391
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "material_glossy_cup",
+   "family": "material",
+   "instruction_id": "material_glossy_cup",
+   "cls": "marker",
+   "gt_pixels": 1291,
+   "geometry": "kept",
+   "iou_delta": -0.0206,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9671,
+   "iou_best": 0.9671,
+   "centroid_err_px": 0.86,
+   "confidence": 0.9375000596046448
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "noise_gauss",
+   "family": "sensor",
+   "instruction_id": "noise_gauss",
+   "cls": "cup",
+   "gt_pixels": 5847,
+   "geometry": "preserved",
+   "iou_delta": -0.0074,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9769,
+   "iou_best": 0.9769,
+   "centroid_err_px": 0.19,
+   "confidence": 0.6559139490127563
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "noise_gauss",
+   "family": "sensor",
+   "instruction_id": "noise_gauss",
+   "cls": "block",
+   "gt_pixels": 608,
+   "geometry": "preserved",
+   "iou_delta": 0.0,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9617,
+   "iou_best": 0.9617,
+   "centroid_err_px": 0.27,
+   "confidence": 0.8083832263946533
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "noise_gauss",
+   "family": "sensor",
+   "instruction_id": "noise_gauss",
+   "cls": "marker",
+   "gt_pixels": 1291,
+   "geometry": "preserved",
+   "iou_delta": 0.0,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9877,
+   "iou_best": 0.9877,
+   "centroid_err_px": 0.06,
+   "confidence": 0.9064327478408813
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "blur_gauss",
+   "family": "sensor",
+   "instruction_id": "blur_gauss",
+   "cls": "cup",
+   "gt_pixels": 5847,
+   "geometry": "preserved",
+   "iou_delta": -0.0036,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9807,
+   "iou_best": 0.9807,
+   "centroid_err_px": 0.5,
+   "confidence": 0.7387754917144775
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "blur_gauss",
+   "family": "sensor",
+   "instruction_id": "blur_gauss",
+   "cls": "block",
+   "gt_pixels": 608,
+   "geometry": "preserved",
+   "iou_delta": -0.0195,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9422,
+   "iou_best": 0.9422,
+   "centroid_err_px": 0.19,
+   "confidence": 0.8048780560493469
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "blur_gauss",
+   "family": "sensor",
+   "instruction_id": "blur_gauss",
+   "cls": "marker",
+   "gt_pixels": 1291,
+   "geometry": "preserved",
+   "iou_delta": -0.0146,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9731,
+   "iou_best": 0.9731,
+   "centroid_err_px": 0.25,
+   "confidence": 0.921951174736023
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "blur_motion",
+   "family": "sensor",
+   "instruction_id": "blur_motion",
+   "cls": "cup",
+   "gt_pixels": 5847,
+   "geometry": "preserved",
+   "iou_delta": -0.0072,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9771,
+   "iou_best": 0.9771,
+   "centroid_err_px": 0.67,
+   "confidence": 0.7344398498535156
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "blur_motion",
+   "family": "sensor",
+   "instruction_id": "blur_motion",
+   "cls": "block",
+   "gt_pixels": 608,
+   "geometry": "preserved",
+   "iou_delta": -0.0962,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.8655,
+   "iou_best": 0.8655,
+   "centroid_err_px": 0.61,
+   "confidence": 0.7730495929718018
+  },
+  {
+   "frame_id": "dev3_oblique_start",
+   "camera": "oblique",
+   "moment": "start",
+   "version": "blur_motion",
+   "family": "sensor",
+   "instruction_id": "blur_motion",
+   "cls": "marker",
+   "gt_pixels": 1291,
+   "geometry": "preserved",
+   "iou_delta": -0.0337,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.954,
+   "iou_best": 0.954,
+   "centroid_err_px": 0.17,
+   "confidence": 0.9139785170555115
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "original",
+   "family": "original",
+   "instruction_id": "original",
+   "cls": "cup",
+   "gt_pixels": 2977,
+   "geometry": "original",
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9683,
+   "iou_best": 0.9683,
+   "centroid_err_px": 0.19,
+   "confidence": 0.7419355511665344
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "original",
+   "family": "original",
+   "instruction_id": "original",
+   "cls": "block",
+   "gt_pixels": 1720,
+   "geometry": "original",
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9809,
+   "iou_best": 0.9809,
+   "centroid_err_px": 0.2,
+   "confidence": 0.921951174736023
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "original",
+   "family": "original",
+   "instruction_id": "original",
+   "cls": "marker",
+   "gt_pixels": 1130,
+   "geometry": "original",
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9805,
+   "iou_best": 0.9805,
+   "centroid_err_px": 0.08,
+   "confidence": 0.9064327478408813
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "light_dim",
+   "family": "lighting",
+   "instruction_id": "light_dim",
+   "cls": "cup",
+   "gt_pixels": 2977,
+   "geometry": "untested",
+   "iou_delta": -0.9683,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "light_dim",
+   "family": "lighting",
+   "instruction_id": "light_dim",
+   "cls": "block",
+   "gt_pixels": 1720,
+   "geometry": "moved",
+   "iou_delta": -0.2285,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.7524,
+   "iou_best": 0.7524,
+   "centroid_err_px": 5.28,
+   "confidence": 0.921951174736023
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "light_dim",
+   "family": "lighting",
+   "instruction_id": "light_dim",
+   "cls": "marker",
+   "gt_pixels": 1130,
+   "geometry": "kept",
+   "iou_delta": -0.9805,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "light_warm",
+   "family": "lighting",
+   "instruction_id": "light_warm",
+   "cls": "cup",
+   "gt_pixels": 2977,
+   "geometry": "untested",
+   "iou_delta": -0.9683,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "light_warm",
+   "family": "lighting",
+   "instruction_id": "light_warm",
+   "cls": "block",
+   "gt_pixels": 1720,
+   "geometry": "kept",
+   "iou_delta": -0.0379,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.943,
+   "iou_best": 0.943,
+   "centroid_err_px": 0.95,
+   "confidence": 0.9179486632347107
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "light_warm",
+   "family": "lighting",
+   "instruction_id": "light_warm",
+   "cls": "marker",
+   "gt_pixels": 1130,
+   "geometry": "weakened",
+   "iou_delta": -0.0876,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.8929,
+   "iou_best": 0.8929,
+   "centroid_err_px": 0.94,
+   "confidence": 0.859649121761322
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "light_harsh",
+   "family": "lighting",
+   "instruction_id": "light_harsh",
+   "cls": "cup",
+   "gt_pixels": 2977,
+   "geometry": "untested",
+   "iou_delta": -0.0143,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.954,
+   "iou_best": 0.954,
+   "centroid_err_px": 0.77,
+   "confidence": 0.6213017702102661
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "light_harsh",
+   "family": "lighting",
+   "instruction_id": "light_harsh",
+   "cls": "block",
+   "gt_pixels": 1720,
+   "geometry": "kept",
+   "iou_delta": -0.1052,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.8757,
+   "iou_best": 0.8757,
+   "centroid_err_px": 2.19,
+   "confidence": 0.9259259104728699
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "light_harsh",
+   "family": "lighting",
+   "instruction_id": "light_harsh",
+   "cls": "marker",
+   "gt_pixels": 1130,
+   "geometry": "kept",
+   "iou_delta": -0.0288,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9517,
+   "iou_best": 0.9517,
+   "centroid_err_px": 0.78,
+   "confidence": 0.8400000333786011
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "bg_wood",
+   "family": "background",
+   "instruction_id": "bg_wood",
+   "cls": "cup",
+   "gt_pixels": 2977,
+   "geometry": "untested",
+   "iou_delta": -0.0472,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9211,
+   "iou_best": 0.9211,
+   "centroid_err_px": 1.42,
+   "confidence": 0.7299578189849854
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "bg_wood",
+   "family": "background",
+   "instruction_id": "bg_wood",
+   "cls": "block",
+   "gt_pixels": 1720,
+   "geometry": "kept",
+   "iou_delta": -0.0627,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9182,
+   "iou_best": 0.9182,
+   "centroid_err_px": 1.54,
+   "confidence": 0.921951174736023
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "bg_wood",
+   "family": "background",
+   "instruction_id": "bg_wood",
+   "cls": "marker",
+   "gt_pixels": 1130,
+   "geometry": "kept",
+   "iou_delta": -0.0734,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9071,
+   "iou_best": 0.9071,
+   "centroid_err_px": 0.76,
+   "confidence": 0.9452055096626282
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "bg_lab_bench",
+   "family": "background",
+   "instruction_id": "bg_lab_bench",
+   "cls": "cup",
+   "gt_pixels": 2977,
+   "geometry": "untested",
+   "iou_delta": -0.0913,
+   "found_original": true,
+   "found": true,
+   "n_matches": 2,
+   "iou": 0.877,
+   "iou_best": 0.877,
+   "centroid_err_px": 1.51,
+   "confidence": 0.6995305418968201
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "bg_lab_bench",
+   "family": "background",
+   "instruction_id": "bg_lab_bench",
+   "cls": "block",
+   "gt_pixels": 1720,
+   "geometry": "kept",
+   "iou_delta": -0.0719,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.909,
+   "iou_best": 0.909,
+   "centroid_err_px": 1.57,
+   "confidence": 0.921951174736023
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "bg_lab_bench",
+   "family": "background",
+   "instruction_id": "bg_lab_bench",
+   "cls": "marker",
+   "gt_pixels": 1130,
+   "geometry": "kept",
+   "iou_delta": -0.0561,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9244,
+   "iou_best": 0.9244,
+   "centroid_err_px": 0.82,
+   "confidence": 0.8787879347801208
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "distractor_mug",
+   "family": "distractor",
+   "instruction_id": "distractor_mug",
+   "cls": "cup",
+   "gt_pixels": 2977,
+   "geometry": "untested",
+   "iou_delta": -0.0117,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9566,
+   "iou_best": 0.9566,
+   "centroid_err_px": 0.53,
+   "confidence": 0.7538461089134216
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "distractor_mug",
+   "family": "distractor",
+   "instruction_id": "distractor_mug",
+   "cls": "block",
+   "gt_pixels": 1720,
+   "geometry": "kept",
+   "iou_delta": -0.0761,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9048,
+   "iou_best": 0.9048,
+   "centroid_err_px": 1.68,
+   "confidence": 0.921951174736023
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "distractor_mug",
+   "family": "distractor",
+   "instruction_id": "distractor_mug",
+   "cls": "marker",
+   "gt_pixels": 1130,
+   "geometry": "kept",
+   "iou_delta": -0.0431,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9374,
+   "iou_best": 0.9374,
+   "centroid_err_px": 0.67,
+   "confidence": 0.859649121761322
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "distractor_paper",
+   "family": "distractor",
+   "instruction_id": "distractor_paper",
+   "cls": "cup",
+   "gt_pixels": 2977,
+   "geometry": "untested",
+   "iou_delta": -0.0078,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9605,
+   "iou_best": 0.9605,
+   "centroid_err_px": 0.27,
+   "confidence": 0.6332378387451172
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "distractor_paper",
+   "family": "distractor",
+   "instruction_id": "distractor_paper",
+   "cls": "block",
+   "gt_pixels": 1720,
+   "geometry": "moved",
+   "iou_delta": -0.174,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.8069,
+   "iou_best": 0.8069,
+   "centroid_err_px": 3.8,
+   "confidence": 0.9139785170555115
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "distractor_paper",
+   "family": "distractor",
+   "instruction_id": "distractor_paper",
+   "cls": "marker",
+   "gt_pixels": 1130,
+   "geometry": "kept",
+   "iou_delta": -0.0371,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9434,
+   "iou_best": 0.9434,
+   "centroid_err_px": 0.59,
+   "confidence": 0.9139785170555115
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "material_glossy_cup",
+   "family": "material",
+   "instruction_id": "material_glossy_cup",
+   "cls": "cup",
+   "gt_pixels": 2977,
+   "geometry": "untested",
+   "iou_delta": -0.9683,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "material_glossy_cup",
+   "family": "material",
+   "instruction_id": "material_glossy_cup",
+   "cls": "block",
+   "gt_pixels": 1720,
+   "geometry": "resized",
+   "iou_delta": -0.1168,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.8641,
+   "iou_best": 0.8641,
+   "centroid_err_px": 2.65,
+   "confidence": 0.921951174736023
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "material_glossy_cup",
+   "family": "material",
+   "instruction_id": "material_glossy_cup",
+   "cls": "marker",
+   "gt_pixels": 1130,
+   "geometry": "kept",
+   "iou_delta": -0.0954,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.8851,
+   "iou_best": 0.8851,
+   "centroid_err_px": 1.08,
+   "confidence": 0.9298245906829834
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "noise_gauss",
+   "family": "sensor",
+   "instruction_id": "noise_gauss",
+   "cls": "cup",
+   "gt_pixels": 2977,
+   "geometry": "preserved",
+   "iou_delta": -0.0299,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9384,
+   "iou_best": 0.9384,
+   "centroid_err_px": 0.65,
+   "confidence": 0.5775577425956726
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "noise_gauss",
+   "family": "sensor",
+   "instruction_id": "noise_gauss",
+   "cls": "block",
+   "gt_pixels": 1720,
+   "geometry": "preserved",
+   "iou_delta": -0.0011,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9798,
+   "iou_best": 0.9798,
+   "centroid_err_px": 0.07,
+   "confidence": 0.9139785170555115
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "noise_gauss",
+   "family": "sensor",
+   "instruction_id": "noise_gauss",
+   "cls": "marker",
+   "gt_pixels": 1130,
+   "geometry": "preserved",
+   "iou_delta": 0.0009,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9814,
+   "iou_best": 0.9814,
+   "centroid_err_px": 0.2,
+   "confidence": 0.9024390578269958
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "blur_gauss",
+   "family": "sensor",
+   "instruction_id": "blur_gauss",
+   "cls": "cup",
+   "gt_pixels": 2977,
+   "geometry": "preserved",
+   "iou_delta": -0.0404,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9279,
+   "iou_best": 0.9279,
+   "centroid_err_px": 1.09,
+   "confidence": 0.6167664527893066
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "blur_gauss",
+   "family": "sensor",
+   "instruction_id": "blur_gauss",
+   "cls": "block",
+   "gt_pixels": 1720,
+   "geometry": "preserved",
+   "iou_delta": -0.0089,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.972,
+   "iou_best": 0.972,
+   "centroid_err_px": 0.45,
+   "confidence": 0.9064327478408813
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "blur_gauss",
+   "family": "sensor",
+   "instruction_id": "blur_gauss",
+   "cls": "marker",
+   "gt_pixels": 1130,
+   "geometry": "preserved",
+   "iou_delta": -0.0221,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9584,
+   "iou_best": 0.9584,
+   "centroid_err_px": 0.66,
+   "confidence": 0.9139785170555115
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "blur_motion",
+   "family": "sensor",
+   "instruction_id": "blur_motion",
+   "cls": "cup",
+   "gt_pixels": 2977,
+   "geometry": "preserved",
+   "iou_delta": -0.0267,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9416,
+   "iou_best": 0.9416,
+   "centroid_err_px": 0.54,
+   "confidence": 0.5395683646202087
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "blur_motion",
+   "family": "sensor",
+   "instruction_id": "blur_motion",
+   "cls": "block",
+   "gt_pixels": 1720,
+   "geometry": "preserved",
+   "iou_delta": -0.0126,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9683,
+   "iou_best": 0.9683,
+   "centroid_err_px": 0.42,
+   "confidence": 0.9024390578269958
+  },
+  {
+   "frame_id": "dev8_oblique_carry",
+   "camera": "oblique",
+   "moment": "carry",
+   "version": "blur_motion",
+   "family": "sensor",
+   "instruction_id": "blur_motion",
+   "cls": "marker",
+   "gt_pixels": 1130,
+   "geometry": "preserved",
+   "iou_delta": -0.0515,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.929,
+   "iou_best": 0.929,
+   "centroid_err_px": 0.43,
+   "confidence": 0.9139785170555115
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "original",
+   "family": "original",
+   "instruction_id": "original",
+   "cls": "cup",
+   "gt_pixels": 2262,
+   "geometry": "original",
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.8788,
+   "iou_best": 0.8788,
+   "centroid_err_px": 0.78,
+   "confidence": 0.5857605338096619
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "original",
+   "family": "original",
+   "instruction_id": "original",
+   "cls": "block",
+   "gt_pixels": 1008,
+   "geometry": "original",
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.971,
+   "iou_best": 0.971,
+   "centroid_err_px": 0.41,
+   "confidence": 0.9139785170555115
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "original",
+   "family": "original",
+   "instruction_id": "original",
+   "cls": "marker",
+   "gt_pixels": 602,
+   "geometry": "original",
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9725,
+   "iou_best": 0.9725,
+   "centroid_err_px": 0.06,
+   "confidence": 0.7344398498535156
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "light_dim",
+   "family": "lighting",
+   "instruction_id": "light_dim",
+   "cls": "cup",
+   "gt_pixels": 2262,
+   "geometry": "kept",
+   "iou_delta": -0.8788,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "light_dim",
+   "family": "lighting",
+   "instruction_id": "light_dim",
+   "cls": "block",
+   "gt_pixels": 1008,
+   "geometry": "kept",
+   "iou_delta": -0.0424,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9286,
+   "iou_best": 0.9286,
+   "centroid_err_px": 0.79,
+   "confidence": 0.9101123809814453
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "light_dim",
+   "family": "lighting",
+   "instruction_id": "light_dim",
+   "cls": "marker",
+   "gt_pixels": 602,
+   "geometry": "kept",
+   "iou_delta": -0.014,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9585,
+   "iou_best": 0.9585,
+   "centroid_err_px": 0.3,
+   "confidence": 0.6246334314346313
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "light_warm",
+   "family": "lighting",
+   "instruction_id": "light_warm",
+   "cls": "cup",
+   "gt_pixels": 2262,
+   "geometry": "kept",
+   "iou_delta": -0.8788,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "light_warm",
+   "family": "lighting",
+   "instruction_id": "light_warm",
+   "cls": "block",
+   "gt_pixels": 1008,
+   "geometry": "kept",
+   "iou_delta": -0.0028,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9682,
+   "iou_best": 0.9682,
+   "centroid_err_px": 0.44,
+   "confidence": 0.8987342119216919
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "light_warm",
+   "family": "lighting",
+   "instruction_id": "light_warm",
+   "cls": "marker",
+   "gt_pixels": 602,
+   "geometry": "kept",
+   "iou_delta": -0.9725,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "light_harsh",
+   "family": "lighting",
+   "instruction_id": "light_harsh",
+   "cls": "cup",
+   "gt_pixels": 2262,
+   "geometry": "kept",
+   "iou_delta": 0.0479,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9267,
+   "iou_best": 0.9267,
+   "centroid_err_px": 0.69,
+   "confidence": 0.5395683646202087
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "light_harsh",
+   "family": "lighting",
+   "instruction_id": "light_harsh",
+   "cls": "block",
+   "gt_pixels": 1008,
+   "geometry": "kept",
+   "iou_delta": -0.0333,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9377,
+   "iou_best": 0.9377,
+   "centroid_err_px": 0.09,
+   "confidence": 0.9179486632347107
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "light_harsh",
+   "family": "lighting",
+   "instruction_id": "light_harsh",
+   "cls": "marker",
+   "gt_pixels": 602,
+   "geometry": "kept",
+   "iou_delta": -0.0513,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9212,
+   "iou_best": 0.9212,
+   "centroid_err_px": 0.65,
+   "confidence": 0.8358974456787109
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "bg_wood",
+   "family": "background",
+   "instruction_id": "bg_wood",
+   "cls": "cup",
+   "gt_pixels": 2262,
+   "geometry": "kept",
+   "iou_delta": 0.0608,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9396,
+   "iou_best": 0.9396,
+   "centroid_err_px": 0.65,
+   "confidence": 0.6521739363670349
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "bg_wood",
+   "family": "background",
+   "instruction_id": "bg_wood",
+   "cls": "block",
+   "gt_pixels": 1008,
+   "geometry": "kept",
+   "iou_delta": -0.0475,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9235,
+   "iou_best": 0.9235,
+   "centroid_err_px": 1.06,
+   "confidence": 0.921951174736023
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "bg_wood",
+   "family": "background",
+   "instruction_id": "bg_wood",
+   "cls": "marker",
+   "gt_pixels": 602,
+   "geometry": "kept",
+   "iou_delta": -0.017,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9555,
+   "iou_best": 0.9555,
+   "centroid_err_px": 0.27,
+   "confidence": 0.8324607610702515
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "bg_lab_bench",
+   "family": "background",
+   "instruction_id": "bg_lab_bench",
+   "cls": "cup",
+   "gt_pixels": 2262,
+   "geometry": "kept",
+   "iou_delta": -0.8788,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "bg_lab_bench",
+   "family": "background",
+   "instruction_id": "bg_lab_bench",
+   "cls": "block",
+   "gt_pixels": 1008,
+   "geometry": "kept",
+   "iou_delta": -0.0535,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9175,
+   "iou_best": 0.9175,
+   "centroid_err_px": 1.19,
+   "confidence": 0.9139785170555115
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "bg_lab_bench",
+   "family": "background",
+   "instruction_id": "bg_lab_bench",
+   "cls": "marker",
+   "gt_pixels": 602,
+   "geometry": "kept",
+   "iou_delta": -0.9725,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "distractor_mug",
+   "family": "distractor",
+   "instruction_id": "distractor_mug",
+   "cls": "cup",
+   "gt_pixels": 2262,
+   "geometry": "kept",
+   "iou_delta": -0.0131,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.8657,
+   "iou_best": 0.8657,
+   "centroid_err_px": 1.01,
+   "confidence": 0.719298243522644
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "distractor_mug",
+   "family": "distractor",
+   "instruction_id": "distractor_mug",
+   "cls": "block",
+   "gt_pixels": 1008,
+   "geometry": "kept",
+   "iou_delta": 0.0028,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9738,
+   "iou_best": 0.9738,
+   "centroid_err_px": 0.35,
+   "confidence": 0.921951174736023
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "distractor_mug",
+   "family": "distractor",
+   "instruction_id": "distractor_mug",
+   "cls": "marker",
+   "gt_pixels": 602,
+   "geometry": "kept",
+   "iou_delta": -0.0169,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9556,
+   "iou_best": 0.9556,
+   "centroid_err_px": 0.14,
+   "confidence": 0.7460317611694336
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "distractor_paper",
+   "family": "distractor",
+   "instruction_id": "distractor_paper",
+   "cls": "cup",
+   "gt_pixels": 2262,
+   "geometry": "kept",
+   "iou_delta": -0.0045,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.8743,
+   "iou_best": 0.8743,
+   "centroid_err_px": 0.91,
+   "confidence": 0.6213017702102661
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "distractor_paper",
+   "family": "distractor",
+   "instruction_id": "distractor_paper",
+   "cls": "block",
+   "gt_pixels": 1008,
+   "geometry": "kept",
+   "iou_delta": -0.0192,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9518,
+   "iou_best": 0.9518,
+   "centroid_err_px": 0.05,
+   "confidence": 0.9179486632347107
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "distractor_paper",
+   "family": "distractor",
+   "instruction_id": "distractor_paper",
+   "cls": "marker",
+   "gt_pixels": 602,
+   "geometry": "kept",
+   "iou_delta": -0.041,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9315,
+   "iou_best": 0.9315,
+   "centroid_err_px": 0.48,
+   "confidence": 0.7142857313156128
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "material_glossy_cup",
+   "family": "material",
+   "instruction_id": "material_glossy_cup",
+   "cls": "cup",
+   "gt_pixels": 2262,
+   "geometry": "kept",
+   "iou_delta": -0.8788,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "material_glossy_cup",
+   "family": "material",
+   "instruction_id": "material_glossy_cup",
+   "cls": "block",
+   "gt_pixels": 1008,
+   "geometry": "kept",
+   "iou_delta": -0.036,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.935,
+   "iou_best": 0.935,
+   "centroid_err_px": 0.87,
+   "confidence": 0.921951174736023
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "material_glossy_cup",
+   "family": "material",
+   "instruction_id": "material_glossy_cup",
+   "cls": "marker",
+   "gt_pixels": 602,
+   "geometry": "kept",
+   "iou_delta": -0.0247,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9478,
+   "iou_best": 0.9478,
+   "centroid_err_px": 0.42,
+   "confidence": 0.7575758099555969
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "noise_gauss",
+   "family": "sensor",
+   "instruction_id": "noise_gauss",
+   "cls": "cup",
+   "gt_pixels": 2262,
+   "geometry": "preserved",
+   "iou_delta": -0.8788,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "noise_gauss",
+   "family": "sensor",
+   "instruction_id": "noise_gauss",
+   "cls": "block",
+   "gt_pixels": 1008,
+   "geometry": "preserved",
+   "iou_delta": 0.0026,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9736,
+   "iou_best": 0.9736,
+   "centroid_err_px": 0.38,
+   "confidence": 0.8827838897705078
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "noise_gauss",
+   "family": "sensor",
+   "instruction_id": "noise_gauss",
+   "cls": "marker",
+   "gt_pixels": 602,
+   "geometry": "preserved",
+   "iou_delta": -0.0062,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9663,
+   "iou_best": 0.9663,
+   "centroid_err_px": 0.03,
+   "confidence": 0.7770034670829773
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "blur_gauss",
+   "family": "sensor",
+   "instruction_id": "blur_gauss",
+   "cls": "cup",
+   "gt_pixels": 2262,
+   "geometry": "preserved",
+   "iou_delta": -0.8788,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "blur_gauss",
+   "family": "sensor",
+   "instruction_id": "blur_gauss",
+   "cls": "block",
+   "gt_pixels": 1008,
+   "geometry": "preserved",
+   "iou_delta": -0.056,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.915,
+   "iou_best": 0.915,
+   "centroid_err_px": 1.0,
+   "confidence": 0.8947368264198303
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "blur_gauss",
+   "family": "sensor",
+   "instruction_id": "blur_gauss",
+   "cls": "marker",
+   "gt_pixels": 602,
+   "geometry": "preserved",
+   "iou_delta": -0.0406,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9319,
+   "iou_best": 0.9319,
+   "centroid_err_px": 0.5,
+   "confidence": 0.7500000596046448
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "blur_motion",
+   "family": "sensor",
+   "instruction_id": "blur_motion",
+   "cls": "cup",
+   "gt_pixels": 2262,
+   "geometry": "preserved",
+   "iou_delta": -0.8788,
+   "found_original": true,
+   "found": false,
+   "n_matches": 0,
+   "iou": 0.0,
+   "iou_best": 0.0,
+   "centroid_err_px": null,
+   "confidence": null
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "blur_motion",
+   "family": "sensor",
+   "instruction_id": "blur_motion",
+   "cls": "block",
+   "gt_pixels": 1008,
+   "geometry": "preserved",
+   "iou_delta": -0.0202,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.9508,
+   "iou_best": 0.9508,
+   "centroid_err_px": 0.63,
+   "confidence": 0.8865247964859009
+  },
+  {
+   "frame_id": "dev8_top_end",
+   "camera": "top",
+   "moment": "end",
+   "version": "blur_motion",
+   "family": "sensor",
+   "instruction_id": "blur_motion",
+   "cls": "marker",
+   "gt_pixels": 602,
+   "geometry": "preserved",
+   "iou_delta": -0.0821,
+   "found_original": true,
+   "found": true,
+   "n_matches": 1,
+   "iou": 0.8904,
+   "iou_best": 0.8904,
+   "centroid_err_px": 0.72,
+   "confidence": 0.6363636255264282
+  }
+ ],
+ "summary": {
+  "original": {
+   "n": 9,
+   "found_rate": 1.0,
+   "iou_mean": 0.9651,
+   "iou_delta_mean": null,
+   "centroid_err_px_mean": 0.2011,
+   "iou_mean_geometry_kept": 0.9651,
+   "n_geometry_kept": 9,
+   "n_geometry_weakened": 0,
+   "n_geometry_changed": 0,
+   "geometry": {
+    "original": 9
+   },
+   "by_class": {
+    "block": {
+     "iou_mean": 0.9712,
+     "found_rate": 1.0
+    },
+    "cup": {
+     "iou_mean": 0.9438,
+     "found_rate": 1.0
+    },
+    "marker": {
+     "iou_mean": 0.9802,
+     "found_rate": 1.0
+    }
+   }
+  },
+  "lighting": {
+   "n": 27,
+   "found_rate": 0.6296,
+   "iou_mean": 0.5802,
+   "iou_delta_mean": -0.3849,
+   "centroid_err_px_mean": 1.0218,
+   "iou_mean_geometry_kept": 0.6222,
+   "n_geometry_kept": 21,
+   "n_geometry_weakened": 2,
+   "n_geometry_changed": 1,
+   "geometry": {
+    "kept": 21,
+    "moved": 1,
+    "untested": 3,
+    "weakened": 2
+   },
+   "by_class": {
+    "block": {
+     "iou_mean": 0.9095,
+     "found_rate": 1.0
+    },
+    "cup": {
+     "iou_mean": 0.209,
+     "found_rate": 0.2222
+    },
+    "marker": {
+     "iou_mean": 0.6221,
+     "found_rate": 0.6667
+    }
+   }
+  },
+  "background": {
+   "n": 18,
+   "found_rate": 0.8889,
+   "iou_mean": 0.789,
+   "iou_delta_mean": -0.1761,
+   "centroid_err_px_mean": 2.545,
+   "iou_mean_geometry_kept": 0.7972,
+   "n_geometry_kept": 15,
+   "n_geometry_weakened": 0,
+   "n_geometry_changed": 1,
+   "geometry": {
+    "kept": 15,
+    "missing": 1,
+    "untested": 2
+   },
+   "by_class": {
+    "block": {
+     "iou_mean": 0.9069,
+     "found_rate": 1.0
+    },
+    "cup": {
+     "iou_mean": 0.6882,
+     "found_rate": 0.8333
+    },
+    "marker": {
+     "iou_mean": 0.7719,
+     "found_rate": 0.8333
+    }
+   }
+  },
+  "distractor": {
+   "n": 18,
+   "found_rate": 1.0,
+   "iou_mean": 0.9333,
+   "iou_delta_mean": -0.0318,
+   "centroid_err_px_mean": 0.8422,
+   "iou_mean_geometry_kept": 0.9383,
+   "n_geometry_kept": 15,
+   "n_geometry_weakened": 0,
+   "n_geometry_changed": 1,
+   "geometry": {
+    "kept": 15,
+    "moved": 1,
+    "untested": 2
+   },
+   "by_class": {
+    "block": {
+     "iou_mean": 0.9183,
+     "found_rate": 1.0
+    },
+    "cup": {
+     "iou_mean": 0.9322,
+     "found_rate": 1.0
+    },
+    "marker": {
+     "iou_mean": 0.9494,
+     "found_rate": 1.0
+    }
+   }
+  },
+  "material": {
+   "n": 9,
+   "found_rate": 0.6667,
+   "iou_mean": 0.616,
+   "iou_delta_mean": -0.3491,
+   "centroid_err_px_mean": 1.0517,
+   "iou_mean_geometry_kept": 0.78,
+   "n_geometry_kept": 6,
+   "n_geometry_weakened": 1,
+   "n_geometry_changed": 1,
+   "geometry": {
+    "kept": 6,
+    "resized": 1,
+    "untested": 1,
+    "weakened": 1
+   },
+   "by_class": {
+    "block": {
+     "iou_mean": 0.9146,
+     "found_rate": 1.0
+    },
+    "cup": {
+     "iou_mean": 0.0,
+     "found_rate": 0.0
+    },
+    "marker": {
+     "iou_mean": 0.9333,
+     "found_rate": 1.0
+    }
+   }
+  },
+  "sensor": {
+   "n": 27,
+   "found_rate": 0.8889,
+   "iou_mean": 0.8461,
+   "iou_delta_mean": -0.119,
+   "centroid_err_px_mean": 0.445,
+   "iou_mean_geometry_kept": 0.8461,
+   "n_geometry_kept": 27,
+   "n_geometry_weakened": 0,
+   "n_geometry_changed": 0,
+   "geometry": {
+    "preserved": 27
+   },
+   "by_class": {
+    "block": {
+     "iou_mean": 0.9477,
+     "found_rate": 1.0
+    },
+    "cup": {
+     "iou_mean": 0.6381,
+     "found_rate": 0.6667
+    },
+    "marker": {
+     "iou_mean": 0.9525,
+     "found_rate": 1.0
+    }
+   }
+  },
+  "_edits": {
+   "model_edits": 24,
+   "ok": 24,
+   "refused": 0,
+   "errors": 0,
+   "reframed": 0,
+   "changed": 4,
+   "latency_s_mean": 7.8047,
+   "latency_s_min": 5.35,
+   "latency_s_max": 12.69,
+   "output_sizes": [
+    [
+     2048,
+     1152
+    ]
+   ]
+  }
+ },
+ "sam": {
+  "model": "sam-3.1",
+  "calls": 108,
+  "network_calls": 0,
+  "latency_s_mean": 1.159,
+  "latency_s_max": 3.003
+ },
+ "wall_time_s": 110.7,
+ "notes": [
+  "Ground truth: visible-pixel masks from a segmentation render of the same simulator frame.",
+  "Edited frames are resampled to the source size before SAM and before scoring.",
+  "iou and centroid error use SAM's top-confidence match; iou_best (chosen with the ground truth) is diagnostic only.",
+  "Local sensor corruptions preserve geometry by construction; the geometry check is still run and reported.",
+  "Edits whose geometry changed stay in every table; their scores use a ground truth that no longer fits."
+ ]
+}

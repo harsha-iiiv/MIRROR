@@ -1,0 +1,50 @@
+{
+ "all_visible": true,
+ "camera_presets": {
+  "top": {
+   "azimuth": 90.0,
+   "distance": 1.02,
+   "elevation": -89.0,
+   "lookat": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "cameras": [
+  "top"
+ ],
+ "code": "mirror.robustness.frames.frames_for_seeds",
+ "failures": [],
+ "family": "mixed",
+ "frames": [
+  {
+   "all_visible": true,
+   "camera": "top",
+   "frame_id": "eval80002_top_carry",
+   "masks": "eval80002_top_carry_masks.npz",
+   "masks_sha256": "d2f56c09503919d6041ce970cb618d9743579d34e079ca590bb40ef37bf767c4",
+   "moment": "carry",
+   "png": "eval80002_top_carry.png",
+   "png_sha256": "6da6e7c786fdb463ca698d0a027b38dddc4c73f748e5238a5aed469136bf3803",
+   "scene_id": "eval_80002",
+   "seed": 80002,
+   "visible_pixels": {
+    "block": 1106,
+    "cup": 432,
+    "marker": 945
+   }
+  }
+ ],
+ "height": 576,
+ "min_visible_pixels": 120,
+ "moment": "carry",
+ "mujoco_version": "3.17.0",
+ "numpy_version": "2.4.6",
+ "seeds": [
+  80002
+ ],
+ "split": "eval",
+ "width": 1024
+}

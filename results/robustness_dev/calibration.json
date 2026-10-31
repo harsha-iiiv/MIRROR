@@ -1,0 +1,82 @@
+{
+ "frames": [
+  "dev3_oblique_carry",
+  "dev3_oblique_end",
+  "dev3_oblique_start",
+  "dev3_top_carry",
+  "dev3_top_end",
+  "dev3_top_start",
+  "dev8_oblique_carry",
+  "dev8_oblique_end",
+  "dev8_oblique_start",
+  "dev8_top_carry",
+  "dev8_top_end",
+  "dev8_top_start"
+ ],
+ "positive_pass_rate": {
+  "dim_x0.35": 1.0,
+  "warm_tint": 0.917,
+  "gamma_1.8": 1.0,
+  "background_recolor": 0.917,
+  "noise_gauss": 1.0,
+  "blur_gauss": 0.75,
+  "blur_motion": 0.667
+ },
+ "positive_n": {
+  "dim_x0.35": 12,
+  "warm_tint": 12,
+  "gamma_1.8": 12,
+  "background_recolor": 12,
+  "noise_gauss": 12,
+  "blur_gauss": 12,
+  "blur_motion": 12
+ },
+ "negative": {
+  "shift_4px": {
+   "flagged": 30,
+   "missed": 4,
+   "untested": 2,
+   "verdicts": {
+    "kept": 4,
+    "moved": 30,
+    "untested": 2
+   },
+   "detection_rate": 0.882
+  },
+  "shift_8px": {
+   "flagged": 34,
+   "missed": 0,
+   "untested": 2,
+   "verdicts": {
+    "moved": 34,
+    "untested": 2
+   },
+   "detection_rate": 1.0
+  },
+  "scale_1.12": {
+   "flagged": 29,
+   "missed": 5,
+   "untested": 2,
+   "verdicts": {
+    "resized": 27,
+    "moved": 2,
+    "untested": 2,
+    "kept": 5
+   },
+   "detection_rate": 0.853
+  },
+  "removed": {
+   "flagged": 33,
+   "missed": 1,
+   "untested": 2,
+   "verdicts": {
+    "moved": 5,
+    "missing": 28,
+    "untested": 2,
+    "weakened": 1
+   },
+   "detection_rate": 0.971
+  }
+ },
+ "collateral_flags": 0
+}

@@ -1,0 +1,22 @@
+{
+ "camera": "top",
+ "execution_status": "completed",
+ "family": "mixed",
+ "frame_id": "eval80000_top_carry",
+ "height": 576,
+ "moment": "carry",
+ "phase": "transport:cup_0",
+ "pixels": {
+  "block": 1144,
+  "cup": 4238,
+  "gripper": 4343,
+  "marker": 675
+ },
+ "png_sha256": "740947220ff32b8b958ec4d116e2e793dc633dbae8f67d97f9fd20764a0e4518",
+ "renderer": "mujoco offscreen (opaque walls, shadows)",
+ "scene_id": "eval_80000",
+ "seed": 80000,
+ "split": "eval",
+ "t": 8.603999999999452,
+ "width": 1024
+}
