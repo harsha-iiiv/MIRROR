@@ -89,6 +89,7 @@ def display_xml(visual: VisualScene, bead_rgba=BEAD_RGBA, wall_alpha: float = WA
     """MJCF that draws a VisualScene: static geoms in place, one free body per
     moving body. Wall segments are drawn with ``wall_alpha`` opacity."""
     statics, moving = [], []
+    nwall = 0
     for body in visual.bodies:
         geoms = []
         for g in body.geoms:
@@ -101,6 +102,8 @@ def display_xml(visual: VisualScene, bead_rgba=BEAD_RGBA, wall_alpha: float = WA
                 rgba, extra = bead_rgba, ' material="bead"'
             elif g.name and "/seg" in g.name:
                 rgba = (*g.rgba[:3], wall_alpha)
+                extra = f' name="display/seg{nwall}"'
+                nwall += 1
             elif g.name == "table":
                 rgba = TABLE_RGBA
             elif g.name == "floor":
@@ -169,6 +172,10 @@ class RolloutRenderer:
             self._adr[self.model.body(self.model.jnt_bodyid[j]).name] = int(self.model.jnt_qposadr[j])
         self._bead_geoms = np.array([g for g in range(self.model.ngeom)
                                      if "/bead" in self.model.body(self.model.geom_bodyid[g]).name], dtype=int)
+        self._walls = [g for g in range(self.model.ngeom)
+                       if "/seg" in (mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_GEOM, g) or "")]
+        self._wall_set = set(self._walls)
+        self.wall_fade: Optional[dict] = None
         self.follow: Optional[dict] = None
         self._look: Optional[np.ndarray] = None
         self._look_t: Optional[float] = None
@@ -215,6 +222,11 @@ class RolloutRenderer:
             look = (0.0, 0.0, 0.04)
         look = tuple(look)
         cam.lookat[:] = look
+        if cfg.get("wall_fade"):
+            wf = {"near": 0.30, "far": 0.45, "alpha": 0.10}
+            if isinstance(cfg["wall_fade"], dict):
+                wf.update(cfg["wall_fade"])
+            self.wall_fade = wf
         cam.distance = cfg["distance"]
         cam.azimuth = cfg["azimuth"]
         cam.elevation = cfg["elevation"]
@@ -258,6 +270,44 @@ class RolloutRenderer:
         self._look_t = frame.t
         self.cam.lookat[:] = self._look
 
+    def _box_distance(self, g: int, p: np.ndarray) -> float:
+        c = self.view.geom_xpos[g]
+        Rm = self.view.geom_xmat[g].reshape(3, 3)
+        d = np.abs(Rm.T @ (p - c)) - self.model.geom_size[g]
+        return float(np.linalg.norm(np.maximum(d, 0.0)))
+
+    def _fade_walls(self) -> None:
+        """Display only: while the camera's look-at point (the followed
+        object) or the camera is close to a wall, draw the wall faces almost
+        clear and outline its edges, so the wall does not wash over the object."""
+        wf = self.wall_fade
+        look = np.array(self.cam.lookat, dtype=float)
+        az, el = math.radians(self.cam.azimuth), math.radians(self.cam.elevation)
+        fwd = np.array([math.cos(el) * math.cos(az), math.cos(el) * math.sin(az), math.sin(el)])
+        eye = look - self.cam.distance * fwd
+        d = min(min(self._box_distance(g, look), self._box_distance(g, eye)) for g in self._walls)
+        k = min(1.0, max(0.0, (wf["far"] - d) / max(1e-6, wf["far"] - wf["near"])))   # 1 = fully faded
+        if k <= 0.0:
+            return
+        scn = self.renderer.scene
+        for i in range(scn.ngeom):
+            sg = scn.geoms[i]
+            if sg.objtype == int(mujoco.mjtObj.mjOBJ_GEOM) and sg.objid in self._wall_set:
+                sg.rgba[3] = (1 - k) * sg.rgba[3] + k * wf["alpha"]
+        edge = (0.30, 0.31, 0.34, 0.9 * k)
+        signs = np.array([[x, y, z] for x in (-1, 1) for y in (-1, 1) for z in (-1, 1)], dtype=float)
+        for g in self._walls:
+            c = self.view.geom_xpos[g]
+            Rm = self.view.geom_xmat[g].reshape(3, 3)
+            corners = c + (signs * self.model.geom_size[g]) @ Rm.T
+            pts = []
+            for a in range(8):
+                for b in range(a + 1, 8):
+                    if np.sum(signs[a] != signs[b]) == 1:
+                        pts.append([(corners[a], edge), (corners[b], edge)])
+            for seg in pts:
+                self._add_trail(seg, 0.0016)
+
     def reset_follow(self) -> None:
         self._look = None
         self._look_t = None
@@ -269,6 +319,8 @@ class RolloutRenderer:
             self._update_follow(frame)
         self.renderer.update_scene(self.view, camera=self.cam)
         self.renderer.scene.flags[mujoco.mjtRndFlag.mjRND_SHADOW] = int(self.shadows)
+        if self.wall_fade is not None and self._walls:
+            self._fade_walls()
         for obj, pts in (trails or {}).items():
             thin = pts and pts[0] and pts[0][0][1] == NEUTRAL_TRAIL
             for seg in pts:
@@ -346,18 +398,18 @@ def _cup_beads_in(frame: RolloutFrame, visual: VisualScene) -> Optional[tuple[in
 
 def _legend_label(trail_objects) -> str:
     if trail_objects:
-        return ", ".join(trail_objects) + " path, coloured by tilt"
+        return ", ".join(object_words(o) for o in trail_objects) + " path, coloured by tilt"
     return "carried path, coloured by tilt"
 
 
 def _overlay(img: np.ndarray, title: str, lines: list[str], legend: bool,
-             legend_label: str = "carried path, coloured by tilt") -> np.ndarray:
+             legend_label: str = "carried path, coloured by tilt", font_px: Optional[int] = None) -> np.ndarray:
     from PIL import Image, ImageDraw, ImageFont
 
     im = Image.fromarray(img)
     dr = ImageDraw.Draw(im, "RGBA")
-    big = ImageFont.load_default(size=max(14, im.height // 30))
-    small = ImageFont.load_default(size=max(12, im.height // 42))
+    big = ImageFont.load_default(size=font_px or max(14, im.height // 30))
+    small = ImageFont.load_default(size=font_px or max(12, im.height // 42))
     pad = im.height // 40
     ink = (24, 24, 27, 255)
     if title:
@@ -442,11 +494,34 @@ class _Playback:
         return self._current
 
 
+_PHASE_WORDS = {
+    "move": "moving to the {o}", "approach": "approaching the {o}", "grasp": "grasping the {o}",
+    "lift": "lifting the {o}", "transport": "carrying the {o}", "place": "placing the {o}",
+    "release": "releasing the {o}", "retreat": "moving away from the {o}",
+}
+
+
+def object_words(obj_id: str) -> str:
+    """'cup_0' -> 'cup', 'block_1' -> 'block 2'."""
+    kind, _, idx = obj_id.rpartition("_")
+    if not kind or not idx.isdigit():
+        return obj_id.replace("_", " ")
+    return kind.replace("_", " ") + ("" if idx == "0" else f" {int(idx) + 1}")
+
+
+def phase_words(phase: str) -> str:
+    """Plain-language phase: 'transport:cup_0' -> 'carrying the cup'."""
+    verb, _, obj = phase.partition(":")
+    if obj and verb in _PHASE_WORDS:
+        return _PHASE_WORDS[verb].format(o=object_words(obj))
+    return {"settle": "settling", "demo": "demonstration", "idle": "idle"}.get(verb, phase.replace("_", " "))
+
+
 def _caption_lines(f: RolloutFrame, t0: float, visual: VisualScene) -> list[str]:
-    lines = [f"t = {f.t - t0:5.1f} s   {f.phase}"]
+    lines = [f"t = {f.t - t0:5.1f} s   {phase_words(f.phase)}"]
     obj = _carried(f)
     if obj and obj in f.bodies:
-        lines.append(f"{obj} tilt {_tilt_deg(f.bodies[obj].quat):4.0f}°")
+        lines.append(f"{object_words(obj)} tilt {_tilt_deg(f.bodies[obj].quat):4.0f}°")
     bi = _cup_beads_in(f, visual)
     if bi is not None:
         lines.append(f"beads in cup {bi[0]}/{bi[1]}")
@@ -608,6 +683,16 @@ class Segment:
     extra_lines: list = field(default_factory=list)
     legend: bool = True                  # show the trail colour legend
     lines: str = "full"                  # caption lines: "full", "beads" or "none"
+    font_px: Optional[int] = None        # caption font size override (pixels)
+    # A title containing "{beads}" is filled per frame with "k/n beads".
+
+
+def segment_length(seg: Segment, fps: float = FPS) -> int:
+    """Number of images segment_images yields for ``seg``."""
+    _, frames, _ = _load(seg.source)
+    t_end = frames[-1].t - frames[0].t if seg.t_end is None else min(seg.t_end, frames[-1].t - frames[0].t)
+    n = max(1, int(math.floor((t_end - seg.t_start) / seg.speed * fps)) + 1)
+    return n + int(round(seg.hold_start * fps)) + int(round(seg.hold_end * fps))
 
 
 def segment_images(seg: Segment, *, width: int = WIDTH, height: int = HEIGHT, fps: float = FPS,
@@ -638,7 +723,12 @@ def segment_images(seg: Segment, *, width: int = WIDTH, height: int = HEIGHT, fp
                 lines += list(seg.extra_lines)
                 if seg.label:
                     lines = [seg.label] + lines
-                img = _overlay(img, title or "", lines, legend=seg.trail and seg.legend, legend_label=label)
+                ttl = title or ""
+                if "{beads}" in ttl:
+                    bi = _cup_beads_in(f, visual)
+                    ttl = ttl.replace("{beads}", f"{bi[0]}/{bi[1]} beads" if bi else "")
+                img = _overlay(img, ttl, lines, legend=seg.trail and seg.legend, legend_label=label,
+                               font_px=seg.font_px)
             reps = 1
             if i == 0:
                 reps += int(round(seg.hold_start * fps))
