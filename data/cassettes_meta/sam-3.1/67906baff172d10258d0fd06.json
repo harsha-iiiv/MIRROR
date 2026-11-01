@@ -1,0 +1,49 @@
+{
+ "key": "67906baff172d10258d0fd0636e3029899b90ad695745e2368a753165375ea3e",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "tan cube"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:20641c15a8d4405009e38b2ed4eabc9c7cdc55eb1658fdc78a8fc6bda0eb1002"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "<0f>0<|box;x1=323;y1=472;x2=412;y2=545;w=1024;h=576;c=0.5460992455482483|><|mask;x=0;y=0;c=0.5460992455482483;data=74,90,!!!!!KFQfl^sH6+cj4K'=+fR++jH$yo9fXB.$NtD8-lQtM33H0nID|>\n",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 0.529,
+ "recorded_at": "2026-10-31T22:49:00Z"
+}

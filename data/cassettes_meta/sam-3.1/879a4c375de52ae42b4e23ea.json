@@ -1,0 +1,49 @@
+{
+ "key": "879a4c375de52ae42b4e23eab3efbed023d6d1d9084e87cf00f8d2270cadbdfc",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "red cylinder"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:ee30624b318f2f22e575ffd821aec7039ada5c5ef3564aa2c4708c008601440d"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "<0f>0<|box;x1=713;y1=141;x2=746;y2=207;w=1024;h=576;c=0.5241636037826538|><|mask;x=0;y=0;c=0.5241636037826538;data=67,34,!!!!!EF0*ILTCdM*hS%43pd-6SB.8OUgkx@G7O(MP5G9(|>\n",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 0.612,
+ "recorded_at": "2026-10-31T23:03:06Z"
+}

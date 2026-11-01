@@ -1,0 +1,49 @@
+{
+ "key": "48fd262f0aa66fcf679373bbdef8551d11b96ea78280878ca70037081f08577c",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "small cube"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:eba5d57b0a0152bd9930cf46468491eb56e2a6582668b7e2bc41abb4fb1f405c"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "<0f>0<|box;x1=324;y1=472;x2=411;y2=545;w=1024;h=576;c=0.8787879347801208|><|mask;x=0;y=0;c=0.8787879347801208;data=74,88,!!!!!MF^1?+fiX8!?u3'0_[dyU+pYf)i#j6)oa&8t.s$S%TDQrNgY*@|>,1<|box;x1=259;y1=192;x2=304;y2=233;w=1024;h=576;c=0.8672199249267578|><|mask;x=0;y=0;c=0.8672199249267578;data=42,46,!!!!!DFQK`rve&9Y$0@1uo^yjzA0HTt)G_X/Tbw1cVoN|>\n",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 0.529,
+ "recorded_at": "2026-10-31T22:52:50Z"
+}

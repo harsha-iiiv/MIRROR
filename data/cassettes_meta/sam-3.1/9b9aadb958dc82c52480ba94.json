@@ -1,0 +1,49 @@
+{
+ "key": "9b9aadb958dc82c52480ba9466778fbfb59a357fc3fa9e52708834aa05c5cb48",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "open box"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:1e334c230bfdf70d569ff679b9861ce42c52abfc3ec27000d8aaaa71c9be384a"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 0.778,
+ "recorded_at": "2026-10-31T22:51:13Z"
+}

@@ -1,0 +1,43 @@
+{
+ "key": "a866684cdfee920ae56f9c6a5bb268564eed0a4a987b11151f1d680374caf434",
+ "model": "muse-image-1.0",
+ "endpoint": "/images/edits",
+ "request": {
+  "model": "muse-image-1.0",
+  "prompt": "Add a few loose sheets of white paper lying flat on the table in empty areas, not touching or covering any object. Keep every object exactly where it is, with the same size, shape and outline, and keep the camera viewpoint and framing unchanged.",
+  "n": 1,
+  "output_format": "webp",
+  "images": [
+   {
+    "image_url": "data:image/png;base64,sha256:740947220ff32b8b958ec4d116e2e793dc633dbae8f67d97f9fd20764a0e4518"
+   }
+  ],
+  "reasoning_strength": "low",
+  "tool_enablement": {
+   "enable_web_search": false,
+   "enable_image_search": false,
+   "enable_shell": false
+  },
+  "size": "1024x576"
+ },
+ "response": {
+  "created": 1793486263,
+  "output_format": "webp",
+  "background": "opaque",
+  "usage": {
+   "input_tokens": 4880,
+   "output_tokens": 760,
+   "total_tokens": 5640
+  },
+  "n_images": 1
+ },
+ "blobs": [
+  {
+   "file": "a866684cdfee920ae56f9c6a_0.webp",
+   "sha256": "a20a07b7cabb5cda9ac6986154ff25d88573edb9d0d7541edafafff735f4551e",
+   "bytes": 28934
+  }
+ ],
+ "latency_s": 7.773,
+ "recorded_at": "2026-10-31T22:37:43Z"
+}

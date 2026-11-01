@@ -1,0 +1,43 @@
+{
+ "key": "06b0f38abea13e2bd4e1888a67b88f2e6ef9e6cff9d5d1a37d76c1276e5f81d1",
+ "model": "muse-image-1.0",
+ "endpoint": "/images/edits",
+ "request": {
+  "model": "muse-image-1.0",
+  "prompt": "Change the lighting to warm, orange-tinted evening light from a tungsten lamp. Keep every object exactly where it is, with the same size, shape and outline, and keep the camera viewpoint and framing unchanged.",
+  "n": 1,
+  "output_format": "webp",
+  "images": [
+   {
+    "image_url": "data:image/png;base64,sha256:c93b1a3657cd881e8b696a3babd2d5b1521c6d729248975f7a76c33e8839575a"
+   }
+  ],
+  "reasoning_strength": "low",
+  "tool_enablement": {
+   "enable_web_search": false,
+   "enable_image_search": false,
+   "enable_shell": false
+  },
+  "size": "1024x576"
+ },
+ "response": {
+  "created": 1793487218,
+  "output_format": "webp",
+  "background": "opaque",
+  "usage": {
+   "input_tokens": 4872,
+   "output_tokens": 741,
+   "total_tokens": 5613
+  },
+  "n_images": 1
+ },
+ "blobs": [
+  {
+   "file": "06b0f38abea13e2bd4e1888a_0.webp",
+   "sha256": "e6978c28b58ecad7a3614988128911345fc65d73b9957025212b10409c9a339a",
+   "bytes": 53464
+  }
+ ],
+ "latency_s": 10.865,
+ "recorded_at": "2026-10-31T22:53:38Z"
+}

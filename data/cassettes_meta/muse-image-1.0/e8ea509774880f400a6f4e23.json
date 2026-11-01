@@ -1,0 +1,43 @@
+{
+ "key": "e8ea509774880f400a6f4e2354faab832e4599fd4014e692a027109d3da324a1",
+ "model": "muse-image-1.0",
+ "endpoint": "/images/edits",
+ "request": {
+  "model": "muse-image-1.0",
+  "prompt": "Light the scene with one hard spotlight from the upper left so that objects cast sharp, dark shadows. Keep every object exactly where it is, with the same size, shape and outline, and keep the camera viewpoint and framing unchanged.",
+  "n": 1,
+  "output_format": "webp",
+  "images": [
+   {
+    "image_url": "data:image/png;base64,sha256:6da6e7c786fdb463ca698d0a027b38dddc4c73f748e5238a5aed469136bf3803"
+   }
+  ],
+  "reasoning_strength": "low",
+  "tool_enablement": {
+   "enable_web_search": false,
+   "enable_image_search": false,
+   "enable_shell": false
+  },
+  "size": "1024x576"
+ },
+ "response": {
+  "created": 1793486611,
+  "output_format": "webp",
+  "background": "opaque",
+  "usage": {
+   "input_tokens": 4876,
+   "output_tokens": 912,
+   "total_tokens": 5788
+  },
+  "n_images": 1
+ },
+ "blobs": [
+  {
+   "file": "e8ea509774880f400a6f4e23_0.webp",
+   "sha256": "e3e3f3299dfc3f2d192130bc05853a721756851caea8a0fd76b2cbc4232d44db",
+   "bytes": 54914
+  }
+ ],
+ "latency_s": 8.085,
+ "recorded_at": "2026-10-31T22:43:31Z"
+}

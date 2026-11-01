@@ -1,0 +1,49 @@
+{
+ "key": "f3d2153578a56e1bb80beb344e77973bbcf85c398037190f34c24fb53c1a4141",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "brown cylinder"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:736e17ca7ad59e621839b2a9a41961e1a703f035de2a8d0566289f5d73782a5b"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "<0f>0<|box;x1=217;y1=418;x2=268;y2=451;w=1024;h=576;c=0.7697842121124268|><|mask;x=0;y=0;c=0.7697842121124268;data=34,52,!!!!!EDbC^hjFrsxS9//o()2y8!3q=9j0r8csty{^K's4|>\n",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 1.381,
+ "recorded_at": "2026-10-31T22:52:34Z"
+}

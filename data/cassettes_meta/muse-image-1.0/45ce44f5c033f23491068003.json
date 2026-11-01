@@ -1,0 +1,43 @@
+{
+ "key": "45ce44f5c033f234910680036f2dde30c07cb0b80baf7335e0378e1e89d79d2f",
+ "model": "muse-image-1.0",
+ "endpoint": "/images/edits",
+ "request": {
+  "model": "muse-image-1.0",
+  "prompt": "Make the surroundings look like a cluttered laboratory bench, with tools, cables and papers in the background, but leave the area around the objects clear. Keep every object exactly where it is, with the same size, shape and outline, and keep the camera viewpoint and framing unchanged.",
+  "n": 1,
+  "output_format": "webp",
+  "images": [
+   {
+    "image_url": "data:image/png;base64,sha256:4ee6c57ec0b513a107bd851a731f9eaf1ac6b7d36c387166886eeb79990fb9f4"
+   }
+  ],
+  "reasoning_strength": "low",
+  "tool_enablement": {
+   "enable_web_search": false,
+   "enable_image_search": false,
+   "enable_shell": false
+  },
+  "size": "1024x576"
+ },
+ "response": {
+  "created": 1793487506,
+  "output_format": "webp",
+  "background": "opaque",
+  "usage": {
+   "input_tokens": 4888,
+   "output_tokens": 1072,
+   "total_tokens": 5960
+  },
+  "n_images": 1
+ },
+ "blobs": [
+  {
+   "file": "45ce44f5c033f23491068003_0.webp",
+   "sha256": "10483f424565a082c4d2a476891030545f4fc9ec0b137cd852e97a9e5192e333",
+   "bytes": 345390
+  }
+ ],
+ "latency_s": 8.132,
+ "recorded_at": "2026-10-31T22:58:26Z"
+}

@@ -1,0 +1,49 @@
+{
+ "key": "398c28c0d1c658407db3a48e3927e364976ff4359ef5bc5031d855ddb1409264",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "tan cube"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:8559e431589922f0979c1462ed4bde5503856f963b77ee2651c3acab836f5be6"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 0.73,
+ "recorded_at": "2026-10-31T22:52:13Z"
+}

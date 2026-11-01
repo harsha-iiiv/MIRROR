@@ -1,0 +1,43 @@
+{
+ "key": "9aef304486c09ffc4a89dfaee550d98a92a278faffa84273aac315ab8352ab44",
+ "model": "muse-image-1.0",
+ "endpoint": "/images/edits",
+ "request": {
+  "model": "muse-image-1.0",
+  "prompt": "Make the scene dimly lit, as if the room lights were turned down to about a third. Keep every object exactly where it is, with the same size, shape and outline, and keep the camera viewpoint and framing unchanged.",
+  "n": 1,
+  "output_format": "webp",
+  "images": [
+   {
+    "image_url": "data:image/png;base64,sha256:6da6e7c786fdb463ca698d0a027b38dddc4c73f748e5238a5aed469136bf3803"
+   }
+  ],
+  "reasoning_strength": "low",
+  "tool_enablement": {
+   "enable_web_search": false,
+   "enable_image_search": false,
+   "enable_shell": false
+  },
+  "size": "1024x576"
+ },
+ "response": {
+  "created": 1793486595,
+  "output_format": "webp",
+  "background": "opaque",
+  "usage": {
+   "input_tokens": 4876,
+   "output_tokens": 604,
+   "total_tokens": 5480
+  },
+  "n_images": 1
+ },
+ "blobs": [
+  {
+   "file": "9aef304486c09ffc4a89dfae_0.webp",
+   "sha256": "cdd4897a9ff90cfe5aa3e83cfc75f4cc3de54a22f724ae4d7e60db5784024f02",
+   "bytes": 23670
+  }
+ ],
+ "latency_s": 6.547,
+ "recorded_at": "2026-10-31T22:43:15Z"
+}

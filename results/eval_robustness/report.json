@@ -1,0 +1,3220 @@
+{
+ "registration": "robustness",
+ "title": "Perception robustness: muse-image-1.0 counterfactual edits (plus local sensor edits), sam-3.1 under two prompt conditions, simulator ground-truth masks",
+ "rehearsal": false,
+ "status": "completed",
+ "design_sha256": "170ac8748af2c5ea847f83332f456907ae0361c642d273cd05c7ac53434fca2f",
+ "inputs_sha256": "cd2c842833ba8b8da393ec08db7805c0cd7050416e72afdab6b322bae4f74d3a",
+ "freeze_code_sha256": "f466fbebcb1e7e20f761cb4c3e63b4a59ad37e7331ac957a8f3cbbf79bded4da",
+ "started_unix": 1793486179.362931,
+ "wall_time_s": 1643.2,
+ "budget": {
+  "muse-image-1.0": {
+   "used": 64,
+   "cap": 80
+  },
+  "sam-3.1": {
+   "used": 589,
+   "cap": 850
+  },
+  "muse-spark-1.3:chooser": {
+   "used": 14,
+   "cap": 40
+  }
+ },
+ "ledger_entries": 100,
+ "hypotheses": [
+  "On edits that keep geometry, sam-3.1 segmentation is stable: median IoU change >= -0.05, found rate >= 0.9 and median centroid error <= 4 px (corrected), under each prompt condition."
+ ],
+ "thresholds": {
+  "delta_iou_median_min": -0.05,
+  "found_rate_min": 0.9,
+  "centroid_px_median_max": 4.0
+ },
+ "result": {
+  "plan_report": "plan_report/report.json",
+  "usage": {
+   "muse-spark-1.3": {
+    "network_calls": 14,
+    "replayed_calls": 0,
+    "input_tokens": 14614,
+    "output_tokens": 31646,
+    "cost_usd": 0.1524,
+    "latency_s_median": 9.586,
+    "latency_s_total": 136.0
+   },
+   "sam-3.1": {
+    "network_calls": 575,
+    "replayed_calls": 14,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 1.4375,
+    "latency_s_median": 0.849,
+    "latency_s_total": 565.1
+   },
+   "muse-image-1.0": {
+    "network_calls": 63,
+    "replayed_calls": 0,
+    "input_tokens": 307292,
+    "output_tokens": 46337,
+    "cost_usd": 0.63,
+    "latency_s_median": 7.108,
+    "latency_s_total": 465.2
+   }
+  },
+  "cost_usd": 2.2199,
+  "stopped": null,
+  "summary": {
+   "groups": {
+    "A/corrected": {
+     "original": {
+      "n": 24,
+      "found_rate": 0.5833,
+      "iou_mean": 0.5307,
+      "iou_delta_mean": null,
+      "centroid_err_px_mean": 11.9057,
+      "n_geometry_kept": 24,
+      "kept_found_rate": 0.5833,
+      "kept_iou_delta_median": null,
+      "kept_centroid_err_px_median": 0.15,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 0,
+      "geometry": {
+       "original": 24
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.8589,
+        "found_rate": 0.875
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.125
+       },
+       "marker": {
+        "iou_mean": 0.7332,
+        "found_rate": 0.75
+       }
+      }
+     },
+     "lighting": {
+      "n": 69,
+      "found_rate": 0.5217,
+      "iou_mean": 0.4475,
+      "iou_delta_mean": -0.0779,
+      "centroid_err_px_mean": 6.4525,
+      "n_geometry_kept": 54,
+      "kept_found_rate": 0.5,
+      "kept_iou_delta_median": -0.0046,
+      "kept_centroid_err_px_median": 1.38,
+      "n_geometry_weakened": 1,
+      "n_geometry_changed": 14,
+      "geometry": {
+       "kept": 54,
+       "missing": 1,
+       "moved": 13,
+       "weakened": 1
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.7489,
+        "found_rate": 0.8696
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.0435
+       },
+       "marker": {
+        "iou_mean": 0.5936,
+        "found_rate": 0.6522
+       }
+      }
+     },
+     "background": {
+      "n": 48,
+      "found_rate": 0.4375,
+      "iou_mean": 0.3452,
+      "iou_delta_mean": -0.1855,
+      "centroid_err_px_mean": 17.5738,
+      "n_geometry_kept": 34,
+      "kept_found_rate": 0.4706,
+      "kept_iou_delta_median": -0.0422,
+      "kept_centroid_err_px_median": 1.245,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 14,
+      "geometry": {
+       "kept": 34,
+       "missing": 1,
+       "moved": 7,
+       "reframed": 6
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.7562,
+        "found_rate": 0.875
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.125
+       },
+       "marker": {
+        "iou_mean": 0.2795,
+        "found_rate": 0.3125
+       }
+      }
+     },
+     "distractor": {
+      "n": 48,
+      "found_rate": 0.5417,
+      "iou_mean": 0.4347,
+      "iou_delta_mean": -0.096,
+      "centroid_err_px_mean": 14.6685,
+      "n_geometry_kept": 40,
+      "kept_found_rate": 0.5,
+      "kept_iou_delta_median": -0.0016,
+      "kept_centroid_err_px_median": 0.88,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 8,
+      "geometry": {
+       "kept": 40,
+       "moved": 8
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.7632,
+        "found_rate": 0.875
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.125
+       },
+       "marker": {
+        "iou_mean": 0.541,
+        "found_rate": 0.625
+       }
+      }
+     },
+     "material": {
+      "n": 24,
+      "found_rate": 0.4583,
+      "iou_mean": 0.3928,
+      "iou_delta_mean": -0.1379,
+      "centroid_err_px_mean": 2.5836,
+      "n_geometry_kept": 18,
+      "kept_found_rate": 0.4444,
+      "kept_iou_delta_median": -0.0149,
+      "kept_centroid_err_px_median": 1.3,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 6,
+      "geometry": {
+       "kept": 18,
+       "missing": 1,
+       "moved": 5
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.7514,
+        "found_rate": 0.875
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.0
+       },
+       "marker": {
+        "iou_mean": 0.4269,
+        "found_rate": 0.5
+       }
+      }
+     },
+     "sensor": {
+      "n": 72,
+      "found_rate": 0.4444,
+      "iou_mean": 0.4022,
+      "iou_delta_mean": -0.1285,
+      "centroid_err_px_mean": 10.5003,
+      "n_geometry_kept": 72,
+      "kept_found_rate": 0.4444,
+      "kept_iou_delta_median": 0.0,
+      "kept_centroid_err_px_median": 0.225,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 0,
+      "geometry": {
+       "preserved": 72
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.8446,
+        "found_rate": 0.875
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.0833
+       },
+       "marker": {
+        "iou_mean": 0.3621,
+        "found_rate": 0.375
+       }
+      }
+     },
+     "all_edits": {
+      "n": 261,
+      "found_rate": 0.4828,
+      "iou_mean": 0.4088,
+      "iou_delta_mean": -0.1205,
+      "centroid_err_px_mean": 10.6917,
+      "n_geometry_kept": 218,
+      "kept_found_rate": 0.4725,
+      "kept_iou_delta_median": -0.0001,
+      "kept_centroid_err_px_median": 0.67,
+      "n_geometry_weakened": 1,
+      "n_geometry_changed": 42,
+      "geometry": {
+       "kept": 146,
+       "missing": 3,
+       "moved": 33,
+       "preserved": 72,
+       "reframed": 6,
+       "weakened": 1
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.7795,
+        "found_rate": 0.8736
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.0805
+       },
+       "marker": {
+        "iou_mean": 0.447,
+        "found_rate": 0.4943
+       }
+      }
+     }
+    },
+    "A/uncorrected": {
+     "original": {
+      "n": 24,
+      "found_rate": 0.5833,
+      "iou_mean": 0.5307,
+      "iou_delta_mean": null,
+      "centroid_err_px_mean": 11.9057,
+      "n_geometry_kept": 24,
+      "kept_found_rate": 0.5833,
+      "kept_iou_delta_median": null,
+      "kept_centroid_err_px_median": 0.15,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 0,
+      "geometry": {
+       "original": 24
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.8589,
+        "found_rate": 0.875
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.125
+       },
+       "marker": {
+        "iou_mean": 0.7332,
+        "found_rate": 0.75
+       }
+      }
+     },
+     "lighting": {
+      "n": 69,
+      "found_rate": 0.5217,
+      "iou_mean": 0.3834,
+      "iou_delta_mean": -0.142,
+      "centroid_err_px_mean": 7.7289,
+      "n_geometry_kept": 54,
+      "kept_found_rate": 0.5,
+      "kept_iou_delta_median": -0.0365,
+      "kept_centroid_err_px_median": 2.65,
+      "n_geometry_weakened": 1,
+      "n_geometry_changed": 14,
+      "geometry": {
+       "kept": 54,
+       "missing": 1,
+       "moved": 13,
+       "weakened": 1
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.7306,
+        "found_rate": 0.8696
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.0435
+       },
+       "marker": {
+        "iou_mean": 0.4195,
+        "found_rate": 0.6522
+       }
+      }
+     },
+     "background": {
+      "n": 48,
+      "found_rate": 0.4583,
+      "iou_mean": 0.2874,
+      "iou_delta_mean": -0.2433,
+      "centroid_err_px_mean": 18.8209,
+      "n_geometry_kept": 34,
+      "kept_found_rate": 0.5,
+      "kept_iou_delta_median": -0.1709,
+      "kept_centroid_err_px_median": 3.55,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 14,
+      "geometry": {
+       "kept": 34,
+       "missing": 1,
+       "moved": 7,
+       "reframed": 6
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.6555,
+        "found_rate": 0.875
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.125
+       },
+       "marker": {
+        "iou_mean": 0.2069,
+        "found_rate": 0.375
+       }
+      }
+     },
+     "distractor": {
+      "n": 48,
+      "found_rate": 0.5417,
+      "iou_mean": 0.3696,
+      "iou_delta_mean": -0.1611,
+      "centroid_err_px_mean": 16.0108,
+      "n_geometry_kept": 40,
+      "kept_found_rate": 0.5,
+      "kept_iou_delta_median": -0.003,
+      "kept_centroid_err_px_median": 3.565,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 8,
+      "geometry": {
+       "kept": 40,
+       "moved": 8
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.7266,
+        "found_rate": 0.875
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.125
+       },
+       "marker": {
+        "iou_mean": 0.3821,
+        "found_rate": 0.625
+       }
+      }
+     },
+     "material": {
+      "n": 24,
+      "found_rate": 0.5,
+      "iou_mean": 0.388,
+      "iou_delta_mean": -0.1427,
+      "centroid_err_px_mean": 3.2017,
+      "n_geometry_kept": 18,
+      "kept_found_rate": 0.5,
+      "kept_iou_delta_median": -0.0528,
+      "kept_centroid_err_px_median": 2.37,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 6,
+      "geometry": {
+       "kept": 18,
+       "missing": 1,
+       "moved": 5
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.7061,
+        "found_rate": 0.875
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.0
+       },
+       "marker": {
+        "iou_mean": 0.4577,
+        "found_rate": 0.625
+       }
+      }
+     },
+     "sensor": {
+      "n": 72,
+      "found_rate": 0.4444,
+      "iou_mean": 0.4022,
+      "iou_delta_mean": -0.1285,
+      "centroid_err_px_mean": 10.5003,
+      "n_geometry_kept": 72,
+      "kept_found_rate": 0.4444,
+      "kept_iou_delta_median": 0.0,
+      "kept_centroid_err_px_median": 0.225,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 0,
+      "geometry": {
+       "preserved": 72
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.8446,
+        "found_rate": 0.875
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.0833
+       },
+       "marker": {
+        "iou_mean": 0.3621,
+        "found_rate": 0.375
+       }
+      }
+     },
+     "all_edits": {
+      "n": 261,
+      "found_rate": 0.4904,
+      "iou_mean": 0.3688,
+      "iou_delta_mean": -0.1605,
+      "centroid_err_px_mean": 11.586,
+      "n_geometry_kept": 218,
+      "kept_found_rate": 0.4817,
+      "kept_iou_delta_median": -0.0007,
+      "kept_centroid_err_px_median": 1.93,
+      "n_geometry_weakened": 1,
+      "n_geometry_changed": 42,
+      "geometry": {
+       "kept": 146,
+       "missing": 3,
+       "moved": 33,
+       "preserved": 72,
+       "reframed": 6,
+       "weakened": 1
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.7452,
+        "found_rate": 0.8736
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.0805
+       },
+       "marker": {
+        "iou_mean": 0.3612,
+        "found_rate": 0.5172
+       }
+      }
+     }
+    },
+    "B/corrected": {
+     "original": {
+      "n": 24,
+      "found_rate": 0.6667,
+      "iou_mean": 0.449,
+      "iou_delta_mean": null,
+      "centroid_err_px_mean": 78.1169,
+      "n_geometry_kept": 24,
+      "kept_found_rate": 0.6667,
+      "kept_iou_delta_median": null,
+      "kept_centroid_err_px_median": 0.205,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 0,
+      "geometry": {
+       "original": 24
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.8579,
+        "found_rate": 1.0
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.5
+       },
+       "marker": {
+        "iou_mean": 0.4891,
+        "found_rate": 0.5
+       }
+      }
+     },
+     "lighting": {
+      "n": 69,
+      "found_rate": 0.7391,
+      "iou_mean": 0.4093,
+      "iou_delta_mean": -0.045,
+      "centroid_err_px_mean": 91.2878,
+      "n_geometry_kept": 54,
+      "kept_found_rate": 0.7037,
+      "kept_iou_delta_median": 0.0,
+      "kept_centroid_err_px_median": 1.655,
+      "n_geometry_weakened": 1,
+      "n_geometry_changed": 14,
+      "geometry": {
+       "kept": 54,
+       "missing": 1,
+       "moved": 13,
+       "weakened": 1
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.712,
+        "found_rate": 1.0
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.6522
+       },
+       "marker": {
+        "iou_mean": 0.516,
+        "found_rate": 0.5652
+       }
+      }
+     },
+     "background": {
+      "n": 48,
+      "found_rate": 0.5833,
+      "iou_mean": 0.347,
+      "iou_delta_mean": -0.102,
+      "centroid_err_px_mean": 78.2636,
+      "n_geometry_kept": 34,
+      "kept_found_rate": 0.6176,
+      "kept_iou_delta_median": -0.011,
+      "kept_centroid_err_px_median": 1.51,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 14,
+      "geometry": {
+       "kept": 34,
+       "missing": 1,
+       "moved": 7,
+       "reframed": 6
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.7563,
+        "found_rate": 1.0
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.4375
+       },
+       "marker": {
+        "iou_mean": 0.2846,
+        "found_rate": 0.3125
+       }
+      }
+     },
+     "distractor": {
+      "n": 48,
+      "found_rate": 0.6458,
+      "iou_mean": 0.4345,
+      "iou_delta_mean": -0.0145,
+      "centroid_err_px_mean": 53.1616,
+      "n_geometry_kept": 40,
+      "kept_found_rate": 0.625,
+      "kept_iou_delta_median": 0.0,
+      "kept_centroid_err_px_median": 0.99,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 8,
+      "geometry": {
+       "kept": 40,
+       "moved": 8
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.8226,
+        "found_rate": 1.0
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.375
+       },
+       "marker": {
+        "iou_mean": 0.4808,
+        "found_rate": 0.5625
+       }
+      }
+     },
+     "material": {
+      "n": 24,
+      "found_rate": 0.5833,
+      "iou_mean": 0.2754,
+      "iou_delta_mean": -0.1736,
+      "centroid_err_px_mean": 102.6786,
+      "n_geometry_kept": 18,
+      "kept_found_rate": 0.6111,
+      "kept_iou_delta_median": 0.0,
+      "kept_centroid_err_px_median": 150.88,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 6,
+      "geometry": {
+       "kept": 18,
+       "missing": 1,
+       "moved": 5
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.7504,
+        "found_rate": 1.0
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.375
+       },
+       "marker": {
+        "iou_mean": 0.0757,
+        "found_rate": 0.375
+       }
+      }
+     },
+     "sensor": {
+      "n": 72,
+      "found_rate": 0.5139,
+      "iou_mean": 0.2696,
+      "iou_delta_mean": -0.1794,
+      "centroid_err_px_mean": 105.8403,
+      "n_geometry_kept": 72,
+      "kept_found_rate": 0.5139,
+      "kept_iou_delta_median": 0.0,
+      "kept_centroid_err_px_median": 0.46,
+      "n_geometry_weakened": 0,
+      "n_geometry_changed": 0,
+      "geometry": {
+       "preserved": 72
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.6456,
+        "found_rate": 1.0
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.375
+       },
+       "marker": {
+        "iou_mean": 0.1631,
+        "found_rate": 0.1667
+       }
+      }
+     },
+     "all_edits": {
+      "n": 261,
+      "found_rate": 0.6169,
+      "iou_mean": 0.3516,
+      "iou_delta_mean": -0.0988,
+      "centroid_err_px_mean": 86.0165,
+      "n_geometry_kept": 218,
+      "kept_found_rate": 0.6055,
+      "kept_iou_delta_median": 0.0,
+      "kept_centroid_err_px_median": 1.495,
+      "n_geometry_weakened": 1,
+      "n_geometry_changed": 42,
+      "geometry": {
+       "kept": 146,
+       "missing": 3,
+       "moved": 33,
+       "preserved": 72,
+       "reframed": 6,
+       "weakened": 1
+      },
+      "by_class": {
+       "block": {
+        "iou_mean": 0.7257,
+        "found_rate": 1.0
+       },
+       "cup": {
+        "iou_mean": 0.0,
+        "found_rate": 0.4598
+       },
+       "marker": {
+        "iou_mean": 0.3291,
+        "found_rate": 0.3908
+       }
+      }
+     }
+    }
+   },
+   "threshold_checks": {
+    "A/corrected": {
+     "median IoU change >= -0.05 (geometry kept)": true,
+     "found rate >= 0.9 (geometry kept)": false,
+     "median centroid error <= 4.0 px (geometry kept)": true
+    },
+    "B/corrected": {
+     "median IoU change >= -0.05 (geometry kept)": true,
+     "found rate >= 0.9 (geometry kept)": false,
+     "median centroid error <= 4.0 px (geometry kept)": true
+    }
+   },
+   "n_edits": 88,
+   "edit_failures": 1,
+   "chooser_missing": {
+    "eval80000_top_carry": [
+     "cup"
+    ],
+    "eval80001_oblique_carry": [
+     "cup"
+    ],
+    "eval80002_top_carry": [
+     "cup",
+     "marker"
+    ],
+    "eval80003_oblique_carry": [
+     "cup"
+    ],
+    "eval80004_top_carry": [],
+    "eval80005_oblique_carry": [
+     "cup"
+    ],
+    "eval80006_top_carry": [
+     "cup",
+     "block",
+     "marker"
+    ],
+    "eval80007_oblique_carry": [
+     "cup"
+    ]
+   }
+  },
+  "prompts_used": {
+   "A": {
+    "eval80000_top_carry": {
+     "prompts": {
+      "cup": null,
+      "block": "blue cube",
+      "marker": "orange cylinder"
+     },
+     "source": "chooser",
+     "model": "muse-spark-1.3",
+     "attempts": 2,
+     "latency_s": 19.179528397973627,
+     "choices": [
+      {
+       "kind": "cup",
+       "phrase": "white cylinder",
+       "sam_count": 0,
+       "ok": false,
+       "verified": null,
+       "verify_reason": "",
+       "box": null,
+       "confidence": null,
+       "attempt": 2
+      },
+      {
+       "kind": "block",
+       "phrase": "blue cube",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        289,
+        85,
+        333,
+        129
+       ],
+       "confidence": 0.9298245906829834,
+       "attempt": 1
+      },
+      {
+       "kind": "marker",
+       "phrase": "orange cylinder",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        304,
+        202,
+        344,
+        230
+       ],
+       "confidence": 0.5311355590820312,
+       "attempt": 2
+      }
+     ],
+     "frame_sha256": "740947220ff32b8b958ec4d116e2e793dc633dbae8f67d97f9fd20764a0e4518"
+    },
+    "eval80001_oblique_carry": {
+     "prompts": {
+      "cup": null,
+      "block": "blue cube",
+      "marker": "red cylinder"
+     },
+     "source": "chooser",
+     "model": "muse-spark-1.3",
+     "attempts": 2,
+     "latency_s": 21.65368732891511,
+     "choices": [
+      {
+       "kind": "cup",
+       "phrase": "tan cube",
+       "sam_count": 0,
+       "ok": false,
+       "verified": null,
+       "verify_reason": "",
+       "box": null,
+       "confidence": null,
+       "attempt": 2
+      },
+      {
+       "kind": "block",
+       "phrase": "blue cube",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        745,
+        370,
+        796,
+        417
+       ],
+       "confidence": 0.921951174736023,
+       "attempt": 1
+      },
+      {
+       "kind": "marker",
+       "phrase": "red cylinder",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        696,
+        444,
+        743,
+        508
+       ],
+       "confidence": 0.8632478713989258,
+       "attempt": 1
+      }
+     ],
+     "frame_sha256": "1686cfbebff3a7471799186afdb707608a3f600f320c0ee4720a57bcc0daebcf"
+    },
+    "eval80002_top_carry": {
+     "prompts": {
+      "cup": null,
+      "block": "blue cube",
+      "marker": null
+     },
+     "source": "chooser",
+     "model": "muse-spark-1.3",
+     "attempts": 2,
+     "latency_s": 12.85311648703646,
+     "choices": [
+      {
+       "kind": "block",
+       "phrase": "blue cube",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        290,
+        361,
+        328,
+        394
+       ],
+       "confidence": 0.9179486632347107,
+       "attempt": 1
+      },
+      {
+       "kind": "marker",
+       "phrase": "orange cylinder",
+       "sam_count": 0,
+       "ok": false,
+       "verified": null,
+       "verify_reason": "",
+       "box": null,
+       "confidence": null,
+       "attempt": 2
+      }
+     ],
+     "frame_sha256": "6da6e7c786fdb463ca698d0a027b38dddc4c73f748e5238a5aed469136bf3803"
+    },
+    "eval80003_oblique_carry": {
+     "prompts": {
+      "cup": null,
+      "block": "blue cube",
+      "marker": "red cylinder"
+     },
+     "source": "chooser",
+     "model": "muse-spark-1.3",
+     "attempts": 2,
+     "latency_s": 18.850519132916816,
+     "choices": [
+      {
+       "kind": "cup",
+       "phrase": "white cylinder",
+       "sam_count": 0,
+       "ok": false,
+       "verified": null,
+       "verify_reason": "",
+       "box": null,
+       "confidence": null,
+       "attempt": 2
+      },
+      {
+       "kind": "block",
+       "phrase": "blue cube",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        778,
+        444,
+        827,
+        494
+       ],
+       "confidence": 0.921951174736023,
+       "attempt": 1
+      },
+      {
+       "kind": "marker",
+       "phrase": "red cylinder",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        637,
+        103,
+        663,
+        170
+       ],
+       "confidence": 0.827957034111023,
+       "attempt": 1
+      }
+     ],
+     "frame_sha256": "cbcf059a32248cca88109cc03fe864b08ed75fbd90ba4797f70a1e80fb6b48e3"
+    },
+    "eval80004_top_carry": {
+     "prompts": {
+      "cup": "tan cube",
+      "block": "blue cube",
+      "marker": "brown cylinder"
+     },
+     "source": "chooser",
+     "model": "muse-spark-1.3",
+     "attempts": 2,
+     "latency_s": 19.571914700092748,
+     "choices": [
+      {
+       "kind": "block",
+       "phrase": "blue cube",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        259,
+        192,
+        305,
+        234
+       ],
+       "confidence": 0.9179486632347107,
+       "attempt": 1
+      },
+      {
+       "kind": "marker",
+       "phrase": "brown cylinder",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        218,
+        418,
+        269,
+        452
+       ],
+       "confidence": 0.6800000071525574,
+       "attempt": 2
+      },
+      {
+       "kind": "cup",
+       "phrase": "tan cube",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        323,
+        472,
+        413,
+        546
+       ],
+       "confidence": 0.5460992455482483,
+       "attempt": 2
+      }
+     ],
+     "frame_sha256": "20641c15a8d4405009e38b2ed4eabc9c7cdc55eb1658fdc78a8fc6bda0eb1002"
+    },
+    "eval80005_oblique_carry": {
+     "prompts": {
+      "cup": null,
+      "block": "blue cube",
+      "marker": "red cylinder"
+     },
+     "source": "chooser",
+     "model": "muse-spark-1.3",
+     "attempts": 1,
+     "latency_s": 15.186615095008165,
+     "choices": [
+      {
+       "kind": "block",
+       "phrase": "blue cube",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        586,
+        141,
+        621,
+        181
+       ],
+       "confidence": 0.941605806350708,
+       "attempt": 1
+      },
+      {
+       "kind": "marker",
+       "phrase": "red cylinder",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        693,
+        153,
+        726,
+        221
+       ],
+       "confidence": 0.827957034111023,
+       "attempt": 1
+      }
+     ],
+     "frame_sha256": "c93b1a3657cd881e8b696a3babd2d5b1521c6d729248975f7a76c33e8839575a"
+    },
+    "eval80006_top_carry": {
+     "prompts": {
+      "cup": null,
+      "block": null,
+      "marker": null
+     },
+     "source": "chooser",
+     "model": "muse-spark-1.3",
+     "attempts": 2,
+     "latency_s": 24.812598155927844,
+     "choices": [
+      {
+       "kind": "cup",
+       "phrase": "white mug",
+       "sam_count": 0,
+       "ok": false,
+       "verified": null,
+       "verify_reason": "",
+       "box": null,
+       "confidence": null,
+       "attempt": 2
+      },
+      {
+       "kind": "block",
+       "phrase": "gray cube",
+       "sam_count": 2,
+       "ok": false,
+       "verified": null,
+       "verify_reason": "",
+       "box": null,
+       "confidence": null,
+       "attempt": 2
+      },
+      {
+       "kind": "marker",
+       "phrase": "orange cylinder",
+       "sam_count": 0,
+       "ok": false,
+       "verified": null,
+       "verify_reason": "",
+       "box": null,
+       "confidence": null,
+       "attempt": 2
+      }
+     ],
+     "frame_sha256": "4ee6c57ec0b513a107bd851a731f9eaf1ac6b7d36c387166886eeb79990fb9f4"
+    },
+    "eval80007_oblique_carry": {
+     "prompts": {
+      "cup": null,
+      "block": "blue cube",
+      "marker": "red cylinder"
+     },
+     "source": "chooser",
+     "model": "muse-spark-1.3",
+     "attempts": 1,
+     "latency_s": 3.9043838679790497,
+     "choices": [
+      {
+       "kind": "block",
+       "phrase": "blue cube",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        762,
+        340,
+        812,
+        391
+       ],
+       "confidence": 0.9179486632347107,
+       "attempt": 1
+      },
+      {
+       "kind": "marker",
+       "phrase": "red cylinder",
+       "sam_count": 1,
+       "ok": true,
+       "verified": null,
+       "verify_reason": "",
+       "box": [
+        711,
+        142,
+        745,
+        210
+       ],
+       "confidence": 0.7887788414955139,
+       "attempt": 1
+      }
+     ],
+     "frame_sha256": "209a291f89bf06750bb43aff78fdbc36dbb37274aef70d8a5704e56b9a1a2d5e"
+    }
+   },
+   "B": {
+    "eval80000_top_carry": {
+     "prompts": {
+      "cup": "open box",
+      "block": "small cube",
+      "marker": "cylinder"
+     },
+     "source": "fixed"
+    },
+    "eval80001_oblique_carry": {
+     "prompts": {
+      "cup": "open box",
+      "block": "small cube",
+      "marker": "cylinder"
+     },
+     "source": "fixed"
+    },
+    "eval80002_top_carry": {
+     "prompts": {
+      "cup": "open box",
+      "block": "small cube",
+      "marker": "cylinder"
+     },
+     "source": "fixed"
+    },
+    "eval80003_oblique_carry": {
+     "prompts": {
+      "cup": "open box",
+      "block": "small cube",
+      "marker": "cylinder"
+     },
+     "source": "fixed"
+    },
+    "eval80004_top_carry": {
+     "prompts": {
+      "cup": "open box",
+      "block": "small cube",
+      "marker": "cylinder"
+     },
+     "source": "fixed"
+    },
+    "eval80005_oblique_carry": {
+     "prompts": {
+      "cup": "open box",
+      "block": "small cube",
+      "marker": "cylinder"
+     },
+     "source": "fixed"
+    },
+    "eval80006_top_carry": {
+     "prompts": {
+      "cup": "open box",
+      "block": "small cube",
+      "marker": "cylinder"
+     },
+     "source": "fixed"
+    },
+    "eval80007_oblique_carry": {
+     "prompts": {
+      "cup": "open box",
+      "block": "small cube",
+      "marker": "cylinder"
+     },
+     "source": "fixed"
+    }
+   }
+  },
+  "edits": [
+   {
+    "frame": "eval80000_top_carry",
+    "instruction": "light_dim",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -3,
+     "dy": -1,
+     "fit_px": 0.339
+    },
+    "latency_s": 7.108
+   },
+   {
+    "frame": "eval80000_top_carry",
+    "instruction": "light_warm",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.618
+    },
+    "latency_s": 6.796
+   },
+   {
+    "frame": "eval80000_top_carry",
+    "instruction": "light_harsh",
+    "family": "lighting",
+    "kind": "model",
+    "status": "refused",
+    "error": "MetaError: HTTP 400: {\"error\":{\"code\":\"content_policy_violation\",\"message\":\"The response was filtered due to the prompt triggering our content management policy.\",\"param\":\"prompt\",\"type\":\"invalid_request_error\"}}",
+    "verdict": null,
+    "objects": {},
+    "correction": null,
+    "latency_s": 0.0
+   },
+   {
+    "frame": "eval80000_top_carry",
+    "instruction": "bg_wood",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -5,
+     "dy": 0,
+     "fit_px": 0.771
+    },
+    "latency_s": 7.244
+   },
+   {
+    "frame": "eval80000_top_carry",
+    "instruction": "bg_lab_bench",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -4,
+     "dy": -3,
+     "fit_px": 0.597
+    },
+    "latency_s": 10.83
+   },
+   {
+    "frame": "eval80000_top_carry",
+    "instruction": "distractor_mug",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -8,
+     "dy": 0,
+     "fit_px": 0.318
+    },
+    "latency_s": 7.375
+   },
+   {
+    "frame": "eval80000_top_carry",
+    "instruction": "distractor_paper",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -2,
+     "dy": -1,
+     "fit_px": 0.449
+    },
+    "latency_s": 7.773
+   },
+   {
+    "frame": "eval80000_top_carry",
+    "instruction": "material_glossy_cup",
+    "family": "material",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -2,
+     "dy": 0,
+     "fit_px": 0.616
+    },
+    "latency_s": 6.593
+   },
+   {
+    "frame": "eval80000_top_carry",
+    "instruction": "noise_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.058
+    },
+    "latency_s": 0.065
+   },
+   {
+    "frame": "eval80000_top_carry",
+    "instruction": "blur_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.591
+    },
+    "latency_s": 0.093
+   },
+   {
+    "frame": "eval80000_top_carry",
+    "instruction": "blur_motion",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction (check said changed, not used)",
+    "objects": {
+     "cup": "moved",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.7
+    },
+    "latency_s": 0.014
+   },
+   {
+    "frame": "eval80001_oblique_carry",
+    "instruction": "light_dim",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "moved"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -3,
+     "dy": -2,
+     "fit_px": 0.543
+    },
+    "latency_s": 7.478
+   },
+   {
+    "frame": "eval80001_oblique_carry",
+    "instruction": "light_warm",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "moved",
+     "block": "kept",
+     "marker": "moved"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.01,
+     "dx": 2,
+     "dy": 1,
+     "fit_px": 1.659
+    },
+    "latency_s": 6.986
+   },
+   {
+    "frame": "eval80001_oblique_carry",
+    "instruction": "light_harsh",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "moved",
+     "block": "moved",
+     "marker": "moved"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.01,
+     "dx": -2,
+     "dy": 2,
+     "fit_px": 2.132
+    },
+    "latency_s": 7.858
+   },
+   {
+    "frame": "eval80001_oblique_carry",
+    "instruction": "bg_wood",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.01,
+     "dx": -4,
+     "dy": 1,
+     "fit_px": 1.845
+    },
+    "latency_s": 6.261
+   },
+   {
+    "frame": "eval80001_oblique_carry",
+    "instruction": "bg_lab_bench",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -2,
+     "dy": -1,
+     "fit_px": 0.893
+    },
+    "latency_s": 11.579
+   },
+   {
+    "frame": "eval80001_oblique_carry",
+    "instruction": "distractor_mug",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "moved"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -1,
+     "dy": -1,
+     "fit_px": 0.457
+    },
+    "latency_s": 7.654
+   },
+   {
+    "frame": "eval80001_oblique_carry",
+    "instruction": "distractor_paper",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "moved"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -1,
+     "dy": 0,
+     "fit_px": 0.425
+    },
+    "latency_s": 6.27
+   },
+   {
+    "frame": "eval80001_oblique_carry",
+    "instruction": "material_glossy_cup",
+    "family": "material",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "moved"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -1,
+     "dy": 1,
+     "fit_px": 1.093
+    },
+    "latency_s": 6.162
+   },
+   {
+    "frame": "eval80001_oblique_carry",
+    "instruction": "noise_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.148
+    },
+    "latency_s": 0.053
+   },
+   {
+    "frame": "eval80001_oblique_carry",
+    "instruction": "blur_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction (check said changed, not used)",
+    "objects": {
+     "cup": "moved",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.485
+    },
+    "latency_s": 0.084
+   },
+   {
+    "frame": "eval80001_oblique_carry",
+    "instruction": "blur_motion",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.455
+    },
+    "latency_s": 0.013
+   },
+   {
+    "frame": "eval80002_top_carry",
+    "instruction": "light_dim",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": -1,
+     "fit_px": 0.344
+    },
+    "latency_s": 6.547
+   },
+   {
+    "frame": "eval80002_top_carry",
+    "instruction": "light_warm",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "weakened"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 2,
+     "dy": 1,
+     "fit_px": 1.213
+    },
+    "latency_s": 7.664
+   },
+   {
+    "frame": "eval80002_top_carry",
+    "instruction": "light_harsh",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": 1,
+     "dy": -2,
+     "fit_px": 0.752
+    },
+    "latency_s": 8.085
+   },
+   {
+    "frame": "eval80002_top_carry",
+    "instruction": "bg_wood",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": 4,
+     "dy": -1,
+     "fit_px": 0.634
+    },
+    "latency_s": 6.915
+   },
+   {
+    "frame": "eval80002_top_carry",
+    "instruction": "bg_lab_bench",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "moved",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.98,
+     "dx": 0,
+     "dy": 1,
+     "fit_px": 0.489
+    },
+    "latency_s": 7.852
+   },
+   {
+    "frame": "eval80002_top_carry",
+    "instruction": "distractor_mug",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": -1,
+     "fit_px": 0.385
+    },
+    "latency_s": 6.719
+   },
+   {
+    "frame": "eval80002_top_carry",
+    "instruction": "distractor_paper",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "moved",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": 0,
+     "dy": -2,
+     "fit_px": 0.483
+    },
+    "latency_s": 5.423
+   },
+   {
+    "frame": "eval80002_top_carry",
+    "instruction": "material_glossy_cup",
+    "family": "material",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "missing",
+     "block": "kept",
+     "marker": "moved"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 1.478
+    },
+    "latency_s": 5.721
+   },
+   {
+    "frame": "eval80002_top_carry",
+    "instruction": "noise_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.069
+    },
+    "latency_s": 0.105
+   },
+   {
+    "frame": "eval80002_top_carry",
+    "instruction": "blur_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction (check said changed, not used)",
+    "objects": {
+     "cup": "moved",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.543
+    },
+    "latency_s": 0.074
+   },
+   {
+    "frame": "eval80002_top_carry",
+    "instruction": "blur_motion",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction (check said changed, not used)",
+    "objects": {
+     "cup": "moved",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.658
+    },
+    "latency_s": 0.014
+   },
+   {
+    "frame": "eval80003_oblique_carry",
+    "instruction": "light_dim",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -6,
+     "dy": 0,
+     "fit_px": 0.623
+    },
+    "latency_s": 6.183
+   },
+   {
+    "frame": "eval80003_oblique_carry",
+    "instruction": "light_warm",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.01,
+     "dx": -8,
+     "dy": 2,
+     "fit_px": 0.661
+    },
+    "latency_s": 6.728
+   },
+   {
+    "frame": "eval80003_oblique_carry",
+    "instruction": "light_harsh",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.01,
+     "dx": -9,
+     "dy": 1,
+     "fit_px": 1.357
+    },
+    "latency_s": 6.964
+   },
+   {
+    "frame": "eval80003_oblique_carry",
+    "instruction": "bg_wood",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "moved",
+     "block": "moved",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -9,
+     "dy": -1,
+     "fit_px": 1.601
+    },
+    "latency_s": 8.312
+   },
+   {
+    "frame": "eval80003_oblique_carry",
+    "instruction": "bg_lab_bench",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "moved",
+     "block": "moved",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.01,
+     "dx": -8,
+     "dy": -2,
+     "fit_px": 1.739
+    },
+    "latency_s": 9.026
+   },
+   {
+    "frame": "eval80003_oblique_carry",
+    "instruction": "distractor_mug",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.01,
+     "dx": -4,
+     "dy": 2,
+     "fit_px": 0.302
+    },
+    "latency_s": 7.381
+   },
+   {
+    "frame": "eval80003_oblique_carry",
+    "instruction": "distractor_paper",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -8,
+     "dy": 0,
+     "fit_px": 0.464
+    },
+    "latency_s": 5.646
+   },
+   {
+    "frame": "eval80003_oblique_carry",
+    "instruction": "material_glossy_cup",
+    "family": "material",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.01,
+     "dx": -3,
+     "dy": 3,
+     "fit_px": 0.908
+    },
+    "latency_s": 5.022
+   },
+   {
+    "frame": "eval80003_oblique_carry",
+    "instruction": "noise_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.122
+    },
+    "latency_s": 0.052
+   },
+   {
+    "frame": "eval80003_oblique_carry",
+    "instruction": "blur_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.463
+    },
+    "latency_s": 0.068
+   },
+   {
+    "frame": "eval80003_oblique_carry",
+    "instruction": "blur_motion",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction (check said changed, not used)",
+    "objects": {
+     "cup": "moved",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.73
+    },
+    "latency_s": 0.012
+   },
+   {
+    "frame": "eval80004_top_carry",
+    "instruction": "light_dim",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": 0,
+     "dy": 1,
+     "fit_px": 0.287
+    },
+    "latency_s": 6.873
+   },
+   {
+    "frame": "eval80004_top_carry",
+    "instruction": "light_warm",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": 2,
+     "dy": 1,
+     "fit_px": 0.677
+    },
+    "latency_s": 6.997
+   },
+   {
+    "frame": "eval80004_top_carry",
+    "instruction": "light_harsh",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": 1,
+     "dy": 0,
+     "fit_px": 1.375
+    },
+    "latency_s": 6.698
+   },
+   {
+    "frame": "eval80004_top_carry",
+    "instruction": "bg_wood",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": 1,
+     "dy": 0,
+     "fit_px": 0.708
+    },
+    "latency_s": 7.705
+   },
+   {
+    "frame": "eval80004_top_carry",
+    "instruction": "bg_lab_bench",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "reframed",
+    "objects": {
+     "cup": "untested",
+     "block": "untested",
+     "marker": "untested"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.97,
+     "dx": 4,
+     "dy": 7,
+     "fit_px": 2.658
+    },
+    "latency_s": 9.224
+   },
+   {
+    "frame": "eval80004_top_carry",
+    "instruction": "distractor_mug",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.286
+    },
+    "latency_s": 7.22
+   },
+   {
+    "frame": "eval80004_top_carry",
+    "instruction": "distractor_paper",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 1,
+     "dy": -1,
+     "fit_px": 0.33
+    },
+    "latency_s": 6.734
+   },
+   {
+    "frame": "eval80004_top_carry",
+    "instruction": "material_glossy_cup",
+    "family": "material",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -1,
+     "dy": 0,
+     "fit_px": 0.766
+    },
+    "latency_s": 7.237
+   },
+   {
+    "frame": "eval80004_top_carry",
+    "instruction": "noise_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.068
+    },
+    "latency_s": 0.179
+   },
+   {
+    "frame": "eval80004_top_carry",
+    "instruction": "blur_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.448
+    },
+    "latency_s": 0.167
+   },
+   {
+    "frame": "eval80004_top_carry",
+    "instruction": "blur_motion",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.649
+    },
+    "latency_s": 0.03
+   },
+   {
+    "frame": "eval80005_oblique_carry",
+    "instruction": "light_dim",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -4,
+     "dy": 0,
+     "fit_px": 0.781
+    },
+    "latency_s": 6.542
+   },
+   {
+    "frame": "eval80005_oblique_carry",
+    "instruction": "light_warm",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -1,
+     "dy": 0,
+     "fit_px": 0.792
+    },
+    "latency_s": 10.865
+   },
+   {
+    "frame": "eval80005_oblique_carry",
+    "instruction": "light_harsh",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -7,
+     "dy": 0,
+     "fit_px": 0.576
+    },
+    "latency_s": 8.652
+   },
+   {
+    "frame": "eval80005_oblique_carry",
+    "instruction": "bg_wood",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -3,
+     "dy": 0,
+     "fit_px": 1.519
+    },
+    "latency_s": 6.984
+   },
+   {
+    "frame": "eval80005_oblique_carry",
+    "instruction": "bg_lab_bench",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -7,
+     "dy": 1,
+     "fit_px": 0.476
+    },
+    "latency_s": 6.937
+   },
+   {
+    "frame": "eval80005_oblique_carry",
+    "instruction": "distractor_mug",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.01,
+     "dx": -9,
+     "dy": 2,
+     "fit_px": 0.459
+    },
+    "latency_s": 7.087
+   },
+   {
+    "frame": "eval80005_oblique_carry",
+    "instruction": "distractor_paper",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -4,
+     "dy": -1,
+     "fit_px": 0.312
+    },
+    "latency_s": 7.649
+   },
+   {
+    "frame": "eval80005_oblique_carry",
+    "instruction": "material_glossy_cup",
+    "family": "material",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -5,
+     "dy": 0,
+     "fit_px": 0.589
+    },
+    "latency_s": 7.532
+   },
+   {
+    "frame": "eval80005_oblique_carry",
+    "instruction": "noise_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.206
+    },
+    "latency_s": 0.084
+   },
+   {
+    "frame": "eval80005_oblique_carry",
+    "instruction": "blur_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "weakened",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.624
+    },
+    "latency_s": 0.164
+   },
+   {
+    "frame": "eval80005_oblique_carry",
+    "instruction": "blur_motion",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.706
+    },
+    "latency_s": 0.015
+   },
+   {
+    "frame": "eval80006_top_carry",
+    "instruction": "light_dim",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -7,
+     "dy": 0,
+     "fit_px": 0.705
+    },
+    "latency_s": 10.175
+   },
+   {
+    "frame": "eval80006_top_carry",
+    "instruction": "light_warm",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "moved"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.98,
+     "dx": -7,
+     "dy": -3,
+     "fit_px": 0.926
+    },
+    "latency_s": 7.645
+   },
+   {
+    "frame": "eval80006_top_carry",
+    "instruction": "light_harsh",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -4,
+     "dy": 0,
+     "fit_px": 0.862
+    },
+    "latency_s": 8.176
+   },
+   {
+    "frame": "eval80006_top_carry",
+    "instruction": "bg_wood",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "moved",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -2,
+     "dy": 0,
+     "fit_px": 0.76
+    },
+    "latency_s": 7.408
+   },
+   {
+    "frame": "eval80006_top_carry",
+    "instruction": "bg_lab_bench",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "reframed",
+    "objects": {
+     "cup": "untested",
+     "block": "untested",
+     "marker": "untested"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.98,
+     "dx": -14,
+     "dy": 11,
+     "fit_px": 2.762
+    },
+    "latency_s": 8.132
+   },
+   {
+    "frame": "eval80006_top_carry",
+    "instruction": "distractor_mug",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "moved"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.98,
+     "dx": -3,
+     "dy": -1,
+     "fit_px": 0.402
+    },
+    "latency_s": 6.954
+   },
+   {
+    "frame": "eval80006_top_carry",
+    "instruction": "distractor_paper",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -5,
+     "dy": -2,
+     "fit_px": 0.455
+    },
+    "latency_s": 5.635
+   },
+   {
+    "frame": "eval80006_top_carry",
+    "instruction": "material_glossy_cup",
+    "family": "material",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "moved",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": -4,
+     "dy": -2,
+     "fit_px": 0.525
+    },
+    "latency_s": 6.503
+   },
+   {
+    "frame": "eval80006_top_carry",
+    "instruction": "noise_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.116
+    },
+    "latency_s": 0.112
+   },
+   {
+    "frame": "eval80006_top_carry",
+    "instruction": "blur_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.615
+    },
+    "latency_s": 0.135
+   },
+   {
+    "frame": "eval80006_top_carry",
+    "instruction": "blur_motion",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction (check said changed, not used)",
+    "objects": {
+     "cup": "moved",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.582
+    },
+    "latency_s": 0.055
+   },
+   {
+    "frame": "eval80007_oblique_carry",
+    "instruction": "light_dim",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": 1,
+     "dy": -1,
+     "fit_px": 0.768
+    },
+    "latency_s": 8.305
+   },
+   {
+    "frame": "eval80007_oblique_carry",
+    "instruction": "light_warm",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "missing",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -2,
+     "dy": -2,
+     "fit_px": 1.194
+    },
+    "latency_s": 8.42
+   },
+   {
+    "frame": "eval80007_oblique_carry",
+    "instruction": "light_harsh",
+    "family": "lighting",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 0.99,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 1.584
+    },
+    "latency_s": 6.921
+   },
+   {
+    "frame": "eval80007_oblique_carry",
+    "instruction": "bg_wood",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 1,
+     "dy": -2,
+     "fit_px": 1.716
+    },
+    "latency_s": 6.098
+   },
+   {
+    "frame": "eval80007_oblique_carry",
+    "instruction": "bg_lab_bench",
+    "family": "background",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "changed",
+    "objects": {
+     "cup": "missing",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -3,
+     "dy": -1,
+     "fit_px": 1.959
+    },
+    "latency_s": 9.96
+   },
+   {
+    "frame": "eval80007_oblique_carry",
+    "instruction": "distractor_mug",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 1,
+     "dy": -1,
+     "fit_px": 0.684
+    },
+    "latency_s": 7.24
+   },
+   {
+    "frame": "eval80007_oblique_carry",
+    "instruction": "distractor_paper",
+    "family": "distractor",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": -3,
+     "dy": 0,
+     "fit_px": 0.46
+    },
+    "latency_s": 6.563
+   },
+   {
+    "frame": "eval80007_oblique_carry",
+    "instruction": "material_glossy_cup",
+    "family": "material",
+    "kind": "model",
+    "status": "ok",
+    "error": "",
+    "verdict": "preserved",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 3,
+     "dy": -2,
+     "fit_px": 1.017
+    },
+    "latency_s": 6.022
+   },
+   {
+    "frame": "eval80007_oblique_carry",
+    "instruction": "noise_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.198
+    },
+    "latency_s": 0.07
+   },
+   {
+    "frame": "eval80007_oblique_carry",
+    "instruction": "blur_gauss",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.838
+    },
+    "latency_s": 0.086
+   },
+   {
+    "frame": "eval80007_oblique_carry",
+    "instruction": "blur_motion",
+    "family": "sensor",
+    "kind": "local",
+    "status": "ok",
+    "error": "",
+    "verdict": "kept by construction",
+    "objects": {
+     "cup": "kept",
+     "block": "kept",
+     "marker": "kept"
+    },
+    "correction": {
+     "applied": true,
+     "scale": 1.0,
+     "dx": 0,
+     "dy": 0,
+     "fit_px": 0.61
+    },
+    "latency_s": 0.016
+   }
+  ],
+  "sam": {
+   "model": "sam-3.1",
+   "calls": 558,
+   "network_calls": 544,
+   "latency_s_mean": 0.9887,
+   "latency_s_max": 4.103
+  },
+  "edit_request": {
+   "model": "muse-image-1.0",
+   "output_format": "webp",
+   "reasoning_strength": "low",
+   "tool_enablement": {
+    "enable_web_search": false,
+    "enable_image_search": false,
+    "enable_shell": false
+   },
+   "size": "source width x height"
+  }
+ }
+}

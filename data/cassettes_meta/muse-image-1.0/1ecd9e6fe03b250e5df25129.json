@@ -1,0 +1,43 @@
+{
+ "key": "1ecd9e6fe03b250e5df25129fbfd82327f346a5ac79f706b7e3dcc28f97593af",
+ "model": "muse-image-1.0",
+ "endpoint": "/images/edits",
+ "request": {
+  "model": "muse-image-1.0",
+  "prompt": "Add a second, unrelated coffee mug standing on the table in the far corner of the image, away from all other objects. Keep every object exactly where it is, with the same size, shape and outline, and keep the camera viewpoint and framing unchanged.",
+  "n": 1,
+  "output_format": "webp",
+  "images": [
+   {
+    "image_url": "data:image/png;base64,sha256:209a291f89bf06750bb43aff78fdbc36dbb37274aef70d8a5704e56b9a1a2d5e"
+   }
+  ],
+  "reasoning_strength": "low",
+  "tool_enablement": {
+   "enable_web_search": false,
+   "enable_image_search": false,
+   "enable_shell": false
+  },
+  "size": "1024x576"
+ },
+ "response": {
+  "created": 1793487677,
+  "output_format": "webp",
+  "background": "opaque",
+  "usage": {
+   "input_tokens": 4881,
+   "output_tokens": 760,
+   "total_tokens": 5641
+  },
+  "n_images": 1
+ },
+ "blobs": [
+  {
+   "file": "1ecd9e6fe03b250e5df25129_0.webp",
+   "sha256": "3f9d1fe9103107bdc3afe17a1ab84e893ffb6844a50f28c4f77c1c9679d92fdd",
+   "bytes": 41328
+  }
+ ],
+ "latency_s": 7.24,
+ "recorded_at": "2026-10-31T23:01:17Z"
+}
