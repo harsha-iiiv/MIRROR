@@ -124,9 +124,10 @@ evaluation layout was generated; full report in
   by the frozen runner.
 
 What this does not show: behaviour outside this task family, with other
-corrections, on physical hardware, or with Muse Spark as the interpreter (the
-specifications were produced from recorded development-model responses, and
-the offline rules produce the same enforced constraints).
+corrections, or on physical hardware. These specifications were produced from
+recorded development-model responses (the offline rules produce the same
+enforced constraints); the second registration below repeats the evaluation
+with specifications compiled by Muse Spark.
 
 
 ## Second registration: specifications compiled by Muse Spark
@@ -160,3 +161,172 @@ commit with the same runtime. Both attempts are in its ledger. Details:
 Reproduce: `git checkout 864060d`, then
 `python scripts/run_eval.py final --registration muse --workers 2` in a scratch
 clone (it writes its outputs and ledger entries into `results/eval_muse`).
+
+
+## Third registration: spoken corrections
+
+**Question.** Does a correction spoken aloud, transcribed by
+`muse-voice-transcribe-1.0` and compiled by `muse-spark-1.3`, give the same
+result as the same sentence typed?
+
+**Design** (`results/eval_voice/design.json`, written 31 October 2026 20:53 UTC,
+committed in `7c2cb2f` before any transcription).
+
+* Inputs: the 72 sentences of the correction benchmark (44 frozen + 28
+  held-out cases), each spoken by two voices, clean and with pink noise at
+  15 dB SNR: 288 WAV files, listed with sha256 in `inputs.json`.
+* Speech was synthesised by a non-Meta engine (ElevenLabs `eleven_v4_turbo`,
+  two premade voices). It is clean synthetic speech, not human recordings.
+* Each file is transcribed once; the transcript goes through the same compiler,
+  recordings and scorer as the typed sentence (exact operation match).
+* Pre-stated checks: corpus word error rate (WER) at most 5% clean and 10% noisy;
+  exact match from audio within 5 points (clean) and 10 points (noisy) of the
+  text baseline.
+
+**Amendments.** None. Frozen in `308ab44` (code, inputs and design hashes in
+`freeze.json`).
+
+**Results** (`results/eval_voice/report.md`, commit `f74602b`).
+
+| Condition | Recordings | Corpus WER | Right from audio | Right from text | Text right, audio wrong | Audio right, text wrong | Exact McNemar |
+|---|---|---|---|---|---|---|---|
+| Clean | 144 | 3.0% | 141 | 142 | 2 | 1 | p = 1 |
+| Pink noise 15 dB | 144 | 2.2% | 140 | 142 | 2 | 0 | p = 0.5 |
+
+| Check | Result |
+|---|---|
+| Corpus WER clean ≤ 5% | met (3.0%) |
+| Audio exact ≥ text exact − 5 points (clean) | met (−0.7 points) |
+| Corpus WER noisy ≤ 10% | met (2.2%) |
+| Audio exact ≥ text exact − 10 points (noisy) | met (−1.4 points) |
+
+No transcription failed. Spend: $1.70 at list prices (288 transcriptions
+$0.05; correction compiles $1.65).
+
+**What the failures mean.** All four "right as text, wrong from audio" cases
+had a word error rate of 0. The words were right; only punctuation differed: a
+doubled full stop (two sentences, one voice, clean) and a comma heard as a full
+stop ("…while you carry it. The cup too.", both voices, noisy). Those
+differences alone changed what Muse Spark compiled, so the compiler is
+sensitive to punctuation. The one text failure (hs04, "All three objects have to stay
+upright at all times", wrong as text; from audio it was right in one of four recordings) is the same
+miss as in the Muse Spark correction benchmark: one rule per object instead of
+one rule for all objects, which the strict scorer counts as wrong
+(`results/corrections_benchmark_holdout_muse.md`). Synthetic voices are an easier case
+than real speakers; results on human speech may differ.
+
+
+## Fourth registration: perception robustness
+
+**Question.** Does SAM 3.1's segmentation of the cup, block and marker hold when
+`muse-image-1.0` changes how a frame looks (lighting, background, a distractor
+object, the cup's material), and under camera noise and blur?
+
+**Design** (`results/eval_robustness/design.json`, written 31 October 2026
+22:29 UTC, before any model call on its frames).
+
+* Inputs: one carry-moment frame (the cup in the gripper) from each of 8 new
+  evaluation seeds (80000-80007), top or oblique camera, with the simulator's
+  true visible-pixel masks.
+* 11 frozen instructions per frame: 8 edits by `muse-image-1.0` (64 edits) and
+  3 local, deterministic ones (noise, Gaussian blur, motion blur).
+* Two prompt conditions: **A**, phrases chosen once per original frame by
+  `muse-spark-1.3` and accepted only if SAM finds exactly one object; **B**,
+  fixed colour-free phrases ("open box", "small cube", "cylinder").
+* The image model shifts and rescales the whole frame slightly; a whole-frame
+  fit undoes this before scoring (primary, "corrected"); uncorrected scores
+  are reported too. A geometry check decides per object whether an edit kept it
+  in place; objects that moved, resized or vanished are reported separately,
+  never dropped.
+* Pre-stated checks, on objects whose geometry was kept, per condition: median
+  IoU change ≥ −0.05, found rate ≥ 0.9, median centroid error ≤ 4 px.
+* Disclosed in the design: the thresholds predate a development run on 3
+  development frames; the frames, prompt conditions and correction rule were
+  chosen after seeing that run.
+
+**Amendments.** None. Frozen in `024f1cb`.
+
+**Results** (`results/eval_robustness/report.md`, commit `cb03bf8`).
+
+| Check (all edits, geometry kept, corrected) | Condition A | Condition B |
+|---|---|---|
+| Median IoU change ≥ −0.05 | met (−0.000) | met (0.000) |
+| Found rate ≥ 0.9 | **not met** (0.47) | **not met** (0.61) |
+| Median centroid error ≤ 4 px | met (0.67 px) | met (1.50 px) |
+
+* Uncorrected (A): median IoU change −0.001, centroid 1.93 px; the background
+  edits lose 0.17 IoU uncorrected vs 0.04 corrected, so most of the apparent
+  damage from those edits is the editor's whole-frame drift.
+* The image model changed the scene itself in 42 of 261 scored objects (16%;
+  all 42 from image-model edits, 22% of their 189 objects): 33 moved, 3
+  missing, 6 in reframed frames that could not be brought into register. One
+  edit was refused by the content policy.
+* Spend: $2.22 (63 image-edit requests $0.63, 575 SAM requests $1.44, 14 phrase
+  choices $0.15).
+
+**What the failure means.** The found rate was already low on the unedited
+frames (0.58 in A, 0.67 in B), so the edits are not what SAM misses. In these
+carry frames the cup sits inside the gripper. In condition A the phrase
+chooser accepted no phrase for the cup in 7 of 8 frames (and none at all in one
+frame), so the cup counts as not found. In condition B "open box" returned a
+mask in about half the cup cases, but every such mask missed the cup (mean IoU
+0.000). Block segmentation was strong (found 0.87 in A, 1.00 in B); the marker
+was found in 39-49% of cases. The video pipeline therefore does not rely on
+noun phrases alone: Muse Spark locates each object and SAM tracks it from that
+box. In condition B the median centroid error on material edits was 151 px
+(18 kept objects), consistent with a fixed phrase matching another object.
+
+
+## Fifth registration: video to specification (results pending)
+
+**Question.** Can MIRROR rebuild the demonstration from rendered video (SAM 3.1
+tracking, two-view reconstruction) well enough that Muse Spark proposes the
+same specification as from the simulator's own trace? And does Muse Wonder
+describe the video better than Muse Spark?
+
+**Design** (`results/eval_video/design.json`, written 31 October 2026 20:56 UTC,
+committed in `7c2cb2f`).
+
+* Inputs: 20 new evaluation seeds (70000-70019), the scripted demonstration in
+  each layout, rendered from a top and a side camera with the simulator's
+  per-frame ground truth.
+* Pre-stated thresholds: object found rate ≥ 0.95; median table-plane centroid
+  error ≤ 1.5 cm; grasp/release detection ≥ 0.9; median timing error ≤ 0.3 s;
+  median cup tilt error ≤ 5°; specification signature from video equal to the
+  one from the true trace on at least 18 of 20 seeds.
+* Decision rule: use Muse Wonder for observations only if its mean event F1
+  is at least 0.05 above Muse Spark's and it gets the relevant objects right at
+  least as often.
+
+**Amendment 1** (21:42 UTC, before any input existed): the tracking thresholds
+apply to SAM tracking and reconstruction, with event times from tracked object
+motion, never from the video models. The video models have no pass/fail
+threshold; they are compared by the decision rule, on the full top video, using
+reported event start times. Written after development-only timing numbers from
+one reference demonstration (video models reported grasps about 2 s early;
+normal-speed video was their best input).
+
+**Amendment 2** (1 November 01:06 UTC, before any input existed): renders at
+960x540, 15 fps, no overlays, on an NVIDIA L4 GPU with EGL; tracking on 5 fps
+copies; Muse Spark grounding on the first frame seeds SAM box prompts, with
+re-seeding of lost tracks; one Wonder and one Spark observation per seed; a $14
+spend cap; a reported-only structure comparison next to the unchanged strict
+signature. Frozen in `8e3b369`.
+
+**Results: pending.**
+
+| Check | Result |
+|---|---|
+| Found rate ≥ 0.95 | *pending* |
+| Median centroid error ≤ 1.5 cm | *pending* |
+| Event detection ≥ 0.9 | *pending* |
+| Median timing error ≤ 0.3 s | *pending* |
+| Median cup tilt error ≤ 5° | *pending* |
+| Signature equal on ≥ 18 of 20 seeds | *pending* |
+| Decision rule (Wonder vs Spark) | *pending* |
+| Structure comparison (reported only) | *pending* |
+| Spend (cap $14) | *pending* |
+
+**What the failures mean.** *Pending.* Known from development before the
+freeze: perception was tuned on the reference demonstration and development
+seeds 9001 and 9002 only; on 9002 it still missed the marker's grasp and release.

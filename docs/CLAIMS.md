@@ -16,7 +16,8 @@ not cover keep their freedom. Evaluation numbers are in
 
 * No physical robot, and no evidence of simulation-to-reality transfer.
 * No understanding of human video. The demonstration is a simulated
-  teleoperation trace.
+  teleoperation trace. The video path reads rendered simulator video, not
+  camera footage of people (see "Video, voice and image" below).
 * No general task learning from one example. One task family is supported.
 * No new foundation model or learned robot policy.
 * No formal verification or safety guarantee. Finite simulated trials are
@@ -48,8 +49,9 @@ not cover keep their freedom. Evaluation numbers are in
 * The reference demonstration is driven by a scripted operator through the
   same velocity-command interface a person uses in the studio. It is
   labelled `teleop_scripted`.
-* The interpreter reads simulator trace data (poses, grasp and release
-  events), not video. Privileged simulator state is used for summarizing the
+* In the first two evaluations the interpreter reads simulator trace data
+  (poses, grasp and release events), not video. The trace rebuilt from video
+  is a separate path, measured in its own registration. Privileged simulator state is used for summarizing the
   demo, for planning and for checking, and is never presented as perception.
 * Recorded model responses in `data/cassettes/` were produced with a
   development model (`gpt-5.5`, through an OpenAI-compatible endpoint), not
@@ -142,3 +144,57 @@ not cover keep their freedom. Evaluation numbers are in
   rollouts may be thinned for playback; every thinning step is noted in the
   report. Metrics always come from the full-rate step log.
 * Tall static walls are drawn translucent so the robot stays visible.
+
+### Video, voice and image
+
+* **Speech.** The spoken-correction benchmark uses synthetic speech from a
+  non-Meta engine (ElevenLabs `eleven_v4_turbo`, two premade voices), clean and
+  with added pink noise. It is not human recordings; results on real speakers
+  may differ. The unit-test audio clip is synthesised with espeak-ng.
+* **Punctuation.** In that benchmark four transcripts with a word error rate of
+  0 still compiled differently from the typed sentence, because of a doubled
+  full stop or a comma heard as a full stop. The correction compiler is
+  sensitive to punctuation.
+* **Rendered video, not camera footage.** Demonstration videos are rendered from
+  the simulator. The render look was adjusted for segmentation (soft wood
+  grain, dark floor, opaque walls) and has no overlays.
+* **GPU renders.** The 20 videos of the video registration were rendered on an
+  NVIDIA L4 GPU with EGL. On a development demonstration, EGL frames differed
+  from software (OSMesa) renders by about 1/255 on average (99th percentile
+  4/255), with identical poses and events.
+* **Known geometry.** Reconstruction from video assumes the camera intrinsics
+  (45° vertical field of view), the table size (1.2 × 1.0 m) and the object,
+  tray and wall-thickness sizes from the kit catalogue. The camera is assumed to
+  be on the operator's side of the table.
+* **What video cannot see.** The gripper opening is not observed (closed while
+  an object is carried, open otherwise). The bead count is the number of balls
+  the grounding model can see. Cup tilt comes from an in-image silhouette fit in
+  the side view, only where the cup is clearly visible. Carried objects hidden
+  under the gripper follow it; gripper depth comes from its apparent size.
+  Static scene parts are segmented once on the first frame.
+* **Prompts.** On these renders, SAM 3.1 noun-phrase prompts alone found only
+  the blue cube, the table (top view) and the wall (side view), so Muse Spark
+  locates each object on the first frame and SAM tracks it from that box.
+* **Tuning.** Perception was tuned on the reference demonstration and
+  development seeds 9001 and 9002 only. The video registration's seeds were
+  never rendered or sampled by that work. On 9002 it still misses the marker's
+  grasp and release.
+* **Run-to-run variation.** Live perception is not deterministic. On the
+  reference video, the recorded run gave a 0.88 cm mean position error with
+  6 of 6 grasp/release events; a live re-run on the same video gave 1.90 cm and
+  4 of 6 ([record](../results/live_checks/2026-10-31_video_rerun.md)). The
+  published site replays the recorded run.
+* **Video models.** In development, Muse Spark and Muse Wonder reported grasps
+  about 2 s early.
+  Their observations are reported and compared; they never set event times for
+  the tracking thresholds and never grade a run.
+* **Image edits change scenes.** Muse Image does not only restyle a frame: in
+  the robustness benchmark it moved, removed or reframed objects in 42 of 261
+  scored objects (16%), and it shifts and rescales the whole frame slightly.
+  Both are measured and reported; objects whose geometry changed are scored
+  separately, and the whole-frame drift is undone before the primary scores.
+* **Robustness scope.** The robustness frames are carry moments, where the cup
+  is inside the gripper. SAM rarely found the cup there even without edits, so
+  the found-rate check failed under both prompt conditions. The benchmark says
+  little about the cup at other moments.
+

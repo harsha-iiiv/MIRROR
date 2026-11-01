@@ -24,7 +24,8 @@ model's description of what happened.
   interface a person uses in the studio. Not human-video understanding.
 * **Model:** Meta Model API (Muse Spark, `muse-spark-1.3`). Recorded Muse Spark
   responses in `data/cassettes_muse` replay the story and the second evaluation
-  without a key. The first evaluation's recordings came from a development model
+  without a key. Four more Meta models have measured roles; see
+  [Meta models in MIRROR](#meta-models-in-mirror). The first evaluation's recordings came from a development model
   and are labelled as such.
 * **Proofs are narrow.** "Infeasible" is claimed only with a geometric bound
   under stated assumptions; otherwise the planner reports that it found no
@@ -68,6 +69,23 @@ either condition of either evaluation. On five layouts per evaluation where the
 slot is the only way through, the original specification spills beads to finish
 the task; the corrected one stops with a proof that the rule cannot be met
 (10/10 proven, each confirmed by an independent bound).
+
+## Meta models in MIRROR
+
+Five Meta models, each with one job. None of them moves the robot or grades a
+run: motion comes from the planner and the physics, verdicts from the checker.
+
+| Model | Job in MIRROR | Why this model | Evidence |
+|---|---|---|---|
+| **Muse Spark** (`muse-spark-1.3`) | Proposes the task specification from the demonstration, compiles corrections into scoped rule changes, asks clarifying questions. In the video path it also locates the objects on the first frame so SAM can track them. | Strict JSON-schema output, and text, image and video input in one model. | [Second evaluation](results/eval_muse/report.md) (its specifications: 33/60 → 60/60, 3/30 → 30/30); [correction benchmark](results/corrections_benchmark_summary.md) |
+| **Muse Voice Transcribe** (`muse-voice-transcribe-1.0`) | Turns a spoken correction into text for the same correction compiler. | Push-to-talk transcription; median latency 1.0 s in the spoken-correction benchmark. | [Spoken corrections](results/eval_voice/report.md): 3.0% word error rate on clean speech; corrections right from audio 141/144 vs 142/144 from text |
+| **SAM 3.1** (`sam-3.1`) | Tracks the cup, block, marker and gripper through a demonstration video and segments the table, tray and wall, so the demonstration can be rebuilt from video. | Video segmentation with object identities kept across frames. | [Robustness](results/eval_robustness/report.md); [video registration](results/eval_video/) (results pending) |
+| **Muse Image** (`muse-image-1.0`) | Edits frames (lighting, background, distractors, material) to test whether segmentation holds up when the scene looks different. | Instruction-based edits of a frame whose true masks are still known from the simulator. | [Robustness](results/eval_robustness/report.md): on objects whose position the edit kept, median IoU change about 0 and centroid error under 2 px |
+| **Muse Wonder** (`muse-wonder-1.0`) | Watches the demonstration video and reports objects, grasp and release events and care cues, compared against Muse Spark doing the same. | The alternative video model, kept only if it beats Spark by a margin stated before the test. | [Video registration](results/eval_video/) (results pending) |
+
+Every model call is recorded, so the story and the published results replay
+without a key. What each test does not show is in [docs/CLAIMS.md](docs/CLAIMS.md)
+and [docs/EVALUATION.md](docs/EVALUATION.md).
 
 ## Quick start
 
