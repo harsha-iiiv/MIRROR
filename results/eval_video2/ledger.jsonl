@@ -18,3 +18,102 @@
 {"caller": "__main__", "family": "mixed", "seed": 71017, "split": "eval", "unix": 1793513052.7442555}
 {"caller": "__main__", "family": "mixed", "seed": 71018, "split": "eval", "unix": 1793513052.8048396}
 {"caller": "__main__", "family": "mixed", "seed": 71019, "split": "eval", "unix": 1793513052.8329067}
+{"kind": "run_start", "registration": "video2", "rehearsal": false, "unix": 1793514638.9148662}
+{"kind": "seed_start", "seed": 71000, "skip_wonder": false, "unix": 1793514639.3025467}
+{"kind": "seed_start", "seed": 71001, "skip_wonder": false, "unix": 1793514639.302919}
+{"kind": "seed_start", "seed": 71002, "skip_wonder": false, "unix": 1793514639.3034887}
+{"kind": "seed_start", "seed": 71003, "skip_wonder": false, "unix": 1793514639.3040898}
+{"kind": "seed_start", "seed": 71004, "skip_wonder": false, "unix": 1793514639.3046415}
+{"kind": "seed_start", "seed": 71005, "skip_wonder": false, "unix": 1793514639.30572}
+{"kind": "seed_start", "seed": 71006, "skip_wonder": false, "unix": 1793514639.3069484}
+{"kind": "seed_start", "seed": 71007, "skip_wonder": false, "unix": 1793514639.3075001}
+{"cost_usd": 0.2766, "kind": "track", "requests": 16, "reseeds": 2, "seed": 71002, "tracker": "sam-3.1", "unix": 1793515218.1396003}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71002, "unix": 1793515304.4040084}
+{"cost_usd": 0.3201, "kind": "track", "requests": 16, "reseeds": 2, "seed": 71004, "tracker": "sam-3.1", "unix": 1793515346.9127965}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71002, "unix": 1793515351.219681}
+{"kind": "spec", "observations_present": true, "seed": 71002, "signature_equal": false, "unix": 1793515400.8052044}
+{"cost_usd": 0.6566, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71002, "unix": 1793515400.8248963}
+{"kind": "seed_start", "seed": 71008, "skip_wonder": false, "unix": 1793515400.954301}
+{"cost_usd": 0.2686, "kind": "track", "requests": 16, "reseeds": 2, "seed": 71000, "tracker": "sam-3.1", "unix": 1793515413.7043839}
+{"cost_usd": 0.2415, "kind": "track", "requests": 16, "reseeds": 3, "seed": 71005, "tracker": "sam-3.1", "unix": 1793515425.499648}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71004, "unix": 1793515429.4156604}
+{"cost_usd": 0.2825, "kind": "track", "requests": 19, "reseeds": 4, "seed": 71006, "tracker": "sam-3.1", "unix": 1793515434.549982}
+{"cost_usd": 0.363, "kind": "track", "requests": 20, "reseeds": 3, "seed": 71007, "tracker": "sam-3.1", "unix": 1793515437.2308571}
+{"cost_usd": 0.4042, "kind": "track", "requests": 21, "reseeds": 3, "seed": 71001, "tracker": "sam-3.1", "unix": 1793515457.053958}
+{"cost_usd": 0.2643, "kind": "track", "requests": 17, "reseeds": 2, "seed": 71003, "tracker": "sam-3.1", "unix": 1793515457.8007767}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71004, "unix": 1793515460.62376}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71006, "unix": 1793515489.7997344}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71007, "unix": 1793515503.2424932}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71000, "unix": 1793515508.1782925}
+{"kind": "spec", "observations_present": true, "seed": 71004, "signature_equal": true, "unix": 1793515515.6452749}
+{"cost_usd": 0.6649, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71004, "unix": 1793515515.6467476}
+{"kind": "seed_start", "seed": 71009, "skip_wonder": false, "unix": 1793515515.7700438}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71003, "unix": 1793515521.3315828}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71005, "unix": 1793515529.3844488}
+{"error": null, "event_f1": 0.167, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71006, "unix": 1793515531.8635902}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71001, "unix": 1793515538.5248022}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71000, "unix": 1793515546.892604}
+{"error": null, "event_f1": 0.333, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71007, "unix": 1793515550.0613117}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71003, "unix": 1793515562.917935}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71005, "unix": 1793515572.9938495}
+{"error": null, "event_f1": 0.167, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71001, "unix": 1793515577.903748}
+{"kind": "spec", "observations_present": true, "seed": 71006, "signature_equal": true, "unix": 1793515578.3556185}
+{"cost_usd": 0.6152, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71006, "unix": 1793515578.3570237}
+{"kind": "seed_start", "seed": 71010, "skip_wonder": false, "unix": 1793515578.528558}
+{"kind": "spec", "observations_present": true, "seed": 71000, "signature_equal": false, "unix": 1793515583.7707474}
+{"cost_usd": 0.6181, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71000, "unix": 1793515583.811243}
+{"kind": "seed_start", "seed": 71011, "skip_wonder": false, "unix": 1793515583.9725697}
+{"kind": "spec", "observations_present": true, "seed": 71007, "signature_equal": false, "unix": 1793515596.6140735}
+{"cost_usd": 0.6877, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71007, "unix": 1793515596.65614}
+{"kind": "seed_start", "seed": 71012, "skip_wonder": false, "unix": 1793515596.7937355}
+{"kind": "spec", "observations_present": true, "seed": 71003, "signature_equal": true, "unix": 1793515598.357396}
+{"cost_usd": 0.5519, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71003, "unix": 1793515598.4075363}
+{"kind": "seed_start", "seed": 71013, "skip_wonder": false, "unix": 1793515598.5688584}
+{"kind": "spec", "observations_present": true, "seed": 71005, "signature_equal": true, "unix": 1793515610.8484106}
+{"cost_usd": 0.6419, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71005, "unix": 1793515610.8876956}
+{"kind": "seed_start", "seed": 71014, "skip_wonder": false, "unix": 1793515611.0282292}
+{"kind": "spec", "observations_present": true, "seed": 71001, "signature_equal": true, "unix": 1793515618.397742}
+{"cost_usd": 0.7545, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71001, "unix": 1793515618.4328945}
+{"kind": "seed_start", "seed": 71015, "skip_wonder": false, "unix": 1793515618.6040156}
+{"cost_usd": 0.278, "kind": "track", "requests": 17, "reseeds": 3, "seed": 71013, "tracker": "sam-3.1", "unix": 1793516398.3390396}
+{"error": null, "event_f1": 0.333, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71013, "unix": 1793516534.8731663}
+{"cost_usd": 0.3135, "kind": "track", "requests": 19, "reseeds": 3, "seed": 71008, "tracker": "sam-3.1", "unix": 1793516549.8574045}
+{"cost_usd": 0.2919, "kind": "track", "requests": 16, "reseeds": 2, "seed": 71012, "tracker": "sam-3.1", "unix": 1793516560.334013}
+{"cost_usd": 0.2767, "kind": "track", "requests": 18, "reseeds": 3, "seed": 71011, "tracker": "sam-3.1", "unix": 1793516572.5935752}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71013, "unix": 1793516585.7367995}
+{"cost_usd": 0.368, "kind": "track", "requests": 18, "reseeds": 2, "seed": 71009, "tracker": "sam-3.1", "unix": 1793516606.3428936}
+{"cost_usd": 0.2835, "kind": "track", "requests": 14, "reseeds": 1, "seed": 71010, "tracker": "sam-3.1", "unix": 1793516609.5793858}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71012, "unix": 1793516610.1311595}
+{"cost_usd": 0.3762, "kind": "track", "requests": 18, "reseeds": 2, "seed": 71015, "tracker": "sam-3.1", "unix": 1793516610.9529648}
+{"cost_usd": 0.2882, "kind": "track", "requests": 19, "reseeds": 3, "seed": 71014, "tracker": "sam-3.1", "unix": 1793516611.5140245}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71008, "unix": 1793516612.9352806}
+{"kind": "spec", "observations_present": true, "seed": 71013, "signature_equal": true, "unix": 1793516639.0251975}
+{"cost_usd": 0.7305, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71013, "unix": 1793516639.0265179}
+{"error": null, "event_f1": 0.333, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71008, "unix": 1793516642.0224226}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71011, "unix": 1793516649.190008}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71014, "unix": 1793516659.5261693}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71010, "unix": 1793516681.4296656}
+{"kind": "spec", "observations_present": true, "seed": 71008, "signature_equal": false, "unix": 1793516694.5812771}
+{"cost_usd": 0.6123, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71008, "unix": 1793516694.5826466}
+{"error": null, "event_f1": 0.167, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71014, "unix": 1793516695.4894485}
+{"error": null, "event_f1": 0.333, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71011, "unix": 1793516707.801943}
+{"error": null, "event_f1": 0.333, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71009, "unix": 1793516710.3380597}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71010, "unix": 1793516722.703927}
+{"error": null, "event_f1": 0.167, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71012, "unix": 1793516722.8952932}
+{"error": null, "event_f1": 0.333, "issues": 0, "kind": "observe", "model": "muse-wonder-1.0", "seed": 71015, "unix": 1793516730.1771884}
+{"kind": "spec", "observations_present": true, "seed": 71014, "signature_equal": true, "unix": 1793516736.0414097}
+{"cost_usd": 0.5513, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71014, "unix": 1793516736.0423388}
+{"error": null, "event_f1": 0.0, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71009, "unix": 1793516750.8038392}
+{"kind": "spec", "observations_present": true, "seed": 71012, "signature_equal": true, "unix": 1793516756.2792463}
+{"cost_usd": 0.561, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71012, "unix": 1793516756.2801926}
+{"kind": "spec", "observations_present": true, "seed": 71011, "signature_equal": false, "unix": 1793516759.7347574}
+{"cost_usd": 0.6137, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71011, "unix": 1793516759.735783}
+{"kind": "spec", "observations_present": true, "seed": 71010, "signature_equal": false, "unix": 1793516771.3913991}
+{"cost_usd": 0.5967, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71010, "unix": 1793516771.3925474}
+{"error": null, "event_f1": 0.167, "issues": 0, "kind": "observe", "model": "muse-spark-1.3", "seed": 71015, "unix": 1793516782.911229}
+{"kind": "spec", "observations_present": true, "seed": 71009, "signature_equal": false, "unix": 1793516803.8302503}
+{"cost_usd": 0.7807, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71009, "unix": 1793516803.8315392}
+{"kind": "spec", "observations_present": true, "seed": 71015, "signature_equal": false, "unix": 1793516846.2382252}
+{"cost_usd": 0.8037, "error": null, "http_retries": {}, "kind": "seed_done", "seed": 71015, "unix": 1793516846.2391326}
+{"kind": "stopped", "not_run": [71016, 71017, 71018, 71019], "reason": "spend cap $14.00: $8.50 spent and $6.80 reserved by running seeds before seed 71016; a seed is projected at $0.66 (reservation x1.5)", "unix": 1793516846.3784964}
+{"kind": "run_end", "registration": "video2", "status": "stopped early: spend cap $14.00: $8.50 spent and $6.80 reserved by running seeds before seed 71016; a seed is projected at $0.66 (reservation x1.5)", "unix": 1793516846.3817394}

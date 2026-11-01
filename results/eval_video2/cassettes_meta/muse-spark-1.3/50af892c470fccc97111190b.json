@@ -1,0 +1,99 @@
+{
+ "key": "50af892c470fccc97111190bfaea4d8dbc2e159b74e8b3eb84d2006f0839a6fe",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "You are an object grounding expert. Provide the bounding box coordinates of the objects in the image: \"the blue cube\". Ensure the objects accurately match the request and do not miss any objects. For each object, answer in the format {\"object_name\": \"<name>\", \"bbox\": {\"x_min\": <int>, \"y_min\": <int>, \"x_max\": <int>, \"y_max\": <int>}}. The coordinates should be in the 0-1000 range. If you cannot find an object, omit it from the results."
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:2f91e6b33d8b7219763613c9aa2f09aa9485817179e6c9a2ba66ddc59b4a2de3"
+     }
+    ]
+   }
+  ],
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "grounding",
+    "schema": {
+     "type": "object",
+     "properties": {
+      "results": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "object_name": {
+          "type": "string"
+         },
+         "bbox": {
+          "type": "object",
+          "properties": {
+           "x_min": {
+            "type": "integer"
+           },
+           "y_min": {
+            "type": "integer"
+           },
+           "x_max": {
+            "type": "integer"
+           },
+           "y_max": {
+            "type": "integer"
+           }
+          },
+          "required": [
+           "x_min",
+           "y_min",
+           "x_max",
+           "y_max"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "object_name",
+         "bbox"
+        ],
+        "additionalProperties": false
+       }
+      }
+     },
+     "required": [
+      "results"
+     ],
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"results\": [{\"bbox\": {\"x_max\": 687, \"x_min\": 630, \"y_max\": 558, \"y_min\": 467}, \"object_name\": \"the blue cube\"}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 1282,
+   "input_tokens_details": {
+    "cached_tokens": 113
+   },
+   "output_tokens": 2147,
+   "output_tokens_details": {
+    "reasoning_tokens": 2094
+   },
+   "total_tokens": 3429
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 9.375,
+ "recorded_at": "2026-11-01T06:55:56Z"
+}

@@ -1,0 +1,18 @@
+{
+ "key": "25cc1326b0300dd6d0c8e9acb312ddd265f8c7d1c9e37829e0fc0d5e5839be3b",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:d3b058c4dd84fba9d1dbf3785572adaa7c2091f985a714dd286c85f54bbca7bd"
+ },
+ "response": {
+  "id": "file-984010244180531",
+  "bytes": 47903,
+  "status": "uploaded",
+  "filename": "top_reseed_block_0_234_245.mp4"
+ },
+ "blobs": [],
+ "latency_s": 1.604,
+ "recorded_at": "2026-11-01T06:38:29Z"
+}

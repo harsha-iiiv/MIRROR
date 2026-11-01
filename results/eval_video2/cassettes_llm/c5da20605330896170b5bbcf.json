@@ -1,0 +1,294 @@
+{
+  "key": "c5da20605330896170b5bbcfb2aa987e38765f3ff6d9f0cfad74d1c30b6b267b",
+  "name": "propose_spec",
+  "request": {
+    "model": "muse-spark-1.3",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Task family: packing a kit of rigid objects into a destination tray on a table.\nObjects: cup (open-top vessel that may hold loose beads), block, marker (standing cylinder).\nGoal type: an object ends at rest inside the destination tray.\nRule types:\n  upright: the object's axis stays within max_tilt_deg of vertical (default 15).\n  forbidden_contact: the object must not touch contact_with groups\n    (obstacle, table_outside_tray, other_objects).\n  keep_clearance: the object stays at least min_clearance_m from obstacles.\nPhases: final (once placed and settled), transport (from grasp until release of that object),\n  always (every moment of the task).\nOrdering: one object kind must be packed before another.\n\nYou interpret one demonstration of this task for a simulated robot. You receive\ndeterministic measurements of the demonstration and the scene inventory, never\nraw video. Propose a task specification that a human will review.\n\nRules:\n1. Separate evidence from inference. shown_by_demo cites measured values from the\n   input; assumption states what you are inferring beyond them.\n2. A consistent behaviour is not automatically a requirement. It may be incidental,\n   for example forced by the layout or merely convenient.\n3. Every regularity (R1, R2, ...) must either appear in regularity_ids of an object,\n   rule or ordering, or be listed in dismissed with a reason.\n4. Propose only rules the demonstration itself satisfies, and only where the\n   behaviour plausibly matters for the objects involved. Do not turn an observed\n   margin into a rule; dismiss it with a reason instead.\n5. Each proposed rule and ordering gets one short, concrete question the human can\n   answer with \"required\" or \"incidental\", and your lean. If the lean rests on the\n   scene inventory (what an object contains) rather than on the demonstration, say\n   so in assumption.\n6. include_in_task is true only for objects that ended inside the tray.\n7. Do not invent objects, coordinates, routes or robot commands. Use null for\n   parameters that do not apply to a rule type.\n8. summary is one plain sentence describing the task.\n\nThe input also includes video_observations: what a video model reported after\nwatching a video of this demonstration. They can be wrong. Treat them as\nsecondary evidence: a care cue may support proposing a rule (cite it in\nshown_by_demo with its times), but never propose a rule that the measurements\ncontradict, and do not dismiss a measured regularity because of them."
+      },
+      {
+        "role": "user",
+        "content": "Propose the task specification for this demonstration.\n{\n \"demonstration\": {\n  \"demo_id\": \"demo_eval_71007_reference_from_video\",\n  \"duration_s\": 85.0,\n  \"notes\": [],\n  \"objects\": [\n   {\n    \"carry_duration_s\": 12.8,\n    \"carry_max_height_m\": 0.296,\n    \"carry_max_tilt_deg\": 0.0,\n    \"carry_mean_tilt_deg\": 0.0,\n    \"carry_path_length_m\": 1.712,\n    \"end_tilt_deg\": 0.0,\n    \"ended_in_tray\": \"tray_0\",\n    \"grasp_times_s\": [\n     39.2,\n     47.2\n    ],\n    \"id\": \"block_0\",\n    \"kind\": \"block\",\n    \"min_obstacle_distance_m\": 0.084,\n    \"moved\": true,\n    \"nearest_obstacle\": \"wall_0\",\n    \"release_times_s\": [\n     43.8,\n     55.4\n    ],\n    \"start_tilt_deg\": 0.0,\n    \"wall_crossings\": [\n     \"wall_0:around_+y\"\n    ]\n   },\n   {\n    \"carry_duration_s\": 16.2,\n    \"carry_max_height_m\": 0.276,\n    \"carry_max_tilt_deg\": 15.5,\n    \"carry_mean_tilt_deg\": 1.3,\n    \"carry_path_length_m\": 1.511,\n    \"end_tilt_deg\": 0.0,\n    \"ended_in_tray\": \"tray_0\",\n    \"grasp_times_s\": [\n     7.4\n    ],\n    \"id\": \"cup_0\",\n    \"kind\": \"cup\",\n    \"min_obstacle_distance_m\": 0.096,\n    \"moved\": true,\n    \"nearest_obstacle\": \"wall_0\",\n    \"release_times_s\": [\n     23.6\n    ],\n    \"start_tilt_deg\": 4.0,\n    \"wall_crossings\": [\n     \"wall_0:around_+y\"\n    ]\n   },\n   {\n    \"carry_duration_s\": 11.4,\n    \"carry_max_height_m\": 0.313,\n    \"carry_max_tilt_deg\": 0.0,\n    \"carry_mean_tilt_deg\": 0.0,\n    \"carry_path_length_m\": 1.114,\n    \"end_tilt_deg\": 0.0,\n    \"ended_in_tray\": \"tray_0\",\n    \"grasp_times_s\": [\n     69.0,\n     72.4\n    ],\n    \"id\": \"marker_0\",\n    \"kind\": \"marker\",\n    \"min_obstacle_distance_m\": 0.092,\n    \"moved\": true,\n    \"nearest_obstacle\": \"wall_0\",\n    \"release_times_s\": [\n     70.6,\n     82.2\n    ],\n    \"start_tilt_deg\": 0.0,\n    \"wall_crossings\": [\n     \"wall_0:around_+y\"\n    ]\n   }\n  ],\n  \"pick_order\": [\n   \"cup_0\",\n   \"block_0\",\n   \"marker_0\"\n  ],\n  \"regularities\": [\n   {\n    \"id\": \"R1\",\n    \"kind\": \"carry_tilted\",\n    \"object_kind\": \"cup\",\n    \"statement\": \"The cup was tilted up to 15.5 degrees while carried.\"\n   },\n   {\n    \"id\": \"R2\",\n    \"kind\": \"final_upright\",\n    \"object_kind\": \"cup\",\n    \"statement\": \"The cup ended upright (0 degrees of tilt).\"\n   },\n   {\n    \"id\": \"R3\",\n    \"kind\": \"inside\",\n    \"object_kind\": \"cup\",\n    \"statement\": \"The cup ended inside tray_0.\"\n   },\n   {\n    \"id\": \"R4\",\n    \"kind\": \"route\",\n    \"object_kind\": \"cup\",\n    \"statement\": \"The cup crossed wall_0 by going around +y.\"\n   },\n   {\n    \"id\": \"R5\",\n    \"kind\": \"clearance\",\n    \"object_kind\": \"cup\",\n    \"statement\": \"While carried, the cup's centre stayed at least 0.096 m from wall_0.\"\n   },\n   {\n    \"id\": \"R6\",\n    \"kind\": \"carry_upright\",\n    \"object_kind\": \"block\",\n    \"statement\": \"The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).\"\n   },\n   {\n    \"id\": \"R7\",\n    \"kind\": \"final_upright\",\n    \"object_kind\": \"block\",\n    \"statement\": \"The block ended upright (0 degrees of tilt).\"\n   },\n   {\n    \"id\": \"R8\",\n    \"kind\": \"inside\",\n    \"object_kind\": \"block\",\n    \"statement\": \"The block ended inside tray_0.\"\n   },\n   {\n    \"id\": \"R9\",\n    \"kind\": \"route\",\n    \"object_kind\": \"block\",\n    \"statement\": \"The block crossed wall_0 by going around +y.\"\n   },\n   {\n    \"id\": \"R10\",\n    \"kind\": \"clearance\",\n    \"object_kind\": \"block\",\n    \"statement\": \"While carried, the block's centre stayed at least 0.084 m from wall_0.\"\n   },\n   {\n    \"id\": \"R11\",\n    \"kind\": \"carry_upright\",\n    \"object_kind\": \"marker\",\n    \"statement\": \"The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).\"\n   },\n   {\n    \"id\": \"R12\",\n    \"kind\": \"final_upright\",\n    \"object_kind\": \"marker\",\n    \"statement\": \"The marker ended upright (0 degrees of tilt).\"\n   },\n   {\n    \"id\": \"R13\",\n    \"kind\": \"inside\",\n    \"object_kind\": \"marker\",\n    \"statement\": \"The marker ended inside tray_0.\"\n   },\n   {\n    \"id\": \"R14\",\n    \"kind\": \"route\",\n    \"object_kind\": \"marker\",\n    \"statement\": \"The marker crossed wall_0 by going around +y.\"\n   },\n   {\n    \"id\": \"R15\",\n    \"kind\": \"clearance\",\n    \"object_kind\": \"marker\",\n    \"statement\": \"While carried, the marker's centre stayed at least 0.092 m from wall_0.\"\n   },\n   {\n    \"id\": \"R16\",\n    \"kind\": \"order\",\n    \"object_kind\": null,\n    \"statement\": \"Objects were picked up in the order: cup, block, marker.\"\n   }\n  ],\n  \"source\": \"video_grounded\"\n },\n \"scene\": {\n  \"objects\": [\n   {\n    \"beads_inside\": 0,\n    \"id\": \"block_0\",\n    \"kind\": \"block\"\n   },\n   {\n    \"beads_inside\": 4,\n    \"id\": \"cup_0\",\n    \"kind\": \"cup\"\n   },\n   {\n    \"beads_inside\": 0,\n    \"id\": \"marker_0\",\n    \"kind\": \"marker\"\n   }\n  ],\n  \"obstacles\": [\n   {\n    \"id\": \"wall_0\",\n    \"kind\": \"wall\",\n    \"slots\": 0\n   }\n  ],\n  \"trays\": [\n   \"tray_0\"\n  ]\n },\n \"video_observations\": {\n  \"care_cues\": [\n   {\n    \"cue\": \"kept cup upright and level while carrying\",\n    \"evidence\": \"cup remains flat with white rim and yellow center visible and centered while moving with gripper, no tipping seen\",\n    \"object\": \"cup\",\n    \"t_end\": 25.5,\n    \"t_start\": 6.0\n   },\n   {\n    \"cue\": \"kept distance from wall by going around its top end\",\n    \"evidence\": \"gripper carrying cup loops north around the tip of the wall with a visible gap rather than crossing over the wall\",\n    \"object\": \"wall\",\n    \"t_end\": 16.5,\n    \"t_start\": 12.0\n   },\n   {\n    \"cue\": \"kept distance from wall by going around its top end\",\n    \"evidence\": \"gripper carrying blue block loops north around the tip of the wall with a visible gap rather than crossing over\",\n    \"object\": \"wall\",\n    \"t_end\": 48.0,\n    \"t_start\": 43.0\n   },\n   {\n    \"cue\": \"kept distance from wall by going around its top end\",\n    \"evidence\": \"gripper carrying orange marker loops north around the tip of the wall with a visible gap rather than crossing over\",\n    \"object\": \"wall\",\n    \"t_end\": 77.0,\n    \"t_start\": 72.0\n   }\n  ],\n  \"events\": [\n   {\n    \"evidence\": \"gripper settles over the white-yellow cup on lower left and the cup begins moving with the gripper\",\n    \"object\": \"cup\",\n    \"t_end\": 6.0,\n    \"t_start\": 6.0,\n    \"type\": \"grasp\"\n   },\n   {\n    \"evidence\": \"cup moves attached to gripper from lower left up and around the top end of wall to over the tray\",\n    \"object\": \"cup\",\n    \"t_end\": 25.5,\n    \"t_start\": 6.0,\n    \"type\": \"carry\"\n   },\n   {\n    \"evidence\": \"gripper lifts away leaving the white-yellow cup resting in the tray\",\n    \"object\": \"cup\",\n    \"t_end\": 25.5,\n    \"t_start\": 25.5,\n    \"type\": \"release\"\n   },\n   {\n    \"evidence\": \"gripper moves onto the blue cube on left side and the cube begins moving with the gripper\",\n    \"object\": \"block\",\n    \"t_end\": 39.0,\n    \"t_start\": 39.0,\n    \"type\": \"grasp\"\n   },\n   {\n    \"evidence\": \"blue cube moves attached to gripper from left side up and around the top end of wall to over the tray\",\n    \"object\": \"block\",\n    \"t_end\": 55.5,\n    \"t_start\": 39.0,\n    \"type\": \"carry\"\n   },\n   {\n    \"evidence\": \"gripper lifts away leaving the blue cube resting in the tray\",\n    \"object\": \"block\",\n    \"t_end\": 55.5,\n    \"t_start\": 55.5,\n    \"type\": \"release\"\n   },\n   {\n    \"evidence\": \"gripper moves over the orange cylinder on upper left and the cylinder begins moving with the gripper\",\n    \"object\": \"marker\",\n    \"t_end\": 65.5,\n    \"t_start\": 65.5,\n    \"type\": \"grasp\"\n   },\n   {\n    \"evidence\": \"orange cylinder moves attached to gripper from upper left around the top end of wall to over the tray\",\n    \"object\": \"marker\",\n    \"t_end\": 81.0,\n    \"t_start\": 65.5,\n    \"type\": \"carry\"\n   },\n   {\n    \"evidence\": \"gripper moves away leaving the orange cylinder resting horizontally in the tray\",\n    \"object\": \"marker\",\n    \"t_end\": 81.0,\n    \"t_start\": 81.0,\n    \"type\": \"release\"\n   }\n  ],\n  \"objects\": [\n   {\n    \"description\": \"small white square rim with yellow center seen top-down\",\n    \"kind\": \"cup\",\n    \"reason\": \"picked up and packed into tray\",\n    \"relevant\": true\n   },\n   {\n    \"description\": \"small solid blue cube\",\n    \"kind\": \"block\",\n    \"reason\": \"picked up and packed into tray\",\n    \"relevant\": true\n   },\n   {\n    \"description\": \"small orange upright cylinder\",\n    \"kind\": \"marker\",\n    \"reason\": \"picked up and packed into tray\",\n    \"relevant\": true\n   },\n   {\n    \"description\": \"large dark gray square open container on right side\",\n    \"kind\": \"tray\",\n    \"reason\": \"destination where all objects are placed\",\n    \"relevant\": true\n   },\n   {\n    \"description\": \"thin light gray vertical barrier dividing table middle\",\n    \"kind\": \"wall\",\n    \"reason\": \"obstacle that shapes motion, gripper goes around its top end\",\n    \"relevant\": true\n   },\n   {\n    \"description\": \"large light gray rectangular moving block\",\n    \"kind\": \"gripper\",\n    \"reason\": \"hand that grasps and carries objects\",\n    \"relevant\": true\n   }\n  ],\n  \"source\": \"muse-spark-1.3 watching the demonstration video (may be wrong)\",\n  \"summary\": \"A gray gripper sequentially picks up a cup, a blue cube, and an orange marker from the left of a central wall, carries each around the top end of the wall, and places them into a dark tray on the right.\",\n  \"uncertainties\": [\n   {\n    \"about\": \"cup yellow interior\",\n    \"question\": \"does the yellow indicate contents that must not spill requiring level transport or is it just color? \"\n   },\n   {\n    \"about\": \"tray arrangement\",\n    \"question\": \"is there a required final layout or order for the objects inside the tray or is any placement inside acceptable?\"\n   },\n   {\n    \"about\": \"marker final orientation\",\n    \"question\": \"why does the marker end lying down when it started standing - is lying required or incidental to release?\"\n   }\n  ]\n }\n}"
+      }
+    ],
+    "schema": {
+      "$defs": {
+        "DraftDismissal": {
+          "additionalProperties": false,
+          "properties": {
+            "regularity_id": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "regularity_id",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "DraftObject": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "enum": [
+                "cup",
+                "block",
+                "marker"
+              ],
+              "type": "string"
+            },
+            "include_in_task": {
+              "type": "boolean"
+            },
+            "evidence": {
+              "type": "string"
+            },
+            "regularity_ids": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "include_in_task",
+            "evidence",
+            "regularity_ids"
+          ],
+          "type": "object"
+        },
+        "DraftOrdering": {
+          "additionalProperties": false,
+          "properties": {
+            "before_kind": {
+              "enum": [
+                "cup",
+                "block",
+                "marker"
+              ],
+              "type": "string"
+            },
+            "after_kind": {
+              "enum": [
+                "cup",
+                "block",
+                "marker"
+              ],
+              "type": "string"
+            },
+            "regularity_ids": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "shown_by_demo": {
+              "type": "string"
+            },
+            "lean": {
+              "enum": [
+                "likely_required",
+                "likely_incidental",
+                "unclear"
+              ],
+              "type": "string"
+            },
+            "question": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "before_kind",
+            "after_kind",
+            "regularity_ids",
+            "shown_by_demo",
+            "lean",
+            "question"
+          ],
+          "type": "object"
+        },
+        "DraftRule": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "enum": [
+                "upright",
+                "forbidden_contact",
+                "keep_clearance"
+              ],
+              "type": "string"
+            },
+            "object_kind": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "cup",
+                    "block",
+                    "marker"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "phase": {
+              "enum": [
+                "final",
+                "transport",
+                "always"
+              ],
+              "type": "string"
+            },
+            "max_tilt_deg": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "contact_with": {
+              "anyOf": [
+                {
+                  "items": {
+                    "enum": [
+                      "obstacle",
+                      "table_outside_tray",
+                      "other_objects"
+                    ],
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "min_clearance_m": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "regularity_ids": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "shown_by_demo": {
+              "type": "string"
+            },
+            "assumption": {
+              "type": "string"
+            },
+            "lean": {
+              "enum": [
+                "likely_required",
+                "likely_incidental",
+                "unclear"
+              ],
+              "type": "string"
+            },
+            "question": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "object_kind",
+            "phase",
+            "max_tilt_deg",
+            "contact_with",
+            "min_clearance_m",
+            "regularity_ids",
+            "shown_by_demo",
+            "assumption",
+            "lean",
+            "question"
+          ],
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "observations": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "assumptions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/DraftObject"
+          },
+          "type": "array"
+        },
+        "rules": {
+          "items": {
+            "$ref": "#/$defs/DraftRule"
+          },
+          "type": "array"
+        },
+        "ordering": {
+          "items": {
+            "$ref": "#/$defs/DraftOrdering"
+          },
+          "type": "array"
+        },
+        "dismissed": {
+          "items": {
+            "$ref": "#/$defs/DraftDismissal"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "summary",
+        "observations",
+        "assumptions",
+        "objects",
+        "rules",
+        "ordering",
+        "dismissed"
+      ],
+      "type": "object"
+    }
+  },
+  "response": {
+    "content": "{\"assumptions\": [\"Cup cup_0 holds 4 beads per scene inventory, so tipping risks spilling; lean for cup upright rules rests on inventory.\", \"Block and marker hold 0 beads, so upright orientation does not affect contents.\", \"Specific +y side around wall_0 is one feasible path; only non-contact matters, numeric gap is incidental.\", \"Measurements take precedence over video; marker end_tilt 0.0 is trusted over video claim of horizontal.\"], \"dismissed\": [{\"reason\": \"Block stayed at 0 deg while carried but with 0 beads there is no spill risk; level carry is gripper convenience, not a requirement.\", \"regularity_id\": \"R6\"}, {\"reason\": \"Block ended at 0 deg but for a solid cube any stable rest inside tray is acceptable; final orientation is incidental.\", \"regularity_id\": \"R7\"}, {\"reason\": \"Marker stayed at 0 deg while carried but with 0 beads there is no spill risk; level carry is gripper convenience, not a requirement.\", \"regularity_id\": \"R11\"}, {\"reason\": \"Marker ended at 0 deg but with 0 beads any stable rest inside tray is acceptable; final standing is incidental.\", \"regularity_id\": \"R12\"}, {\"reason\": \"Pick order cup, block, marker shows no physical dependency; layout does not force order, likely convenience.\", \"regularity_id\": \"R16\"}], \"objects\": [{\"evidence\": \"cup_0 ended_in_tray tray_0 with end_tilt_deg 0.0; scene beads_inside 4\", \"include_in_task\": true, \"kind\": \"cup\", \"regularity_ids\": [\"R3\"]}, {\"evidence\": \"block_0 ended_in_tray tray_0 with end_tilt_deg 0.0\", \"include_in_task\": true, \"kind\": \"block\", \"regularity_ids\": [\"R8\"]}, {\"evidence\": \"marker_0 ended_in_tray tray_0 with end_tilt_deg 0.0\", \"include_in_task\": true, \"kind\": \"marker\", \"regularity_ids\": [\"R13\"]}], \"observations\": [\"All three objects ended inside tray_0 with end_tilt 0.0.\", \"Cup carry mean tilt 1.3 deg with max 15.5 deg; block and marker carry 0.0 deg max and mean.\", \"All carries went wall_0:around_+y with min centre distances 0.096 m cup, 0.084 m block, 0.092 m marker.\", \"Video reports level cup carry 6.0-25.5s and gap around wall tip for each object, but claims marker ended horizontally contradicting measured 0.0 deg.\"], \"ordering\": [], \"rules\": [{\"assumption\": \"Brief 15.5 deg excursion still mostly level; tolerance 20 covers observed max. Lean rests on inventory that cup holds 4 beads that would spill if tipped.\", \"contact_with\": null, \"lean\": \"likely_required\", \"max_tilt_deg\": 20.0, \"min_clearance_m\": null, \"object_kind\": \"cup\", \"phase\": \"transport\", \"question\": \"Must the cup stay roughly upright while carrying to avoid spilling, or is tipping allowed?\", \"regularity_ids\": [\"R1\"], \"shown_by_demo\": \"cup_0 carry_max_tilt_deg 15.5 carry_mean_tilt_deg 1.3; video kept cup upright and level 6.0-25.5s\", \"type\": \"upright\"}, {\"assumption\": \"Upright final keeps beads contained. Lean rests on inventory that cup contains 4 beads.\", \"contact_with\": null, \"lean\": \"likely_required\", \"max_tilt_deg\": 15.0, \"min_clearance_m\": null, \"object_kind\": \"cup\", \"phase\": \"final\", \"question\": \"Must the cup end upright in the tray, or may it lie on its side once placed?\", \"regularity_ids\": [\"R2\"], \"shown_by_demo\": \"cup_0 end_tilt_deg 0.0\", \"type\": \"upright\"}, {\"assumption\": \"Specific +y route and 0.096 m gap are incidental; only non-contact matters.\", \"contact_with\": [\"obstacle\"], \"lean\": \"likely_required\", \"max_tilt_deg\": null, \"min_clearance_m\": null, \"object_kind\": \"cup\", \"phase\": \"transport\", \"question\": \"Must the cup avoid touching the wall while carrying, or is contact allowed?\", \"regularity_ids\": [\"R4\", \"R5\"], \"shown_by_demo\": \"cup_0 wall_crossings wall_0:around_+y min_obstacle_distance_m 0.096 from wall_0; video kept distance around top end 12.0-16.5s with visible gap\", \"type\": \"forbidden_contact\"}, {\"assumption\": \"Specific +y route and 0.084 m gap are incidental; only non-contact matters.\", \"contact_with\": [\"obstacle\"], \"lean\": \"likely_required\", \"max_tilt_deg\": null, \"min_clearance_m\": null, \"object_kind\": \"block\", \"phase\": \"transport\", \"question\": \"Must the block avoid touching the wall while carrying, or is contact allowed?\", \"regularity_ids\": [\"R9\", \"R10\"], \"shown_by_demo\": \"block_0 wall_crossings wall_0:around_+y min_obstacle_distance_m 0.084 from wall_0; video kept distance around top end 43.0-48.0s with visible gap\", \"type\": \"forbidden_contact\"}, {\"assumption\": \"Specific +y route and 0.092 m gap are incidental; only non-contact matters.\", \"contact_with\": [\"obstacle\"], \"lean\": \"likely_required\", \"max_tilt_deg\": null, \"min_clearance_m\": null, \"object_kind\": \"marker\", \"phase\": \"transport\", \"question\": \"Must the marker avoid touching the wall while carrying, or is contact allowed?\", \"regularity_ids\": [\"R14\", \"R15\"], \"shown_by_demo\": \"marker_0 wall_crossings wall_0:around_+y min_obstacle_distance_m 0.092 from wall_0; video kept distance around top end 72.0-77.0s with visible gap\", \"type\": \"forbidden_contact\"}], \"summary\": \"Pack cup, block and marker into tray_0 while keeping the beaded cup upright and avoiding contact with the wall during transport.\"}",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 7519,
+      "prompt_tokens": 4058,
+      "total_tokens": 11577
+    }
+  },
+  "attempts": 1,
+  "format_used": "json_schema",
+  "recorded_at": "2026-11-01T06:46:36Z"
+}

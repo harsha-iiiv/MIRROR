@@ -1,0 +1,49 @@
+{
+ "key": "f4055a9ef70f6c82ba471cfb362a405dcd926cfb18158f504292b73b4fde3010",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "<0f>1<|box;x1=498;y1=255;x2=615;y2=311;w=960;h=540|>,2<|box;x1=396;y1=85;x2=514;y2=329;w=960;h=540|>,100<|box;x1=214;y1=235;x2=801;y2=520;w=960;h=540|>,101<|box;x1=302;y1=277;x2=713;y2=478;w=960;h=540|>,102<|point;x=302;y=363;w=960;h=540|><|point;x=390;y=363;w=960;h=540|><|point;x=508;y=363;w=960;h=540|><|point;x=625;y=363;w=960;h=540|><|point;x=713;y=363;w=960;h=540|>"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:b7df9b08c0aa0feddee3374882f4ee3ef40238094c3ca58dcb7d92bbf42851e4"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "<0f>1<|box;x1=498;y1=246;x2=603;y2=291;w=960;h=540;c=0.96484375|><|mask;x=0;y=0;c=0.96484375;data=46,106,!!!!!cCux)@KPZlQD4PV0&IHZtv!qbgeEdqxHW?fB'GfG%%748Et.{]Y_TT![YUy:7m*4Hb8+ec)5:SA%|>,2<|box;x1=391;y1=88;x2=500;y2=304;w=960;h=540;c=0.9765625|><|mask;x=0;y=0;c=0.9765625;data=217,110,!!!!!pL=loAKD'I%`)*jFE4zalP$hP=HGoKP&v2DOliUdn7)R?vk&4a{JpW87B=w0a*?C%`d7hnLiebHZ/5W'w!/T_LremA^)c|>,100<|box;x1=216;y1=222;x2=783;y2=474;w=960;h=540;c=0.73828125|><|mask;x=0;y=0;c=0.73828125;data=253,568,!!!!(5@4dtEp%^Dict5`zgO#bNMFEB+3X]H{-'C9S$*^gFR=Rr!).Q$NNNVY(6+DSHn00vuh:kl{B^(:cdeg@QK%^o4c-)8s'U/2./U/1cBU22DFf/?$g?nIo#xm^7nKHNkj2wY0LDmdX%jwhrUGdZtf(scrSun6Z1$DG_vtTA!Ar7WqeF/Mf]HhiqN&OP6m)SkDUI)#!=M:o'IK1Sb[et``sz@zIpS8Uv.xg3e6-$k#-uKsy.$Y]{L'FfJ2PeUp?B6hEtK^?1LgkJN0]b6ep?/'p%+DD(odNhd)l8:s9lB662e&nGvdYOBA@4LHGX)Rhu-(HL:8.lrZ^6+wF2buJ'#6{w!L&=gQkl(qUew8gn!1Qx`[O&e$sqii3EvP0fV:9pUk]fjg5{nu7Fu58n^zI9s*ucpw%.uGAt09#/jTaoaKo5KA95k2I:tmo]hI5SqxsryG]9oc9w2HIRplhw&9Qld@LVr@lB_HZSE7G%D$d#rr$8U_=W7H#o[7r'Z:Hs:kt`/4.5g`SgUUm0[GX:5?+05en=*@O6SRsC(TWcU#NbMPectZFO%W-OXc!YuvN?'dW#L-OQ??YBwt_Ze8vd4=xaqfV#.kj@-vgnu)=]JS@lG9-[YSbO(FkphYrnJ1r?U+xqo4Tf[fU-D8:=5a7PfS(bEIXC|>,101<|box;x1=385;y1=271;x2=668;y2=453;w=960;h=540;c=0.75|><|mask;x=0;y=0;c=0.75;data=183,284,!!!!#N@wveF8Nj%U.$HiZ*X23&`BYE=+q%=AQwXt.b68O.YJ(7x$)@l)eDh296JJR9tXOf3e{sTYNXJw3It:l?]Ea]]F'rz[tQ{zzdAi)?M19Rpqr2Lri$zn)90))%_iu=9eAF8(k-Mj)uFtqt]Cka@)$iEZA'dAN!!|>,102<|box;x1=0;y1=201;x2=959;y2=539;w=960;h=540;c=0.91015625|><|mask;x=0;y=0;c=0.91015625;data=339,960,!!!!/8:{pTU2oGBfgM$oFWNQYbDLx@/sz65q){=jN9S)(c9opzn&R3eF%FzcAe{@Weq$4-hMhc#3uH`0wH7?XbuSfM[!Ql@N0W28@=-mWD7C?OQ(m-La`yZ8vx?dZ6D2e98KhLt/kNAI$+H9n]G5-qcg[87Wse6j&G5e{26IBtH)CA8k.C'EBJ]48JJ#Z/e6r@HYKr4-?]:*hX19Q@g0Ou#{?]vVrtl?sQW@EDm/rgeTTMI:%[hT[++Ll#xKP3'ix''rp?+0wHIS-G)${1j#v`5$rrS.U#J[k9X`l+C!R1U9GH#rSZup_J0oJY_=5pBGJg{*$-Ze0+JPXT_iJ-.Hz:j!(#-4LGm0qjoT.q^lRUo3.m#$=?Q!^@mwuzcYpF7#5MDNcBJrTS3KYaT.A#CN5+k4.gKVu*(#-VW3_Yc#Wj#24_lgg99T-zsFA5o4{GUvrfU]DqTo::x7!tJAM@ZNexUtjj6W67s!Bbr{a*FFrdc$#fZS&R3VbW]*M{*JZ%ppO@NWXf8%ubh+t_/T`Oelv[[)2${`fidG4*ea=G:hH!X+Gm?ozx)$6yX?yl(C$kii3GQ[dBgn8/3STDyVC.OGG4mpp.cq:Dhw2wu_w:jF%HKU+IY=Qho?C?CX+L*J'O-2d+(itjxiNH#5fvWIOn8bsrzG2dQgj&k'I6YI:=[S*&&#Z[bp@*1s6mZSD6aHmN)R_CpmQC)k1?MDTI+B*P{OeI(!x2QM7t[rH[5Dm0:9jr/p3o8ZqhW9y){u?]/Cur+.5EuqCR1%)7u%[o+hCOe#J@I(c1R-7.olVln`so7sjOk&N[Z/W9W.Gxpom'5BG+(x=:Zg-j@TDH?Y&2]HxoPvjf5xtn]$JxXT8'(sDlHNFULkG@&&WZf0m!DqIa^_ufMk-E(zCqVtf{5Nfo+ope4#]oDQL&4nX)[Af&V?02D3jW7zB@e0qv.Qq3=:6o{amRdWqUt+nAktaVx5p'!1nsx]+3M8=)3{Zs=h/!8ks0Zo_t{X@iA4{auiGwfjBU?7uJWLMK)QRz`ppFGN9*4IID*r`D*C{X^4kCUjErKD-wFsV1:Pwv3A'uWCa^.3o`.=lTOhKlE'H&-NR6a/cZ&NZjm&Q!Rd_8/Qqf3P-uU8/4g.V+yAI-=U91&rdZNhmlXZdKok3)AyEUco(PyU7APtV$1&8sQHp)$Qo6kuSOrPCRDDkrtQ'$&FQ%d2CcHmW0iY[^7brvj-@=)EoA$iJY8X4W)!2*O5mC0^3g0f{kUkSfK(UpcxENiXr-JXz1[*5.m[DdO%mjio?Ctc24fhG8n'^6U@.5?To2!!|>\n",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 0.999,
+ "recorded_at": "2026-11-01T06:38:17Z"
+}

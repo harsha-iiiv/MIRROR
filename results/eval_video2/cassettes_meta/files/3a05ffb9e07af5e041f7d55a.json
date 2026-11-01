@@ -1,0 +1,18 @@
+{
+ "key": "3a05ffb9e07af5e041f7d55a18af5295610f0802953488e448ec8cebefb430d9",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:09c59707d8855a3abddba76c887bbca246fa9f8bda7bc0e35b1e4658c7c2e346"
+ },
+ "response": {
+  "id": "file-1787865253348081",
+  "bytes": 1789463,
+  "status": "uploaded",
+  "filename": "top.mp4"
+ },
+ "blobs": [],
+ "latency_s": 4.401,
+ "recorded_at": "2026-11-01T07:03:37Z"
+}

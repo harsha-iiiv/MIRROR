@@ -1,0 +1,99 @@
+{
+ "key": "439622a6184bb325544f00c79763e4281b6ee48115172576fe3a72b223297dd5",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "You are an object grounding expert. Provide the bounding box coordinates of the objects in the image: \"the red cylinder\". Ensure the objects accurately match the request and do not miss any objects. For each object, answer in the format {\"object_name\": \"<name>\", \"bbox\": {\"x_min\": <int>, \"y_min\": <int>, \"x_max\": <int>, \"y_max\": <int>}}. The coordinates should be in the 0-1000 range. If you cannot find an object, omit it from the results."
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:478acb7283e645f96af20770f9ab8cd140995c96cf94937449c92c3b9defa221"
+     }
+    ]
+   }
+  ],
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "grounding",
+    "schema": {
+     "type": "object",
+     "properties": {
+      "results": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "object_name": {
+          "type": "string"
+         },
+         "bbox": {
+          "type": "object",
+          "properties": {
+           "x_min": {
+            "type": "integer"
+           },
+           "y_min": {
+            "type": "integer"
+           },
+           "x_max": {
+            "type": "integer"
+           },
+           "y_max": {
+            "type": "integer"
+           }
+          },
+          "required": [
+           "x_min",
+           "y_min",
+           "x_max",
+           "y_max"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "object_name",
+         "bbox"
+        ],
+        "additionalProperties": false
+       }
+      }
+     },
+     "required": [
+      "results"
+     ],
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"results\": [{\"bbox\": {\"x_max\": 729, \"x_min\": 684, \"y_max\": 503, \"y_min\": 466}, \"object_name\": \"the red cylinder\"}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 1626,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 697,
+   "output_tokens_details": {
+    "reasoning_tokens": 644
+   },
+   "total_tokens": 2323
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 4.568,
+ "recorded_at": "2026-11-01T06:38:33Z"
+}

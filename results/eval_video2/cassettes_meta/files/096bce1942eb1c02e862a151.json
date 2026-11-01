@@ -1,0 +1,18 @@
+{
+ "key": "096bce1942eb1c02e862a1516c7b93fbc33aa8c16614b2231861c376facb66eb",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:7d0fc2ff9b55cd9818acdadd9763107dc9de99d6a5fbaf94ca0bd20c7bf855e9"
+ },
+ "response": {
+  "id": "file-2220552275473473",
+  "bytes": 73260,
+  "status": "uploaded",
+  "filename": "side_reseed_block_0_214_416.mp4"
+ },
+ "blobs": [],
+ "latency_s": 2.176,
+ "recorded_at": "2026-11-01T06:54:19Z"
+}

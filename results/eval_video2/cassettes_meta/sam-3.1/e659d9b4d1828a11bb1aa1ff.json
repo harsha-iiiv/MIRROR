@@ -1,0 +1,49 @@
+{
+ "key": "e659d9b4d1828a11bb1aa1ff14f2131fbc87c42c0acf5c10c32ede440a4eea1d",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "<0f>1<|box;x1=519;y1=32;x2=531;y2=67;w=960;h=540|>"
+     },
+     {
+      "type": "input_video",
+      "file_id": "sha256:9cd5b33144521edef3d9d015c829b13286bcd050c6c65af2bc7632e2d8e0a83c"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "<0f>1<|box;x1=523;y1=35;x2=534;y2=68;w=960;h=540;c=0.63671875|><|mask;x=0;y=0;c=0.63671875;data=34,12,!!!!!7L9dEF4FptDTf4^m[]!R4H:-S*|>\n<1f>1<|box;x1=522;y1=34;x2=532;y2=68;w=960;h=540;c=0.6938770413398743|><|mask;x=0;y=0;c=0.6938770413398743;data=35,11,!!!!!5KvB.p2f89T+K'+KTeh]9FtI|>\n<2f>1<|box;x1=521;y1=32;x2=528;y2=68;w=960;h=540;c=0.6788312792778015|><|mask;x=0;y=0;c=0.6788312792778015;data=37,8,!!!!!0O4Zp:8Sa(o@NI:7:.|>\n<3f>1<|box;x1=518;y1=33;x2=526;y2=68;w=960;h=540;c=0.678851306438446|><|mask;x=0;y=0;c=0.678851306438446;data=36,9,!!!!!3O3M{xK1N*'k:ym/=&Ose|>\n<4f>1<|box;x1=513;y1=31;x2=523;y2=68;w=960;h=540;c=0.6617128252983093|><|mask;x=0;y=0;c=0.6617128252983093;data=38,11,!!!!!8LXgj&VGvNq:Jn+&h&^nT23@je!!|>\n<5f>1<|box;x1=507;y1=31;x2=518;y2=68;w=960;h=540;c=0.4423028826713562|><|mask;x=0;y=0;c=0.4423028826713562;data=38,12,!!!!!=LWeZ9%d*jtf.w$.9GulrV(7z2EENw5|>\n<6f>1<|box;x1=499;y1=37;x2=508;y2=68;w=960;h=540;c=0.2186466008424759|><|mask;x=0;y=0;c=0.2186466008424759;data=32,10,!!!!!8K@m^hRR@2k/'y?3kQUv@l0Fgnf@|>\n<7f>1<|box;x1=488;y1=52;x2=497;y2=68;w=960;h=540;c=0.022005541250109673|><|mask;x=0;y=0;c=0.022005541250109673;data=17,10,!!!!!1O2iWq]prPhOH'_Lux9|>\n",
+  "model": "sam-3.1",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "video_frames_processed": 50
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 1.95,
+ "recorded_at": "2026-11-01T06:38:18Z"
+}

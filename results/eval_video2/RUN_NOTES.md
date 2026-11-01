@@ -1,0 +1,7 @@
+# Video registration 2: run notes
+
+- Run once from a clean worktree at the freeze commit 80750a4, 8 seeds at a time, starting 31 October 2026 at 23:41 PT. It ended at 00:07 PT on 1 November.
+- **Stopped early by the registered spend cap after 16 of 20 seeds.** A seed starts only if spend so far, plus what running seeds have reserved, plus 1.5 times its projected cost stays under $14. With 8 seeds in flight, the reservations blocked seeds 71016 to 71019: $8.50 had been spent and $6.80 was reserved. Actual spend for the 16 seeds was $10.44, so the last 4 would probably have fitted. The reservation was more conservative than it needed to be; the cap worked as written.
+- **A second invocation was refused** by the run-once guard ("report.json exists; a registration is run once"). We did not remove that guard, so the four seeds stay unrun.
+- **The missing seeds cannot change any verdict.** Even if all four were perfect: found rate at most (0.886 x 16 + 4) / 20 = 0.91, under 0.95; grasp/release within 1 s at most 0.71, under 0.9; same spec at most 12 of 20, under 18. The median timing error (0.65 s) cannot fall to 0.3 s with four more values. The two medians that pass (position 0.72 cm, tilt 2.0 deg) cannot both move past their limits with four seeds out of 20.
+- Per-seed perception scratch files (frozen 5 fps frame copies) are not committed; everything needed to recompute the report is in `seeds/`, `tracks/` and the recordings.

@@ -1,0 +1,18 @@
+{
+ "key": "0add517c6b08f53c341ab66408905e27340571b769dfc87acc4d6fdecbd3ea7c",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:d0db08ba22091432159f44acb0b76d19b2ff0bc960c2960b14429460fa27457a"
+ },
+ "response": {
+  "id": "file-1140906265132470",
+  "bytes": 157803,
+  "status": "uploaded",
+  "filename": "side_reseed_cup_0_78_448.mp4"
+ },
+ "blobs": [],
+ "latency_s": 2.604,
+ "recorded_at": "2026-11-01T06:38:52Z"
+}

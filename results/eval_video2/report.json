@@ -1,0 +1,6054 @@
+{
+ "registration": "video2",
+ "title": "Video to specification: sam-3.1 tracking, muse-wonder-1.0 vs muse-spark-1.3 observations, muse-spark-1.3 specification (registration 2)",
+ "rehearsal": false,
+ "status": "stopped early: spend cap $14.00: $8.50 spent and $6.80 reserved by running seeds before seed 71016; a seed is projected at $0.66 (reservation x1.5)",
+ "design_sha256": "a41be6f9737fe0b369ded76ae9857fba8cfd9bd6a07703f12cfa8d0caae8c452",
+ "inputs_sha256": "b0794e98b4eef7166bbdbfd17fca5c241144ba2d0db97b539d489eb9cc40dbfc",
+ "freeze_code_sha256": "f174076be48d0b845fbbbd3848ba22c8198f548587fa7407fb8ebd36ba1c56c7",
+ "started_unix": 1793514638.9148636,
+ "wall_time_s": 2207.5,
+ "budget": {
+  "muse-spark-1.3:grounding": {
+   "used": 124,
+   "cap": null
+  },
+  "muse-spark-1.3:video": {
+   "used": 16,
+   "cap": null
+  },
+  "muse-wonder-1.0": {
+   "used": 16,
+   "cap": null
+  },
+  "sam-3.1": {
+   "used": 94,
+   "cap": null
+  }
+ },
+ "ledger_entries": 119,
+ "hypotheses": [
+  "Tracking from rendered video meets every pre-stated threshold.",
+  "The specification from video has the same proposal signature as the one from the ground-truth trace on at least 18 of 20 seeds."
+ ],
+ "thresholds": {
+  "found_rate_min": 0.95,
+  "centroid_cm_median_max": 1.5,
+  "event_detection_min": 0.9,
+  "timing_s_median_max": 0.3,
+  "tilt_deg_median_max": 5.0,
+  "signature_equal_min": 18
+ },
+ "result": {
+  "rows": [
+   {
+    "seed": 71000,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.2686,
+    "reseeds": [
+     {
+      "camera": "side",
+      "object": "cup_0",
+      "gap": [
+       73,
+       403
+      ],
+      "found": false,
+      "merged": 0,
+      "seed_frame": 402,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 4.6501915650005685,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1297,
+        "input_tokens_details": {
+         "cached_tokens": 0
+        },
+        "output_tokens": 692,
+        "output_tokens_details": {
+         "reasoning_tokens": 678
+        },
+        "total_tokens": 1989
+       }
+      }
+     },
+     {
+      "camera": "side",
+      "object": "block_0",
+      "gap": [
+       208,
+       403
+      ],
+      "found": true,
+      "merged": 195,
+      "seed_frame": 402,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 4.464291811998919,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1297,
+        "input_tokens_details": {
+         "cached_tokens": 0
+        },
+        "output_tokens": 696,
+        "output_tokens_details": {
+         "reasoning_tokens": 643
+        },
+        "total_tokens": 1993
+       }
+      },
+      "box": [
+       478,
+       241,
+       499,
+       262
+      ],
+      "sam": {
+       "latency_s": 15.716340271001172,
+       "frames": 195,
+       "cassette": false
+      },
+      "plausible": true
+     }
+    ],
+    "tracking_latency_s": 773.0,
+    "tracking": {
+     "found_rate": {
+      "cup": 1.0,
+      "block": 0.9503722084367245,
+      "marker": 1.0
+     },
+     "found_rate_all": 0.9834574028122415,
+     "centroid_cm": {
+      "cup": {
+       "n": 403,
+       "median": 1.353260256590903,
+       "p90": 1.9184040865671814,
+       "max": 4.292477405096033
+      },
+      "block": {
+       "n": 383,
+       "median": 1.0387811784847816,
+       "p90": 1.2293230645097901,
+       "max": 4.756786567246035
+      },
+      "marker": {
+       "n": 403,
+       "median": 0.0619532700681151,
+       "p90": 1.8515581503862306,
+       "max": 4.232083259999092
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1189,
+      "median": 1.0909108296625547,
+      "p90": 1.7679144588930933,
+      "max": 4.756786567246035
+     },
+     "tilt_deg": {
+      "n": 18,
+      "median": 3.416,
+      "p90": 5.8690999999999995,
+      "max": 7.841
+     },
+     "n_visible": 1209
+    },
+    "tracking_frames": 403,
+    "timing": {
+     "tp": 6,
+     "n_gt": 6,
+     "n_est": 8,
+     "precision": 0.75,
+     "recall": 1.0,
+     "f1": 0.8571428571428571,
+     "abs_err_s": [
+      0.5239999999999938,
+      0.5240000000000009,
+      0.5839999999999961,
+      0.5880000000000001,
+      0.652000000000001,
+      0.7120000000000033
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 94.4,
+      "cost_usd": 0.2563,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [
+       0.7120000000000033,
+       0.7240000000000002,
+       1.0519999999999996
+      ],
+      "events_matched_2s": 3,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515419.95,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 6.103,
+        "key": "276243e1e223f963",
+        "usage": {
+         "bytes": 1497700
+        }
+       },
+       {
+        "ts": 1793515508.134,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 88.15,
+        "key": "a14f5b70266cce96",
+        "usage": {
+         "input_tokens": 15284,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 9760,
+         "output_tokens_details": {
+          "reasoning_tokens": 7454
+         },
+         "total_tokens": 25044
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 38.7,
+      "cost_usd": 0.0425,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [
+       0.7120000000000033,
+       1.0519999999999996,
+       1.216000000000001,
+       1.2760000000000034,
+       1.388
+      ],
+      "events_matched_2s": 5,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515511.938,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.488,
+        "key": "276243e1e223f963",
+        "usage": {
+         "bytes": 1497700
+        }
+       },
+       {
+        "ts": 1793515546.89,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 34.908,
+        "key": "d939ea29250ba0ee",
+        "usage": {
+         "input_tokens": 21509,
+         "input_tokens_details": {
+          "cached_tokens": 625
+         },
+         "output_tokens": 3828,
+         "output_tokens_details": {
+          "reasoning_tokens": 3110
+         },
+         "total_tokens": 25337
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": false,
+    "structure_equal": false,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"marker\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.6181,
+    "wonder_cost_usd": 0.2563,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 11,
+      "replayed_calls": 0,
+      "input_tokens": 37308,
+      "output_tokens": 26150,
+      "cost_usd": 0.1566,
+      "latency_s_median": 9.189,
+      "latency_s_total": 138.1
+     },
+     "files": {
+      "network_calls": 5,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.488,
+      "latency_s_total": 19.6
+     },
+     "sam-3.1": {
+      "network_calls": 5,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.2052,
+      "latency_s_median": 15.716,
+      "latency_s_total": 107.0
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 15284,
+      "output_tokens": 9760,
+      "cost_usd": 0.2563,
+      "latency_s_median": 88.15,
+      "latency_s_total": 88.2
+     }
+    }
+   },
+   {
+    "seed": 71001,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.4042,
+    "reseeds": [
+     {
+      "camera": "top",
+      "object": "marker_0",
+      "gap": [
+       340,
+       449
+      ],
+      "found": true,
+      "merged": 71,
+      "seed_frame": 448,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 6.975367222001296,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1540,
+        "input_tokens_details": {
+         "cached_tokens": 0
+        },
+        "output_tokens": 784,
+        "output_tokens_details": {
+         "reasoning_tokens": 731
+        },
+        "total_tokens": 2324
+       }
+      },
+      "box": [
+       611,
+       318,
+       640,
+       333
+      ],
+      "sam": {
+       "latency_s": 8.810097692999989,
+       "frames": 71,
+       "cassette": false
+      },
+      "plausible": true
+     },
+     {
+      "camera": "side",
+      "object": "cup_0",
+      "gap": [
+       78,
+       449
+      ],
+      "found": true,
+      "merged": 371,
+      "seed_frame": 448,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 2.7201870509998116,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1297,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 521,
+        "output_tokens_details": {
+         "reasoning_tokens": 468
+        },
+        "total_tokens": 1818
+       }
+      },
+      "box": [
+       523,
+       237,
+       543,
+       281
+      ],
+      "sam": {
+       "latency_s": 27.79238173000158,
+       "frames": 371,
+       "cassette": false
+      },
+      "plausible": true
+     },
+     {
+      "camera": "side",
+      "object": "block_0",
+      "gap": [
+       225,
+       449
+      ],
+      "found": true,
+      "merged": 178,
+      "seed_frame": 448,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 10.539987598000153,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1297,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 2217,
+        "output_tokens_details": {
+         "reasoning_tokens": 2164
+        },
+        "total_tokens": 3514
+       }
+      },
+      "box": [
+       636,
+       289,
+       645,
+       306
+      ],
+      "sam": {
+       "latency_s": 18.051565581999967,
+       "frames": 178,
+       "cassette": false
+      },
+      "plausible": true
+     }
+    ],
+    "tracking_latency_s": 812.8,
+    "tracking": {
+     "found_rate": {
+      "cup": 0.9955456570155902,
+      "block": 0.9688195991091314,
+      "marker": 0.8351893095768375
+     },
+     "found_rate_all": 0.933184855233853,
+     "centroid_cm": {
+      "cup": {
+       "n": 447,
+       "median": 2.3719321601901218,
+       "p90": 2.8830107542801984,
+       "max": 4.163299496591109
+      },
+      "block": {
+       "n": 435,
+       "median": 1.4349136221267478,
+       "p90": 2.0325930026219807,
+       "max": 4.493773669940016
+      },
+      "marker": {
+       "n": 375,
+       "median": 2.1459813282837423,
+       "p90": 2.2478615530349337,
+       "max": 4.957631023843963
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1257,
+      "median": 2.1312349853865786,
+      "p90": 2.4148616154914513,
+      "max": 4.957631023843963
+     },
+     "tilt_deg": {
+      "n": 67,
+      "median": 1.992,
+      "p90": 3.9164,
+      "max": 7.765
+     },
+     "n_visible": 1347
+    },
+    "tracking_frames": 449,
+    "timing": {
+     "tp": 3,
+     "n_gt": 6,
+     "n_est": 6,
+     "precision": 0.5,
+     "recall": 0.5,
+     "f1": 0.5,
+     "abs_err_s": [
+      0.54,
+      0.6360000000000028,
+      0.8840000000000003
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 81.4,
+      "cost_usd": 0.2443,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [],
+      "events_matched_2s": 0,
+      "events_true": 6,
+      "events_reported": 3,
+      "relevance_correct": true,
+      "care_cue": true,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515461.092,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.916,
+        "key": "ae8d0e47b11ce631",
+        "usage": {
+         "bytes": 1767162
+        }
+       },
+       {
+        "ts": 1793515538.522,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 77.423,
+        "key": "35f6e773bb9398c8",
+        "usage": {
+         "input_tokens": 16788,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 8857,
+         "output_tokens_details": {
+          "reasoning_tokens": 6913
+         },
+         "total_tokens": 25645
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 39.4,
+      "cost_usd": 0.0472,
+      "replayed": false,
+      "event_f1": 0.16666666666666666,
+      "event_precision": 0.16666666666666666,
+      "event_recall": 0.16666666666666666,
+      "event_abs_err_s": [
+       0.3359999999999985,
+       1.283999999999999,
+       1.684000000000001
+      ],
+      "events_matched_2s": 3,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515543.309,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 4.677,
+        "key": "ae8d0e47b11ce631",
+        "usage": {
+         "bytes": 1767162
+        }
+       },
+       {
+        "ts": 1793515577.902,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 34.578,
+        "key": "a8dfcb0655bc57cf",
+        "usage": {
+         "input_tokens": 23849,
+         "input_tokens_details": {
+          "cached_tokens": 625
+         },
+         "output_tokens": 4244,
+         "output_tokens_details": {
+          "reasoning_tokens": 3396
+         },
+         "total_tokens": 28093
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": true,
+    "structure_equal": true,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.7545,
+    "wonder_cost_usd": 0.2443,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 12,
+      "replayed_calls": 0,
+      "input_tokens": 40694,
+      "output_tokens": 31850,
+      "cost_usd": 0.1848,
+      "latency_s_median": 9.983,
+      "latency_s_total": 147.8
+     },
+     "files": {
+      "network_calls": 7,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 2.797,
+      "latency_s_total": 23.3
+     },
+     "sam-3.1": {
+      "network_calls": 7,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.3254,
+      "latency_s_median": 18.052,
+      "latency_s_total": 161.2
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 16788,
+      "output_tokens": 8857,
+      "cost_usd": 0.2443,
+      "latency_s_median": 77.423,
+      "latency_s_total": 77.4
+     }
+    }
+   },
+   {
+    "seed": 71002,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.2766,
+    "reseeds": [
+     {
+      "camera": "side",
+      "object": "gripper",
+      "gap": [
+       223,
+       294
+      ],
+      "found": true,
+      "merged": 0,
+      "seed_frame": 294,
+      "seed_source": "sam (reappearance)",
+      "box": [
+       445,
+       126,
+       459,
+       164
+      ],
+      "sam": {
+       "latency_s": 6.993981367999368,
+       "frames": 1,
+       "cassette": false
+      },
+      "plausible": true
+     },
+     {
+      "camera": "side",
+      "object": "gripper",
+      "gap": [
+       72,
+       136
+      ],
+      "found": true,
+      "merged": 0,
+      "seed_frame": 136,
+      "seed_source": "sam (reappearance)",
+      "box": [
+       447,
+       126,
+       458,
+       163
+      ],
+      "sam": {
+       "latency_s": 5.7905502899993735,
+       "frames": 1,
+       "cassette": false
+      },
+      "plausible": false
+     }
+    ],
+    "tracking_latency_s": 571.7,
+    "tracking": {
+     "found_rate": {
+      "cup": 0.9905660377358491,
+      "block": 0.11320754716981132,
+      "marker": 1.0
+     },
+     "found_rate_all": 0.7012578616352201,
+     "centroid_cm": {
+      "cup": {
+       "n": 420,
+       "median": 0.6912330085518767,
+       "p90": 2.8697779820984355,
+       "max": 4.823255215560521
+      },
+      "block": {
+       "n": 48,
+       "median": 2.159100645860326,
+       "p90": 4.415172691651421,
+       "max": 4.778070428951043
+      },
+      "marker": {
+       "n": 424,
+       "median": 1.9601990246004697,
+       "p90": 2.6311917947986214,
+       "max": 4.477598539050911
+      }
+     },
+     "centroid_cm_all": {
+      "n": 892,
+      "median": 1.9491795703761636,
+      "p90": 2.897169154235341,
+      "max": 4.823255215560521
+     },
+     "tilt_deg": null,
+     "n_visible": 1272
+    },
+    "tracking_frames": 424,
+    "timing": {
+     "tp": 1,
+     "n_gt": 6,
+     "n_est": 16,
+     "precision": 0.0625,
+     "recall": 0.16666666666666666,
+     "f1": 0.09090909090909091,
+     "abs_err_s": [
+      0.784000000000006
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 86.2,
+      "cost_usd": 0.2675,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [
+       0.5319999999999965,
+       1.411999999999999,
+       1.519999999999996
+      ],
+      "events_matched_2s": 3,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515223.549,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 5.091,
+        "key": "9d17a7e1b704e2e4",
+        "usage": {
+         "bytes": 1685641
+        }
+       },
+       {
+        "ts": 1793515304.391,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 80.791,
+        "key": "9537f7c16229fa7d",
+        "usage": {
+         "input_tokens": 16036,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 10169,
+         "output_tokens_details": {
+          "reasoning_tokens": 7640
+         },
+         "total_tokens": 26205
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 46.8,
+      "cost_usd": 0.0471,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [
+       0.519999999999996,
+       0.5319999999999965,
+       1.9399999999999977
+      ],
+      "events_matched_2s": 3,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515309.251,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 4.604,
+        "key": "9d17a7e1b704e2e4",
+        "usage": {
+         "bytes": 1685641
+        }
+       },
+       {
+        "ts": 1793515351.215,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 41.915,
+        "key": "262955d5f800156f",
+        "usage": {
+         "input_tokens": 22549,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 4443,
+         "output_tokens_details": {
+          "reasoning_tokens": 3560
+         },
+         "total_tokens": 26992
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": false,
+    "structure_equal": false,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.6566,
+    "wonder_cost_usd": 0.2675,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 9,
+      "replayed_calls": 0,
+      "input_tokens": 35583,
+      "output_tokens": 33613,
+      "cost_usd": 0.187,
+      "latency_s_median": 13.61,
+      "latency_s_total": 161.9
+     },
+     "files": {
+      "network_calls": 6,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.5545,
+      "latency_s_total": 22.8
+     },
+     "sam-3.1": {
+      "network_calls": 6,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.202,
+      "latency_s_median": 6.3925,
+      "latency_s_total": 108.9
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 16036,
+      "output_tokens": 10169,
+      "cost_usd": 0.2675,
+      "latency_s_median": 80.791,
+      "latency_s_total": 80.8
+     }
+    }
+   },
+   {
+    "seed": 71003,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.2643,
+    "reseeds": [
+     {
+      "camera": "top",
+      "object": "marker_0",
+      "gap": [
+       379,
+       442
+      ],
+      "found": true,
+      "merged": 63,
+      "seed_frame": 441,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 4.56758564699885,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1626,
+        "input_tokens_details": {
+         "cached_tokens": 0
+        },
+        "output_tokens": 697,
+        "output_tokens_details": {
+         "reasoning_tokens": 644
+        },
+        "total_tokens": 2323
+       }
+      },
+      "box": [
+       615,
+       252,
+       645,
+       272
+      ],
+      "sam": {
+       "latency_s": 5.671017310000025,
+       "frames": 63,
+       "cassette": false
+      },
+      "plausible": true
+     },
+     {
+      "camera": "top",
+      "object": "block_0",
+      "gap": [
+       183,
+       198
+      ],
+      "found": true,
+      "merged": 0,
+      "seed_frame": 198,
+      "seed_source": "sam (reappearance)",
+      "box": [
+       351,
+       107,
+       359,
+       116
+      ],
+      "sam": {
+       "latency_s": 2.5576151459990797,
+       "frames": 13,
+       "cassette": false
+      },
+      "plausible": false
+     }
+    ],
+    "tracking_latency_s": 808.2,
+    "tracking": {
+     "found_rate": {
+      "cup": 1.0,
+      "block": 0.9547511312217195,
+      "marker": 0.920814479638009
+     },
+     "found_rate_all": 0.9585218702865762,
+     "centroid_cm": {
+      "cup": {
+       "n": 442,
+       "median": 0.274960209727824,
+       "p90": 1.698652537349869,
+       "max": 3.7563833284420283
+      },
+      "block": {
+       "n": 422,
+       "median": 0.42229966502163024,
+       "p90": 2.2009943509580703,
+       "max": 4.685799407876626
+      },
+      "marker": {
+       "n": 407,
+       "median": 0.2119757724532278,
+       "p90": 1.1321495505531203,
+       "max": 4.900722863926308
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1271,
+      "median": 0.2726667823953993,
+      "p90": 1.7814107883073165,
+      "max": 4.900722863926308
+     },
+     "tilt_deg": {
+      "n": 39,
+      "median": 0.103,
+      "p90": 1.9654,
+      "max": 1.972
+     },
+     "n_visible": 1326
+    },
+    "tracking_frames": 442,
+    "timing": {
+     "tp": 4,
+     "n_gt": 6,
+     "n_est": 10,
+     "precision": 0.4,
+     "recall": 0.6666666666666666,
+     "f1": 0.5,
+     "abs_err_s": [
+      0.6120000000000001,
+      0.652000000000001,
+      0.6639999999999873,
+      0.9720000000000013
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 63.5,
+      "cost_usd": 0.1891,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [],
+      "events_matched_2s": 0,
+      "events_true": 6,
+      "events_reported": 0,
+      "relevance_correct": false,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515461.264,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.357,
+        "key": "0acbed1a3cc8e092",
+        "usage": {
+         "bytes": 1774130
+        }
+       },
+       {
+        "ts": 1793515521.33,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 60.062,
+        "key": "4fdaab1af131e9ea",
+        "usage": {
+         "input_tokens": 16788,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 6095,
+         "output_tokens_details": {
+          "reasoning_tokens": 6055
+         },
+         "total_tokens": 22883
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 41.6,
+      "cost_usd": 0.0479,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [
+       0.936000000000007,
+       1.308000000000007,
+       1.7719999999999985
+      ],
+      "events_matched_2s": 3,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515525.196,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.784,
+        "key": "0acbed1a3cc8e092",
+        "usage": {
+         "bytes": 1774130
+        }
+       },
+       {
+        "ts": 1793515562.916,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 37.711,
+        "key": "efd622b5cd159063",
+        "usage": {
+         "input_tokens": 23589,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 4322,
+         "output_tokens_details": {
+          "reasoning_tokens": 3556
+         },
+         "total_tokens": 27911
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": true,
+    "structure_equal": true,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.5519,
+    "wonder_cost_usd": 0.1891,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 10,
+      "replayed_calls": 0,
+      "input_tokens": 38211,
+      "output_tokens": 26160,
+      "cost_usd": 0.1585,
+      "latency_s_median": 7.592,
+      "latency_s_total": 127.3
+     },
+     "files": {
+      "network_calls": 6,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.2585,
+      "latency_s_total": 18.4
+     },
+     "sam-3.1": {
+      "network_calls": 6,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.2044,
+      "latency_s_median": 4.1145,
+      "latency_s_total": 111.0
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 16788,
+      "output_tokens": 6095,
+      "cost_usd": 0.1891,
+      "latency_s_median": 60.062,
+      "latency_s_total": 60.1
+     }
+    }
+   },
+   {
+    "seed": 71004,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.3201,
+    "reseeds": [
+     {
+      "camera": "side",
+      "object": "cup_0",
+      "gap": [
+       69,
+       428
+      ],
+      "found": true,
+      "merged": 359,
+      "seed_frame": 427,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 4.201910243000384,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1297,
+        "input_tokens_details": {
+         "cached_tokens": 0
+        },
+        "output_tokens": 788,
+        "output_tokens_details": {
+         "reasoning_tokens": 735
+        },
+        "total_tokens": 2085
+       }
+      },
+      "box": [
+       475,
+       257,
+       493,
+       286
+      ],
+      "sam": {
+       "latency_s": 27.062805642999592,
+       "frames": 359,
+       "cassette": false
+      },
+      "plausible": true
+     },
+     {
+      "camera": "side",
+      "object": "block_0",
+      "gap": [
+       220,
+       428
+      ],
+      "found": false,
+      "merged": 0,
+      "seed_frame": 427,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 11.321646194001005,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1297,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 2199,
+        "output_tokens_details": {
+         "reasoning_tokens": 2185
+        },
+        "total_tokens": 3496
+       }
+      }
+     }
+    ],
+    "tracking_latency_s": 705.2,
+    "tracking": {
+     "found_rate": {
+      "cup": 0.9439252336448598,
+      "block": 0.9084507042253521,
+      "marker": 0.9345794392523364
+     },
+     "found_rate_all": 0.9290171606864275,
+     "centroid_cm": {
+      "cup": {
+       "n": 404,
+       "median": 0.39022175462250197,
+       "p90": 2.4710336796008496,
+       "max": 4.985202470096148
+      },
+      "block": {
+       "n": 387,
+       "median": 0.721940524780057,
+       "p90": 1.8732989262426032,
+       "max": 4.940506534668581
+      },
+      "marker": {
+       "n": 400,
+       "median": 1.4046586773825267,
+       "p90": 1.870431448455454,
+       "max": 4.260667926992605
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1191,
+      "median": 0.7289682425833821,
+      "p90": 2.1577772127356623,
+      "max": 4.985202470096148
+     },
+     "tilt_deg": null,
+     "n_visible": 1282
+    },
+    "tracking_frames": 428,
+    "timing": {
+     "tp": 2,
+     "n_gt": 6,
+     "n_est": 6,
+     "precision": 0.3333333333333333,
+     "recall": 0.3333333333333333,
+     "f1": 0.3333333333333333,
+     "abs_err_s": [
+      0.7799999999999976,
+      0.7800000000000011
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 82.5,
+      "cost_usd": 0.2294,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [],
+      "events_matched_2s": 0,
+      "events_true": 6,
+      "events_reported": 1,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515350.658,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.59,
+        "key": "2656b5ad89a0ba0c",
+        "usage": {
+         "bytes": 1646940
+        }
+       },
+       {
+        "ts": 1793515429.405,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 78.732,
+        "key": "f5fa337ff042f7c9",
+        "usage": {
+         "input_tokens": 16036,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 8261,
+         "output_tokens_details": {
+          "reasoning_tokens": 7252
+         },
+         "total_tokens": 24297
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 31.2,
+      "cost_usd": 0.0432,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [
+       1.0600000000000023,
+       1.3079999999999998
+      ],
+      "events_matched_2s": 2,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": true,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515433.104,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.587,
+        "key": "2656b5ad89a0ba0c",
+        "usage": {
+         "bytes": 1646940
+        }
+       },
+       {
+        "ts": 1793515460.622,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 27.509,
+        "key": "59e933119f6276a2",
+        "usage": {
+         "input_tokens": 22809,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 3456,
+         "output_tokens_details": {
+          "reasoning_tokens": 2433
+         },
+         "total_tokens": 26265
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": true,
+    "structure_equal": true,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.6649,
+    "wonder_cost_usd": 0.2294,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 11,
+      "replayed_calls": 0,
+      "input_tokens": 38541,
+      "output_tokens": 32892,
+      "cost_usd": 0.1875,
+      "latency_s_median": 11.322,
+      "latency_s_total": 153.8
+     },
+     "files": {
+      "network_calls": 5,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.587,
+      "latency_s_total": 17.1
+     },
+     "sam-3.1": {
+      "network_calls": 5,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.248,
+      "latency_s_median": 27.063,
+      "latency_s_total": 128.9
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 16036,
+      "output_tokens": 8261,
+      "cost_usd": 0.2294,
+      "latency_s_median": 78.732,
+      "latency_s_total": 78.7
+     }
+    }
+   },
+   {
+    "seed": 71005,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.2415,
+    "reseeds": [
+     {
+      "camera": "top",
+      "object": "block_0",
+      "gap": [
+       210,
+       220
+      ],
+      "found": true,
+      "merged": 7,
+      "seed_frame": 220,
+      "seed_source": "sam (reappearance)",
+      "box": [
+       525,
+       38,
+       526,
+       62
+      ],
+      "sam": {
+       "latency_s": 1.9499067799988552,
+       "frames": 8,
+       "cassette": false
+      },
+      "plausible": true
+     },
+     {
+      "camera": "side",
+      "object": "cup_0",
+      "gap": [
+       67,
+       433
+      ],
+      "found": false,
+      "merged": 0,
+      "seed_frame": 432,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 2.682445257998552,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1339,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 343,
+        "output_tokens_details": {
+         "reasoning_tokens": 329
+        },
+        "total_tokens": 1682
+       }
+      }
+     },
+     {
+      "camera": "side",
+      "object": "block_0",
+      "gap": [
+       214,
+       433
+      ],
+      "found": false,
+      "merged": 0,
+      "seed_frame": 432,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 2.4862715109993587,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1339,
+        "input_tokens_details": {
+         "cached_tokens": 0
+        },
+        "output_tokens": 366,
+        "output_tokens_details": {
+         "reasoning_tokens": 352
+        },
+        "total_tokens": 1705
+       }
+      }
+     }
+    ],
+    "tracking_latency_s": 779.8,
+    "tracking": {
+     "found_rate": {
+      "cup": 1.0,
+      "block": 0.9695550351288056,
+      "marker": 0.9445727482678984
+     },
+     "found_rate_all": 0.97138437741686,
+     "centroid_cm": {
+      "cup": {
+       "n": 433,
+       "median": 1.5392166445145896,
+       "p90": 1.8626348454127553,
+       "max": 4.572911951529435
+      },
+      "block": {
+       "n": 414,
+       "median": 0.771576633420322,
+       "p90": 1.1659819859725653,
+       "max": 4.8341119757294
+      },
+      "marker": {
+       "n": 409,
+       "median": 2.773111680235975,
+       "p90": 2.8546650017111848,
+       "max": 4.9346449197021895
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1256,
+      "median": 1.5428021365410962,
+      "p90": 2.78408799509685,
+      "max": 4.9346449197021895
+     },
+     "tilt_deg": {
+      "n": 62,
+      "median": 3.973,
+      "p90": 5.9919,
+      "max": 5.994
+     },
+     "n_visible": 1293
+    },
+    "tracking_frames": 433,
+    "timing": {
+     "tp": 5,
+     "n_gt": 6,
+     "n_est": 6,
+     "precision": 0.8333333333333334,
+     "recall": 0.8333333333333334,
+     "f1": 0.8333333333333334,
+     "abs_err_s": [
+      0.4280000000000008,
+      0.5319999999999965,
+      0.5640000000000001,
+      0.6760000000000019,
+      0.8960000000000008
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 103.8,
+      "cost_usd": 0.2961,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [
+       0.695999999999998,
+       1.131999999999998,
+       1.6280000000000001
+      ],
+      "events_matched_2s": 3,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": true,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515429.176,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.547,
+        "key": "e3ea71283b5b03ee",
+        "usage": {
+         "bytes": 1737838
+        }
+       },
+       {
+        "ts": 1793515529.382,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 100.198,
+        "key": "3c077c1b78edc779",
+        "usage": {
+         "input_tokens": 16412,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 11522,
+         "output_tokens_details": {
+          "reasoning_tokens": 9344
+         },
+         "total_tokens": 27934
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 43.6,
+      "cost_usd": 0.0496,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [
+       0.695999999999998,
+       1.131999999999998
+      ],
+      "events_matched_2s": 2,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": true,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515535.123,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 5.658,
+        "key": "e3ea71283b5b03ee",
+        "usage": {
+         "bytes": 1737838
+        }
+       },
+       {
+        "ts": 1793515572.991,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 37.862,
+        "key": "341b66510c2b21ca",
+        "usage": {
+         "input_tokens": 23069,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 4894,
+         "output_tokens_details": {
+          "reasoning_tokens": 3862
+         },
+         "total_tokens": 27963
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": true,
+    "structure_equal": true,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.6419,
+    "wonder_cost_usd": 0.2961,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 11,
+      "replayed_calls": 0,
+      "input_tokens": 38899,
+      "output_tokens": 25754,
+      "cost_usd": 0.1577,
+      "latency_s_median": 7.271,
+      "latency_s_total": 120.5
+     },
+     "files": {
+      "network_calls": 5,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.547,
+      "latency_s_total": 19.7
+     },
+     "sam-3.1": {
+      "network_calls": 5,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.1882,
+      "latency_s_median": 1.95,
+      "latency_s_total": 95.4
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 16412,
+      "output_tokens": 11522,
+      "cost_usd": 0.2961,
+      "latency_s_median": 100.198,
+      "latency_s_total": 100.2
+     }
+    }
+   },
+   {
+    "seed": 71006,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.2825,
+    "reseeds": [
+     {
+      "camera": "top",
+      "object": "block_0",
+      "gap": [
+       234,
+       245
+      ],
+      "found": true,
+      "merged": 0,
+      "seed_frame": 245,
+      "seed_source": "sam (reappearance)",
+      "box": [
+       540,
+       78,
+       542,
+       105
+      ],
+      "sam": {
+       "latency_s": 2.259296475998781,
+       "frames": 1,
+       "cassette": false
+      },
+      "plausible": true
+     },
+     {
+      "camera": "top",
+      "object": "block_0",
+      "gap": [
+       199,
+       209
+      ],
+      "found": true,
+      "merged": 10,
+      "seed_frame": 209,
+      "seed_source": "sam (reappearance)",
+      "box": [
+       321,
+       205,
+       340,
+       228
+      ],
+      "sam": {
+       "latency_s": 1.7447818010004994,
+       "frames": 11,
+       "cassette": false
+      },
+      "plausible": true
+     },
+     {
+      "camera": "side",
+      "object": "cup_0",
+      "gap": [
+       76,
+       477
+      ],
+      "found": false,
+      "merged": 0,
+      "seed_frame": 476,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 5.8781581800012646,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1339,
+        "input_tokens_details": {
+         "cached_tokens": 0
+        },
+        "output_tokens": 1241,
+        "output_tokens_details": {
+         "reasoning_tokens": 1227
+        },
+        "total_tokens": 2580
+       }
+      }
+     },
+     {
+      "camera": "side",
+      "object": "gripper",
+      "gap": [
+       77,
+       152
+      ],
+      "found": true,
+      "merged": 0,
+      "seed_frame": 152,
+      "seed_source": "sam (reappearance)",
+      "box": [
+       425,
+       125,
+       432,
+       145
+      ],
+      "sam": {
+       "latency_s": 6.368455746000109,
+       "frames": 1,
+       "cassette": false
+      },
+      "plausible": false
+     }
+    ],
+    "tracking_latency_s": 784.9,
+    "tracking": {
+     "found_rate": {
+      "cup": 0.9853249475890985,
+      "block": 0.9914893617021276,
+      "marker": 0.9811320754716981
+     },
+     "found_rate_all": 0.9859550561797753,
+     "centroid_cm": {
+      "cup": {
+       "n": 470,
+       "median": 0.4042758451088192,
+       "p90": 1.5915591247881151,
+       "max": 4.792558921028855
+      },
+      "block": {
+       "n": 466,
+       "median": 0.832688512372523,
+       "p90": 1.7446387130636445,
+       "max": 4.58004333335116
+      },
+      "marker": {
+       "n": 468,
+       "median": 1.5477734943755337,
+       "p90": 2.065149827516744,
+       "max": 4.9679618708691
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1404,
+      "median": 0.8411023416638548,
+      "p90": 1.8605178612786153,
+      "max": 4.9679618708691
+     },
+     "tilt_deg": {
+      "n": 56,
+      "median": 1.9915,
+      "p90": 3.991,
+      "max": 9.773
+     },
+     "n_visible": 1424
+    },
+    "tracking_frames": 477,
+    "timing": {
+     "tp": 5,
+     "n_gt": 6,
+     "n_est": 6,
+     "precision": 0.8333333333333334,
+     "recall": 0.8333333333333334,
+     "f1": 0.8333333333333334,
+     "abs_err_s": [
+      0.5640000000000001,
+      0.568000000000012,
+      0.5799999999999983,
+      0.804000000000002,
+      0.9879999999999995
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 55.2,
+      "cost_usd": 0.2174,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [
+       0.8640000000000043,
+       0.9879999999999995
+      ],
+      "events_matched_2s": 2,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515438.182,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.493,
+        "key": "5c52bdf238b69425",
+        "usage": {
+         "bytes": 1819928
+        }
+       },
+       {
+        "ts": 1793515489.747,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 51.541,
+        "key": "3cf173792e2f3a75",
+        "usage": {
+         "input_tokens": 17916,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 7288,
+         "output_tokens_details": {
+          "reasoning_tokens": 5094
+         },
+         "total_tokens": 25204
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 42.0,
+      "cost_usd": 0.0501,
+      "replayed": false,
+      "event_f1": 0.16666666666666666,
+      "event_precision": 0.16666666666666666,
+      "event_recall": 0.16666666666666666,
+      "event_abs_err_s": [
+       0.1639999999999997,
+       0.8319999999999936,
+       0.8640000000000043,
+       0.9879999999999995,
+       1.2040000000000006
+      ],
+      "events_matched_2s": 5,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515494.664,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 4.604,
+        "key": "5c52bdf238b69425",
+        "usage": {
+         "bytes": 1819928
+        }
+       },
+       {
+        "ts": 1793515531.862,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 37.134,
+        "key": "f6af9f4d30f37be8",
+        "usage": {
+         "input_tokens": 25409,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 4311,
+         "output_tokens_details": {
+          "reasoning_tokens": 3294
+         },
+         "total_tokens": 29720
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": true,
+    "structure_equal": true,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.6152,
+    "wonder_cost_usd": 0.2174,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 10,
+      "replayed_calls": 0,
+      "input_tokens": 39954,
+      "output_tokens": 27550,
+      "cost_usd": 0.1667,
+      "latency_s_median": 6.77,
+      "latency_s_total": 125.2
+     },
+     "files": {
+      "network_calls": 7,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.493,
+      "latency_s_total": 21.2
+     },
+     "sam-3.1": {
+      "network_calls": 7,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.231,
+      "latency_s_median": 2.259,
+      "latency_s_total": 125.6
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 17916,
+      "output_tokens": 7288,
+      "cost_usd": 0.2174,
+      "latency_s_median": 51.541,
+      "latency_s_total": 51.5
+     }
+    }
+   },
+   {
+    "seed": 71007,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.363,
+    "reseeds": [
+     {
+      "camera": "top",
+      "object": "block_0",
+      "gap": [
+       225,
+       236
+      ],
+      "found": true,
+      "merged": 0,
+      "seed_frame": 236,
+      "seed_source": "sam (reappearance)",
+      "box": [
+       541,
+       87,
+       543,
+       115
+      ],
+      "sam": {
+       "latency_s": 1.7883877050007868,
+       "frames": 1,
+       "cassette": false
+      },
+      "plausible": false
+     },
+     {
+      "camera": "side",
+      "object": "cup_0",
+      "gap": [
+       76,
+       426
+      ],
+      "found": true,
+      "merged": 0,
+      "seed_frame": 425,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 5.506440945000577,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1339,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 939,
+        "output_tokens_details": {
+         "reasoning_tokens": 886
+        },
+        "total_tokens": 2278
+       }
+      },
+      "box": [
+       503,
+       268,
+       514,
+       307
+      ],
+      "sam": {
+       "latency_s": 25.88394991399946,
+       "frames": 16,
+       "cassette": false
+      },
+      "plausible": false
+     },
+     {
+      "camera": "side",
+      "object": "block_0",
+      "gap": [
+       229,
+       426
+      ],
+      "found": true,
+      "merged": 197,
+      "seed_frame": 425,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 16.439539555998635,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1339,
+        "input_tokens_details": {
+         "cached_tokens": 0
+        },
+        "output_tokens": 3122,
+        "output_tokens_details": {
+         "reasoning_tokens": 3069
+        },
+        "total_tokens": 4461
+       }
+      },
+      "box": [
+       469,
+       267,
+       505,
+       289
+      ],
+      "sam": {
+       "latency_s": 15.575060833998577,
+       "frames": 197,
+       "cassette": false
+      },
+      "plausible": true
+     }
+    ],
+    "tracking_latency_s": 794.2,
+    "tracking": {
+     "found_rate": {
+      "cup": 0.9859154929577465,
+      "block": 0.9645390070921985,
+      "marker": 0.9788732394366197
+     },
+     "found_rate_all": 0.9764705882352941,
+     "centroid_cm": {
+      "cup": {
+       "n": 420,
+       "median": 0.39794755328335246,
+       "p90": 1.817252595902589,
+       "max": 4.621964822825404
+      },
+      "block": {
+       "n": 408,
+       "median": 0.17367461301625786,
+       "p90": 1.0534312549206888,
+       "max": 4.999553251741229
+      },
+      "marker": {
+       "n": 417,
+       "median": 0.24850542337370635,
+       "p90": 1.5843127438698876,
+       "max": 4.700800552157652
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1245,
+      "median": 0.2585480409118338,
+      "p90": 1.661798952813341,
+      "max": 4.999553251741229
+     },
+     "tilt_deg": {
+      "n": 52,
+      "median": 1.995,
+      "p90": 7.640599999999996,
+      "max": 15.445545454545455
+     },
+     "n_visible": 1275
+    },
+    "tracking_frames": 426,
+    "timing": {
+     "tp": 5,
+     "n_gt": 6,
+     "n_est": 10,
+     "precision": 0.5,
+     "recall": 0.8333333333333334,
+     "f1": 0.625,
+     "abs_err_s": [
+      0.5,
+      0.5360000000000014,
+      0.5400000000000063,
+      0.7640000000000029,
+      0.9799999999999969
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 66.0,
+      "cost_usd": 0.2106,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [],
+      "events_matched_2s": 0,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515441.827,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 4.491,
+        "key": "b0d9139216b4a957",
+        "usage": {
+         "bytes": 1700315
+        }
+       },
+       {
+        "ts": 1793515503.204,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 61.346,
+        "key": "e25b3583066f03bf",
+        "usage": {
+         "input_tokens": 16036,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 7322,
+         "output_tokens_details": {
+          "reasoning_tokens": 5125
+         },
+         "total_tokens": 23358
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 46.8,
+      "cost_usd": 0.0518,
+      "replayed": false,
+      "event_f1": 0.3333333333333333,
+      "event_precision": 0.3333333333333333,
+      "event_recall": 0.3333333333333333,
+      "event_abs_err_s": [
+       0.02400000000000091,
+       0.3400000000000034,
+       0.9000000000000004,
+       1.0799999999999983
+      ],
+      "events_matched_2s": 4,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": true,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793515506.604,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.127,
+        "key": "b0d9139216b4a957",
+        "usage": {
+         "bytes": 1700315
+        }
+       },
+       {
+        "ts": 1793515550.059,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 43.391,
+        "key": "9fb7fb674eb3ac83",
+        "usage": {
+         "input_tokens": 22809,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 5481,
+         "output_tokens_details": {
+          "reasoning_tokens": 4351
+         },
+         "total_tokens": 28290
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": false,
+    "structure_equal": false,
+    "numeric_differences": [
+     {
+      "type": "upright",
+      "phase": "transport",
+      "applies_to": {
+       "kind": "cup"
+      },
+      "param": "max_tilt_deg",
+      "video": 20.0,
+      "ground_truth": 15.0
+     }
+    ],
+    "signature_video": {
+     "constraints": [
+      [
+       "forbidden_contact",
+       "transport",
+       "{\"kind\": \"block\"}",
+       "{\"with\": [\"obstacle\"]}"
+      ],
+      [
+       "forbidden_contact",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"with\": [\"obstacle\"]}"
+      ],
+      [
+       "forbidden_contact",
+       "transport",
+       "{\"kind\": \"marker\"}",
+       "{\"with\": [\"obstacle\"]}"
+      ],
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 20.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.6877,
+    "wonder_cost_usd": 0.2106,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 11,
+      "replayed_calls": 0,
+      "input_tokens": 38847,
+      "output_tokens": 31613,
+      "cost_usd": 0.1823,
+      "latency_s_median": 7.948,
+      "latency_s_total": 157.9
+     },
+     "files": {
+      "network_calls": 7,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 2.961,
+      "latency_s_total": 22.9
+     },
+     "sam-3.1": {
+      "network_calls": 7,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.2948,
+      "latency_s_median": 15.575,
+      "latency_s_total": 141.7
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 16036,
+      "output_tokens": 7322,
+      "cost_usd": 0.2106,
+      "latency_s_median": 61.346,
+      "latency_s_total": 61.3
+     }
+    }
+   },
+   {
+    "seed": 71008,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.3135,
+    "reseeds": [
+     {
+      "camera": "top",
+      "object": "marker_0",
+      "gap": [
+       383,
+       460
+      ],
+      "found": true,
+      "merged": 77,
+      "seed_frame": 459,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 3.262068105999788,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1540,
+        "input_tokens_details": {
+         "cached_tokens": 0
+        },
+        "output_tokens": 573,
+        "output_tokens_details": {
+         "reasoning_tokens": 520
+        },
+        "total_tokens": 2113
+       }
+      },
+      "box": [
+       609,
+       160,
+       639,
+       190
+      ],
+      "sam": {
+       "latency_s": 6.769723144998352,
+       "frames": 77,
+       "cassette": false
+      },
+      "plausible": true
+     },
+     {
+      "camera": "side",
+      "object": "cup_0",
+      "gap": [
+       84,
+       460
+      ],
+      "found": false,
+      "merged": 0,
+      "seed_frame": 459,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 6.9935898299991095,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1339,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 1200,
+        "output_tokens_details": {
+         "reasoning_tokens": 1186
+        },
+        "total_tokens": 2539
+       }
+      }
+     },
+     {
+      "camera": "side",
+      "object": "block_0",
+      "gap": [
+       253,
+       460
+      ],
+      "found": true,
+      "merged": 207,
+      "seed_frame": 459,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 7.923041351001302,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1339,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 1469,
+        "output_tokens_details": {
+         "reasoning_tokens": 1416
+        },
+        "total_tokens": 2808
+       }
+      },
+      "box": [
+       528,
+       260,
+       567,
+       289
+      ],
+      "sam": {
+       "latency_s": 17.443522348999977,
+       "frames": 207,
+       "cassette": false
+      },
+      "plausible": true
+     }
+    ],
+    "tracking_latency_s": 1146.7,
+    "tracking": {
+     "found_rate": {
+      "cup": 1.0,
+      "block": 0.9891304347826086,
+      "marker": 0.8956521739130435
+     },
+     "found_rate_all": 0.9615942028985507,
+     "centroid_cm": {
+      "cup": {
+       "n": 460,
+       "median": 1.186531353330306,
+       "p90": 2.505928303278902,
+       "max": 4.48789940191762
+      },
+      "block": {
+       "n": 455,
+       "median": 1.1871109093659937,
+       "p90": 2.2503675107300007,
+       "max": 4.855865568025926
+      },
+      "marker": {
+       "n": 412,
+       "median": 3.4607801254717785,
+       "p90": 3.5379115124152127,
+       "max": 4.999468370971975
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1327,
+      "median": 1.2088941518345737,
+      "p90": 3.5039951477378257,
+      "max": 4.999468370971975
+     },
+     "tilt_deg": {
+      "n": 58,
+      "median": 3.9905,
+      "p90": 3.995,
+      "max": 3.996
+     },
+     "n_visible": 1380
+    },
+    "tracking_frames": 460,
+    "timing": {
+     "tp": 4,
+     "n_gt": 6,
+     "n_est": 8,
+     "precision": 0.5,
+     "recall": 0.6666666666666666,
+     "f1": 0.5714285714285715,
+     "abs_err_s": [
+      0.45600000000000307,
+      0.652000000000001,
+      0.6680000000000001,
+      0.7800000000000011
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 63.0,
+      "cost_usd": 0.1977,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [],
+      "events_matched_2s": 0,
+      "events_true": 6,
+      "events_reported": 0,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516554.741,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 4.68,
+        "key": "3a05ffb9e07af5e0",
+        "usage": {
+         "bytes": 1789463
+        }
+       },
+       {
+        "ts": 1793516612.933,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 58.177,
+        "key": "95aef2bc72fdc376",
+        "usage": {
+         "input_tokens": 17164,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 6454,
+         "output_tokens_details": {
+          "reasoning_tokens": 4801
+         },
+         "total_tokens": 23618
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 29.1,
+      "cost_usd": 0.0443,
+      "replayed": false,
+      "event_f1": 0.3333333333333333,
+      "event_precision": 0.3333333333333333,
+      "event_recall": 0.3333333333333333,
+      "event_abs_err_s": [
+       0.22400000000000375,
+       0.40400000000000347,
+       0.9440000000000026,
+       1.9520000000000017
+      ],
+      "events_matched_2s": 4,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516617.415,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 4.401,
+        "key": "3a05ffb9e07af5e0",
+        "usage": {
+         "bytes": 1789463
+        }
+       },
+       {
+        "ts": 1793516642.021,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 24.602,
+        "key": "1ce762a2b0680e65",
+        "usage": {
+         "input_tokens": 24369,
+         "input_tokens_details": {
+          "cached_tokens": 625
+         },
+         "output_tokens": 3409,
+         "output_tokens_details": {
+          "reasoning_tokens": 2451
+         },
+         "total_tokens": 27778
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": false,
+    "structure_equal": false,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"marker\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.6123,
+    "wonder_cost_usd": 0.1977,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 12,
+      "replayed_calls": 0,
+      "input_tokens": 41728,
+      "output_tokens": 27800,
+      "cost_usd": 0.1688,
+      "latency_s_median": 8.036999999999999,
+      "latency_s_total": 142.1
+     },
+     "files": {
+      "network_calls": 6,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.415,
+      "latency_s_total": 21.9
+     },
+     "sam-3.1": {
+      "network_calls": 6,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.2458,
+      "latency_s_median": 12.107,
+      "latency_s_total": 121.3
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 17164,
+      "output_tokens": 6454,
+      "cost_usd": 0.1977,
+      "latency_s_median": 58.177,
+      "latency_s_total": 58.2
+     }
+    }
+   },
+   {
+    "seed": 71009,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.368,
+    "reseeds": [
+     {
+      "camera": "side",
+      "object": "cup_0",
+      "gap": [
+       105,
+       450
+      ],
+      "found": true,
+      "merged": 345,
+      "seed_frame": 449,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 3.80372216700016,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1454,
+        "input_tokens_details": {
+         "cached_tokens": 0
+        },
+        "output_tokens": 577,
+        "output_tokens_details": {
+         "reasoning_tokens": 524
+        },
+        "total_tokens": 2031
+       }
+      },
+      "box": [
+       543,
+       293,
+       572,
+       339
+      ],
+      "sam": {
+       "latency_s": 26.190473676000693,
+       "frames": 345,
+       "cassette": false
+      },
+      "plausible": true
+     },
+     {
+      "camera": "side",
+      "object": "block_0",
+      "gap": [
+       230,
+       450
+      ],
+      "found": true,
+      "merged": 94,
+      "seed_frame": 449,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 6.515001277999545,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1454,
+        "input_tokens_details": {
+         "cached_tokens": 0
+        },
+        "output_tokens": 1380,
+        "output_tokens_details": {
+         "reasoning_tokens": 1327
+        },
+        "total_tokens": 2834
+       }
+      },
+      "box": [
+       542,
+       308,
+       647,
+       330
+      ],
+      "sam": {
+       "latency_s": 17.194663084999775,
+       "frames": 94,
+       "cassette": false
+      },
+      "plausible": true
+     }
+    ],
+    "tracking_latency_s": 1089.8,
+    "tracking": {
+     "found_rate": {
+      "cup": 0.9888888888888889,
+      "block": 0.9711111111111111,
+      "marker": 0.9933333333333333
+     },
+     "found_rate_all": 0.9844444444444445,
+     "centroid_cm": {
+      "cup": {
+       "n": 445,
+       "median": 0.8161554106651999,
+       "p90": 1.4561224865740292,
+       "max": 4.845765080608899
+      },
+      "block": {
+       "n": 437,
+       "median": 0.16857017729612597,
+       "p90": 1.3125836156683144,
+       "max": 3.338877914905567
+      },
+      "marker": {
+       "n": 447,
+       "median": 0.05474755683267768,
+       "p90": 1.8775036009059463,
+       "max": 4.462643987241537
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1329,
+      "median": 0.22007702447022875,
+      "p90": 1.543682916052053,
+      "max": 4.845765080608899
+     },
+     "tilt_deg": {
+      "n": 61,
+      "median": 3.875,
+      "p90": 3.995,
+      "max": 5.919
+     },
+     "n_visible": 1350
+    },
+    "tracking_frames": 450,
+    "timing": {
+     "tp": 4,
+     "n_gt": 6,
+     "n_est": 8,
+     "precision": 0.5,
+     "recall": 0.6666666666666666,
+     "f1": 0.5714285714285715,
+     "abs_err_s": [
+      0.5319999999999965,
+      0.5720000000000001,
+      0.6799999999999926,
+      0.8919999999999995
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 104.0,
+      "cost_usd": 0.3104,
+      "replayed": false,
+      "event_f1": 0.3333333333333333,
+      "event_precision": 0.3333333333333333,
+      "event_recall": 0.3333333333333333,
+      "event_abs_err_s": [
+       0.23999999999999488,
+       0.4920000000000009,
+       1.0679999999999978,
+       1.8799999999999955,
+       1.9720000000000004
+      ],
+      "events_matched_2s": 5,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516610.122,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.668,
+        "key": "217e9bc506658bd8",
+        "usage": {
+         "bytes": 1737759
+        }
+       },
+       {
+        "ts": 1793516710.335,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 100.209,
+        "key": "883443a9b3c028ff",
+        "usage": {
+         "input_tokens": 16788,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 12162,
+         "output_tokens_details": {
+          "reasoning_tokens": 9362
+         },
+         "total_tokens": 28950
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 40.5,
+      "cost_usd": 0.0449,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [
+       1.2600000000000051,
+       1.5679999999999978,
+       1.9920000000000009
+      ],
+      "events_matched_2s": 3,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516716.437,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 6.009,
+        "key": "217e9bc506658bd8",
+        "usage": {
+         "bytes": 1737759
+        }
+       },
+       {
+        "ts": 1793516750.802,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 34.362,
+        "key": "5187d11b1de99406",
+        "usage": {
+         "input_tokens": 23849,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 3551,
+         "output_tokens_details": {
+          "reasoning_tokens": 2850
+         },
+         "total_tokens": 27400
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": false,
+    "structure_equal": false,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [],
+     "goals": [
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.7807,
+    "wonder_cost_usd": 0.3104,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 11,
+      "replayed_calls": 0,
+      "input_tokens": 39839,
+      "output_tokens": 28956,
+      "cost_usd": 0.1723,
+      "latency_s_median": 9.528,
+      "latency_s_total": 146.1
+     },
+     "files": {
+      "network_calls": 6,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.0305,
+      "latency_s_total": 20.9
+     },
+     "sam-3.1": {
+      "network_calls": 6,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.298,
+      "latency_s_median": 21.692500000000003,
+      "latency_s_total": 145.0
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 16788,
+      "output_tokens": 12162,
+      "cost_usd": 0.3104,
+      "latency_s_median": 100.209,
+      "latency_s_total": 100.2
+     }
+    }
+   },
+   {
+    "seed": 71010,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.2835,
+    "reseeds": [
+     {
+      "camera": "side",
+      "object": "marker_0",
+      "gap": [
+       13,
+       329
+      ],
+      "found": true,
+      "merged": 6,
+      "seed_frame": 329,
+      "seed_source": "sam (reappearance)",
+      "box": [
+       417,
+       285,
+       432,
+       331
+      ],
+      "sam": {
+       "latency_s": 25.006406413998775,
+       "frames": 7,
+       "cassette": false
+      },
+      "plausible": true
+     }
+    ],
+    "tracking_latency_s": 1030.3,
+    "tracking": {
+     "found_rate": {
+      "cup": 0.0,
+      "block": 0.0,
+      "marker": 0.0
+     },
+     "found_rate_all": 0.0,
+     "centroid_cm": {},
+     "centroid_cm_all": null,
+     "tilt_deg": null,
+     "n_visible": 1269
+    },
+    "tracking_frames": 423,
+    "timing": {
+     "tp": 0,
+     "n_gt": 6,
+     "n_est": 0,
+     "precision": 0.0,
+     "recall": 0.0,
+     "f1": 0.0,
+     "abs_err_s": []
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 71.8,
+      "cost_usd": 0.2177,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [],
+      "events_matched_2s": 0,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": true,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516616.433,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 6.738,
+        "key": "a8a90cb2c976f51f",
+        "usage": {
+         "bytes": 1668596
+        }
+       },
+       {
+        "ts": 1793516681.428,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 64.991,
+        "key": "37853c5595725478",
+        "usage": {
+         "input_tokens": 16036,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 7679,
+         "output_tokens_details": {
+          "reasoning_tokens": 5315
+         },
+         "total_tokens": 23715
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 41.3,
+      "cost_usd": 0.0459,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [
+       0.5120000000000005,
+       0.7199999999999989,
+       1.1159999999999997,
+       1.6000000000000014,
+       1.6039999999999992
+      ],
+      "events_matched_2s": 5,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516685.18,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.671,
+        "key": "a8a90cb2c976f51f",
+        "usage": {
+         "bytes": 1668596
+        }
+       },
+       {
+        "ts": 1793516722.702,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 37.518,
+        "key": "be968546921f4e71",
+        "usage": {
+         "input_tokens": 22549,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 4175,
+         "output_tokens_details": {
+          "reasoning_tokens": 3281
+         },
+         "total_tokens": 26724
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": false,
+    "structure_equal": false,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"marker\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"marker\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.5967,
+    "wonder_cost_usd": 0.2177,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 9,
+      "replayed_calls": 0,
+      "input_tokens": 35001,
+      "output_tokens": 23121,
+      "cost_usd": 0.1414,
+      "latency_s_median": 6.927,
+      "latency_s_total": 123.9
+     },
+     "files": {
+      "network_calls": 5,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.671,
+      "latency_s_total": 21.1
+     },
+     "sam-3.1": {
+      "network_calls": 5,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.2376,
+      "latency_s_median": 25.006,
+      "latency_s_total": 118.8
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 16036,
+      "output_tokens": 7679,
+      "cost_usd": 0.2177,
+      "latency_s_median": 64.991,
+      "latency_s_total": 65.0
+     }
+    }
+   },
+   {
+    "seed": 71011,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.2767,
+    "reseeds": [
+     {
+      "camera": "top",
+      "object": "block_0",
+      "gap": [
+       212,
+       222
+      ],
+      "found": true,
+      "merged": 0,
+      "seed_frame": 222,
+      "seed_source": "sam (reappearance)",
+      "box": [
+       530,
+       34,
+       532,
+       65
+      ],
+      "sam": {
+       "latency_s": 2.0270353109990538,
+       "frames": 5,
+       "cassette": false
+      },
+      "plausible": false
+     },
+     {
+      "camera": "side",
+      "object": "cup_0",
+      "gap": [
+       65,
+       417
+      ],
+      "found": false,
+      "merged": 0,
+      "seed_frame": 416,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 2.8340695810002217,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1325,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 438,
+        "output_tokens_details": {
+         "reasoning_tokens": 424
+        },
+        "total_tokens": 1763
+       }
+      }
+     },
+     {
+      "camera": "side",
+      "object": "block_0",
+      "gap": [
+       214,
+       417
+      ],
+      "found": true,
+      "merged": 203,
+      "seed_frame": 416,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 4.349178861000837,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1325,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 887,
+        "output_tokens_details": {
+         "reasoning_tokens": 834
+        },
+        "total_tokens": 2212
+       }
+      },
+      "box": [
+       499,
+       258,
+       522,
+       267
+      ],
+      "sam": {
+       "latency_s": 16.32417606299896,
+       "frames": 203,
+       "cassette": false
+      },
+      "plausible": true
+     }
+    ],
+    "tracking_latency_s": 983.1,
+    "tracking": {
+     "found_rate": {
+      "cup": 1.0,
+      "block": 0.9328537170263789,
+      "marker": 1.0
+     },
+     "found_rate_all": 0.9776179056754596,
+     "centroid_cm": {
+      "cup": {
+       "n": 417,
+       "median": 1.4976848219858305,
+       "p90": 1.8921935830036456,
+       "max": 4.535022277027164
+      },
+      "block": {
+       "n": 389,
+       "median": 2.204319125982056,
+       "p90": 2.532273637752676,
+       "max": 4.322309239695202
+      },
+      "marker": {
+       "n": 417,
+       "median": 0.06785797358613027,
+       "p90": 2.0833370873040775,
+       "max": 4.8357262623268875
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1223,
+      "median": 1.500649639079077,
+      "p90": 2.4387284521404795,
+      "max": 4.8357262623268875
+     },
+     "tilt_deg": {
+      "n": 62,
+      "median": 5.83,
+      "p90": 7.9407000000000005,
+      "max": 7.996
+     },
+     "n_visible": 1251
+    },
+    "tracking_frames": 417,
+    "timing": {
+     "tp": 5,
+     "n_gt": 6,
+     "n_est": 8,
+     "precision": 0.625,
+     "recall": 0.8333333333333334,
+     "f1": 0.7142857142857143,
+     "abs_err_s": [
+      0.4960000000000093,
+      0.6120000000000019,
+      0.6760000000000002,
+      0.8119999999999976,
+      0.8640000000000043
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 76.6,
+      "cost_usd": 0.224,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [],
+      "events_matched_2s": 0,
+      "events_true": 6,
+      "events_reported": 0,
+      "relevance_correct": true,
+      "care_cue": true,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516576.132,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.41,
+        "key": "06c401f014423947",
+        "usage": {
+         "bytes": 1512634
+        }
+       },
+       {
+        "ts": 1793516649.188,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 73.052,
+        "key": "14b79f0b0e2ec2b3",
+        "usage": {
+         "input_tokens": 15660,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 8069,
+         "output_tokens_details": {
+          "reasoning_tokens": 6224
+         },
+         "total_tokens": 23729
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 58.6,
+      "cost_usd": 0.0549,
+      "replayed": false,
+      "event_f1": 0.3333333333333333,
+      "event_precision": 0.3333333333333333,
+      "event_recall": 0.3333333333333333,
+      "event_abs_err_s": [
+       0.13599999999999568,
+       0.347999999999999,
+       1.0120000000000005
+      ],
+      "events_matched_2s": 3,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": true,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516652.452,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.185,
+        "key": "06c401f014423947",
+        "usage": {
+         "bytes": 1512634
+        }
+       },
+       {
+        "ts": 1793516707.8,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 55.338,
+        "key": "469dc7393a5524b6",
+        "usage": {
+         "input_tokens": 22289,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 6366,
+         "output_tokens_details": {
+          "reasoning_tokens": 5270
+         },
+         "total_tokens": 28655
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": false,
+    "structure_equal": false,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"marker\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.6137,
+    "wonder_cost_usd": 0.224,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 11,
+      "replayed_calls": 0,
+      "input_tokens": 38174,
+      "output_tokens": 28343,
+      "cost_usd": 0.1673,
+      "latency_s_median": 5.6,
+      "latency_s_total": 152.2
+     },
+     "files": {
+      "network_calls": 6,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.3040000000000003,
+      "latency_s_total": 21.3
+     },
+     "sam-3.1": {
+      "network_calls": 6,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.2224,
+      "latency_s_median": 9.175500000000001,
+      "latency_s_total": 110.9
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 15660,
+      "output_tokens": 8069,
+      "cost_usd": 0.224,
+      "latency_s_median": 73.052,
+      "latency_s_total": 73.1
+     }
+    }
+   },
+   {
+    "seed": 71012,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.2919,
+    "reseeds": [
+     {
+      "camera": "side",
+      "object": "cup_0",
+      "gap": [
+       64,
+       451
+      ],
+      "found": false,
+      "merged": 0,
+      "seed_frame": 450,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 5.197783355000865,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1368,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 600,
+        "output_tokens_details": {
+         "reasoning_tokens": 586
+        },
+        "total_tokens": 1968
+       }
+      }
+     },
+     {
+      "camera": "side",
+      "object": "block_0",
+      "gap": [
+       233,
+       451
+      ],
+      "found": true,
+      "merged": 218,
+      "seed_frame": 450,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 8.185392258999855,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1368,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 1756,
+        "output_tokens_details": {
+         "reasoning_tokens": 1703
+        },
+        "total_tokens": 3124
+       }
+      },
+      "box": [
+       623,
+       287,
+       682,
+       327
+      ],
+      "sam": {
+       "latency_s": 17.460814124000535,
+       "frames": 218,
+       "cassette": false
+      },
+      "plausible": true
+     }
+    ],
+    "tracking_latency_s": 962.8,
+    "tracking": {
+     "found_rate": {
+      "cup": 1.0,
+      "block": 0.9577777777777777,
+      "marker": 0.9977827050997783
+     },
+     "found_rate_all": 0.985207100591716,
+     "centroid_cm": {
+      "cup": {
+       "n": 451,
+       "median": 0.5393136921341612,
+       "p90": 1.9714141747466467,
+       "max": 4.385600255969476
+      },
+      "block": {
+       "n": 431,
+       "median": 0.24182323941922493,
+       "p90": 1.944482741987263,
+       "max": 3.959053052815869
+      },
+      "marker": {
+       "n": 450,
+       "median": 0.04827769007906442,
+       "p90": 1.8459589286078595,
+       "max": 3.931323595875363
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1332,
+      "median": 0.2598856742726849,
+      "p90": 1.9538318812032038,
+      "max": 4.385600255969476
+     },
+     "tilt_deg": {
+      "n": 13,
+      "median": 0.126,
+      "p90": 9.740400000000001,
+      "max": 9.75
+     },
+     "n_visible": 1352
+    },
+    "tracking_frames": 451,
+    "timing": {
+     "tp": 5,
+     "n_gt": 6,
+     "n_est": 6,
+     "precision": 0.8333333333333334,
+     "recall": 0.8333333333333334,
+     "f1": 0.8333333333333334,
+     "abs_err_s": [
+      0.5,
+      0.5360000000000014,
+      0.6120000000000001,
+      0.8599999999999994,
+      0.9519999999999982
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 49.7,
+      "cost_usd": 0.1784,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [],
+      "events_matched_2s": 0,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516564.926,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 4.405,
+        "key": "344fda227a6b2fb7",
+        "usage": {
+         "bytes": 1746769
+        }
+       },
+       {
+        "ts": 1793516610.129,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 45.196,
+        "key": "e8ed292cd3351fda",
+        "usage": {
+         "input_tokens": 17164,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 5487,
+         "output_tokens_details": {
+          "reasoning_tokens": 3373
+         },
+         "total_tokens": 22651
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 112.8,
+      "cost_usd": 0.0478,
+      "replayed": false,
+      "event_f1": 0.16666666666666666,
+      "event_precision": 0.16666666666666666,
+      "event_recall": 0.16666666666666666,
+      "event_abs_err_s": [
+       0.5,
+       0.8599999999999994,
+       1.4519999999999982,
+       1.6640000000000015
+      ],
+      "events_matched_2s": 4,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516683.705,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 73.485,
+        "key": "344fda227a6b2fb7",
+        "usage": {
+         "bytes": 1746769
+        }
+       },
+       {
+        "ts": 1793516722.894,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 39.186,
+        "key": "ca2c10f3984a45e2",
+        "usage": {
+         "input_tokens": 24109,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 4155,
+         "output_tokens_details": {
+          "reasoning_tokens": 3329
+         },
+         "total_tokens": 28264
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": true,
+    "structure_equal": true,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.561,
+    "wonder_cost_usd": 0.1784,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 11,
+      "replayed_calls": 0,
+      "input_tokens": 39907,
+      "output_tokens": 24603,
+      "cost_usd": 0.1536,
+      "latency_s_median": 7.641,
+      "latency_s_total": 125.3
+     },
+     "files": {
+      "network_calls": 5,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.851,
+      "latency_s_total": 87.1
+     },
+     "sam-3.1": {
+      "network_calls": 5,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.229,
+      "latency_s_median": 17.461,
+      "latency_s_total": 117.8
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 17164,
+      "output_tokens": 5487,
+      "cost_usd": 0.1784,
+      "latency_s_median": 45.196,
+      "latency_s_total": 45.2
+     }
+    }
+   },
+   {
+    "seed": 71013,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.278,
+    "reseeds": [
+     {
+      "camera": "top",
+      "object": "marker_0",
+      "gap": [
+       319,
+       448
+      ],
+      "found": true,
+      "merged": 129,
+      "seed_frame": 447,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 7.47693911100032,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1549,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 1133,
+        "output_tokens_details": {
+         "reasoning_tokens": 1080
+        },
+        "total_tokens": 2682
+       }
+      },
+      "box": [
+       614,
+       220,
+       644,
+       245
+      ],
+      "sam": {
+       "latency_s": 10.612654753998868,
+       "frames": 129,
+       "cassette": false
+      },
+      "plausible": true
+     },
+     {
+      "camera": "side",
+      "object": "cup_0",
+      "gap": [
+       67,
+       448
+      ],
+      "found": false,
+      "merged": 0,
+      "seed_frame": 447,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 4.614971400000286,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1454,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 948,
+        "output_tokens_details": {
+         "reasoning_tokens": 934
+        },
+        "total_tokens": 2402
+       }
+      }
+     },
+     {
+      "camera": "side",
+      "object": "block_0",
+      "gap": [
+       232,
+       448
+      ],
+      "found": false,
+      "merged": 0,
+      "seed_frame": 447,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 1.9608646079996106,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1454,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 220,
+        "output_tokens_details": {
+         "reasoning_tokens": 206
+        },
+        "total_tokens": 1674
+       }
+      }
+     }
+    ],
+    "tracking_latency_s": 794.6,
+    "tracking": {
+     "found_rate": {
+      "cup": 0.9642857142857143,
+      "block": 0.8794642857142857,
+      "marker": 0.6808035714285714
+     },
+     "found_rate_all": 0.8415178571428571,
+     "centroid_cm": {
+      "cup": {
+       "n": 432,
+       "median": 0.990916302278712,
+       "p90": 2.915681470734922,
+       "max": 4.96832158457402
+      },
+      "block": {
+       "n": 394,
+       "median": 0.674979383864245,
+       "p90": 1.535989149678111,
+       "max": 4.844197236959553
+      },
+      "marker": {
+       "n": 305,
+       "median": 3.072369393535047,
+       "p90": 3.1746775509232914,
+       "max": 3.3978392345432096
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1131,
+      "median": 0.9910611066487082,
+      "p90": 3.1083934611499604,
+      "max": 4.96832158457402
+     },
+     "tilt_deg": null,
+     "n_visible": 1344
+    },
+    "tracking_frames": 448,
+    "timing": {
+     "tp": 2,
+     "n_gt": 6,
+     "n_est": 4,
+     "precision": 0.5,
+     "recall": 0.3333333333333333,
+     "f1": 0.4,
+     "abs_err_s": [
+      0.8359999999999994,
+      0.9960000000000022
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 136.4,
+      "cost_usd": 0.344,
+      "replayed": false,
+      "event_f1": 0.3333333333333333,
+      "event_precision": 0.3333333333333333,
+      "event_recall": 0.3333333333333333,
+      "event_abs_err_s": [
+       0.35600000000000165,
+       0.40800000000000125,
+       1.436
+      ],
+      "events_matched_2s": 3,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": true,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516405.438,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 6.786,
+        "key": "59771ce7a721f160",
+        "usage": {
+         "bytes": 1783231
+        }
+       },
+       {
+        "ts": 1793516534.857,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 129.362,
+        "key": "b63d12ca0601ccaf",
+        "usage": {
+         "input_tokens": 16788,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 13840,
+         "output_tokens_details": {
+          "reasoning_tokens": 11731
+         },
+         "total_tokens": 30628
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 50.9,
+      "cost_usd": 0.0495,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [
+       0.5919999999999987,
+       0.6439999999999984,
+       0.7360000000000042,
+       1.9640000000000004
+      ],
+      "events_matched_2s": 4,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": true,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516538.363,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.332,
+        "key": "59771ce7a721f160",
+        "usage": {
+         "bytes": 1783231
+        }
+       },
+       {
+        "ts": 1793516585.734,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 47.365,
+        "key": "2b88a2c6d3ead1a6",
+        "usage": {
+         "input_tokens": 23849,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 4628,
+         "output_tokens_details": {
+          "reasoning_tokens": 3563
+         },
+         "total_tokens": 28477
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": true,
+    "structure_equal": true,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.7305,
+    "wonder_cost_usd": 0.344,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 12,
+      "replayed_calls": 0,
+      "input_tokens": 41611,
+      "output_tokens": 29521,
+      "cost_usd": 0.1765,
+      "latency_s_median": 7.375500000000001,
+      "latency_s_total": 159.5
+     },
+     "files": {
+      "network_calls": 5,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.487,
+      "latency_s_total": 20.3
+     },
+     "sam-3.1": {
+      "network_calls": 5,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.21,
+      "latency_s_median": 10.613,
+      "latency_s_total": 112.6
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 16788,
+      "output_tokens": 13840,
+      "cost_usd": 0.344,
+      "latency_s_median": 129.362,
+      "latency_s_total": 129.4
+     }
+    }
+   },
+   {
+    "seed": 71014,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.2882,
+    "reseeds": [
+     {
+      "camera": "top",
+      "object": "block_0",
+      "gap": [
+       219,
+       229
+      ],
+      "found": true,
+      "merged": 0,
+      "seed_frame": 229,
+      "seed_source": "sam (reappearance)",
+      "box": [
+       537,
+       83,
+       538,
+       108
+      ],
+      "sam": {
+       "latency_s": 1.9078039399992122,
+       "frames": 6,
+       "cassette": false
+      },
+      "plausible": false
+     },
+     {
+      "camera": "side",
+      "object": "block_0",
+      "gap": [
+       224,
+       422
+      ],
+      "found": true,
+      "merged": 0,
+      "seed_frame": 421,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 4.966641818000426,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1297,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 894,
+        "output_tokens_details": {
+         "reasoning_tokens": 841
+        },
+        "total_tokens": 2191
+       }
+      },
+      "box": [
+       506,
+       268,
+       515,
+       300
+      ],
+      "sam": {
+       "latency_s": 15.648294304999581,
+       "frames": 198,
+       "cassette": false
+      },
+      "plausible": false
+     },
+     {
+      "camera": "side",
+      "object": "gripper",
+      "gap": [
+       226,
+       292
+      ],
+      "found": true,
+      "merged": 0,
+      "seed_frame": 292,
+      "seed_source": "sam (reappearance)",
+      "box": [
+       435,
+       128,
+       450,
+       167
+      ],
+      "sam": {
+       "latency_s": 5.928507932001594,
+       "frames": 1,
+       "cassette": false
+      },
+      "plausible": false
+     }
+    ],
+    "tracking_latency_s": 995.7,
+    "tracking": {
+     "found_rate": {
+      "cup": 0.990521327014218,
+      "block": 0.985781990521327,
+      "marker": 0.9928909952606635
+     },
+     "found_rate_all": 0.9897314375987362,
+     "centroid_cm": {
+      "cup": {
+       "n": 418,
+       "median": 0.17260168665497638,
+       "p90": 1.6275857012702442,
+       "max": 4.906436673277717
+      },
+      "block": {
+       "n": 416,
+       "median": 0.2762255239428048,
+       "p90": 1.7776702433839418,
+       "max": 4.891839288884483
+      },
+      "marker": {
+       "n": 419,
+       "median": 0.1820733685499641,
+       "p90": 1.6592029809606477,
+       "max": 4.917213717333943
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1253,
+      "median": 0.1828043385772176,
+      "p90": 1.678754049566753,
+      "max": 4.917213717333943
+     },
+     "tilt_deg": {
+      "n": 71,
+      "median": 1.99,
+      "p90": 3.995,
+      "max": 13.825
+     },
+     "n_visible": 1266
+    },
+    "tracking_frames": 422,
+    "timing": {
+     "tp": 5,
+     "n_gt": 6,
+     "n_est": 6,
+     "precision": 0.8333333333333334,
+     "recall": 0.8333333333333334,
+     "f1": 0.8333333333333334,
+     "abs_err_s": [
+      0.5439999999999969,
+      0.6439999999999984,
+      0.6920000000000002,
+      0.7080000000000002,
+      0.804000000000002
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 48.0,
+      "cost_usd": 0.1681,
+      "replayed": false,
+      "event_f1": 0.0,
+      "event_precision": 0.0,
+      "event_recall": 0.0,
+      "event_abs_err_s": [
+       0.9039999999999964,
+       1.4040000000000035,
+       1.6439999999999984
+      ],
+      "events_matched_2s": 3,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516617.115,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 5.489,
+        "key": "73b5a6a9a0db2fb7",
+        "usage": {
+         "bytes": 1743499
+        }
+       },
+       {
+        "ts": 1793516659.524,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 42.402,
+        "key": "3373068c58305dfe",
+        "usage": {
+         "input_tokens": 16036,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 5199,
+         "output_tokens_details": {
+          "reasoning_tokens": 3471
+         },
+         "total_tokens": 21235
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 36.0,
+      "cost_usd": 0.0441,
+      "replayed": false,
+      "event_f1": 0.16666666666666666,
+      "event_precision": 0.16666666666666666,
+      "event_recall": 0.16666666666666666,
+      "event_abs_err_s": [
+       0.49199999999999733,
+       0.9039999999999964,
+       0.9080000000000004,
+       0.9440000000000026
+      ],
+      "events_matched_2s": 4,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516663.431,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.823,
+        "key": "73b5a6a9a0db2fb7",
+        "usage": {
+         "bytes": 1743499
+        }
+       },
+       {
+        "ts": 1793516695.488,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 32.053,
+        "key": "ffd91aebcc3385da",
+        "usage": {
+         "input_tokens": 22549,
+         "input_tokens_details": {
+          "cached_tokens": 0
+         },
+         "output_tokens": 3739,
+         "output_tokens_details": {
+          "reasoning_tokens": 2919
+         },
+         "total_tokens": 26288
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": true,
+    "structure_equal": true,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.5513,
+    "wonder_cost_usd": 0.1681,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 10,
+      "replayed_calls": 0,
+      "input_tokens": 36840,
+      "output_tokens": 23785,
+      "cost_usd": 0.1464,
+      "latency_s_median": 6.6875,
+      "latency_s_total": 116.3
+     },
+     "files": {
+      "network_calls": 7,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.528,
+      "latency_s_total": 25.1
+     },
+     "sam-3.1": {
+      "network_calls": 7,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.2368,
+      "latency_s_median": 5.929,
+      "latency_s_total": 123.2
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 16036,
+      "output_tokens": 5199,
+      "cost_usd": 0.1681,
+      "latency_s_median": 42.402,
+      "latency_s_total": 42.4
+     }
+    }
+   },
+   {
+    "seed": 71015,
+    "attempt": 1,
+    "rerun_after_interruption": false,
+    "tracking_cost_usd": 0.3762,
+    "reseeds": [
+     {
+      "camera": "side",
+      "object": "cup_0",
+      "gap": [
+       69,
+       440
+      ],
+      "found": true,
+      "merged": 364,
+      "seed_frame": 439,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 4.277315995999743,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1282,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 834,
+        "output_tokens_details": {
+         "reasoning_tokens": 781
+        },
+        "total_tokens": 2116
+       }
+      },
+      "box": [
+       483,
+       262,
+       500,
+       298
+      ],
+      "sam": {
+       "latency_s": 28.643087829999786,
+       "frames": 364,
+       "cassette": false
+      },
+      "plausible": true
+     },
+     {
+      "camera": "side",
+      "object": "block_0",
+      "gap": [
+       216,
+       440
+      ],
+      "found": true,
+      "merged": 224,
+      "seed_frame": 439,
+      "seed_source": "muse-spark grounding (last frame)",
+      "grounding": {
+       "latency_s": 9.37498759799928,
+       "cassette": false,
+       "usage": {
+        "input_tokens": 1282,
+        "input_tokens_details": {
+         "cached_tokens": 113
+        },
+        "output_tokens": 2147,
+        "output_tokens_details": {
+         "reasoning_tokens": 2094
+        },
+        "total_tokens": 3429
+       }
+      },
+      "box": [
+       619,
+       303,
+       659,
+       343
+      ],
+      "sam": {
+       "latency_s": 18.009730268999192,
+       "frames": 224,
+       "cassette": false
+      },
+      "plausible": true
+     }
+    ],
+    "tracking_latency_s": 989.6,
+    "tracking": {
+     "found_rate": {
+      "cup": 0.9886363636363636,
+      "block": 1.0,
+      "marker": 0.9840909090909091
+     },
+     "found_rate_all": 0.990909090909091,
+     "centroid_cm": {
+      "cup": {
+       "n": 435,
+       "median": 0.39515118819398204,
+       "p90": 3.898477459982874,
+       "max": 4.665516253175926
+      },
+      "block": {
+       "n": 440,
+       "median": 0.8433813986794473,
+       "p90": 1.8138295119584489,
+       "max": 3.7324463867831725
+      },
+      "marker": {
+       "n": 433,
+       "median": 0.2334345051057962,
+       "p90": 1.9487355286127317,
+       "max": 4.846932028774273
+      }
+     },
+     "centroid_cm_all": {
+      "n": 1308,
+      "median": 0.3910413210284147,
+      "p90": 1.9962711906635995,
+      "max": 4.846932028774273
+     },
+     "tilt_deg": {
+      "n": 51,
+      "median": 1.995,
+      "p90": 3.994,
+      "max": 3.995
+     },
+     "n_visible": 1320
+    },
+    "tracking_frames": 440,
+    "timing": {
+     "tp": 5,
+     "n_gt": 6,
+     "n_est": 8,
+     "precision": 0.625,
+     "recall": 0.8333333333333334,
+     "f1": 0.7142857142857143,
+     "abs_err_s": [
+      0.5360000000000014,
+      0.6200000000000045,
+      0.6360000000000001,
+      0.8359999999999985,
+      0.9320000000000022
+     ]
+    },
+    "observations": {
+     "muse-wonder-1.0": {
+      "error": null,
+      "latency_s": 119.2,
+      "cost_usd": 0.3057,
+      "replayed": false,
+      "event_f1": 0.3333333333333333,
+      "event_precision": 0.3333333333333333,
+      "event_recall": 0.3333333333333333,
+      "event_abs_err_s": [
+       0.2560000000000002,
+       0.33200000000000074
+      ],
+      "events_matched_2s": 2,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": false,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516617.811,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 6.736,
+        "key": "613cc200d91dc696",
+        "usage": {
+         "bytes": 1704532
+        }
+       },
+       {
+        "ts": 1793516730.175,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-wonder-1.0",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 112.354,
+        "key": "fb68ce8098b87cf5",
+        "usage": {
+         "input_tokens": 16412,
+         "input_tokens_details": {
+          "cached_tokens": 116
+         },
+         "output_tokens": 12024,
+         "output_tokens_details": {
+          "reasoning_tokens": 9717
+         },
+         "total_tokens": 28436
+        }
+       }
+      ]
+     },
+     "muse-spark-1.3": {
+      "error": null,
+      "latency_s": 52.7,
+      "cost_usd": 0.0518,
+      "replayed": false,
+      "event_f1": 0.16666666666666666,
+      "event_precision": 0.16666666666666666,
+      "event_recall": 0.16666666666666666,
+      "event_abs_err_s": [
+       0.4200000000000017,
+       0.8360000000000003,
+       1.2560000000000002,
+       1.3320000000000007,
+       1.6359999999999992
+      ],
+      "events_matched_2s": 5,
+      "events_true": 6,
+      "events_reported": 6,
+      "relevance_correct": true,
+      "care_cue": false,
+      "care_expected": true,
+      "validator_issues": [],
+      "usage": [
+       {
+        "ts": 1793516734.1,
+        "call": "upload_file",
+        "endpoint": "/files",
+        "model": "files",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 3.842,
+        "key": "613cc200d91dc696",
+        "usage": {
+         "bytes": 1704532
+        }
+       },
+       {
+        "ts": 1793516782.909,
+        "call": "observe_video",
+        "endpoint": "/responses",
+        "model": "muse-spark-1.3",
+        "mode": "record",
+        "from_cassette": false,
+        "latency_s": 48.804,
+        "key": "78b08a6b7cb39022",
+        "usage": {
+         "input_tokens": 23329,
+         "input_tokens_details": {
+          "cached_tokens": 625
+         },
+         "output_tokens": 5487,
+         "output_tokens_details": {
+          "reasoning_tokens": 4438
+         },
+         "total_tokens": 28816
+        }
+       }
+      ]
+     }
+    },
+    "observe_kwargs": {
+     "strategy": "video"
+    },
+    "spec_observations": {
+     "model": "muse-spark-1.3",
+     "present": true
+    },
+    "signature_equal": false,
+    "structure_equal": false,
+    "numeric_differences": [],
+    "signature_video": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "signature_ground_truth": {
+     "constraints": [
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "final",
+       "{\"kind\": \"marker\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ],
+      [
+       "upright",
+       "transport",
+       "{\"kind\": \"cup\"}",
+       "{\"max_tilt_deg\": 15.0}"
+      ]
+     ],
+     "goals": [
+      [
+       "{\"kind\": \"block\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"cup\"}",
+       "destination"
+      ],
+      [
+       "{\"kind\": \"marker\"}",
+       "destination"
+      ]
+     ]
+    },
+    "cost_usd": 0.8037,
+    "wonder_cost_usd": 0.3057,
+    "http_retries": {},
+    "usage_summary": {
+     "muse-spark-1.3": {
+      "network_calls": 11,
+      "replayed_calls": 0,
+      "input_tokens": 39164,
+      "output_tokens": 35440,
+      "cost_usd": 0.198,
+      "latency_s_median": 9.736,
+      "latency_s_total": 177.4
+     },
+     "files": {
+      "network_calls": 6,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0,
+      "latency_s_median": 3.753,
+      "latency_s_total": 27.0
+     },
+     "sam-3.1": {
+      "network_calls": 6,
+      "replayed_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.3,
+      "latency_s_median": 23.326500000000003,
+      "latency_s_total": 151.3
+     },
+     "muse-wonder-1.0": {
+      "network_calls": 1,
+      "replayed_calls": 0,
+      "input_tokens": 16412,
+      "output_tokens": 12024,
+      "cost_usd": 0.3057,
+      "latency_s_median": 112.354,
+      "latency_s_total": 112.4
+     }
+    }
+   }
+  ],
+  "tracker": "sam-3.1",
+  "usage": {
+   "muse-spark-1.3": {
+    "network_calls": 172,
+    "replayed_calls": 0,
+    "input_tokens": 620301,
+    "output_tokens": 457151,
+    "cost_usd": 2.7055,
+    "latency_s_median": 8.301,
+    "latency_s_total": 2275.3
+   },
+   "files": {
+    "network_calls": 94,
+    "replayed_calls": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 0.0,
+    "latency_s_median": 3.4945,
+    "latency_s_total": 409.7
+   },
+   "sam-3.1": {
+    "network_calls": 94,
+    "replayed_calls": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 3.8786,
+    "latency_s_median": 13.094,
+    "latency_s_total": 1980.5
+   },
+   "muse-wonder-1.0": {
+    "network_calls": 16,
+    "replayed_calls": 0,
+    "input_tokens": 263344,
+    "output_tokens": 140188,
+    "cost_usd": 3.8567,
+    "latency_s_median": 75.23750000000001,
+    "latency_s_total": 1224.0
+   }
+  },
+  "cost_usd": 10.4408,
+  "stopped": "spend cap $14.00: $8.50 spent and $6.80 reserved by running seeds before seed 71016; a seed is projected at $0.66 (reservation x1.5)",
+  "not_run": [
+   71016,
+   71017,
+   71018,
+   71019
+  ],
+  "run_info": {
+   "workers": 8,
+   "attempts": 1,
+   "restarts": 0,
+   "resumed_from_checkpoints": [],
+   "rerun_after_interruption": [],
+   "reservation_factor": 1.5,
+   "http_retries": {},
+   "observe_kwargs": {
+    "strategy": "video"
+   }
+  },
+  "summary": {
+   "values": {
+    "seeds": 16,
+    "completed": 16,
+    "found_rate": 0.8856419507341939,
+    "centroid_cm_median": 0.721940524780057,
+    "event_detection_rate": 0.6354166666666666,
+    "timing_abs_err_s_median": 0.652000000000001,
+    "tilt_err_deg_median": 1.995,
+    "signature_equal": 8,
+    "structure_equal_reported_only": 8,
+    "numeric_differences": 1
+   },
+   "models": {
+    "muse-wonder-1.0": {
+     "n": 16,
+     "errors": 0,
+     "skipped": 0,
+     "event_f1_mean": 0.0625,
+     "relevance_correct": 14,
+     "care_cue_when_expected": 5,
+     "care_expected": 16,
+     "validator_issues": 0,
+     "event_mae_s": 0.9854999999999995,
+     "events_matched_2s": 24,
+     "events_true": 96,
+     "latency_s_median": 79.0,
+     "cost_usd": 3.8567
+    },
+    "muse-spark-1.3": {
+     "n": 16,
+     "errors": 0,
+     "skipped": 0,
+     "event_f1_mean": 0.11458333333333331,
+     "relevance_correct": 16,
+     "care_cue_when_expected": 5,
+     "care_expected": 16,
+     "validator_issues": 0,
+     "event_mae_s": 1.00135593220339,
+     "events_matched_2s": 59,
+     "events_true": 96,
+     "latency_s_median": 41.8,
+     "cost_usd": 0.7626
+    }
+   },
+   "paired": {
+    "seeds": 16,
+    "muse-wonder-1.0": {
+     "event_f1_mean": 0.0625,
+     "relevance_correct": 14
+    },
+    "muse-spark-1.3": {
+     "event_f1_mean": 0.11458333333333331,
+     "relevance_correct": 16
+    }
+   },
+   "adopt_wonder": false,
+   "threshold_checks": {
+    "found rate >= 0.95": false,
+    "median centroid error <= 1.5 cm": true,
+    "grasp/release detected within 1 s >= 0.9": false,
+    "median timing error <= 0.3 s": false,
+    "median cup tilt error <= 5.0 deg": true,
+    "same proposal signature on >= 18 of 20 seeds": false
+   }
+  }
+ }
+}

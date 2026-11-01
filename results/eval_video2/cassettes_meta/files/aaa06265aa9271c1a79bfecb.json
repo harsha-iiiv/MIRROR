@@ -1,0 +1,18 @@
+{
+ "key": "aaa06265aa9271c1a79bfecbaad578a8b76ec8a1284bbe9d52f6da6412c5bf29",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:4b542d541c5aa3ad7bc43d9d93cc676c7a89259a94aee9aa974ecd5c1fb75f8e"
+ },
+ "response": {
+  "id": "file-1142243712006164",
+  "bytes": 51414,
+  "status": "uploaded",
+  "filename": "side_reseed_gripper_226_292.mp4"
+ },
+ "blobs": [],
+ "latency_s": 4.652,
+ "recorded_at": "2026-11-01T06:55:30Z"
+}

@@ -1,0 +1,230 @@
+{
+ "key": "59e933119f6276a222d9715cdb310209d4276d7a85d613aaad784536909febdf",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "Describe this demonstration video. The video is 85.60 seconds long."
+     },
+     {
+      "type": "input_file",
+      "file_id": "sha256:bc303ffd887c29f09a169cb006019a473f884ace71e2a943d5b1344646a79167"
+     }
+    ]
+   }
+  ],
+  "instructions": "You watch a video of a tabletop demonstration: objects are packed into a\ndestination tray. Report only what the video shows.\n\nVocabulary of object kinds: cup (open-top container), block, marker (standing\ncylinder), tray (destination), wall (obstacle), gripper (the hand or robot\ngripper), other.\n\nReport:\n- objects: every distinct object, its kind, a short visual description, whether\n  it matters to the task and why.\n- events: grasp, release and carry of each object, with times in seconds from\n  the start of the video. A carry spans from grasp to release.\n- care_cues: behaviour that suggests a requirement, such as keeping an object\n  level, slowing down, or keeping distance from something, with the times where\n  the video shows it and what shows it. Report none if you see none.\n- uncertainties: what the video does not settle (for example why an object was\n  carried a certain way).\nDo not guess numbers you cannot see; describe evidence instead.",
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "video_observations",
+    "schema": {
+     "$defs": {
+      "CareCue": {
+       "properties": {
+        "object": {
+         "enum": [
+          "cup",
+          "block",
+          "marker",
+          "tray",
+          "wall",
+          "gripper",
+          "other"
+         ],
+         "type": "string"
+        },
+        "cue": {
+         "description": "the careful behaviour, e.g. 'kept level while passing the wall'",
+         "type": "string"
+        },
+        "t_start": {
+         "type": "number"
+        },
+        "t_end": {
+         "type": "number"
+        },
+        "evidence": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "object",
+        "cue",
+        "t_start",
+        "t_end",
+        "evidence"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      },
+      "ObservationUncertainty": {
+       "properties": {
+        "about": {
+         "type": "string"
+        },
+        "question": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "about",
+        "question"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      },
+      "ObservedEvent": {
+       "properties": {
+        "type": {
+         "enum": [
+          "grasp",
+          "release",
+          "carry"
+         ],
+         "type": "string"
+        },
+        "object": {
+         "enum": [
+          "cup",
+          "block",
+          "marker",
+          "tray",
+          "wall",
+          "gripper",
+          "other"
+         ],
+         "type": "string"
+        },
+        "t_start": {
+         "description": "seconds from the start of the video",
+         "type": "number"
+        },
+        "t_end": {
+         "description": "seconds from the start of the video; equal to t_start for an instant",
+         "type": "number"
+        },
+        "evidence": {
+         "description": "what in the video shows it",
+         "type": "string"
+        }
+       },
+       "required": [
+        "type",
+        "object",
+        "t_start",
+        "t_end",
+        "evidence"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      },
+      "ObservedObject": {
+       "properties": {
+        "kind": {
+         "description": "closest kind from the vocabulary",
+         "enum": [
+          "cup",
+          "block",
+          "marker",
+          "tray",
+          "wall",
+          "gripper",
+          "other"
+         ],
+         "type": "string"
+        },
+        "description": {
+         "description": "what it looks like in the video, e.g. 'small white open box'",
+         "type": "string"
+        },
+        "relevant": {
+         "description": "true if the task acts on it or it shapes the motion",
+         "type": "boolean"
+        },
+        "reason": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "kind",
+        "description",
+        "relevant",
+        "reason"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     },
+     "description": "What the model returns (strict schema).",
+     "properties": {
+      "summary": {
+       "description": "one sentence: what the person or robot does",
+       "type": "string"
+      },
+      "objects": {
+       "items": {
+        "$ref": "#/$defs/ObservedObject"
+       },
+       "type": "array"
+      },
+      "events": {
+       "items": {
+        "$ref": "#/$defs/ObservedEvent"
+       },
+       "type": "array"
+      },
+      "care_cues": {
+       "items": {
+        "$ref": "#/$defs/CareCue"
+       },
+       "type": "array"
+      },
+      "uncertainties": {
+       "items": {
+        "$ref": "#/$defs/ObservationUncertainty"
+       },
+       "type": "array"
+      }
+     },
+     "required": [
+      "summary",
+      "objects",
+      "events",
+      "care_cues",
+      "uncertainties"
+     ],
+     "type": "object",
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"care_cues\": [{\"cue\": \"routed around north end of wall instead of straight across to reach tray\", \"evidence\": \"gripper holding cup travels up on left, east above top of wall, then south to tray\", \"object\": \"cup\", \"t_end\": 16.0, \"t_start\": 10.0}, {\"cue\": \"routed around north end of wall instead of straight across to reach tray\", \"evidence\": \"gripper holding blue cube travels east above top of wall then south to tray\", \"object\": \"block\", \"t_end\": 47.0, \"t_start\": 39.0}, {\"cue\": \"routed around north end of wall instead of straight across to reach tray\", \"evidence\": \"gripper holding red cylinder travels up and east above top of wall then south to tray\", \"object\": \"marker\", \"t_end\": 77.0, \"t_start\": 70.0}], \"events\": [{\"evidence\": \"gripper positions over small white-yellow cup on lower left and cup starts moving with gripper\", \"object\": \"cup\", \"t_end\": 8.5, \"t_start\": 8.5, \"type\": \"grasp\"}, {\"evidence\": \"cup moves attached under gripper up, around north end of wall, then south to tray\", \"object\": \"cup\", \"t_end\": 24.0, \"t_start\": 8.5, \"type\": \"carry\"}, {\"evidence\": \"cup remains on left side of dark tray as gripper lifts away\", \"object\": \"cup\", \"t_end\": 24.0, \"t_start\": 24.0, \"type\": \"release\"}, {\"evidence\": \"gripper contacts blue cube in upper left and cube starts moving with gripper\", \"object\": \"block\", \"t_end\": 33.5, \"t_start\": 33.5, \"type\": \"grasp\"}, {\"evidence\": \"blue cube moves with gripper around north end of wall to over the tray\", \"object\": \"block\", \"t_end\": 54.0, \"t_start\": 33.5, \"type\": \"carry\"}, {\"evidence\": \"blue cube remains in tray as gripper lifts away\", \"object\": \"block\", \"t_end\": 54.0, \"t_start\": 54.0, \"type\": \"release\"}, {\"evidence\": \"gripper positions over red cylinder on left and cylinder starts moving with gripper\", \"object\": \"marker\", \"t_end\": 64.0, \"t_start\": 64.0, \"type\": \"grasp\"}, {\"evidence\": \"red cylinder moves with gripper around north end of wall to over the tray\", \"object\": \"marker\", \"t_end\": 82.5, \"t_start\": 64.0, \"type\": \"carry\"}, {\"evidence\": \"red cylinder remains in tray at right side as gripper holds position\", \"object\": \"marker\", \"t_end\": 82.5, \"t_start\": 82.5, \"type\": \"release\"}], \"objects\": [{\"description\": \"gray rectangular robot gripper seen from above\", \"kind\": \"gripper\", \"reason\": \"acts on all objects and carries them to tray\", \"relevant\": true}, {\"description\": \"small white square cup with yellow interior\", \"kind\": \"cup\", \"reason\": \"carried from left side and packed into tray\", \"relevant\": true}, {\"description\": \"small blue cube\", \"kind\": \"block\", \"reason\": \"carried from upper left and packed into tray\", \"relevant\": true}, {\"description\": \"small red standing cylinder\", \"kind\": \"marker\", \"reason\": \"carried from middle left and packed into tray\", \"relevant\": true}, {\"description\": \"dark gray rectangular container on right side\", \"kind\": \"tray\", \"reason\": \"destination where all three objects are placed\", \"relevant\": true}, {\"description\": \"thin light vertical strip dividing table\", \"kind\": \"wall\", \"reason\": \"shapes motion; gripper goes around its north end to cross sides\", \"relevant\": true}], \"summary\": \"A simulated gripper carries a small cup, a blue block, and a red marker one by one from the left side of the table around a central wall into the destination tray on the right.\", \"uncertainties\": [{\"about\": \"wall constraint\", \"question\": \"Is the central strip a forbidden obstacle that must not be touched, or only a divider?\"}, {\"about\": \"placement requirement\", \"question\": \"Is a specific order or position inside the tray required, or only that all three end in the tray?\"}, {\"about\": \"cup handling\", \"question\": \"Must the cup stay upright or level to retain its contents while carried?\"}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 22809,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 3456,
+   "output_tokens_details": {
+    "reasoning_tokens": 2433
+   },
+   "total_tokens": 26265
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 27.509,
+ "recorded_at": "2026-11-01T06:44:20Z"
+}

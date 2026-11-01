@@ -1,0 +1,18 @@
+{
+ "key": "9d3cb8c84e6a38658adf2463cb72e2d33d8b1855dabf98b30ce9c8f2b2e3d1dd",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:4745ca773211f3895d7106eec69d2bdd2d0515a73caf1b5e591aee9b1cddcccd"
+ },
+ "response": {
+  "id": "file-1431155562547357",
+  "bytes": 182269,
+  "status": "uploaded",
+  "filename": "side_reseed_marker_0_13_329.mp4"
+ },
+ "blobs": [],
+ "latency_s": 3.84,
+ "recorded_at": "2026-11-01T06:57:20Z"
+}

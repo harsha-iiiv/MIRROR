@@ -1,0 +1,49 @@
+{
+ "key": "b01872e55cd7f5734189d0734a5e815d0e7a6aa1f5d15567652fccc5cdf85eb6",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "<0f>1<|box;x1=441;y1=120;x2=463;y2=168;w=960;h=540|>"
+     },
+     {
+      "type": "input_video",
+      "file_id": "sha256:e84cf11cdc9e058da82b3256c8452480a360f213d8dd6b9db2094529dcdf0220"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "<0f>1<|box;x1=447;y1=126;x2=458;y2=162;w=960;h=540;c=0.78515625|><|mask;x=0;y=0;c=0.78515625;data=37,12,!!!!!6L?4abNL#6MLI+h(1pVcZffRB|>\n",
+  "model": "sam-3.1",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "video_frames_processed": 65
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 5.791,
+ "recorded_at": "2026-11-01T06:38:34Z"
+}

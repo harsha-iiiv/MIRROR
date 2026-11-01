@@ -1,0 +1,49 @@
+{
+ "key": "f47312a0c77aa152b6280ec0aa9da11ecf2c43a47658ae33475957d77dfcb2b9",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "<0f>1<|box;x1=411;y1=279;x2=437;y2=336;w=960;h=540|>"
+     },
+     {
+      "type": "input_video",
+      "file_id": "sha256:4745ca773211f3895d7106eec69d2bdd2d0515a73caf1b5e591aee9b1cddcccd"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "<0f>1<|box;x1=413;y1=280;x2=437;y2=339;w=960;h=540;c=0.46875|><|mask;x=0;y=0;c=0.46875;data=60,25,!!!!!^I@`L{B@9U@Bfw+/$bt%lq6VRKWJEX4gsso_q:UvA^S&O3j)kQM]LqS:Nc5$7JJ%qtPfI*|>\n<1f>1<|box;x1=413;y1=278;x2=434;y2=338;w=960;h=540;c=0.5905832648277283|><|mask;x=0;y=0;c=0.5905832648277283;data=61,22,!!!!!JI@XMC59l-QR+{0cpOB!)*E4@t0_Gv-7(&O]R7R^C'{wl1|>\n<2f>1<|box;x1=413;y1=278;x2=435;y2=338;w=960;h=540;c=0.5066584348678589|><|mask;x=0;y=0;c=0.5066584348678589;data=61,23,!!!!!MJ:]-lBaY%pZoFGXX:p5J`8%1JT(87iQTrcEw8*FpLs`l[JTZS|>\n<3f>1<|box;x1=413;y1=278;x2=437;y2=337;w=960;h=540;c=0.3786258399486542|><|mask;x=0;y=0;c=0.3786258399486542;data=60,25,!!!!!OIU`90cJ:v2AvcSSWK$]/e-k+&K*vcH@$&qNQ)$`xkWpbyLEa+IpY|>\n<4f>1<|box;x1=413;y1=272;x2=436;y2=337;w=960;h=540;c=0.09977614134550095|><|mask;x=0;y=0;c=0.09977614134550095;data=66,24,!!!!!ZH86R.(g9jEhhG$3'$S?4Su1hs^f@=`Yo$sCR8?_?UA*hsCssd3hyp'L@!!wH`[A3Y|>\n<12f>1<|box;x1=414;y1=276;x2=436;y2=337;w=960;h=540;c=0.027288787066936493|><|mask;x=0;y=0;c=0.027288787066936493;data=62,23,!!!!!WJ:[v)r98#L(6Ba@3H)I+Ln%x:LzJyK:1R!Crj5fZ.gBR%$!4^d#G)yE9O+i!.8|>\n<14f>1<|box;x1=414;y1=275;x2=436;y2=337;w=960;h=540;c=0.005703272297978401|><|mask;x=0;y=0;c=0.005703272297978401;data=63,23,!!!!!^J=MMNWq05z`F5j[4i#b0Jx4FJFinQ.uVC8$n!p`Mf$+9.xP7&^X+5RSaP_A3L^%=N#&oT|>\n",
+  "model": "sam-3.1",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "video_frames_processed": 317
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 25.006,
+ "recorded_at": "2026-11-01T06:57:45Z"
+}

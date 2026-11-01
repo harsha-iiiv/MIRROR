@@ -1,0 +1,99 @@
+{
+ "key": "16dcc917ee73a56270148d3bd4bad997d7e3493d77ed0339e471322eb1fc998c",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "You are an object grounding expert. Provide the bounding box coordinates of the objects in the image: \"the white cup\", \"the blue cube\", \"the red cylinder\", \"the dark grey tray\", \"the wall\", \"the robot gripper\", \"the wooden table\". Ensure the objects accurately match the request and do not miss any objects. For each object, answer in the format {\"object_name\": \"<name>\", \"bbox\": {\"x_min\": <int>, \"y_min\": <int>, \"x_max\": <int>, \"y_max\": <int>}}. The coordinates should be in the 0-1000 range. If you cannot find an object, omit it from the results."
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:1fb8c81bcbf6bc0cff6df4e730f1f0b13c4d6f5b746374027c331ea659e88041"
+     }
+    ]
+   }
+  ],
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "grounding",
+    "schema": {
+     "type": "object",
+     "properties": {
+      "results": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "object_name": {
+          "type": "string"
+         },
+         "bbox": {
+          "type": "object",
+          "properties": {
+           "x_min": {
+            "type": "integer"
+           },
+           "y_min": {
+            "type": "integer"
+           },
+           "x_max": {
+            "type": "integer"
+           },
+           "y_max": {
+            "type": "integer"
+           }
+          },
+          "required": [
+           "x_min",
+           "y_min",
+           "x_max",
+           "y_max"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "object_name",
+         "bbox"
+        ],
+        "additionalProperties": false
+       }
+      }
+     },
+     "required": [
+      "results"
+     ],
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"results\": [{\"bbox\": {\"x_max\": 336, \"x_min\": 280, \"y_max\": 567, \"y_min\": 488}, \"object_name\": \"the white cup\"}, {\"bbox\": {\"x_max\": 446, \"x_min\": 412, \"y_max\": 272, \"y_min\": 215}, \"object_name\": \"the blue cube\"}, {\"bbox\": {\"x_max\": 370, \"x_min\": 341, \"y_max\": 447, \"y_min\": 407}, \"object_name\": \"the red cylinder\"}, {\"bbox\": {\"x_max\": 727, \"x_min\": 586, \"y_max\": 542, \"y_min\": 363}, \"object_name\": \"the dark grey tray\"}, {\"bbox\": {\"x_max\": 527, \"x_min\": 507, \"y_max\": 573, \"y_min\": 0}, \"object_name\": \"the wall\"}, {\"bbox\": {\"x_max\": 411, \"x_min\": 368, \"y_max\": 565, \"y_min\": 390}, \"object_name\": \"the robot gripper\"}, {\"bbox\": {\"x_max\": 823, \"x_min\": 205, \"y_max\": 976, \"y_min\": 44}, \"object_name\": \"the wooden table\"}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 798,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 1123,
+   "output_tokens_details": {
+    "reasoning_tokens": 829
+   },
+   "total_tokens": 1921
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 5.348,
+ "recorded_at": "2026-11-01T06:30:55Z"
+}
