@@ -1,0 +1,18 @@
+{
+ "key": "98a873a339b1af7159017ca3f2952de6b767fa093482b888d17f3776120ced02",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:f47f71d23965e41d5914cc1446e32a431d60286bd5c7e77a10603b0a97b863ba"
+ },
+ "response": {
+  "id": "file-1859694631715981",
+  "bytes": 56443,
+  "status": "uploaded",
+  "filename": "top_reseed_cup_0_31_46.mp4"
+ },
+ "blobs": [],
+ "latency_s": 2.172,
+ "recorded_at": "2026-11-01T02:30:34Z"
+}

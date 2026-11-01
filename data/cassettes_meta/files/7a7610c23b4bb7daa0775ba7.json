@@ -1,0 +1,18 @@
+{
+ "key": "7a7610c23b4bb7daa0775ba73a13d7bf94032b3cd77a9406e813f8baa3542c8a",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:f07d04fb7e5cff66e3446fe5e939e1885a8a68c252e03bd0799dd0ed3a64a634"
+ },
+ "response": {
+  "id": "file-2571122593353758",
+  "bytes": 351950,
+  "status": "uploaded",
+  "filename": "side_sam5fps.mp4"
+ },
+ "blobs": [],
+ "latency_s": 2.938,
+ "recorded_at": "2026-11-01T03:29:20Z"
+}

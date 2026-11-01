@@ -1,0 +1,18 @@
+{
+ "key": "a1d42a942f4d3b6c3b55656df457d462ebacebf789e6157f4430950e8ffebb93",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:25e0c3a3d882164b237ca9fedba5440efa2b18e1eb26e60a0e61533ec4baae55"
+ },
+ "response": {
+  "id": "file-2559791367858820",
+  "bytes": 803052,
+  "status": "uploaded",
+  "filename": "top_sam5fps.mp4"
+ },
+ "blobs": [],
+ "latency_s": 3.818,
+ "recorded_at": "2026-11-01T02:57:17Z"
+}

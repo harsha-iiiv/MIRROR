@@ -1,0 +1,18 @@
+{
+ "key": "c4e91506bf6a0119651a0037a78ad6d9e81178cf6fba3cb1bcbff13b10e4c4f6",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:b0d6bc926d4eea60882f1c9f5f35105dd6b9a8df597a307b15c950fe791f4948"
+ },
+ "response": {
+  "id": "file-1743481393380324",
+  "bytes": 50812,
+  "status": "uploaded",
+  "filename": "top_reseed_marker_0_330_343.mp4"
+ },
+ "blobs": [],
+ "latency_s": 2.291,
+ "recorded_at": "2026-11-01T02:48:48Z"
+}
