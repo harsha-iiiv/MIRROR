@@ -15,6 +15,12 @@ small machine responsive:
   MIRROR_MODEL_CALLS_PER_SESSION per session (default 8). Past either limit,
   or on any model error, the offline rule-based interpreter is used and the
   interface says so.
+* other Meta models, counted per request the studio makes, each with a server
+  hour budget and a session budget:
+    sam   (video tracking)        MIRROR_SAM_CALLS_PER_HOUR / _PER_SESSION     (12 / 2)
+    video (video understanding)   MIRROR_VIDEO_CALLS_PER_HOUR / _PER_SESSION   (12 / 2)
+    voice (speech to text)        MIRROR_VOICE_CALLS_PER_HOUR / _PER_SESSION   (60 / 10)
+  Past a limit the request is refused with a clear message; recordings keep working.
 """
 from __future__ import annotations
 
@@ -141,6 +147,32 @@ class ModelBudget:
             self._by_session.pop(session_id, None)
 
 
+META_BUDGETS = {
+    # kind: (hour env, default, session env, default, what it pays for)
+    "sam": ("MIRROR_SAM_CALLS_PER_HOUR", 12, "MIRROR_SAM_CALLS_PER_SESSION", 2, "video tracking (SAM)"),
+    "video": ("MIRROR_VIDEO_CALLS_PER_HOUR", 12, "MIRROR_VIDEO_CALLS_PER_SESSION", 2, "video understanding"),
+    "voice": ("MIRROR_VOICE_CALLS_PER_HOUR", 60, "MIRROR_VOICE_CALLS_PER_SESSION", 10, "speech to text"),
+}
+
+
+def meta_budgets(clock: Callable[[], float] = time.monotonic) -> dict[str, "ModelBudget"]:
+    out = {}
+    for kind, (h_env, hour, s_env, sess, _what) in META_BUDGETS.items():
+        out[kind] = ModelBudget(per_hour=_env_int(h_env, hour), per_session=_env_int(s_env, sess), clock=clock)
+    return out
+
+
+def budgets_public(budgets: Optional[dict], session_id: Optional[str] = None) -> dict:
+    out = {}
+    for kind, b in (budgets or {}).items():
+        d = {"per_hour": b.per_hour, "remaining_hour": b.remaining_hour(), "per_session": b.per_session,
+             "pays_for": META_BUDGETS.get(kind, ("", 0, "", 0, kind))[4]}
+        if session_id:
+            d["remaining_session"] = b.remaining_session(session_id)
+        out[kind] = d
+    return out
+
+
 class BudgetExceeded(Exception):
     """Raised by BudgetedClient instead of calling the model."""
 
@@ -245,6 +277,7 @@ class SessionManager:
         self.idle_s = float(idle_s if idle_s is not None else _env_int("MIRROR_SESSION_IDLE_S", 1800))
         self.gate = gate or JobGate()
         self.budget = budget or ModelBudget()
+        self.meta_budgets = meta_budgets(clock)
         self.clock = clock
         self.factory = factory or _default_factory
         self._lock = threading.RLock()
@@ -299,6 +332,8 @@ class SessionManager:
             svc = self._sessions.pop(sid, None)
             self._last.pop(sid, None)
         self.budget.forget(sid)
+        for b in self.meta_budgets.values():
+            b.forget(sid)
         if svc is not None and hasattr(svc, "close"):
             svc.close(reason)
 
@@ -314,4 +349,5 @@ class SessionManager:
 
 def _default_factory(sid: str, mgr: SessionManager):
     from .session_adapter import StudioService
-    return StudioService(session_id=sid, gate=mgr.gate, budget=mgr.budget, one_job=True, private_runtime=True)
+    return StudioService(session_id=sid, gate=mgr.gate, budget=mgr.budget, meta_budgets=mgr.meta_budgets,
+                         one_job=True, private_runtime=True)

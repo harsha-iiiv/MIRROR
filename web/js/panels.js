@@ -3,6 +3,7 @@ import { h } from 'preact';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import htm from 'htm';
 import * as api from './api.js';
+import { VideoDemoCard, VideoObservations, MicButton } from './media.js';
 import { MiniMap } from './minimap.js';
 import { fmtT, fmtNum, statusLabel, constraintText, selectorText, provText, sceneLabel, latest, cupOutcome, cap, isAux, isBlockedScene } from './util.js';
 
@@ -55,6 +56,14 @@ function JobLine({ job }) {
   }
   return html`<div class="job" role="status" aria-live="polite">${job.message ? job.message.split('\n')[0] : job.kind}…
     <div class="progress"><div style=${`width:${Math.round(100 * (job.progress || 0.04))}%`}></div></div></div>`;
+}
+
+// The recording behind a spoken correction (recorded sessions keep the audio).
+function SpokenNote({ snap, text }) {
+  const tr = (snap.transcripts || []).slice().reverse().find((t) => t.text && (t.text === text || (snap.models || []).some((m) => m.input === t.id)));
+  if (!tr) return null;
+  return html`<div class="spoken"><span class="muted" style="font-size:12px">Spoken, transcribed by <b>${tr.model}</b> (${tr.source}, ${(tr.latency_s || 0).toFixed(1)} s)${tr.text !== text ? '; the text was edited before applying' : ''}.</span>
+    ${tr.audio_file ? html`<audio controls preload="none" src=${api.mediaUrl(tr.audio_file)}></audio>` : ''}</div>`;
 }
 
 // Says when a step fell back to the offline interpreter, and why.
@@ -295,17 +304,21 @@ function WatchPanel({ ctx }) {
   const { snap } = ctx;
   const [teleop, setTeleop] = useState(false);
   const d = snap.demo;
+  const vd = snap.video_demo && snap.demo && snap.video_demo.trace_source === snap.demo.source ? snap.video_demo : null;
   const sources = { teleop_scripted: 'Scripted teleoperation in simulation', teleop_keyboard: 'Keyboard teleoperation in simulation',
-    replay: 'Replayed trace', video_grounded: 'Human video grounded to simulator objects' };
+    replay: 'Replayed trace', video_grounded: 'Video, reconstructed onto simulator objects' };
   return html`
     <div class="sec">
       <${Head} n="1" kicker="Watch me" title="The demonstration"
-        lede="An operator packs the cup, the block and the marker into the tray, carrying everything around the wall." />
+        lede=${vd ? 'A demonstration video: the objects are tracked in the pixels, reconstructed on the table, and replayed in 3D beside the video.'
+          : 'An operator packs the cup, the block and the marker into the tray, carrying everything around the wall.'} />
       ${d ? html`
         <dl class="kv"><dt>Input</dt><dd>${sources[d.source] || d.source}</dd>
           <dt>Duration</dt><dd class="num">${fmtT(d.duration)}</dd>
           <dt>Layout</dt><dd>${sceneLabel(d.scene_id)}</dd></dl>
-        <p class="faint" style="font-size:12px;margin-top:8px">The demonstration is a recorded simulator trace (gripper and object poses), not video of a person.${d.source_note ? ' ' + d.source_note : ''}</p>
+        ${vd ? html`<p class="faint" style="font-size:12px;margin-top:8px">The 3D replay is reconstructed from the video${vd.views.side ? ' (top view for positions, side view for tilt)' : ' (top view)'}: object poses come from the tracked masks, not from the simulator.${vd.fixture ? ' Fixture data.' : ''}</p>
+          <${VideoObservations} ctx=${ctx} vd=${vd} models=${snap.models} />`
+          : html`<p class="faint" style="font-size:12px;margin-top:8px">The demonstration is a recorded simulator trace (gripper and object poses), not video of a person.${d.source_note ? ' ' + d.source_note : ''}</p>`}
         <h3>Events</h3>
         <ol class="timeline">${(d.events || []).filter((e) => e.type === 'grasp' || e.type === 'release').map((e) => html`
           <li><button onClick=${() => { ctx.setPick('demo'); setTimeout(() => ctx.viewer.current?.setTime(e.t), 60); }}
@@ -323,7 +336,10 @@ function WatchPanel({ ctx }) {
         <div class="row"><button class="btn primary" disabled=${ctx.isStatic || !!ctx.busy.demo}
           onClick=${() => ctx.action('demo', () => api.post('demo/load'))}>Load the reference demonstration</button></div>`}
       <${StaticNote} ctx=${ctx} />
-    </div>`;
+    </div>
+    <div class="sec"><${VideoDemoCard} ctx=${ctx} />
+      ${!ctx.isStatic && vd ? html`<div class="row" style="margin-top:8px"><button class="btn ghost small" disabled=${!!ctx.busy.demo}
+        onClick=${() => ctx.action('demo', () => api.post('demo/load'))}>Back to the recorded teleoperation</button></div>` : ''}</div>`;
 }
 
 // ------------------------------------------------------------ 2 Interpret
@@ -533,6 +549,7 @@ function CorrectPanel({ ctx }) {
   const cv = correctionVersion(snap);
   const rec = cv ? (spec.history || []).find((r) => r.version === cv) : null;
   const [text, setText] = useState('');
+  const [spoken, setSpoken] = useState(null);       // transcript from the mic, if the text came from speech
   const [again, setAgain] = useState(false);
   const job = ctx.busy.correct;
   const before = cv ? specV(snap, cv - 1) || specV(snap, specV(snap, cv)?.parent_version) : null;
@@ -545,7 +562,7 @@ function CorrectPanel({ ctx }) {
   const [reply, setReply] = useState(null);
   const submit = async (t) => {
     setReply(null);
-    const res = await ctx.action('correct', () => api.post('correct', { text: t }));
+    const res = await ctx.action('correct', () => api.post('correct', { text: t, transcript_id: spoken ? spoken.id : null }));
     if (res && (res.question || res.rejected)) setReply(res);
     else if (res && !res.changed) setReply({ rejected: 'That did not change the specification.' });
     else setAgain(false);
@@ -555,11 +572,14 @@ function CorrectPanel({ ctx }) {
     <textarea id="corr" class="corr" placeholder=${snap.reference_correction} value=${text}
       onInput=${(e) => setText(e.target.value)}
       onKeyDown=${(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && text.trim()) submit(text.trim()); }}></textarea>
+    ${spoken ? html`<p class="faint" style="font-size:12px;margin:4px 0 0">${spoken.text === text ? 'Transcribed' : 'Transcribed, then edited'} · ${spoken.model} · ${spoken.source} · ${(spoken.latency_s || 0).toFixed(1)} s for ${spoken.audio_s} s of audio</p>` : ''}
     <div class="row" style="margin-top:8px">
-      <button class="btn ghost small" onClick=${() => setText(snap.reference_correction)}>Use the example sentence</button>
+      ${snap.capabilities?.voice ? html`<${MicButton} ctx=${ctx} disabled=${!!job} onTranscript=${(tr) => { setSpoken(tr); setText(tr.text); }} />` : ''}
+      <button class="btn ghost small" onClick=${() => { setSpoken(null); setText(snap.reference_correction); }}>Use the example sentence</button>
       <span class="spacer"></span>
       <button class="btn primary" disabled=${!text.trim() || !!job} onClick=${() => submit(text.trim())}>Apply correction</button>
     </div>
+    ${ctx.busy.voice ? html`<${JobLine} job=${ctx.busy.voice} />` : ''}
     <${JobLine} job=${job} />
     ${reply?.question ? html`<div class="callout" style="margin-top:10px" role="status"><b>MIRROR needs to know:</b> ${reply.question}
       ${reply.options?.length ? html`<div class="row" style="margin-top:8px">${reply.options.map((o) => html`<button class="btn small"
@@ -571,6 +591,7 @@ function CorrectPanel({ ctx }) {
       <${Head} n="5" kicker="You misunderstood this" title="Correct one rule"
         lede=${cv ? '' : 'Say what was wrong in plain words. MIRROR compiles it into a scoped change to the specification.'} />
       ${cv && rec ? html`<blockquote class="quote">“${rec.text}”<span class="faint"> → spec v${cv}</span></blockquote>` : ''}
+      ${cv && rec ? html`<${SpokenNote} snap=${snap} text=${rec.text} />` : ''}
       <${FallbackNote} snap=${snap} steps=${['correction', 'answer']} />
       ${!ctx.isStatic && (!cv || again) ? input : ''}
       ${!ctx.isStatic && cv && !again ? html`<button class="btn ghost small" onClick=${() => setAgain(true)}>Correct something else</button>` : ''}
@@ -1004,7 +1025,9 @@ function StoryResult({ raw }) {
 export function StoryBar({ ctx }) {
   const order = STEPS.map((x) => x.key);
   const ix = order.indexOf(ctx.step);
-  const st = STORY[ctx.step];
+  const st = ctx.step === 'watch' && ctx.snap.video_demo && ctx.snap.demo?.source === 'video_grounded'
+    ? { title: 'Watch me', text: 'A demonstration video: SAM 3.1 tracks the objects, the trace is reconstructed on the table, and Muse Spark describes what it sees.' }
+    : STORY[ctx.step];
   const act = storyAction(ctx);
   const busy = act?.busy && ctx.busy[act.busy];
   const enabled = stepState(ctx.snap);

@@ -27,8 +27,9 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from .session_adapter import EvaluationFenceError, StudioService, max_eval_seeds, packages_available
-from .sessions import ServerBusy, SessionBusy, SessionExpired, SessionManager, llm_public
+from .session_adapter import (MAX_UPLOAD_MB, EvaluationFenceError, StudioService, max_eval_seeds,
+                              packages_available)
+from .sessions import ServerBusy, SessionBusy, SessionExpired, SessionManager, budgets_public, llm_public
 
 WEB_DIR = Path(__file__).resolve().parents[2] / "web"
 SESSION_HEADER = "X-Mirror-Session"
@@ -37,6 +38,12 @@ VERSION = "0.2"
 
 class CorrectionIn(BaseModel):
     text: str
+    transcript_id: Optional[str] = None
+
+
+class VideoIn(BaseModel):
+    top: str = "bundled"
+    side: Optional[str] = None
 
 
 class DecisionsIn(BaseModel):
@@ -158,6 +165,7 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
         return {"ok": True, "service": "mirror-studio", "version": VERSION,
                 "backend": "fixture" if (not ok or os.environ.get("MIRROR_STUDIO_BACKEND", "").lower() == "fixture") else "live",
                 "llm": llm_public(mgr.budget),
+                "meta_budgets": budgets_public(mgr.meta_budgets),
                 "sessions": mgr.stats(), "jobs": mgr.gate.stats(),
                 "eval": {"max_seeds": max_eval_seeds(), "showcase_seeds": [9000, 9099]},
                 "uptime_s": round(time.time() - started, 1)}
@@ -205,7 +213,7 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
             raise StudioError(422, "invalid", "empty correction")
         if len(text) > 600:
             raise StudioError(422, "invalid", "a correction is one or two sentences (600 characters at most)")
-        return guard(svc.correct, text).public()
+        return guard(svc.correct, text, body.transcript_id).public()
 
     @app.post("/api/run")
     def run(body: RunIn, svc: StudioService = Depends(session)):
@@ -243,6 +251,48 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
         if not body.seeds or len(body.seeds) > cap:
             raise StudioError(422, "too_many_seeds", f"between 1 and {cap} showcase layouts per request")
         return guard(svc.evaluate, body.seeds, body.spec_a, body.spec_b, body.split).public()
+
+    async def read_body(request: Request, limit: int) -> bytes:
+        n = request.headers.get("content-length")
+        if n is not None and n.isdigit() and int(n) > limit:
+            raise StudioError(413, "too_large", f"upload larger than {limit // (1024 * 1024)} MB")
+        data = b""
+        async for chunk in request.stream():
+            data += chunk
+            if len(data) > limit:
+                raise StudioError(413, "too_large", f"upload larger than {limit // (1024 * 1024)} MB")
+        return data
+
+    @app.post("/api/video/upload")
+    async def video_upload(request: Request, view: str = "top", svc: StudioService = Depends(session)):
+        data = await read_body(request, MAX_UPLOAD_MB * 1024 * 1024)
+        try:
+            return await asyncio.to_thread(svc.upload_video, data, view)
+        except ValueError as exc:
+            raise StudioError(422, "invalid_video", str(exc))
+
+    @app.post("/api/video/process")
+    def video_process(body: VideoIn, svc: StudioService = Depends(session)):
+        return guard(svc.process_video, body.top, body.side).public()
+
+    @app.get("/api/video/file/{vid}")
+    def video_file(vid: str, svc: StudioService = Depends(session)):
+        path = guard(svc.video_file, vid)
+        return FileResponse(path, media_type="video/mp4")
+
+    @app.post("/api/voice")
+    async def voice(request: Request, svc: StudioService = Depends(session)):
+        data = await read_body(request, 2 * 1024 * 1024)
+        from .session_adapter import check_wav
+        try:
+            check_wav(data)
+        except ValueError as exc:
+            raise StudioError(422, "invalid_audio", str(exc))
+        return guard(svc.transcribe, data).public()
+
+    @app.get("/api/models")
+    def models(svc: StudioService = Depends(session)):
+        return svc.models_public()
 
     @app.post("/api/teleop/start")
     def teleop_start(svc: StudioService = Depends(session)):

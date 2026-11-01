@@ -85,9 +85,11 @@ _TYPES = {"box": "box", "sphere": "sphere", "cylinder": "cylinder", "capsule": "
           "plane": "plane"}
 
 
-def display_xml(visual: VisualScene, bead_rgba=BEAD_RGBA, wall_alpha: float = WALL_ALPHA) -> str:
+def display_xml(visual: VisualScene, bead_rgba=BEAD_RGBA, wall_alpha: float = WALL_ALPHA,
+                name_geoms: bool = False) -> str:
     """MJCF that draws a VisualScene: static geoms in place, one free body per
-    moving body. Wall segments are drawn with ``wall_alpha`` opacity."""
+    moving body. Wall segments are drawn with ``wall_alpha`` opacity. With
+    ``name_geoms`` every geom keeps its scene name (used for segmentation)."""
     statics, moving = [], []
     nwall = 0
     for body in visual.bodies:
@@ -102,12 +104,15 @@ def display_xml(visual: VisualScene, bead_rgba=BEAD_RGBA, wall_alpha: float = WA
                 rgba, extra = bead_rgba, ' material="bead"'
             elif g.name and "/seg" in g.name:
                 rgba = (*g.rgba[:3], wall_alpha)
-                extra = f' name="display/seg{nwall}"'
+                wname = g.name if name_geoms else f"display/seg{nwall}"
+                extra = f' name="{wname}"'
                 nwall += 1
             elif g.name == "table":
                 rgba = TABLE_RGBA
             elif g.name == "floor":
                 rgba = FLOOR_RGBA
+            if name_geoms and g.name and ' name="' not in extra:
+                extra += f' name="{g.name}"'
             geoms.append(f'<geom type="{t}" size="{_f(g.size)}" pos="{_f(g.pos)}" quat="{_f(g.quat)}" '
                          f'rgba="{_f(rgba)}" contype="0" conaffinity="0"{extra}/>')
         if body.static:

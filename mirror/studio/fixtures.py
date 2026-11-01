@@ -13,6 +13,7 @@ import math
 import time
 import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Optional
 
 import numpy as np
@@ -677,3 +678,137 @@ class FixtureSession:
                 progress(i + 1, len(seeds))
         return {"kind": "fixture", "spec_a": spec_a.version, "spec_b": spec_b.version, "seeds": seeds,
                 "split": "eval", "pairs": pairs, "notes": [FIXTURE_NOTE]}
+
+
+
+# ---------------------------------------------------------------------------
+# Fixture stand-ins for the Meta-model stages (video tracking, video
+# observations, speech to text). Used only by the fixture backend and tests;
+# every output says "fixture". They never stand in for a model on the live
+# backend.
+# ---------------------------------------------------------------------------
+
+FIXTURE_META_MODEL = "fixture (no model)"
+_VID_W, _VID_H, _VID_FPS = 640, 360, 10.0
+_VID_X, _VID_Y = (-0.45, 0.45), (-0.30, 0.30)
+
+
+def _to_px(x: float, y: float) -> tuple[float, float]:
+    """Table-plane metres -> top-view pixels (x to the right, y up the image)."""
+    u = (x - _VID_X[0]) / (_VID_X[1] - _VID_X[0]) * _VID_W
+    v = (1 - (y - _VID_Y[0]) / (_VID_Y[1] - _VID_Y[0])) * _VID_H
+    return u, v
+
+
+def _footprint(kind: str) -> float:
+    return {"cup": 0.035, "block": 0.03, "marker": 0.05}.get(kind, 0.03)
+
+
+class FixtureMeta:
+    """Duck-typed like mirror.studio.meta_bridge, driven by a FixtureSession."""
+
+    def __init__(self, session: "FixtureSession", workdir: Path):
+        self.session = session
+        self.workdir = Path(workdir)
+
+    def available(self) -> dict:
+        return {"perception": True, "observe": True, "voice": True, "bundled_video": _ffmpeg() is not None}
+
+    def bundled_demo(self) -> Optional[dict]:
+        if _ffmpeg() is None:
+            return None
+        path = self.workdir / "fixture_top.mp4"
+        if not path.exists():
+            self._render(path)
+        return {"top": str(path), "side": None, "ground_truth": None, "fixture": True}
+
+    def _render(self, path: Path) -> None:
+        """A synthetic top-down video of the fixture demonstration (shapes on a table)."""
+        import subprocess
+        import tempfile
+        from PIL import Image, ImageDraw
+        s = self.session
+        trace = s.demo or s.record_demo()
+        scene = trace.scene
+        kinds = {o.id: o.kind for o in scene.objects}
+        colors = {"cup": (235, 235, 240), "block": (220, 120, 60), "marker": (60, 120, 220)}
+        tmp = Path(tempfile.mkdtemp(prefix="fxvid-", dir=self.workdir))
+        dur = trace.frames[-1].t
+        n = int(dur * _VID_FPS) + 1
+        for i in range(n):
+            t = i / _VID_FPS
+            fr = min(trace.frames, key=lambda f: abs(f.t - t))
+            im = Image.new("RGB", (_VID_W, _VID_H), (58, 60, 66))
+            d = ImageDraw.Draw(im)
+            for tray in scene.trays:
+                cx, cy = tray.pose.pos[0], tray.pose.pos[1]
+                hx, hy = tray.inner_half
+                a, b = _to_px(cx - hx, cy + hy), _to_px(cx + hx, cy - hy)
+                d.rectangle([a, b], outline=(200, 200, 200), width=3)
+            for ob in scene.obstacles:
+                if ob.kind == "wall":
+                    x, y = ob.pose.pos[0], ob.pose.pos[1]
+                    a, b = _to_px(x - ob.thickness / 2, y + ob.length / 2), _to_px(x + ob.thickness / 2, y - ob.length / 2)
+                    d.rectangle([a, b], fill=(120, 120, 128))
+            for oid, pose in fr.objects.items():
+                r = _footprint(kinds.get(oid, ""))
+                a, b = _to_px(pose.pos[0] - r, pose.pos[1] + r), _to_px(pose.pos[0] + r, pose.pos[1] - r)
+                (d.ellipse if kinds.get(oid) == "cup" else d.rectangle)([a, b], fill=colors.get(kinds.get(oid), (200, 200, 200)))
+            d.text((10, 8), "FIXTURE VIDEO (synthetic)", fill=(255, 210, 0))
+            im.save(tmp / f"f{i:05d}.png")
+        subprocess.run([_ffmpeg(), "-y", "-loglevel", "error", "-framerate", str(_VID_FPS), "-i", str(tmp / "f%05d.png"),
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", str(path)], check=True, timeout=120,
+                       stdin=subprocess.DEVNULL)
+        import shutil
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    def perceive(self, top: str, side: Optional[str] = None, progress=None, ground_truth=None) -> dict:
+        s = self.session
+        trace = s.demo or s.record_demo()
+        kinds = {o.id: o.kind for o in trace.scene.objects}
+        if progress:
+            progress(0.5, "fixture tracking")
+        objects: dict[str, list] = {oid: [] for oid in kinds}
+        last = -1.0
+        for fr in trace.frames:
+            if fr.t - last < 1.0 / _VID_FPS - 1e-6:
+                continue
+            last = fr.t
+            for oid, pose in fr.objects.items():
+                r = _footprint(kinds[oid])
+                (x0, y0), (x1, y1) = _to_px(pose.pos[0] - r, pose.pos[1] + r), _to_px(pose.pos[0] + r, pose.pos[1] - r)
+                cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+                rad = (x1 - x0) / 2
+                poly = [[round(cx + rad * math.cos(a), 1), round(cy + rad * math.sin(a), 1)]
+                        for a in [k * math.pi / 8 for k in range(16)]] if kinds[oid] == "cup" else \
+                    [[round(x0, 1), round(y0, 1)], [round(x1, 1), round(y0, 1)], [round(x1, 1), round(y1, 1)], [round(x0, 1), round(y1, 1)]]
+                objects[oid].append({"t": round(fr.t, 3), "box": [round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)],
+                                     "polygon": poly, "score": 1.0})
+        vt = trace.model_copy(update={"source": "video_grounded", "source_note": FIXTURE_NOTE, "video_path": top})
+        return {"trace": vt, "tracks": {"top": {"fps": _VID_FPS, "width": _VID_W, "height": _VID_H, "objects": objects}},
+                "metrics": None, "model": FIXTURE_META_MODEL, "latency_s": 0.0, "source": "fixture", "calls": []}
+
+    def observe(self, video: str, progress=None, model=None) -> dict:
+        trace = self.session.demo or self.session.record_demo()
+        events = [{"t": round(e.t, 2), "kind": e.type, "object_id": e.object_id, "text": ""} for e in trace.events]
+        cup_t = next((e.t for e in trace.events if e.object_id.startswith("cup") and e.type == "grasp"), 1.0)
+        cues = [{"t": round(cup_t + 0.5, 2), "t_end": round(cup_t + 3.0, 2), "kind": "care", "object_id": "cup_0",
+                 "text": "fixture cue: the cup stays level while carried"}]
+        obs = {"objects": [{"id": o.id, "kind": o.kind, "matters": True, "note": "fixture"} for o in trace.scene.objects],
+               "events": events, "cues": cues, "uncertainties": ["fixture: is the cup's upright transport required?"],
+               "summary": "Fixture observations for interface tests.", "model": FIXTURE_META_MODEL}
+        return {"raw": obs, "observations": obs, "model": FIXTURE_META_MODEL, "latency_s": 0.0, "source": "fixture",
+                "calls": []}
+
+    def propose_with_observations(self, trace, client, observations):
+        return self.session.interpret()
+
+    def transcribe(self, wav: bytes) -> dict:
+        return {"text": "This container must remain upright throughout transport, not just at the destination.",
+                "raw": {"note": "fixture transcript: the audio is not read"}, "model": FIXTURE_META_MODEL,
+                "latency_s": 0.0, "source": "fixture", "calls": []}
+
+
+def _ffmpeg() -> Optional[str]:
+    import shutil
+    return shutil.which("ffmpeg")

@@ -1,0 +1,111 @@
+{
+ "key": "88c4ba30d595b8c611b803ebd1e4eaa28092d8a9cb46f0476deeae0945091d89",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "You are an object grounding expert. You are given 3 images. For each image, provide the bounding box of the named object in that image: image 0: \"the white cup\"; image 1: \"the blue cube\"; image 2: \"the red cylinder\". Coordinates are in the 0-1000 range of that image, (0,0) top-left. Set found=false if the object is not visible in that image."
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:6f49580ece226e7446d608c0f3a1a81e8df4d529de5860c0f1b8edc9874820e5"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:b3cd00dafd4cf77f4c6e389590f9972d1cff5c2c0ebdb2899b1cd059ac4a0336"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:7b8b321d7f7a5b39bf012f55c97980a961b23cebc971fc4a5bdf4700f539f899"
+     }
+    ]
+   }
+  ],
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "boxes",
+    "schema": {
+     "type": "object",
+     "properties": {
+      "boxes": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "image_index": {
+          "type": "integer"
+         },
+         "found": {
+          "type": "boolean"
+         },
+         "bbox": {
+          "type": "object",
+          "properties": {
+           "x_min": {
+            "type": "integer"
+           },
+           "y_min": {
+            "type": "integer"
+           },
+           "x_max": {
+            "type": "integer"
+           },
+           "y_max": {
+            "type": "integer"
+           }
+          },
+          "required": [
+           "x_min",
+           "y_min",
+           "x_max",
+           "y_max"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "image_index",
+         "found",
+         "bbox"
+        ],
+        "additionalProperties": false
+       }
+      }
+     },
+     "required": [
+      "boxes"
+     ],
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"boxes\": [{\"bbox\": {\"x_max\": 706, \"x_min\": 370, \"y_max\": 631, \"y_min\": 306}, \"found\": true, \"image_index\": 0}, {\"bbox\": {\"x_max\": 718, \"x_min\": 405, \"y_max\": 427, \"y_min\": 185}, \"found\": true, \"image_index\": 1}, {\"bbox\": {\"x_max\": 735, \"x_min\": 465, \"y_max\": 593, \"y_min\": 308}, \"found\": true, \"image_index\": 2}]}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 1152,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 1622,
+   "output_tokens_details": {
+    "reasoning_tokens": 1481
+   },
+   "total_tokens": 2774
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 7.08,
+ "recorded_at": "2026-10-31T23:00:51Z"
+}

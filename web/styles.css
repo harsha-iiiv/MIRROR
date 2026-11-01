@@ -322,3 +322,52 @@ svg.chart .ax { font: 10px var(--mono); fill: var(--faint); }
 .banner .live-note { padding: 0; background: none; border: 0; }
 .live-note a.btn { text-decoration: none; color: var(--text); }
 .live-switch { flex: none; }
+
+/* ---------- video demonstration ---------- */
+.vpip { position: absolute; left: var(--s3); bottom: 72px; width: min(42%, 520px); margin: 0; z-index: 4; background: var(--surface);
+  border: 1px solid var(--line-strong); border-radius: var(--r-md); overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+.vpip.big { width: min(70%, 900px); }
+.vpip-media { position: relative; aspect-ratio: 16 / 9; background: #000; }
+.vpip-media video, .vpip-media canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.vpip-err { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: 12px; }
+.vpip figcaption { display: flex; align-items: center; gap: 4px; padding: 4px 6px; font-size: var(--fs-xs); }
+.vpip-title { flex: 1; color: var(--muted); }
+.vpip .iconbtn { height: 24px; padding: 0 8px; font-size: var(--fs-xs); }
+.credits { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+.src { font-size: 11px; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--line-strong); white-space: nowrap; }
+.src.live { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+.src.recorded { color: var(--muted); }
+.src.fixture, .src.offline { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 50%, transparent); }
+.otl { margin: 10px 0 4px; }
+.otl-row { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 6px; height: 22px; }
+.otl-lab { font-size: 11px; font-weight: 600; }
+.otl-track { position: relative; height: 14px; border-radius: 4px; background: var(--viewer); }
+.otl-cue { position: absolute; top: 1px; height: 12px; border: 1px solid; border-radius: 3px; padding: 0; cursor: pointer; min-width: 6px; }
+.otl-ev { position: absolute; top: -2px; width: 14px; margin-left: -7px; height: 18px; border: 0; padding: 0; cursor: pointer; background: none; }
+.otl-ev::before { content: ''; position: absolute; left: 2px; top: 4px; width: 10px; height: 10px; background: var(--c);
+  transform: rotate(45deg); border: 2px solid var(--surface); box-sizing: border-box; }
+.otl-ev.release::before { background: var(--surface); border-color: var(--c); }
+.otl-ev:focus-visible::before { outline: 2px solid var(--accent); }
+.otl-axis { display: flex; justify-content: space-between; margin-left: 58px; font-size: 10px; color: var(--faint); font-family: var(--mono); }
+.objs { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+.objs li { display: flex; gap: 6px; align-items: baseline; padding: 2px 0; }
+.objs i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; flex: none; }
+ul.plain { padding-left: 18px; margin: 4px 0; font-size: 13px; }
+.vdc .vdc-files { display: grid; gap: 6px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+.vdc .vdc-files label { display: grid; gap: 2px; }
+.vdc .vdc-files .btn { justify-self: start; }
+/* ---------- voice ---------- */
+.mic-wrap { display: inline-flex; align-items: center; gap: 8px; }
+.btn.mic { display: inline-flex; align-items: center; gap: 6px; touch-action: none; user-select: none; }
+.btn.mic.recording { background: var(--bad); color: #fff; border-color: var(--bad); }
+.spoken { display: grid; gap: 4px; margin: -4px 0 10px; }
+.spoken audio { height: 30px; width: 100%; max-width: 360px; }
+/* ---------- models ---------- */
+.about.models { width: min(640px, calc(100% - 32px)); max-height: 70vh; overflow: auto; }
+.mtab { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mtab th { text-align: left; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--line); padding: 4px 6px; }
+.mtab td { border-bottom: 1px solid var(--line); padding: 6px; vertical-align: top; }
+.mtab td .faint { font-size: 11px; }
+.iconbtn .cnt { font-size: 10px; color: var(--muted); }
+.otl-cue.carry { border-style: dashed; opacity: .7; }
+.metrics-line { font-size: 12px; color: var(--muted); margin: 6px 0 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--r-sm, 6px); }

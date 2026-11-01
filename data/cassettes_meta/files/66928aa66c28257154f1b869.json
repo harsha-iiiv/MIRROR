@@ -7,12 +7,12 @@
   "file": "sha256:0a68d38ba876866a77c7141b217783298319333a71bbdce44b6b8a1f06ca1b1e"
  },
  "response": {
-  "id": "file-1650892453082445",
+  "id": "file-1109615018444642",
   "bytes": 813161,
   "status": "uploaded",
   "filename": "side.mp4"
  },
  "blobs": [],
- "latency_s": 3.789,
- "recorded_at": "2026-10-31T22:28:59Z"
+ "latency_s": 3.07,
+ "recorded_at": "2026-10-31T22:38:50Z"
 }

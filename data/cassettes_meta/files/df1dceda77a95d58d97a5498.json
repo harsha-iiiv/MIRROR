@@ -1,0 +1,18 @@
+{
+ "key": "df1dceda77a95d58d97a5498e76c70dd8c21e3b593c658af28d9c175b304fefd",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:68480aeeb35c9e0b8e0c88129eccdb1fe256afc9c39b9edf84f4e4a4965b35eb"
+ },
+ "response": {
+  "id": "file-1483671880346661",
+  "bytes": 788992,
+  "status": "uploaded",
+  "filename": "side.mp4"
+ },
+ "blobs": [],
+ "latency_s": 2.699,
+ "recorded_at": "2026-11-01T00:30:03Z"
+}

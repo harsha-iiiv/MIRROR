@@ -175,6 +175,24 @@ export function prefetch(ids) {
 export function forgetRollouts() { rolloutCache.clear(); }
 export function forget(id) { rolloutCache.delete(id); }
 
+export async function postBinary(path, blob, type) {
+  if (isStatic) throw new Error('These are recordings: actions need the live simulation.');
+  const r = await request(path, { method: 'POST', headers: { 'Content-Type': type }, body: blob });
+  return r.json();
+}
+
+export async function getJSONApi(path) { return (await request(path)).json(); }
+
+// Playable URL of a demonstration video: a file in the recorded site, or the session's file on the server.
+export function videoUrl(v) {
+  if (!v) return '';
+  if (isStatic) return v.file ? base + 'media/' + v.file : '';
+  return apiUrl(config, `video/file/${encodeURIComponent(v.id)}`) + '?session=' + encodeURIComponent(session || '');
+}
+
+// A recorded audio file (static site only).
+export function mediaUrl(file) { return file ? base + 'media/' + file : ''; }
+
 export async function post(path, body = {}) {
   if (isStatic) throw new Error('These are recordings: actions need the live simulation.');
   const r = await request(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });

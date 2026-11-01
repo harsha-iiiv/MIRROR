@@ -1,0 +1,49 @@
+{
+ "key": "1173636b355abf907b88c773dbe3a282ec7003b480a9ed915251da02478f408c",
+ "model": "sam-3.1",
+ "endpoint": "/responses#stream",
+ "request": {
+  "model": "sam-3.1",
+  "stream": true,
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "<0f>1<|box;x1=215;y1=235;x2=784;y2=474;w=960;h=540|>,2<|point;x=450;y=358;w=960;h=540|>"
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:549a77993f45fb9729e5f10d32ead17be5d7cbc507b8062c16f9616dc4a76323"
+     }
+    ]
+   }
+  ],
+  "metadata": {
+   "mask_encoding": "one_bit",
+   "include_confidence": "true"
+  }
+ },
+ "response": {
+  "text": "<0f>1<|box;x1=216;y1=236;x2=783;y2=473;w=960;h=540;c=0.98046875|><|mask;x=0;y=0;c=0.98046875;data=238,568,!!!!'LA)80JLkhw0+BFtp4L31.y5[28VFB01pF))lM544DR2&Zf#pH=Y+)no*XcCOt.QzX.szImFd5=ks1o(ip48qD:[r$mZ0wJl2x9iCrIRlHPCjpVb@e3ldDzJX9p7=pz6Y.7mcZiJ`i{*KHN(7GjFtv!eG$=(M8_yeNraa*TM=BVumZw&vCC4kmc$k?$tzjX@L+_S!2%{2OCZ4ARd=?X[p#0w7R`aVvwEO_/P8ve$rcmzn!e(wqfum.@39XBE^C&T&_3xZoAIOm0@HvNEu1VGz`0tz`Lef/+lo9YWCRs%tN?udHnIS7.*Hhm[Ib8?8pu'[fI-.u**yMIZFl#(]H=.Xt26Z(9tn'4&ktfcUG`XCq%8y4OMGDjugaElO^W@PSVPt4Qr:nhk9Sc{W.lz'C$^2?REwgS?a=YwTOBS(Ei.o`ZQV$1x8ndt%193o[Cw$.Zr:k]F0ow`JI[q7cd%twJJ?+duDOh/XmO5c3G8`+I^y1Y04)gTISklln+s52rsEuL#vaOHGCUERN7(*zMO7Lx0glL[*x!Fhtc`=+%837l`Vi?@(J?B8l&BiRd_F`w.M!iI!)GF9|>,2<|box;x1=217;y1=236;x2=761;y2=459;w=960;h=540;c=0.94921875|><|mask;x=0;y=0;c=0.94921875;data=224,545,!!!!%]A*jq:mlO]qEEBm1]C/VCmC.s1.I8DHYakWo`3A0??^1=8[lVqQ)qIRQhGUZ.T(-YtHI#O:TwQb+j1#1j24k{Vo#zQNJ4VUx'Y&J)c)iy)kvRU_Z=lVeE70?lVQHd8j@hvK8lvP3HBF4f@j).{P1WW%Z15xw#PE*X(Wf.z_5MkV?5c$pDY5(pnRLRTU6#fkfCZS.b4)ijn0:_A(l8@c9lmj8L395e]7b[f%1ojhJ2P`tQHuCE/pnwfA.%n2#)'U)A.f[5-nAlgHplbv4]Cgum%VwEZp9i'`u3nY+HB)rY6Pck:ws67IWPQ{LYfGe#].V$^+NE`wt:'7r`]%uAe2El6?U.Ol^!`VN3R&!G-7Ko+vQD`f?I{eh)yc$_@-eIUnDW{!!|>\n",
+  "model": "sam-3.1",
+  "usage": {
+   "images_processed": 1,
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 0.671,
+ "recorded_at": "2026-10-31T22:48:00Z"
+}

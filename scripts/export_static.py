@@ -128,6 +128,13 @@ def write_site(svc: StudioService, out: Path, steps: list[dict], extra: dict) ->
     snap = svc.snapshot()
     snap["jobs"] = []
     snap["static"] = True
+    # The site replays recordings: calls that were live while recording are recorded responses here.
+    for m in snap.get("models") or []:
+        if m.get("source") == "live":
+            m["source"], m["recorded_live"] = "recorded", True
+    for tr in snap.get("transcripts") or []:
+        if tr.get("source") == "live":
+            tr["source"] = "recorded"
     media = data / "media"
     vd = snap.get("video_demo")
     if vd:

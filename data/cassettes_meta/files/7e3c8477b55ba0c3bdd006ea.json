@@ -1,0 +1,18 @@
+{
+ "key": "7e3c8477b55ba0c3bdd006ea5ac156a619b2b18edaf1554ac2c45242f165e4ee",
+ "model": "files",
+ "endpoint": "/files",
+ "request": {
+  "purpose": "user_data",
+  "file": "sha256:af1c816091344ee9ee60ead46be530c27bcc304dd2de0350539ecf1793d0489e"
+ },
+ "response": {
+  "id": "file-1669509098247510",
+  "bytes": 33374,
+  "status": "uploaded",
+  "filename": "side_reseed_marker_0_985_1041.mp4"
+ },
+ "blobs": [],
+ "latency_s": 1.752,
+ "recorded_at": "2026-11-01T00:31:44Z"
+}

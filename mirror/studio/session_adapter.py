@@ -265,7 +265,64 @@ class Job:
 
 
 # Jobs that run the simulator (the expensive part); they share the server's job gate.
-SIM_JOB_KINDS = {"run", "clarify", "evaluate"}
+SIM_JOB_KINDS = {"run", "clarify", "evaluate", "video"}
+
+MAX_UPLOAD_MB = 40          # per video file
+MAX_VIDEO_S = 90.0
+MAX_WAV_S = 30.0
+
+
+def _probe_video(path: Path) -> dict:
+    """Duration and size from ffprobe when it is installed (best effort)."""
+    import shutil
+    import subprocess
+    exe = shutil.which("ffprobe")
+    if not exe:
+        return {}
+    try:
+        r = subprocess.run([exe, "-v", "error", "-select_streams", "v:0", "-show_entries",
+                            "stream=width,height,r_frame_rate:format=duration", "-of", "json", str(path)],
+                           capture_output=True, text=True, timeout=20, stdin=subprocess.DEVNULL)
+        d = json.loads(r.stdout or "{}")
+        st = (d.get("streams") or [{}])[0]
+        num, _, den = (st.get("r_frame_rate") or "0/1").partition("/")
+        fps = float(num) / float(den or 1) if float(den or 1) else None
+        return {"duration": float(d.get("format", {}).get("duration") or 0) or None,
+                "width": st.get("width"), "height": st.get("height"), "fps": round(fps, 3) if fps else None}
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def _video_meta(tr: Optional[dict]) -> dict:
+    tr = tr or {}
+    return {"fps": tr.get("fps"), "width": tr.get("width"), "height": tr.get("height")}
+
+
+def check_wav(data: bytes) -> dict:
+    """Accept only 16 kHz mono 16-bit PCM WAV of at most MAX_WAV_S seconds."""
+    import struct
+    if len(data) < 44 or data[:4] != b"RIFF" or data[8:12] != b"WAVE":
+        raise ValueError("expected a WAV file (RIFF/WAVE)")
+    pos, fmt, size = 12, None, None
+    while pos + 8 <= len(data):
+        cid, clen = data[pos:pos + 4], struct.unpack("<I", data[pos + 4:pos + 8])[0]
+        if cid == b"fmt ":
+            fmt = struct.unpack("<HHIIHH", data[pos + 8:pos + 24])
+        elif cid == b"data":
+            size = min(clen, len(data) - pos - 8)
+            break
+        pos += 8 + clen + (clen & 1)
+    if fmt is None or size is None:
+        raise ValueError("WAV without fmt or data chunk")
+    audio_format, channels, rate, _br, _align, bits = fmt
+    if audio_format != 1 or channels != 1 or rate != 16000 or bits != 16:
+        raise ValueError("WAV must be 16 kHz, mono, 16-bit PCM")
+    seconds = size / (rate * 2)
+    if seconds > MAX_WAV_S:
+        raise ValueError(f"recording longer than {MAX_WAV_S:.0f} s")
+    if seconds < 0.2:
+        raise ValueError("recording too short")
+    return {"seconds": round(seconds, 2)}
 
 
 def _is_model_error(exc: BaseException) -> bool:
@@ -286,7 +343,8 @@ def _budget_exc():
 
 class StudioService:
     def __init__(self, backend: Optional[str] = None, *, session_id: Optional[str] = None, gate=None,
-                 budget=None, one_job: bool = False, private_runtime: bool = False):
+                 budget=None, meta_budgets: Optional[dict] = None, one_job: bool = False,
+                 private_runtime: bool = False):
         backend = (backend or os.environ.get("MIRROR_STUDIO_BACKEND", "auto")).lower()
         ok, missing = packages_available()
         self.missing = missing
@@ -322,7 +380,12 @@ class StudioService:
         self.budget = budget          # shared model-call budget (public server)
         self.one_job = one_job        # refuse a second job while one is queued or running
         self.private_runtime = private_runtime
+        self.meta_budgets = meta_budgets or {}
         self.closed = False
+        self.model_log: list[dict] = []      # which model produced each artifact (Models panel)
+        self.video_demo: Optional[dict] = None
+        self.uploads: dict[str, dict] = {}
+        self.transcripts: dict[str, dict] = {}
         if self.mode == "live" and (gate is not None or budget is not None):
             from .sessions import make_client
             client = make_client(budget, session_id or "local")
@@ -435,6 +498,7 @@ class StudioService:
                 s.record_demo()
             self.demo_rollout = self._make_demo_rollout()
             self.payload_cache.pop("demo", None)
+            self.video_demo = None
             self._changed()
             return self.snapshot()
 
@@ -482,9 +546,13 @@ class StudioService:
             with self.lock:
                 if self.session.demo is None:
                     self.load_demo()
+                t0, mark = time.time(), self._llm_mark()
                 spec, fb = self._with_fallback(self.session.interpret, job)
                 if fb:
                     self.fallbacks.append({"step": "interpret", "used": fb, "version": spec.version})
+                lat, tok = self._llm_latency(mark, t0)
+                self._log_model(f"specification v{spec.version}", "proposes the task from the demonstration",
+                                spec.interpreter, lat, self._client_source(fb), tokens=tok)
             return {"version": spec.version, "fallback": fb}
         return self.submit("interpret", {}, work)
 
@@ -527,15 +595,28 @@ class StudioService:
             self._changed()
             return self.snapshot()
 
-    def correct(self, text: str) -> Job:
+    def correct(self, text: str, transcript_id: Optional[str] = None) -> Job:
+        if transcript_id is not None and transcript_id not in self.transcripts:
+            raise KeyError(f"transcript {transcript_id}")
+
         def work(job):
             self._progress(job, 0.1, "Compiling the correction")
             with self.lock:
                 before = self.session.spec.version
                 try:
+                    t0, mark = time.time(), self._llm_mark()
                     (spec, record), fb = self._with_fallback(lambda: self.session.correct(text), job)
                     if fb:
                         self.fallbacks.append({"step": "correction", "used": fb, "version": spec.version})
+                    if spec.version != before:
+                        rec_model = getattr(record, "model", None) or (record.get("model") if isinstance(record, dict) else None)
+                        tr = self.transcripts.get(transcript_id) if transcript_id else None
+                        self._log_model(f"specification v{spec.version}",
+                                        "compiles the correction" + (" (spoken, transcript edited)" if tr and tr["text"] != text
+                                                                     else " (spoken)" if tr else " (typed)"),
+                                        rec_model or self._client_label(), *self._llm_latency(mark, t0)[:1],
+                                        self._client_source(fb), input=transcript_id,
+                                        tokens=self._llm_latency(mark, t0)[1])
                 except Exception as exc:  # noqa: BLE001 - typed outcomes from the interpreter
                     name = type(exc).__name__
                     if name == "NeedsClarification":
@@ -563,7 +644,248 @@ class StudioService:
                             self.rechecks.append({"rollout_id": rid, "spec_version": spec.version,
                                                   "error": str(exc)})
                 return result
-        return self.submit("correct", {"text": text}, work)
+        return self.submit("correct", {"text": text, "transcript_id": transcript_id}, work)
+
+    # ------------------------------------------------- models and Meta stages
+    def _client_label(self) -> str:
+        c = getattr(self.session, "client", None)
+        return getattr(c, "label", None) or ("fixture" if self.mode == "fixture" else "unknown")
+
+    def _client_source(self, fallback: Optional[str] = None) -> str:
+        if self.mode == "fixture":
+            return "fixture"
+        if fallback:
+            return "offline rules (fallback)"
+        c = getattr(self.session, "client", None)
+        mode = getattr(c, "mode", None) or os.environ.get("MIRROR_LLM_MODE") or "offline"
+        return {"live": "live", "record": "live", "replay": "recorded"}.get(mode, "offline rules")
+
+    def _llm_mark(self) -> int:
+        c = getattr(self.session, "client", None)
+        return len(getattr(c, "usage", None) or [])
+
+    def _llm_latency(self, mark: int, t0: float) -> tuple[Optional[float], Optional[int]]:
+        """Latency and tokens of the model calls since ``mark``. For a replayed
+        recording, the latency measured when it was recorded (from the usage log
+        named by MIRROR_LLM_USAGE_LOG), or None if unknown."""
+        c = getattr(self.session, "client", None)
+        new = (getattr(c, "usage", None) or [])[mark:]
+        if not new:
+            return time.time() - t0, None
+        tokens = sum(int(e.get("total_tokens") or 0) for e in new) or None
+        live = [e for e in new if not e.get("from_cassette")]
+        if live:
+            return sum(float(e.get("latency_s") or 0) for e in live), tokens
+        log = os.environ.get("MIRROR_LLM_USAGE_LOG")
+        if log and Path(log).exists():
+            want = {e.get("key") for e in new}
+            got = {}
+            for line in Path(log).read_text().splitlines():
+                try:
+                    r = json.loads(line)
+                except ValueError:
+                    continue
+                if r.get("key") in want and not r.get("from_cassette"):
+                    got[r["key"]] = float(r.get("latency_s") or 0)
+            if want and want <= set(got):
+                return sum(got.values()), tokens
+        return None, tokens
+
+    def _log_model(self, artifact: str, role: str, model: Optional[str], latency_s: float, source: str,
+                   **extra) -> dict:
+        entry = {"artifact": artifact, "role": role, "model": model or "unknown",
+                 "latency_s": round(float(latency_s), 3) if latency_s is not None else None,
+                 "source": source, "at": time.time(),
+                 **{k: v for k, v in extra.items() if v is not None}}
+        self.model_log.append(entry)
+        return entry
+
+    def _meta(self):
+        if self.mode == "fixture":
+            from .fixtures import FixtureMeta
+            if not hasattr(self, "_fixture_meta"):
+                self._fixture_meta = FixtureMeta(self.session, self._runtime_dir())
+            return self._fixture_meta
+        from . import meta_bridge
+        return meta_bridge
+
+    def capabilities(self) -> dict:
+        now = time.time()
+        if getattr(self, "_cap_cache", None) and now - self._cap_cache[0] < 30:
+            return dict(self._cap_cache[1])
+        try:
+            cap = self._meta().available()
+        except Exception:  # noqa: BLE001
+            cap = {"perception": False, "observe": False, "voice": False, "bundled_video": False}
+        cap["video"] = bool(cap.get("perception") and cap.get("observe"))
+        self._cap_cache = (now, dict(cap))
+        return cap
+
+    def _spend(self, kind: str, n: int = 1) -> None:
+        """Take budget for a Meta-model request on the public server; refuse clearly when used up."""
+        b = self.meta_budgets.get(kind)
+        if b is None or self.mode == "fixture":
+            return
+        for _ in range(n):
+            why = b.take(self.session_id or "local")
+            if why:
+                raise RuntimeError(f"{why.capitalize()}. The recorded demonstration and typing still work.")
+
+    def upload_video(self, data: bytes, view: str = "top") -> dict:
+        if view not in ("top", "side"):
+            raise ValueError("view must be top or side")
+        if len(data) > MAX_UPLOAD_MB * 1024 * 1024:
+            raise ValueError(f"video larger than {MAX_UPLOAD_MB} MB")
+        if len(data) < 64 or data[4:8] != b"ftyp":
+            raise ValueError("not an MP4 video (expected an ISO media 'ftyp' header)")
+        vid = "v" + uuid.uuid4().hex[:10]
+        path = self._runtime_dir() / f"{vid}.mp4"
+        path.write_bytes(data)
+        info = _probe_video(path)
+        if info.get("duration") and info["duration"] > MAX_VIDEO_S:
+            path.unlink(missing_ok=True)
+            raise ValueError(f"video longer than {MAX_VIDEO_S:.0f} s")
+        self.uploads[vid] = {"id": vid, "path": str(path), "view": view, "bytes": len(data), **info}
+        return {k: v for k, v in self.uploads[vid].items() if k != "path"}
+
+    def video_file(self, vid: str) -> str:
+        if vid == "bundled-top" or vid == "bundled-side":
+            b = self._meta().bundled_demo() or {}
+            p = b.get(vid.split("-")[1])
+            if not p:
+                raise KeyError(vid)
+            return str(p)
+        return self.uploads[vid]["path"]
+
+    def process_video(self, top: str = "bundled", side: Optional[str] = None) -> Job:
+        """Video demonstration -> tracks (SAM) -> observations -> Muse Spark proposal -> new session."""
+        cap = self.capabilities()
+        if not cap["video"]:
+            raise RuntimeError("video demonstrations are not available on this server")
+        meta = self._meta()
+        gt = None
+        if top == "bundled":
+            b = meta.bundled_demo()
+            if not b:
+                raise RuntimeError("no bundled demonstration video on this server")
+            top_id, top_path = "bundled-top", b["top"]
+            side_id, side_path = ("bundled-side", b["side"]) if b.get("side") and side in (None, "bundled") else (None, None)
+            gt = b.get("ground_truth")
+        else:
+            top_id, top_path = top, self.video_file(top)
+            side_id, side_path = (side, self.video_file(side)) if side else (None, None)
+        self._spend("sam", 2 if side_path else 1)
+        self._spend("video", 1)
+
+        def work(job):
+            def stage(lo, hi):
+                def cb(*a, **k):
+                    frac = next((x for x in a if isinstance(x, (int, float))), None)
+                    msg = next((x for x in a if isinstance(x, str)), k.get("message", ""))
+                    self._progress(job, lo + (hi - lo) * max(0.0, min(1.0, float(frac or 0))), msg or job.message)
+                return cb
+            self._progress(job, 0.03, "Tracking the objects in the video (SAM 3.1)")
+            per = meta.perceive(top_path, side_path, progress=stage(0.03, 0.45), ground_truth=gt)
+            self._progress(job, 0.46, "Reading the video: objects, grasps, releases, care")
+            obs = meta.observe(top_path, progress=stage(0.46, 0.8))
+            self._progress(job, 0.82, "Proposing the task from the reconstruction and the observations")
+            with self.lock:
+                self._reset_session()
+                trace = per["trace"]
+                self.session.demo = trace
+                self.session.scene = trace.scene
+                self.session._event("demo_loaded", demo_id=trace.demo_id, source=trace.source)
+                t0, mark = time.time(), self._llm_mark()
+                spec, fb = self._with_fallback(lambda: meta.propose_with_observations(trace, getattr(self.session, "client", None)
+                                                                                      if self.mode == "fixture" else self.session._client(),
+                                                                                      obs["raw"]), job)
+                if not self.session.specs or self.session.specs[-1] is not spec:
+                    self.session.specs = [spec]
+                if fb:
+                    self.fallbacks.append({"step": "interpret", "used": fb, "version": spec.version})
+                views = ["top"] + (["side"] if side_path else [])
+                pcalls = per.get("calls") or []
+                ground = [c for c in pcalls if not str(c.get("model") or "").startswith("sam")]
+                samc = [c for c in pcalls if str(c.get("model") or "").startswith("sam")]
+                if ground:
+                    self._log_model("object grounding (first frame)", "finds the table, tray, wall and objects to track",
+                                    ground[0]["model"], sum(float(c.get("latency_s") or 0) for c in ground),
+                                    "live" if any(c["source"] == "live" for c in ground) else "recorded", calls=len(ground))
+                self._log_model("object tracks (" + " + ".join(views) + " view)", "tracks objects in the video",
+                                per.get("model"), sum(float(c.get("latency_s") or 0) for c in samc) if samc else per.get("latency_s", 0.0),
+                                ("live" if any(c["source"] == "live" for c in samc) else "recorded") if samc else per.get("source", "unknown"),
+                                calls=len(samc) or None)
+                self._log_model("video observations", "objects that matter, grasps, releases, care cues",
+                                obs.get("model"), obs.get("latency_s", 0.0), obs.get("source", "unknown"),
+                                calls=len(obs.get("calls") or []))
+                lat, tok = self._llm_latency(mark, t0)
+                self._log_model(f"specification v{spec.version}", "proposes the task from the video reconstruction",
+                                spec.interpreter, lat, self._client_source(fb), tokens=tok)
+                self.demo_rollout = self._make_demo_rollout()
+                self.payload_cache.pop("demo", None)
+                self.video_demo = {
+                    "views": {"top": {"id": top_id, **_video_meta(per["tracks"].get("top"))},
+                              **({"side": {"id": side_id, **_video_meta(per["tracks"].get("side"))}} if side_id else {})},
+                    "tracks": per["tracks"], "observations": obs["observations"], "metrics": per.get("metrics"),
+                    "checks": per.get("checks"), "reconstruction_s": per.get("latency_s"),
+                    "bundled": top == "bundled", "fixture": self.mode == "fixture",
+                    "trace_source": trace.source, "spec_version": spec.version,
+                }
+                self._changed()
+            return {"version": spec.version, "fallback": fb}
+        return self.submit("video", {"top": top_id, "side": side_id}, work)
+
+    def _reset_session(self) -> None:
+        """Start a fresh pipeline session (a new demonstration replaces the old story)."""
+        if self.mode == "fixture":
+            from .fixtures import FixtureSession
+            new = FixtureSession()
+            new.record_demo()
+            if hasattr(self, "_fixture_meta"):
+                self._fixture_meta.session = new
+        else:
+            from ..pipeline import Session
+            new = Session()
+            new.client = getattr(self.session, "client", None)
+        self.session = new
+        self.tags.clear()
+        self.rechecks = []
+        self.evaluation = None
+        self.clarification = None
+        self.payload_cache.clear()
+        self.trace_cache.clear()
+        self.scene_seq = 0
+
+    def transcribe(self, wav: bytes) -> Job:
+        info = check_wav(wav)
+        meta = self._meta()
+        if not self.capabilities().get("voice"):
+            raise RuntimeError("speech to text is not available on this server")
+        self._spend("voice", 1)
+
+        def work(job):
+            self._progress(job, 0.2, "Transcribing (Muse voice)")
+            res = meta.transcribe(wav)
+            tid = "t" + uuid.uuid4().hex[:8]
+            (self._runtime_dir() / f"{tid}.wav").write_bytes(wav)     # kept for recorded sessions (export)
+            rec = {"id": tid, "text": res["text"], "model": res.get("model"), "latency_s": res.get("latency_s"),
+                   "source": res.get("source"), "audio_s": info["seconds"], "at": time.time()}
+            self.transcripts[tid] = rec
+            self._log_model("transcript", "speech to text", res.get("model"), res.get("latency_s", 0.0),
+                            res.get("source", "unknown"), id=tid)
+            self._changed()
+            return rec
+        return self.submit("voice", {"seconds": info["seconds"]}, work)
+
+    def transcript_audio(self, tid: str) -> Optional[str]:
+        p = self._runtime_dir() / f"{tid}.wav"
+        return str(p) if p.exists() else None
+
+    def models_public(self) -> dict:
+        from .sessions import budgets_public, llm_public
+        return {"artifacts": self.model_log,
+                "budgets": {"interpreter": llm_public(self.budget, self.session_id) if self.budget is not None else None,
+                            **budgets_public(self.meta_budgets, self.session_id)}}
 
     def run(self, spec_version: Optional[int] = None, condition: str = "", tags: Optional[list[str]] = None) -> Job:
         def work(job):
@@ -1043,6 +1365,10 @@ class StudioService:
                 "teleop_available": self.mode == "live",
                 "llm_mode": os.environ.get("MIRROR_LLM_MODE") or ("live" if os.environ.get("MODEL_API_KEY") else "offline"),
                 "llm": self._llm_public(),
+                "models": self.model_log,
+                "video_demo": self.video_demo,
+                "transcripts": list(self.transcripts.values())[-10:],
+                "capabilities": self.capabilities(),
                 "fallbacks": self.fallbacks,
                 "limits": {"max_eval_seeds": max_eval_seeds(), "one_job_at_a_time": self.one_job,
                            "showcase_seeds": [SHOWCASE_SEEDS.start, SHOWCASE_SEEDS.stop - 1]},

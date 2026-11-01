@@ -1,0 +1,31 @@
+{
+ "what": "Clean rendered demonstration video of the reference task (no captions, labels, paths or other overlays), top and side cameras, with simulator ground truth for measurement only.",
+ "rendered_by": "mirror.perception.render_demo_video('reference', cams=('top','side'))",
+ "source_trace": "teleop_scripted",
+ "fps": 15.0,
+ "duration_s": 82.133,
+ "n_frames": 1233,
+ "files": {
+  "top.mp4": {
+   "sha256": "11548e06cffabe90fb8c6195a3d93494c9dc869af755e32920ec92e665345665",
+   "bytes": 1600919
+  },
+  "side.mp4": {
+   "sha256": "33ab225ff73fac5c3c33a0bc3b1107cf150bc19887a8fd61264f5e8f8713cc96",
+   "bytes": 693357
+  },
+  "ground_truth.json.gz": {
+   "sha256": "48796329b292565ff4ccdb10ae0e7be06a819199e66793e93bac0f33ba42919b",
+   "bytes": 940810
+  },
+  "scene.json": {
+   "sha256": "8498bab4b38e5931e17ed665387347f5f677177f8b91caa7738d1339d70afb67",
+   "bytes": 1244
+  },
+  "video.json": {
+   "sha256": "96c22a1dc8ee9bc936334c6643469fe4ab1074184eba9b7ec97869b6ad593b5b",
+   "bytes": 2293
+  }
+ },
+ "ground_truth_use": "metrics only; never an input to reconstruction"
+}

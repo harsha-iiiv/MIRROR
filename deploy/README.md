@@ -20,7 +20,7 @@ forwards a public HTTPS URL to `127.0.0.1:8000` (websockets included).
 ```bash
 # packages
 sudo apt-get update
-sudo apt-get install -y git python3 python3-venv python3-dev build-essential
+sudo apt-get install -y git python3 python3-venv python3-dev build-essential ffmpeg
 
 # service account and code
 sudo useradd --system --home /opt/mirror --shell /usr/sbin/nologin mirror
@@ -72,6 +72,12 @@ Logs: `journalctl -u mirror-studio -f`. After changing the env file:
 | `MIRROR_LLM_TIMEOUT` | 90 | Seconds per model request |
 | `MIRROR_MODEL_CALLS_PER_HOUR` | 40 | Model requests per sliding hour, whole server |
 | `MIRROR_MODEL_CALLS_PER_SESSION` | 8 | Model requests per visitor session |
+| `MIRROR_SAM_CALLS_PER_HOUR` | 12 | Video tracking requests (SAM) per hour, whole server |
+| `MIRROR_SAM_CALLS_PER_SESSION` | 2 | Video tracking requests per session (one per camera view) |
+| `MIRROR_VIDEO_CALLS_PER_HOUR` | 12 | Video understanding requests per hour |
+| `MIRROR_VIDEO_CALLS_PER_SESSION` | 2 | Video understanding requests per session |
+| `MIRROR_VOICE_CALLS_PER_HOUR` | 60 | Speech-to-text requests per hour |
+| `MIRROR_VOICE_CALLS_PER_SESSION` | 10 | Speech-to-text requests per session |
 
 A model request is one structured interpreter request (it may include one repair round).
 When a budget is used up, or the model fails, that step uses the offline rule-based

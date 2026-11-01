@@ -71,3 +71,31 @@ def test_export_fixture_site(tmp_path):
     prov = json.loads((out / "data" / "provenance.json").read_text())
     assert prov["backend"] == "fixture" and prov["showcase_seeds"] == [9000, 9001]
     assert (out / "index.html").exists() and (out / "js" / "viewer.js").exists()
+
+
+
+def test_export_records_video_demo_and_spoken_correction(tmp_path):
+    import shutil as _sh
+    import wave
+    if _sh.which("ffmpeg") is None:
+        pytest.skip("ffmpeg is needed for the fixture video")
+    wav = tmp_path / "say.wav"
+    with wave.open(str(wav), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(16000)
+        w.writeframes(b"\x10\x00" * 16000)
+    out = tmp_path / "site"
+    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "export_static.py"), "--backend", "fixture",
+                        "--allow-fixture", "--seeds", "0", "--no-clarify", "--no-blocked", "--voice-wav", str(wav),
+                        "--out", str(out)], capture_output=True, text=True, timeout=180, cwd=ROOT,
+                       stdin=subprocess.DEVNULL)
+    assert r.returncode == 0, r.stderr
+    snap = json.loads((out / "data" / "session.json").read_text())
+    top = snap["video_demo"]["views"]["top"]
+    assert (out / "data" / "media" / top["file"]).read_bytes()[4:8] == b"ftyp"
+    tr = snap["transcripts"][0]
+    assert (out / "data" / "media" / tr["audio_file"]).read_bytes()[:4] == b"RIFF"
+    arts = [m["artifact"] for m in snap["models"]]
+    assert arts[:3] == ["object tracks (top view)", "video observations", "specification v1"]
+    assert "transcript" in arts and any("(spoken)" in m["role"] for m in snap["models"])

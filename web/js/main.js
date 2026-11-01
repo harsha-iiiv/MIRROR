@@ -6,6 +6,7 @@ import * as api from './api.js';
 import { Viewer } from './viewer.js';
 import { fmtT, statusLabel, sceneLabel, latest, cupOutcome, isAux, isBlockedScene } from './util.js';
 import { PANELS, STEPS, stepState, correctionVersion, StoryBar, AboutPanel } from './panels.js';
+import { VideoPane, ModelsPanel } from './media.js';
 
 const html = htm.bind(h);
 
@@ -79,6 +80,7 @@ function App() {
   const [opts, setOpts] = useState({ labels: true, trace: true, ghost: true });
   const [story, setStory] = useState(localStorage.getItem('mirror-story') !== 'off');
   const [about, setAbout] = useState(false);
+  const [models, setModels] = useState(false);
   const liveStatus = useLiveStatus();
   const [noteHidden, setNoteHidden] = useState(false);
   const toggleStory = (on) => { localStorage.setItem('mirror-story', on ? 'on' : 'off'); setStory(on); };
@@ -167,7 +169,8 @@ function App() {
             : html`<span class=${'badge ' + (api.isStatic ? '' : snap.mode)}
             title=${modeTitle(snap)}>${api.isStatic ? 'recorded session' : snap.mode === 'live' ? 'live simulation' : 'fixture data'}</span>`}
           ${!story ? html`<button class="iconbtn" onClick=${() => toggleStory(true)} title="Show the guided story">Story</button>` : ''}
-          <button class="iconbtn" aria-expanded=${about} onClick=${() => setAbout(!about)}>About</button>
+          <button class="iconbtn" aria-expanded=${models} onClick=${() => { setModels(!models); setAbout(false); }}>Models${(snap.models || []).length ? html` <span class="cnt">${snap.models.length}</span>` : ''}</button>
+          <button class="iconbtn" aria-expanded=${about} onClick=${() => { setAbout(!about); setModels(false); }}>About</button>
           <button class="iconbtn" onClick=${toggleTheme} aria-label=${'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme'}>${theme === 'dark' ? Icon.sun : Icon.moon}</button>
         </div>
       </header>
@@ -177,6 +180,7 @@ function App() {
         ${!noteHidden ? html`<${LiveNote} status=${liveStatus} onClose=${() => setNoteHidden(true)} />` : ''}</div>
       ${story ? html`<${StoryBar} ctx=${ctx} />` : ''}
       ${about ? html`<${AboutPanel} ctx=${ctx} onClose=${() => setAbout(false)} />` : ''}
+      ${models ? html`<${ModelsPanel} ctx=${ctx} onClose=${() => setModels(false)} />` : ''}
       <main class="main">
         <${Stage} ctx=${ctx} viewerRef=${viewerRef} opts=${opts} setOpts=${setOpts} />
         <aside class="panel" aria-label="Step details">
@@ -396,6 +400,8 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
             <button class="iconbtn" aria-pressed=${opts.labels} onClick=${() => setOpts({ ...opts, labels: !opts.labels })}>Labels</button>
           </div>
         </div>
+        ${display.kind === 'demo' && snap.video_demo && snap.demo && snap.video_demo.trace_source === snap.demo.source
+          ? html`<${VideoPane} vd=${snap.video_demo} t=${t} />` : ''}
         ${display.kind !== 'scene' && payload && !payload.t?.length ? html`<div class="v-empty"><span class="v-note">${report?.plan_status === 'no_plan' ? 'No plan: nothing was executed.' : 'Nothing was executed.'}</span></div>` : ''}
         ${loadErr ? html`<div class="v-empty err">${loadErr}</div>` : ''}
         ${loading ? html`<div class="v-loading" role="status">Loading recorded rollout ${loading.total ? `${Math.round((100 * loading.got) / loading.total)}%` : `${(loading.got / 1e6).toFixed(1)} MB`}

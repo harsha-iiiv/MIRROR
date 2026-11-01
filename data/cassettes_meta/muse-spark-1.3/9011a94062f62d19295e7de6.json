@@ -1,0 +1,132 @@
+{
+ "key": "9011a94062f62d19295e7de66fcff29b6326e2ada31d89f922f7ccaf247c2b5f",
+ "model": "muse-spark-1.3",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-spark-1.3",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "You are an object grounding expert. Provide the bounding box coordinates of the objects in the image: \"the white cup\", \"the blue cube\", \"the red cylinder\", \"the dark grey tray\", \"the wall\", \"the robot gripper\", \"the wooden table\". Ensure the objects accurately match the request and do not miss any objects. For each object, answer in the format {\"object_name\": \"<name>\", \"bbox\": {\"x_min\": <int>, \"y_min\": <int>, \"x_max\": <int>, \"y_max\": <int>}}. The coordinates should be in the 0-1000 range. If you cannot find an object, omit it from the results. Also point to every small yellow ball visible inside the white cup and count them (points in the same 0-1000 range); use count 0 if none are visible."
+     },
+     {
+      "type": "input_image",
+      "image_url": "data:image/png;base64,sha256:9941a435cabdf359da2afdbb9e5a8cb2ea1c57037389bb1a262c24cbaaa04626"
+     }
+    ]
+   }
+  ],
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "grounding",
+    "schema": {
+     "type": "object",
+     "properties": {
+      "results": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "object_name": {
+          "type": "string"
+         },
+         "bbox": {
+          "type": "object",
+          "properties": {
+           "x_min": {
+            "type": "integer"
+           },
+           "y_min": {
+            "type": "integer"
+           },
+           "x_max": {
+            "type": "integer"
+           },
+           "y_max": {
+            "type": "integer"
+           }
+          },
+          "required": [
+           "x_min",
+           "y_min",
+           "x_max",
+           "y_max"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "object_name",
+         "bbox"
+        ],
+        "additionalProperties": false
+       }
+      },
+      "small_yellow_balls_in_cup": {
+       "type": "object",
+       "properties": {
+        "points": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "properties": {
+           "x": {
+            "type": "integer"
+           },
+           "y": {
+            "type": "integer"
+           }
+          },
+          "required": [
+           "x",
+           "y"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "count": {
+         "type": "integer"
+        }
+       },
+       "required": [
+        "points",
+        "count"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "results",
+      "small_yellow_balls_in_cup"
+     ],
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\"results\": [{\"bbox\": {\"x_max\": 361, \"x_min\": 319, \"y_max\": 570, \"y_min\": 461}, \"object_name\": \"the white cup\"}, {\"bbox\": {\"x_max\": 363, \"x_min\": 324, \"y_max\": 661, \"y_min\": 596}, \"object_name\": \"the blue cube\"}, {\"bbox\": {\"x_max\": 402, \"x_min\": 380, \"y_max\": 581, \"y_min\": 496}, \"object_name\": \"the red cylinder\"}, {\"bbox\": {\"x_max\": 733, \"x_min\": 536, \"y_max\": 590, \"y_min\": 491}, \"object_name\": \"the dark grey tray\"}, {\"bbox\": {\"x_max\": 542, \"x_min\": 348, \"y_max\": 594, \"y_min\": 24}, \"object_name\": \"the wall\"}, {\"bbox\": {\"x_max\": 393, \"x_min\": 334, \"y_max\": 333, \"y_min\": 198}, \"object_name\": \"the robot gripper\"}, {\"bbox\": {\"x_max\": 970, \"x_min\": 54, \"y_max\": 879, \"y_min\": 374}, \"object_name\": \"the wooden table\"}], \"small_yellow_balls_in_cup\": {\"count\": 0, \"points\": []}}",
+  "model": "muse-spark-1.3",
+  "usage": {
+   "input_tokens": 1521,
+   "input_tokens_details": {
+    "cached_tokens": 161
+   },
+   "output_tokens": 1305,
+   "output_tokens_details": {
+    "reasoning_tokens": 991
+   },
+   "total_tokens": 2826
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 6.293,
+ "recorded_at": "2026-10-31T23:33:45Z"
+}
