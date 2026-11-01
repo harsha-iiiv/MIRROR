@@ -18,6 +18,7 @@ Ground truth is read only for scoring. No model grades a run.
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional
@@ -302,59 +303,182 @@ def reconstruct(dv, tracks):
     return est, scene, trace, checks
 
 
+OBSERVE_ARGS = ("strategy", "duration_s", "slow_factor", "frame_step_s", "max_frames", "frame_width",
+                "reasoning_effort", "run")
+
+
+def observe_kwargs(fn: Callable, cfg: dict) -> dict:
+    """The design's observation settings that ``fn`` accepts by name.
+
+    The observation block also holds descriptive notes (camera, event_time,
+    matching); those stay in the design and are never passed. Only names in
+    OBSERVE_ARGS that ``fn``'s signature declares explicitly are forwarded."""
+    import inspect
+    named = {n for n, p in inspect.signature(fn).parameters.items()
+             if p.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)}
+    return {k: v for k, v in cfg.items() if k in OBSERVE_ARGS and k in named}
+
+
+def _count_http(client, counter: dict) -> None:
+    """Count HTTP 429 and 5xx responses the client retries (reported per seed)."""
+    orig = getattr(client, "_check", None)
+    if orig is None:
+        return
+
+    def check(r, attempt):
+        if r.status_code == 429 or r.status_code >= 500:
+            counter[str(r.status_code)] = counter.get(str(r.status_code), 0) + 1
+        return orig(r, attempt)
+    try:
+        client._check = check
+    except Exception:  # a client without the hook is simply not counted
+        pass
+
+
+def _read_jsonl(path: Path) -> list[dict]:
+    if not Path(path).exists():
+        return []
+    out = []
+    for line in Path(path).read_text().splitlines():
+        try:
+            out.append(json.loads(line))
+        except ValueError:
+            pass
+    return out
+
+
+def _write_atomic(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(text)
+    os.replace(tmp, path)
+
+
 def run(design: dict, inputs: dict, *, ledger, budget, out_dir: Path, meta_client=None, spark_client=None,
         tracker: Optional[Callable] = None, observe: Optional[Callable] = None, propose: Optional[Callable] = None,
-        repo_root: Optional[Path] = None, tracker_label: str = "sam-3.1") -> dict:
+        reconstructor: Optional[Callable] = None, repo_root: Optional[Path] = None, tracker_label: str = "sam-3.1",
+        workers: Optional[int] = None, client_factory: Optional[Callable] = None) -> dict:
+    """Run every seed (``workers`` at a time) and return the report.
+
+    Each finished seed is checkpointed to ``out_dir/seeds/<seed>.json``. A
+    restarted run skips checkpointed seeds and runs the rest; seeds that had
+    started without finishing are run again and listed as such. Spend is read
+    from the usage logs in ``out_dir`` (every network call of every attempt),
+    and a seed starts only if the spend so far plus the reservations of the
+    running seeds plus its own reservation stay within the cap."""
+    import threading
+    from concurrent.futures import ThreadPoolExecutor, FIRST_COMPLETED, wait
     from mirror.contracts import DemoTrace
     from mirror.perception import load_demo_video
-    if meta_client is None:
-        from mirror.meta import MetaClient
-        meta_client = MetaClient.from_env()
-    if spark_client is None:
-        from mirror.interpret import LLMClient
-        spark_client = LLMClient.from_env()
+    out_dir = Path(out_dir)
+    shared = meta_client is not None or spark_client is not None
+    workers = int(workers or design.get("workers", 1))
+    if shared and workers > 1:
+        raise ValueError("shared clients cannot attribute usage per seed; use workers=1 or per-seed clients")
+    meta_log, llm_log = out_dir / "meta_usage.jsonl", out_dir / "llm_usage.jsonl"
+
+    made: list = []                       # every client of this process (their usage lists are live)
+
+    def clients():
+        if shared:
+            pair = (meta_client, spark_client)
+        elif client_factory is not None:
+            pair = client_factory()
+        else:
+            from mirror.interpret import LLMClient
+            from mirror.meta import MetaClient
+            # recordings go next to the ledger: data/cassettes* are hashed by the freeze, and a restarted run
+            # re-verifies the freeze before it resumes
+            pair = (MetaClient.from_env(usage_log=meta_log, cassette_dir=out_dir / "cassettes_meta"),
+                    LLMClient.from_env(usage_log_path=llm_log, cassette_dir=out_dir / "cassettes_llm"))
+        with lock:
+            for c in pair:
+                if c is not None and all(c is not m for m in made):
+                    made.append(c)
+        return pair
+
     if observe is None:
         from mirror.interpret.video_observe import observe
     if propose is None:
         from mirror.interpret import propose_spec as propose
-    if tracker is None:
-        tracker = lambda dv, gt, root: sam_tracker(dv, gt, root, client=meta_client)  # noqa: E731  (frozen default objects)
+    reconstructor = reconstructor or reconstruct
     repo_root = repo_root or Path(__file__).resolve().parents[2]
     obs_cfg = dict(design.get("observation", {}))
-    cam = obs_cfg.pop("camera", "top")
+    cam = obs_cfg.get("camera", "top")
+    obs_kw = observe_kwargs(observe, obs_cfg)
+    obs_models = list(design.get("observe_models", ["muse-wonder-1.0", "muse-spark-1.3"]))
     manifests = {d["seed"]: repo_root / d["manifest"] for d in inputs["provenance"]["demos"]}
-    rows, stopped = [], None
     cap = design.get("spend_cap_usd")
-    est_seed = dict(design.get("spend_projection_per_seed_usd", {}))     # used until a seed has been measured
-    per_seed: list[dict] = []
+    est_seed = dict(design.get("spend_projection_per_seed_usd", {}))
+    factor = float(design.get("reservation_factor", 1.0))
+    ck_dir = out_dir / "seeds"
 
-    def spent() -> float:
-        return sum(costs.record_cost(r) for r in list(meta_client.usage) + list(getattr(spark_client, "usage", [])))
+    # ---- what earlier attempts of this run left behind
+    done: dict[int, dict] = {}
+    for f in sorted(ck_dir.glob("*.json")) if ck_dir.exists() else []:
+        r = json.loads(f.read_text())
+        done[int(r["seed"])] = r
+    entries = ledger.entries()
+    run_starts = [e for e in entries if e.get("kind") == "run_start" and not e.get("rehearsal")]
+    started_before = {int(e["seed"]) for e in entries if e.get("kind") == "seed_start"}
+    resumed = sorted(done)
+    rerun = sorted(s for s in started_before if s not in done)
+    prior_records = _read_jsonl(meta_log) + _read_jsonl(llm_log)     # network calls of earlier attempts
+    lock = threading.RLock()
+    state = dict(reserved={}, completed_cost=0.0, local=[])   # local: usage of seeds finished in this process
 
-    for seed in design["seeds"]:
-        row: dict[str, Any] = dict(seed=seed)
-        skip_wonder = False
-        if cap is not None:
-            full = (np.mean([p["total"] for p in per_seed]) if per_seed else sum(est_seed.values()))
-            wonder = (np.mean([p["wonder"] for p in per_seed]) if per_seed else est_seed.get("muse-wonder-1.0", 0.0))
-            now = spent()
-            if now + full > cap:
-                if now + full - wonder <= cap:
-                    skip_wonder = True
-                    row["wonder_skipped"] = (f"spend cap: ${now:.2f} spent, a full seed is projected at ${full:.2f}; "
-                                             f"muse-wonder-1.0 dropped for this seed, tracking kept")
-                else:
-                    stopped = (f"spend cap ${cap:.2f}: ${now:.2f} spent before seed {seed}; even without "
-                               f"muse-wonder-1.0 a seed is projected at ${full - wonder:.2f}")
-                    break
-        seed_start, wonder_cost = spent(), 0.0
+    def all_records() -> list[dict]:
+        # earlier attempts from the usage logs + this process's calls, including seeds still running
+        return prior_records + [r for c in list(made) for r in list(getattr(c, "usage", []))]
+
+    def logged_spend() -> float:
+        return sum(costs.record_cost(r) for r in all_records())
+
+    def measured() -> list[dict]:
+        rows = list(done.values()) + state["local"]
+        return [r for r in rows if "error" not in r and not r.get("wonder_skipped") and "cost_usd" in r]
+
+    def admit(seed: int):
+        """None (stop), False (full seed) or True (without muse-wonder-1.0); reserves under the lock."""
+        if cap is None:
+            state["reserved"][seed] = 0.0
+            return False
+        m = measured()
+        full = float(np.mean([r["cost_usd"] for r in m])) if m else sum(est_seed.values())
+        wonder = (float(np.mean([r.get("wonder_cost_usd", 0.0) for r in m])) if m
+                  else est_seed.get("muse-wonder-1.0", 0.0))
+        if "muse-wonder-1.0" not in obs_models:
+            wonder = 0.0
+        committed = logged_spend() + sum(state["reserved"].values())
+        if committed + full * factor <= cap:
+            state["reserved"][seed] = full * factor
+            return False
+        if wonder and committed + (full - wonder) * factor <= cap:
+            state["reserved"][seed] = (full - wonder) * factor
+            return True
+        state["stop"] = (f"spend cap ${cap:.2f}: ${logged_spend():.2f} spent and ${sum(state['reserved'].values()):.2f} "
+                         f"reserved by running seeds before seed {seed}; a seed is projected at ${full:.2f} "
+                         f"(reservation x{factor:g})")
+        return None
+
+    def one(seed: int, skip_wonder: bool) -> dict:
+        mc, sc = clients()
+        http: dict = {}
+        _count_http(mc, http)
+        row: dict[str, Any] = dict(seed=seed, attempt=len(run_starts), rerun_after_interruption=seed in rerun)
+        if skip_wonder:
+            row["wonder_skipped"] = "spend cap: muse-wonder-1.0 dropped for this seed, tracking kept"
+        ledger.append(kind="seed_start", seed=seed, skip_wonder=skip_wonder)
+        u0m, u0s = len(getattr(mc, "usage", [])), len(getattr(sc, "usage", []))
+        wonder_cost = 0.0
         try:
             dv, gt = load_demo_video(manifests[seed])
             root = manifests[seed].parent
+            trk = tracker or (lambda dv, gt, root: sam_tracker(dv, gt, root, client=mc))  # noqa: E731
             t0 = time.monotonic()
-            n0 = len(getattr(meta_client, "usage", []))
-            tracks = tracker(dv, gt, root)
-            recs = getattr(meta_client, "usage", [])[n0:]
+            n0 = len(getattr(mc, "usage", []))
+            tracks = trk(dv, gt, root)
+            recs = getattr(mc, "usage", [])[n0:]
             budget.charge("sam-3.1", sum(1 for r in recs if str(r.get("model", "")).startswith("sam")))
             budget.charge("muse-spark-1.3:grounding", sum(1 for r in recs if str(r.get("model", "")).startswith("muse-spark")))
             row["tracking_cost_usd"] = round(sum(costs.record_cost(r) for r in recs), 4)
@@ -366,34 +490,35 @@ def run(design: dict, inputs: dict, *, ledger, budget, out_dir: Path, meta_clien
             row["reseeds"] = info.get("reseed", [])
             try:
                 from mirror.perception.track import save_tracks
-                (Path(out_dir) / "tracks").mkdir(parents=True, exist_ok=True)
-                save_tracks(tracks, Path(out_dir) / "tracks" / f"{seed}.json.gz")
+                (out_dir / "tracks").mkdir(parents=True, exist_ok=True)
+                save_tracks(tracks, out_dir / "tracks" / f"{seed}.json.gz")
             except Exception as exc:  # the tracks file is a convenience record, not a measure
                 row["tracks_saved"] = f"not saved: {type(exc).__name__}"
-            est, scene_v, trace_v, checks = reconstruct(dv, tracks)
+            est, scene_v, trace_v, checks = reconstructor(dv, tracks)
             row["tracking_latency_s"] = round(time.monotonic() - t0, 1)
             ledger.append(kind="track", seed=seed, tracker=tracker_label, requests=len(recs),
                           reseeds=len(row["reseeds"]), cost_usd=row["tracking_cost_usd"])
             kinds = est.scene_checks.get("kinds", {})
             row["tracking"] = frame_errors(gt_frames(gt), est_frames(est, kinds, gt_fps=dv.fps))
             row["tracking_frames"] = len(est.t)
-            m = match_events(gt_events(gt), est_events(est), EVENT_MATCH_S)
-            row["timing"] = m
+            row["timing"] = match_events(gt_events(gt), est_events(est), EVENT_MATCH_S)
             gt_rel, care_expected = gt_relevant(gt), gt_cup_kept_upright(gt)
             obs_by, row["observations"] = {}, {}
-            for model, line in (("muse-wonder-1.0", "muse-wonder-1.0"), ("muse-spark-1.3", "muse-spark-1.3:video")):
+            row["observe_kwargs"] = obs_kw
+            for model in obs_models:
+                line = "muse-wonder-1.0" if model == "muse-wonder-1.0" else "muse-spark-1.3:video"
                 if model == "muse-wonder-1.0" and skip_wonder:
                     ledger.append(kind="observe_skipped", seed=seed, model=model, reason="spend cap")
                     continue
                 budget.charge(line)
-                n0 = len(meta_client.usage)
+                n0 = len(getattr(mc, "usage", []))
                 t0 = time.monotonic()
                 try:
-                    o, err = observe(root / dv.videos[cam], model, client=meta_client, **obs_cfg), None
+                    o, err = observe(root / dv.videos[cam], model, client=mc, **obs_kw), None
                 except Exception as exc:  # reported, never retried here
                     o, err = None, f"{type(exc).__name__}: {exc}"[:300]
                 lat = round(time.monotonic() - t0, 1)
-                recs = meta_client.usage[n0:]
+                recs = getattr(mc, "usage", [])[n0:]
                 if model == "muse-wonder-1.0":
                     wonder_cost = sum(costs.record_cost(r) for r in recs)
                 obs_by[model] = o
@@ -412,30 +537,70 @@ def run(design: dict, inputs: dict, *, ledger, budget, out_dir: Path, meta_clien
                               issues=len(v["issues"]))
             gt_trace = DemoTrace.model_validate_json((root / dv.trace).read_text())
             chosen = design.get("spec_observations_model", "muse-spark-1.3")
-            spec_gt = propose(gt_trace, spark_client)
-            spec_v = propose(trace_v, spark_client, observations=obs_by.get(chosen))
+            row["spec_observations"] = dict(model=chosen, present=obs_by.get(chosen) is not None)
+            spec_gt = propose(gt_trace, sc)
+            spec_v = propose(trace_v, sc, observations=obs_by.get(chosen))
             sv, sg = proposal_signature(spec_v), proposal_signature(spec_gt)
             row["signature_equal"] = sv == sg
             row["structure_equal"] = structure_signature(sv) == structure_signature(sg)       # reported only
             row["numeric_differences"] = numeric_differences(sv, sg)
             row["signature_video"], row["signature_ground_truth"] = sv, sg
-            ledger.append(kind="spec", seed=seed, signature_equal=row["signature_equal"])
+            ledger.append(kind="spec", seed=seed, signature_equal=row["signature_equal"],
+                          observations_present=row["spec_observations"]["present"])
         except Exception as exc:  # every attempt is reported
             from .prereg import BudgetExceeded
             if isinstance(exc, BudgetExceeded):
                 raise
             row["error"] = f"{type(exc).__name__}: {exc}"[:400]
             ledger.append(kind="error", seed=seed, error=row["error"])
-        row["cost_usd"] = round(spent() - seed_start, 4)
-        if not skip_wonder and "error" not in row:
-            per_seed.append(dict(total=row["cost_usd"], wonder=wonder_cost))
-        rows.append(row)
+        recs = list(getattr(mc, "usage", []))[u0m:] + list(getattr(sc, "usage", []))[u0s:]
+        row["cost_usd"] = round(sum(costs.record_cost(r) for r in recs), 4)
+        row["wonder_cost_usd"] = round(wonder_cost, 4)
+        row["http_retries"] = http
+        row["usage_summary"] = costs.summarize_usage(recs)
+        _write_atomic(ck_dir / f"{seed}.json", json.dumps(row, default=str))
+        ledger.append(kind="seed_done", seed=seed, error=row.get("error"), cost_usd=row["cost_usd"], http_retries=http)
+        return row
+
+    todo = [s for s in design["seeds"] if s not in done]
+    rows_new: list[dict] = []
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        running: dict = {}
+        queue = list(todo)
+        while queue or running:
+            while queue and len(running) < workers and not state.get("stop"):
+                seed = queue[0]
+                with lock:
+                    skip = admit(seed)
+                if skip is None:
+                    break
+                queue.pop(0)
+                running[pool.submit(one, seed, skip)] = seed
+            if not running:
+                break
+            fin, _ = wait(list(running), return_when=FIRST_COMPLETED)
+            for f in fin:
+                seed = running.pop(f)
+                row = f.result()                       # BudgetExceeded propagates and stops the run
+                with lock:
+                    state["reserved"].pop(seed, None)
+                    state["local"].append(row)
+                rows_new.append(row)
+    rows = sorted(list(done.values()) + rows_new, key=lambda r: r["seed"])
     not_run = [s for s in design["seeds"] if s not in {r["seed"] for r in rows}]
+    stopped = state.get("stop")
     if stopped:
         ledger.append(kind="stopped", reason=stopped, not_run=not_run)
-    usage = costs.summarize_usage(list(meta_client.usage) + list(getattr(spark_client, "usage", [])))
+    usage = costs.summarize_usage(all_records())
+    http_all: dict = {}
+    for r in rows:
+        for k, v in (r.get("http_retries") or {}).items():
+            http_all[k] = http_all.get(k, 0) + v
+    run_info = dict(workers=workers, attempts=len(run_starts), restarts=max(len(run_starts) - 1, 0),
+                    resumed_from_checkpoints=resumed, rerun_after_interruption=rerun,
+                    reservation_factor=factor, http_retries=http_all, observe_kwargs=obs_kw)
     return dict(rows=rows, tracker=tracker_label, usage=usage, cost_usd=costs.total_cost(usage),
-                stopped=stopped, not_run=not_run, summary=summarize(rows, design))
+                stopped=stopped, not_run=not_run, run_info=run_info, summary=summarize(rows, design))
 
 
 def summarize(rows: list[dict], design: dict) -> dict:
@@ -549,11 +714,27 @@ def markdown(report: dict, design: dict) -> str:
             L.append(f"| {r['seed']} | error: {r['error'][:120]} | | | | | | |")
             continue
         o = r["observations"]
-        L.append(f"| {r['seed']} | completed | {_f(r['tracking']['found_rate_all'], 3)} | "
+
+        def cell(m):
+            if m not in o:
+                return "not run"
+            return f"{_f(o[m]['event_f1'])}{' (error)' if o[m]['error'] else ''}"
+        L.append(f"| {r['seed']} | completed{' (re-run after an interruption)' if r.get('rerun_after_interruption') else ''} | "
+                 f"{_f(r['tracking']['found_rate_all'], 3)} | "
                  f"{_f((r['tracking']['centroid_cm_all'] or {}).get('median'))} | {r['timing']['tp']}/{r['timing']['n_gt']} | "
-                 f"{_f(o['muse-wonder-1.0']['event_f1'])}{' (error)' if o['muse-wonder-1.0']['error'] else ''} | "
-                 f"{_f(o['muse-spark-1.3']['event_f1'])}{' (error)' if o['muse-spark-1.3']['error'] else ''} | "
+                 f"{cell('muse-wonder-1.0')} | {cell('muse-spark-1.3')} | "
                  f"{'yes' if r['signature_equal'] else 'no'} |")
+    ri = res.get("run_info")
+    if ri:
+        L += ["", "## How the run went", "",
+              f"- Seeds in parallel: {ri['workers']}; spend reservation per running seed: x{ri['reservation_factor']:g} "
+              "of the projected seed cost.",
+              f"- Attempts of this run: {ri['attempts']} (restarts: {ri['restarts']}). Seeds taken from checkpoints of "
+              f"earlier attempts: {', '.join(map(str, ri['resumed_from_checkpoints'])) or 'none'}. Seeds that had "
+              f"started without finishing and were run again: {', '.join(map(str, ri['rerun_after_interruption'])) or 'none'} "
+              "(their earlier partial calls are included in the spend).",
+              f"- Arguments passed to observe(): {json.dumps(ri['observe_kwargs'])}.",
+              f"- HTTP responses retried by the client (429 = rate limit): {json.dumps(ri['http_retries']) or '{}'}."]
     if res.get("stopped"):
         L += ["", f"**Stopped early.** {res['stopped']}. Seeds not run: {', '.join(map(str, res.get('not_run', [])))}."]
     nd = [(r["seed"], d) for r in res["rows"] for d in r.get("numeric_differences", [])]

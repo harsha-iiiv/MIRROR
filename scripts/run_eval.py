@@ -121,7 +121,7 @@ def _prereg(args, p) -> int:
         print(f"rehearsal {name}: {rep['status']}; report {(out / 'report.md').relative_to(ROOT)}")
         return 0
     if args.mode == "inputs":
-        files, prov = (designs.INPUTS[name](from_dir=Path(args.from_dir)) if (name == "video" and args.from_dir)
+        files, prov = (designs.INPUTS[name](from_dir=Path(args.from_dir)) if (name in ("video", "video2") and args.from_dir)
                        else designs.INPUTS[name]())
         doc = prereg.write_inputs(name, files, provenance=prov, audit_paths=tuple(args.audit_path),
                                   replace=args.replace_design)
@@ -142,7 +142,7 @@ def _prereg(args, p) -> int:
               f"{fz['design_sha256'][:12]} -> {pp['freeze'].relative_to(ROOT)}")
         return 0
     if args.mode == "final":
-        rep = prereg.run(name)
+        rep = prereg.run(name, **({"workers": args.seed_workers} if args.seed_workers else {}))
         print(f"{name}: {rep['status']}; report {pp['report_md'].relative_to(ROOT)}")
         return 0
     p.error(f"mode {args.mode} does not apply to registration {name}")
@@ -160,7 +160,7 @@ def main(argv=None) -> int:
     p.add_argument("--reference-specs", action="store_true", help="use the hand-written spec pair")
     p.add_argument("--spec-source", default="replay", choices=["replay", "offline"],
                    help="freeze-final: how the pre-registered specs are built (offline only for --rehearsal)")
-    p.add_argument("--registration", default=None, choices=["muse", "voice", "video", "robustness"],
+    p.add_argument("--registration", default=None, choices=["muse", "voice", "video", "video2", "robustness"],
                    help="design/freeze-final/final/status: a named registration (own seeds, ledger, output)")
     p.add_argument("--from-dir", default=None,
                    help="inputs --registration video: demos rendered elsewhere (seed<k>/<demo>/video.json + versions.json)")
@@ -176,6 +176,9 @@ def main(argv=None) -> int:
     p.add_argument("--spec-a", default=None)
     p.add_argument("--spec-b", default=None)
     p.add_argument("--workers", type=int, default=1, help="parallel trials, capped at 2")
+    p.add_argument("--seed-workers", type=int, default=None,
+                   help="final --registration video2: seeds processed at once (default: the design's 'workers'); "
+                        "a restarted run resumes from the per-seed checkpoints")
     p.add_argument("--max-sim-time", type=float, default=120.0)
     p.add_argument("--save-logs", action="store_true",
                    help="save every step log (npz) under results/tmp/<out name>/logs (not versioned)")
@@ -197,7 +200,7 @@ def main(argv=None) -> int:
         print(rep.model_dump_json(indent=1))
         return 0
 
-    if args.registration in ("voice", "video", "robustness") or args.mode in ("design", "inputs", "status", "rehearse"):
+    if args.registration in ("voice", "video", "video2", "robustness") or args.mode in ("design", "inputs", "status", "rehearse"):
         return _prereg(args, p)
 
     if args.registration:

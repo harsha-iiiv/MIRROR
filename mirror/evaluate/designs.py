@@ -239,7 +239,7 @@ def inputs_robustness() -> tuple[list[dict], dict]:
                        renderer="mirror.robustness.frames.frames_for_seeds (mujoco offscreen, opaque walls)")
 
 
-def inputs_video(from_dir: Optional[Path] = None) -> tuple[list[dict], dict]:
+def inputs_video(from_dir: Optional[Path] = None, name: str = "video") -> tuple[list[dict], dict]:
     """Rendered demonstrations for the video seeds, each with its frozen
     SAM_FPS tracking copies. With ``from_dir`` (renders made elsewhere, e.g.
     on another machine with pinned versions) the demos are copied in and each
@@ -249,11 +249,11 @@ def inputs_video(from_dir: Optional[Path] = None) -> tuple[list[dict], dict]:
     from mirror.perception import load_demo_video, render_demo_video
     from mirror.scenes import sample_layout
     from .bench_video import make_sam_copies
-    os.environ["MIRROR_EVAL_LEDGER"] = str(paths("video")["ledger"])
-    out = paths("video")["out"] / "inputs"
+    os.environ["MIRROR_EVAL_LEDGER"] = str(paths(name)["ledger"])
+    out = paths(name)["out"] / "inputs"
     files, demos, render_info = [], [], {}
     staged = Path(from_dir).parent / "scenes" if from_dir is not None else None
-    for seed in VIDEO_SEEDS:
+    for seed in (VIDEO_SEEDS if name == "video" else VIDEO2_SEEDS):
         sf = staged / f"{seed}.json" if staged is not None else None
         if sf is not None and sf.exists():      # the layout sampled (and ledgered) when the renders were staged
             from mirror.contracts import SceneState
@@ -288,7 +288,78 @@ def inputs_video(from_dir: Optional[Path] = None) -> tuple[list[dict], dict]:
                        render_environment=render_info)
 
 
-INPUTS = {"voice": inputs_voice, "video": inputs_video, "robustness": inputs_robustness}
+VIDEO2_SEEDS = list(range(71000, 71020))
+
+
+def design_video2(workers: int = 8, boxes: int = 8) -> dict:
+    """Registration 2 of the video benchmark: the design of registration
+    'video' with its two amendments folded in, on new seeds. Thresholds,
+    tolerances, metrics and the decision rule are unchanged."""
+    from .prereg import amendment_hashes, load_design, sha256_file
+    base = load_design("video")
+    keep_out = {"amendments", "audit", "created_at", "created_unix", "registration", "pending", "sam_prompts",
+                "sam_requests_per_video", "budget_caps_amended"}
+    d = {k: v for k, v in base.items() if k not in keep_out}
+    d.update(
+        title=base["title"] + " (registration 2)",
+        seeds=VIDEO2_SEEDS,
+        supersedes=dict(
+            registration="video", seeds="70000-70019 (retired)",
+            design_sha256=sha256_file(paths("video")["design"]), amendments=amendment_hashes("video"),
+            outcome="attempt 1 did not produce a result: results/eval_video/ATTEMPT_1.md"),
+        rationale=("Attempt 1 of registration 'video' failed for a harness reason: the runner passed the whole "
+                   "observation block of the design to observe() as keyword arguments, so every video-model call "
+                   "raised TypeError before any request; the specification was then proposed without observations, "
+                   "which is not the registered condition; and the run stopped after 12 of 20 seeds when the machine "
+                   "restarted, with no way to resume. A frozen registration cannot be patched, so this registration "
+                   "repeats the design on 20 new seeds with three harness changes: only the arguments observe() "
+                   "declares are passed (tested against the real function), finished seeds are checkpointed and a "
+                   "restarted run resumes, and seeds run four at a time under a spend reservation. Everything measured "
+                   "and every threshold, tolerance, metric and decision rule is the same as registration 'video' with "
+                   "its amendments 1 and 2 (hashes in 'supersedes'). Attempt 1's tracking outputs (seeds 70000-70011) "
+                   "were not summarised before this design was written."),
+        budget_caps={"muse-wonder-1.0": None, "muse-spark-1.3:video": None, "sam-3.1": None},
+        observe_models=["muse-wonder-1.0", "muse-spark-1.3"],
+        observation_call=("observe(top video, model, client, strategy='video'): of the observation block only the "
+                          "names that observe() declares in its signature are passed (bench_video.observe_kwargs); "
+                          "camera, event_time and matching are descriptive and used by the scorer"),
+        workers=workers,
+        reservation_factor=1.5,
+        spend_projection_per_seed_usd={"sam-3.1": 0.25, "muse-spark-1.3": 0.18, "muse-wonder-1.0": 0.25},
+        spend_projection_note=("from measured calls before this design: attempt 1 tracking on 12 seeds (sam-3.1 $2.93, "
+                               "muse-spark-1.3 grounding $0.82), one muse-wonder-1.0 observation of the 82 s reference "
+                               "clip ($0.20), and the development rehearsal of this harness (8 truncated demos, "
+                               "8 workers, $0.26 per seed without Wonder, no HTTP 429)"),
+        spend_rule=("all model calls of this registration (grounding, SAM, re-seeds, observations, proposals; every "
+                    "attempt, including calls of seeds interrupted by a restart) count against the dollar cap, read "
+                    f"from the clients' usage logs. Seeds run {workers} at a time. Before a seed starts: projected = mean "
+                    "measured cost of finished full seeds (spend_projection_per_seed_usd until one exists); if spent + "
+                    "reservations of running seeds + 1.5 x projected > cap, the seed runs without muse-wonder-1.0 when "
+                    "1.5 x (projected - Wonder) fits; otherwise no further seed starts, running seeds finish, and the "
+                    "remaining seeds are listed as not run. Tracking is never dropped."),
+        resume_rule=("each finished seed (completed or failed) is written to seeds/<seed>.json next to the ledger. A "
+                     "restarted run skips those seeds and runs the others; a seed that had started without finishing "
+                     "is run again from the start and listed in the report. A finished seed is never run twice. The "
+                     "report states every attempt and restart."),
+    )
+    d["render"] = dict(base["render"], machine=(
+        f"{boxes} NVIDIA L4 GPU compute boxes in parallel (4 CPU each, 2 to 3 seeds per box), EGL, image with pinned "
+        "mujoco 3.17.0, numpy 2.4.6, scipy 1.17.1, imageio 2.38.1, pydantic 2.14.2 (the image of attempt 1); layouts "
+        "sampled and ledgered here, rendered there from the saved scenes; GPU, driver, box count and package versions "
+        "in versions.json, copied into inputs.json"))
+    d["disclosures"] = list(base.get("disclosures", [])) + [
+        "registration 2: attempt 1 on seeds 70000-70019 failed for a harness reason and is reported in "
+        "results/eval_video/ATTEMPT_1.md; its 12 tracked seeds are not used",
+        f"seeds run in parallel ({workers} at a time) and the tracking latency reported per seed includes waiting for "
+        "the shared CPU; results do not depend on the order"]
+    return d
+
+
+def inputs_video2(from_dir: Optional[Path] = None) -> tuple[list[dict], dict]:
+    return inputs_video(from_dir, name="video2")
+
+
+INPUTS = {"voice": inputs_voice, "video": inputs_video, "video2": inputs_video2, "robustness": inputs_robustness}
 
 
 # --------------------------------------------------------------- rehearsal ---
@@ -358,7 +429,7 @@ def rehearsal_setup(name: str, synth: Optional[Callable] = None) -> tuple[dict, 
     raise KeyError(name)
 
 
-DESIGNS = {"voice": design_voice, "video": design_video, "robustness": design_robustness}
+DESIGNS = {"voice": design_voice, "video": design_video, "video2": design_video2, "robustness": design_robustness}
 
 
 # ---------------------------------------------------------- amendments -----

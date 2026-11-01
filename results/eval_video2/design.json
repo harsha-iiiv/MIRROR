@@ -1,0 +1,180 @@
+{
+ "title": "Video to specification: sam-3.1 tracking, muse-wonder-1.0 vs muse-spark-1.3 observations, muse-spark-1.3 specification (registration 2)",
+ "seeds": [
+  71000,
+  71001,
+  71002,
+  71003,
+  71004,
+  71005,
+  71006,
+  71007,
+  71008,
+  71009,
+  71010,
+  71011,
+  71012,
+  71013,
+  71014,
+  71015,
+  71016,
+  71017,
+  71018,
+  71019
+ ],
+ "split": "eval",
+ "family": "mixed",
+ "cameras": [
+  "top",
+  "side"
+ ],
+ "models": {
+  "tracking": "sam-3.1",
+  "observations": [
+   "muse-wonder-1.0",
+   "muse-spark-1.3"
+  ],
+  "specification": "muse-spark-1.3"
+ },
+ "spec_observations_model": "muse-spark-1.3",
+ "plan": [
+  "Each seed: render the scripted demonstration (top + side), track with sam-3.1, rebuild the table-plane trace, compare with simulator ground truth per frame.",
+  "Both observation models see the same videos once each; their events are matched to ground-truth grasp/release events (same type and object, one-to-one, closest first).",
+  "Specification from the video trace (with the muse-spark-1.3 observations) vs specification from the ground-truth trace, both by muse-spark-1.3; compared by proposal signature (constraints not rejected: type, phase, selector, parameters; active goals: selector, target).",
+  "Every seed is reported, including failures."
+ ],
+ "metrics": [
+  "object found rate (detection within 5 cm of ground truth, frames where visible)",
+  "table-plane centroid error (cm): median of per-object medians",
+  "grasp/release detection within 1 s and absolute timing error (s)",
+  "cup tilt error from the side view (deg)",
+  "proposal-signature equality, video vs ground-truth trace",
+  "observation models: event F1 at 0.5 s, relevant-object set correct, care cue for the cup when the demonstration kept it upright, latency"
+ ],
+ "thresholds": {
+  "found_rate_min": 0.95,
+  "centroid_cm_median_max": 1.5,
+  "event_detection_min": 0.9,
+  "timing_s_median_max": 0.3,
+  "tilt_deg_median_max": 5.0,
+  "signature_equal_min": 18
+ },
+ "decision_rule": {
+  "min_f1_gain": 0.05,
+  "text": "use muse-wonder-1.0 for observations only if its mean event F1 is at least 0.05 above muse-spark-1.3 and it gets the relevant-object set right at least as often; otherwise keep muse-spark-1.3"
+ },
+ "hypotheses": [
+  "Tracking from rendered video meets every pre-stated threshold.",
+  "The specification from video has the same proposal signature as the one from the ground-truth trace on at least 18 of 20 seeds."
+ ],
+ "budget_caps": {
+  "muse-wonder-1.0": null,
+  "muse-spark-1.3:video": null,
+  "sam-3.1": null
+ },
+ "inputs_rule": "for each seed: sample_layout(seed, 'eval'), the scripted demonstration, rendered by mirror.perception.render_demo_video (top + side), with its ground truth; all files listed with sha256 in inputs.json; no model call",
+ "threshold_scope": {
+  "found_rate_min, centroid_cm_median_max, event_detection_min, timing_s_median_max, tilt_deg_median_max": "perception estimates from sam-3.1 tracking and the reconstruction in mirror.perception; grasp/release times for these thresholds come from tracked object motion, never from the video models",
+  "signature_equal_min": "muse-spark-1.3 proposal from the video-derived trace (with the muse-spark-1.3 observations) vs from the ground-truth trace",
+  "video models": "muse-wonder-1.0 and muse-spark-1.3 observations have no pass/fail threshold; reported: event F1 at the published 0.5 s tolerance, mean absolute timing error of events matched within 2 s, relevant-object set, care cue, validator issues, latency and cost; the published decision rule (Wonder vs Spark) applies"
+ },
+ "observation": {
+  "strategy": "video",
+  "camera": "top",
+  "event_time": "t_start of each reported grasp or release event",
+  "matching": "same event type and object kind, one-to-one, closest in time first"
+ },
+ "definitions": {
+  "relevant_objects": "among cup, block, marker and tray: the kit objects grasped in the demonstration plus the tray; a model is right when the kinds it marks relevant among these four equal that set",
+  "care_cue": "a cue on the cup (or naming the cup) containing upright, level, vertical, tilt, spill or straight; expected when the cup's true tilt stayed below 15 degrees while it was held",
+  "tilt": "the in-image tilt estimated from the side view vs the cup's true 3D tilt (only the in-image component is observable from one view); frames where the estimate is missing are not scored and are counted"
+ },
+ "render": {
+  "function": "mirror.perception.render_demo_video(scene, out_dir, cams=('top', 'side')) with the scripted teleoperation demonstration (same operator as the reference demonstration)",
+  "width": 960,
+  "height": 540,
+  "fps": 15,
+  "encoding": "H.264 yuv420p",
+  "cameras": [
+   "top",
+   "side"
+  ],
+  "camera_settings": "mirror.perception.cameras as frozen: top lookat (0, 0, 0), distance 1.30, azimuth 90, elevation -86, vertical field of view 45; side lookat (0, 0, 0.06), distance 1.75, azimuth 60, elevation -20, vertical field of view 45",
+  "overlays": "none (no text, labels, paths or readouts)",
+  "machine": "8 NVIDIA L4 GPU compute boxes in parallel (4 CPU each, 2 to 3 seeds per box), EGL, image with pinned mujoco 3.17.0, numpy 2.4.6, scipy 1.17.1, imageio 2.38.1, pydantic 2.14.2 (the image of attempt 1); layouts sampled and ledgered here, rendered there from the saved scenes; GPU, driver, box count and package versions in versions.json, copied into inputs.json"
+ },
+ "tracking": {
+  "input_fps": 5,
+  "frames": "every 3rd frame of each 15 fps render, starting at frame 0, re-encoded once at the inputs stage and frozen by sha256 (bench_video.make_sam_copies); the video models watch the full 15 fps top video",
+  "procedure": "mirror.perception.track.track_videos as frozen, on the 5 fps copies: per camera, three muse-spark-1.3 grounding calls on frame 0 (full frame for the table; a table crop for boxes and the visible ball count; one multi-image call of zoomed crops for cup, block and marker), then sam-3.1 box prompts: one video request (cup, block, marker, gripper) and one image request (table hypotheses, tray, wall) on frame 0",
+  "re_seeding": "for gaps of at least 2 s in a moving object's track (at most 2 per camera, ranked: the other camera also missing it, then length), SAM tracks backwards over the gap from where the object is visible again (SAM's own box; no model call), or, when the gap runs to the end of the clip, from one muse-spark-1.3 grounding call on the last frame; one SAM video request per re-seed; merged only into missing frames and only if the seed mask is 0.3x to 3x the object's earlier median area; every re-seed is recorded and reported. Worst case per demonstration: 10 Spark calls and 8 SAM requests.",
+  "reconstruction": "mirror.perception reconstruction as frozen (estimate, scene_from_video, trace_from_estimates), on the 5 fps tracks; scoring uses the ground-truth frames at the sampled times",
+  "five_fps_check": "before this amendment, development demonstration 9001 was tracked live at 5 fps ($0.24): found rate 0.98, median centroid error cup 0.39 / block 0.58 / marker 0.90 cm, 5 of 6 events within 1 s, one re-seed; sim's 15 fps run of the same demonstration: block 2.46 cm, 5 of 6 within 1 s. Reconstruction from every 3rd frame of the 15 fps tracks gave the same centroid errors. Fewer frames carry a cup tilt estimate at 5 fps (59 vs 168 sampled)."
+ },
+ "observation_runs": "one muse-wonder-1.0 and one muse-spark-1.3 observation per seed, no repeats",
+ "spend_cap_usd": 14.0,
+ "spend_rule": "all model calls of this registration (grounding, SAM, re-seeds, observations, proposals; every attempt, including calls of seeds interrupted by a restart) count against the dollar cap, read from the clients' usage logs. Seeds run 8 at a time. Before a seed starts: projected = mean measured cost of finished full seeds (spend_projection_per_seed_usd until one exists); if spent + reservations of running seeds + 1.5 x projected > cap, the seed runs without muse-wonder-1.0 when 1.5 x (projected - Wonder) fits; otherwise no further seed starts, running seeds finish, and the remaining seeds are listed as not run. Tracking is never dropped.",
+ "spend_projection_per_seed_usd": {
+  "sam-3.1": 0.25,
+  "muse-spark-1.3": 0.18,
+  "muse-wonder-1.0": 0.25
+ },
+ "budget_note": "Request counts are bookkeeping only (still counted and reported); the dollar cap is the binding limit. This changes a resource limit only; no threshold, metric, seed or decision rule changes.",
+ "spec_comparison": {
+  "pass_fail": "the published strict proposal signature (signature_equal_min = 18 of 20), unchanged",
+  "reported_only": "same structure ignoring numeric limits (items, phases, selectors and parameter names equal; numbers may differ), with every numeric difference listed per seed (for example a cup tilt limit of 10 vs 15 degrees); not a pass/fail measure, added before any input exists"
+ },
+ "development_status": "perception was tuned on the reference demonstration and development seeds 9001 and 9002 only. On dev 9002 it still misses the marker's grasp and release (3 of 6 events; the marker's carry is reconstructed wrongly) and its strict signature differs offline. Nothing in the design was loosened after these development results.",
+ "disclosures": [
+  "camera intrinsics known (45 degree vertical field of view); table size known (1.2 x 1.0 m); object, tray and wall-thickness sizes from the kit catalogue",
+  "the camera is assumed to be on the operator's (-y) side of the table, which resolves the table rectangle's symmetry",
+  "the bead count is the number of balls visible to the grounding model, not the true count",
+  "the gripper opening is not observed: closed while an object is carried, open otherwise",
+  "cup tilt only where the cup is clearly visible in the side view (visibility, occlusion and temporal consistency gates), from an in-image silhouette fit",
+  "the render look was adjusted for segmentation (soft wood grain, dark floor, opaque walls)",
+  "perception was tuned on the reference demonstration and dev 9001/9002; evaluation seeds were never rendered or sampled by the perception track",
+  "SAM 3.1 noun-phrase prompts alone found only the blue cube, the table (top) and the wall (side) on these renders, so muse-spark-1.3 grounding seeds box prompts",
+  "static scene parts are segmented once on frame 0 and held",
+  "one-view frames: resting objects are placed on their support; carried objects hidden under the gripper follow it; gripper depth from apparent size",
+  "rendered video, not camera footage, rendered on an NVIDIA L4 with EGL",
+  "registration 2: attempt 1 on seeds 70000-70019 failed for a harness reason and is reported in results/eval_video/ATTEMPT_1.md; its 12 tracked seeds are not used",
+  "seeds run in parallel (8 at a time) and the tracking latency reported per seed includes waiting for the shared CPU; results do not depend on the order"
+ ],
+ "supersedes": {
+  "registration": "video",
+  "seeds": "70000-70019 (retired)",
+  "design_sha256": "31980f0adadd404d1c3939c111635781434d79f98dd4a329222266f914f2ad45",
+  "amendments": {
+   "design_amendment_1.json": "9aa3cc803455b8a393e4dfa2fb1173c5431c1b3764ea24634273ead04decd177",
+   "design_amendment_2.json": "92ecdc59209df6c1a22dfa8f83b8572a0ab6d98998ef9ebc49ee8808d793e6f6"
+  },
+  "outcome": "attempt 1 did not produce a result: results/eval_video/ATTEMPT_1.md"
+ },
+ "rationale": "Attempt 1 of registration 'video' failed for a harness reason: the runner passed the whole observation block of the design to observe() as keyword arguments, so every video-model call raised TypeError before any request; the specification was then proposed without observations, which is not the registered condition; and the run stopped after 12 of 20 seeds when the machine restarted, with no way to resume. A frozen registration cannot be patched, so this registration repeats the design on 20 new seeds with three harness changes: only the arguments observe() declares are passed (tested against the real function), finished seeds are checkpointed and a restarted run resumes, and seeds run four at a time under a spend reservation. Everything measured and every threshold, tolerance, metric and decision rule is the same as registration 'video' with its amendments 1 and 2 (hashes in 'supersedes'). Attempt 1's tracking outputs (seeds 70000-70011) were not summarised before this design was written.",
+ "observe_models": [
+  "muse-wonder-1.0",
+  "muse-spark-1.3"
+ ],
+ "observation_call": "observe(top video, model, client, strategy='video'): of the observation block only the names that observe() declares in its signature are passed (bench_video.observe_kwargs); camera, event_time and matching are descriptive and used by the scorer",
+ "workers": 8,
+ "reservation_factor": 1.5,
+ "spend_projection_note": "from measured calls before this design: attempt 1 tracking on 12 seeds (sam-3.1 $2.93, muse-spark-1.3 grounding $0.82), one muse-wonder-1.0 observation of the 82 s reference clip ($0.20), and the development rehearsal of this harness (8 truncated demos, 8 workers, $0.26 per seed without Wonder, no HTTP 429)",
+ "resume_rule": "each finished seed (completed or failed) is written to seeds/<seed>.json next to the ledger. A restarted run skips those seeds and runs the others; a seed that had started without finishing is run again from the start and listed in the report. A finished seed is never run twice. The report states every attempt and restart.",
+ "registration": "video2",
+ "created_at": "2026-11-01T06:04:11.898819+00:00",
+ "created_unix": 1793513051.898819,
+ "audit": {
+  "roots": [
+   "results",
+   "data",
+   "external:media",
+   "external:site_final",
+   "external:perception",
+   "external:probes",
+   "external:interpret"
+  ],
+  "text_files": 3234,
+  "hits": [],
+  "result": "no seed or input hash of this registration found"
+ }
+}

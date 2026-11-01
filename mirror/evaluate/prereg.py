@@ -28,6 +28,7 @@ import hashlib
 import importlib
 import json
 import os
+import threading
 import time
 from pathlib import Path
 from typing import Any, Callable, Optional  # noqa: F401
@@ -55,6 +56,17 @@ REGISTRY: dict[str, dict[str, Any]] = {
                             ("mirror.perception.reconstruct", "trace_from_estimates"),
                             ("mirror.interpret.video_observe", "observe"), ("mirror.interpret", "propose_spec")],
                   runner="mirror.evaluate.bench_video:run"),
+    "video2": dict(out="results/eval_video2", code_exclude=PRESENTATION_ONLY + ("sim/render.py",),
+                   code_entries=["mirror.evaluate.prereg", "mirror.evaluate.bench_video", "mirror.evaluate.costs",
+                                 "mirror.perception", "mirror.perception.track", "mirror.perception.reconstruct",
+                                 "mirror.interpret.video_observe", "mirror.interpret", "mirror.meta", "mirror.contracts"],
+                   requires=[("mirror.perception", "load_demo_video"), ("mirror.perception.track", "track_videos"),
+                             ("mirror.perception.reconstruct", "estimate"),
+                             ("mirror.perception.reconstruct", "scene_from_video"),
+                             ("mirror.perception.reconstruct", "trace_from_estimates"),
+                             ("mirror.interpret.video_observe", "observe"), ("mirror.interpret", "propose_spec"),
+                             ("mirror.evaluate.bench_video", "observe_kwargs")],
+                   runner="mirror.evaluate.bench_video:run"),
     "robustness": dict(out="results/eval_robustness", code_exclude=PRESENTATION_ONLY + ("sim/render.py",),
                        code_entries=["mirror.evaluate.prereg", "mirror.evaluate.bench_robust", "mirror.evaluate.costs",
                                      "mirror.robustness", "mirror.robustness.geometry", "mirror.robustness.local",
@@ -104,19 +116,24 @@ def _shown(p: Path) -> str:
 # ------------------------------------------------------------------ ledger ---
 
 class Ledger:
-    """Append-only JSON-lines record of every attempt."""
+    """Append-only JSON-lines record of every attempt (safe across threads:
+    one locked append per entry)."""
+
+    _lock = threading.Lock()
 
     def __init__(self, path: Path | str):
         self.path = Path(path)
 
     def append(self, **entry) -> dict:
         entry.setdefault("unix", time.time())
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        fd = os.open(self.path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
-        try:
-            os.write(fd, (json.dumps(entry, sort_keys=True, default=str) + "\n").encode())
-        finally:
-            os.close(fd)
+        line = (json.dumps(entry, sort_keys=True, default=str) + "\n").encode()
+        with Ledger._lock:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            fd = os.open(self.path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+            try:
+                os.write(fd, line)
+            finally:
+                os.close(fd)
         return entry
 
     def entries(self) -> list[dict]:
@@ -144,12 +161,14 @@ class Budget:
     def __init__(self, caps: Optional[dict] = None):
         self.caps = dict(caps or BUDGET_CAPS)
         self.used: dict[str, int] = {}
+        self._lock = threading.Lock()
 
     def charge(self, line: str, n: int = 1) -> None:
-        cap = self.caps.get(line)
-        if cap is not None and self.used.get(line, 0) + n > cap:
-            raise BudgetExceeded(f"budget line {line}: {self.used.get(line, 0)} used, cap {cap}")
-        self.used[line] = self.used.get(line, 0) + n
+        with self._lock:
+            cap = self.caps.get(line)
+            if cap is not None and self.used.get(line, 0) + n > cap:
+                raise BudgetExceeded(f"budget line {line}: {self.used.get(line, 0)} used, cap {cap}")
+            self.used[line] = self.used.get(line, 0) + n
 
     def snapshot(self) -> dict:
         return {k: {"used": self.used.get(k, 0), "cap": self.caps.get(k)} for k in sorted(set(self.caps) | set(self.used))}

@@ -1,0 +1,230 @@
+{
+ "key": "efe193a62f8fb79fee1d24fccc3b70c1846ba0bb4c9fdcc444ee504fb77714cf",
+ "model": "muse-wonder-1.0",
+ "endpoint": "/responses",
+ "request": {
+  "model": "muse-wonder-1.0",
+  "input": [
+   {
+    "type": "message",
+    "role": "user",
+    "content": [
+     {
+      "type": "input_text",
+      "text": "Describe this demonstration video. The video is 82.20 seconds long."
+     },
+     {
+      "type": "input_file",
+      "file_id": "sha256:11548e06cffabe90fb8c6195a3d93494c9dc869af755e32920ec92e665345665"
+     }
+    ]
+   }
+  ],
+  "instructions": "You watch a video of a tabletop demonstration: objects are packed into a\ndestination tray. Report only what the video shows.\n\nVocabulary of object kinds: cup (open-top container), block, marker (standing\ncylinder), tray (destination), wall (obstacle), gripper (the hand or robot\ngripper), other.\n\nReport:\n- objects: every distinct object, its kind, a short visual description, whether\n  it matters to the task and why.\n- events: grasp, release and carry of each object, with times in seconds from\n  the start of the video. A carry spans from grasp to release.\n- care_cues: behaviour that suggests a requirement, such as keeping an object\n  level, slowing down, or keeping distance from something, with the times where\n  the video shows it and what shows it. Report none if you see none.\n- uncertainties: what the video does not settle (for example why an object was\n  carried a certain way).\nDo not guess numbers you cannot see; describe evidence instead.",
+  "text": {
+   "format": {
+    "type": "json_schema",
+    "name": "video_observations",
+    "schema": {
+     "$defs": {
+      "CareCue": {
+       "properties": {
+        "object": {
+         "enum": [
+          "cup",
+          "block",
+          "marker",
+          "tray",
+          "wall",
+          "gripper",
+          "other"
+         ],
+         "type": "string"
+        },
+        "cue": {
+         "description": "the careful behaviour, e.g. 'kept level while passing the wall'",
+         "type": "string"
+        },
+        "t_start": {
+         "type": "number"
+        },
+        "t_end": {
+         "type": "number"
+        },
+        "evidence": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "object",
+        "cue",
+        "t_start",
+        "t_end",
+        "evidence"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      },
+      "ObservationUncertainty": {
+       "properties": {
+        "about": {
+         "type": "string"
+        },
+        "question": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "about",
+        "question"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      },
+      "ObservedEvent": {
+       "properties": {
+        "type": {
+         "enum": [
+          "grasp",
+          "release",
+          "carry"
+         ],
+         "type": "string"
+        },
+        "object": {
+         "enum": [
+          "cup",
+          "block",
+          "marker",
+          "tray",
+          "wall",
+          "gripper",
+          "other"
+         ],
+         "type": "string"
+        },
+        "t_start": {
+         "description": "seconds from the start of the video",
+         "type": "number"
+        },
+        "t_end": {
+         "description": "seconds from the start of the video; equal to t_start for an instant",
+         "type": "number"
+        },
+        "evidence": {
+         "description": "what in the video shows it",
+         "type": "string"
+        }
+       },
+       "required": [
+        "type",
+        "object",
+        "t_start",
+        "t_end",
+        "evidence"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      },
+      "ObservedObject": {
+       "properties": {
+        "kind": {
+         "description": "closest kind from the vocabulary",
+         "enum": [
+          "cup",
+          "block",
+          "marker",
+          "tray",
+          "wall",
+          "gripper",
+          "other"
+         ],
+         "type": "string"
+        },
+        "description": {
+         "description": "what it looks like in the video, e.g. 'small white open box'",
+         "type": "string"
+        },
+        "relevant": {
+         "description": "true if the task acts on it or it shapes the motion",
+         "type": "boolean"
+        },
+        "reason": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "kind",
+        "description",
+        "relevant",
+        "reason"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     },
+     "description": "What the model returns (strict schema).",
+     "properties": {
+      "summary": {
+       "description": "one sentence: what the person or robot does",
+       "type": "string"
+      },
+      "objects": {
+       "items": {
+        "$ref": "#/$defs/ObservedObject"
+       },
+       "type": "array"
+      },
+      "events": {
+       "items": {
+        "$ref": "#/$defs/ObservedEvent"
+       },
+       "type": "array"
+      },
+      "care_cues": {
+       "items": {
+        "$ref": "#/$defs/CareCue"
+       },
+       "type": "array"
+      },
+      "uncertainties": {
+       "items": {
+        "$ref": "#/$defs/ObservationUncertainty"
+       },
+       "type": "array"
+      }
+     },
+     "required": [
+      "summary",
+      "objects",
+      "events",
+      "care_cues",
+      "uncertainties"
+     ],
+     "type": "object",
+     "additionalProperties": false
+    },
+    "strict": true
+   }
+  }
+ },
+ "response": {
+  "text": "{\n  \"care_cues\": [\n    {\n      \"cue\": \"Avoiding the wall / using the gap at its end\",\n      \"evidence\": \"On every carry the gripper does not cross the central wall line. It travels north on the left side, passes around the top end of the wall, then travels south on the right side toward the tray.\",\n      \"object\": \"wall\",\n      \"t_end\": 74,\n      \"t_start\": 10\n    },\n    {\n      \"cue\": \"Keeping the cup upright / open side up\",\n      \"evidence\": \"The cup is carried without being inverted and is left in the tray with its yellow interior still visible from above, in the same up-facing orientation as at the start. Top-down view limits how much tilt can be judged.\",\n      \"object\": \"cup\",\n      \"t_end\": 23,\n      \"t_start\": 9\n    },\n    {\n      \"cue\": \"Slow, prolonged alignment at pick-up and placement\",\n      \"evidence\": \"The gripper spends several seconds creeping/dwelling against each object before it starts moving with it (approx. 1-9 s for the cup, 29-38 s for the block, 60-68 s for the marker) and again dwells over the tray before withdrawing (approx. 16-23 s, 45-53 s, and 73-80 s).\",\n      \"object\": \"cup\",\n      \"t_end\": 80,\n      \"t_start\": 1\n    },\n    {\n      \"cue\": \"Placing items separately in the tray rather than on top of one another\",\n      \"evidence\": \"The cup is left on the west side of the tray, the block is then placed to its east, and the marker is then placed east of the block, forming a west-to-east row.\",\n      \"object\": \"tray\",\n      \"t_end\": 80,\n      \"t_start\": 22\n    },\n    {\n      \"cue\": \"Not displacing the remaining left-side objects during earlier carries\",\n      \"evidence\": \"While carrying the cup north (approx. 10-12 s), the gripper passes close to the blue block and red marker but neither moves from its starting position until its own later pick-up.\",\n      \"object\": \"block\",\n      \"t_end\": 12,\n      \"t_start\": 10\n    }\n  ],\n  \"events\": [\n    {\n      \"evidence\": \"Gripper moves against the west side of the cup at the bottom-left, the cup's yellow pattern becomes partly covered, then at approx. 9-10 s the cup starts moving north together with the gripper.\",\n      \"object\": \"cup\",\n      \"t_end\": 9,\n      \"t_start\": 1,\n      \"type\": \"grasp\"\n    },\n    {\n      \"evidence\": \"Cup moves with the gripper north along the left side, east through the gap above the top end of the wall (approx. 12-14 s), then south to and over the tray.\",\n      \"object\": \"cup\",\n      \"t_end\": 22,\n      \"t_start\": 9,\n      \"type\": \"carry\"\n    },\n    {\n      \"evidence\": \"Cup becomes visible as a separate object inside the west side of the tray and remains there while the gripper withdraws north out of the tray.\",\n      \"object\": \"cup\",\n      \"t_end\": 24,\n      \"t_start\": 22,\n      \"type\": \"release\"\n    },\n    {\n      \"evidence\": \"After returning to the left side, the gripper dwells against the blue block (approx. 29-38 s); the block becomes partly hidden at the gripper's edge, then starts moving north with the gripper at approx. 38-39 s.\",\n      \"object\": \"block\",\n      \"t_end\": 38,\n      \"t_start\": 29,\n      \"type\": \"grasp\"\n    },\n    {\n      \"evidence\": \"Block moves with the gripper north, east through the gap above the wall (approx. 41-43 s), then south over the tray.\",\n      \"object\": \"block\",\n      \"t_end\": 52,\n      \"t_start\": 38,\n      \"type\": \"carry\"\n    },\n    {\n      \"evidence\": \"Blue block becomes visible as a separate square in the tray, east of the cup, while the gripper moves away north/east.\",\n      \"object\": \"block\",\n      \"t_end\": 54,\n      \"t_start\": 52,\n      \"type\": \"release\"\n    },\n    {\n      \"evidence\": \"After returning to the left side, the gripper dwells beside the red marker (approx. 60-68 s); the marker is progressively hidden behind the gripper, then the gripper begins moving north with only a small red part visible at its edge around 68 s.\",\n      \"object\": \"marker\",\n      \"t_end\": 68,\n      \"t_start\": 60,\n      \"type\": \"grasp\"\n    },\n    {\n      \"evidence\": \"Gripper carries the marker north, east through the gap above the wall (approx. 70-72 s), then south to the east side of the tray; a red elongated shape becomes visible extending from the gripper into the tray.\",\n      \"object\": \"marker\",\n      \"t_end\": 79,\n      \"t_start\": 68,\n      \"type\": \"carry\"\n    },\n    {\n      \"evidence\": \"Red marker is left visible in the tray east of the blue block, appearing elongated/on its side from above, while the gripper moves east away from the tray and stops there by the end of the video.\",\n      \"object\": \"marker\",\n      \"t_end\": 81,\n      \"t_start\": 79,\n      \"type\": \"release\"\n    }\n  ],\n  \"objects\": [\n    {\n      \"description\": \"Small square open-top container with a light rim and yellow squares visible inside; starts at bottom-left of the table.\",\n      \"kind\": \"cup\",\n      \"reason\": \"It is the first object carried by the gripper and placed in the tray.\",\n      \"relevant\": true\n    },\n    {\n      \"description\": \"Small solid blue square/cube; starts on the left side, below and west of the red marker.\",\n      \"kind\": \"block\",\n      \"reason\": \"It is the second object carried by the gripper and placed in the tray, east of the cup.\",\n      \"relevant\": true\n    },\n    {\n      \"description\": \"Small red/orange cylinder; initially seen from above as a small round top with a side shadow on the left side of the table. In the tray at the end it appears as an elongated red shape, i.e. on its side from this view.\",\n      \"kind\": \"marker\",\n      \"reason\": \"It is the third object carried by the gripper and placed in the tray, east of the block.\",\n      \"relevant\": true\n    },\n    {\n      \"description\": \"Large dark grey rectangular destination container in the upper-right area of the table; stationary throughout.\",\n      \"kind\": \"tray\",\n      \"reason\": \"All three carried objects are placed into it.\",\n      \"relevant\": true\n    },\n    {\n      \"description\": \"Long thin light-grey vertical strip in the centre of the table, running from the bottom edge to near the top, leaving a gap at the top/north end.\",\n      \"kind\": \"wall\",\n      \"reason\": \"It divides the starting side from the tray side; every carry goes around its top end rather than crossing it.\",\n      \"relevant\": true\n    },\n    {\n      \"description\": \"One large solid medium-grey rectangle seen from above; moves around the table, dwells against each object, moves with it, and withdraws after placement.\",\n      \"kind\": \"gripper\",\n      \"reason\": \"It performs all grasps, carries, and releases.\",\n      \"relevant\": true\n    },\n    {\n      \"description\": \"Large tan/brown table surface filling most of the frame, on a darker background.\",\n      \"kind\": \"other\",\n      \"reason\": \"It is the supporting surface/background; it does not itself move or get placed.\",\n      \"relevant\": false\n    }\n  ],\n  \"summary\": \"Top-down view of a tan table divided by a central wall with a gap at the top. A large grey rectangular gripper sequentially carries three objects from the left side into a dark tray on the right: first a small cup with yellow interior, then a small blue block, then a small red marker. Each trip goes north around the top end of the wall, then south into the tray, leaving the three objects in a west-to-east row in the tray.\",\n  \"uncertainties\": [\n    {\n      \"about\": \"Exact grasp and release instants\",\n      \"question\": \"When exactly is each object gripped and let go within the stated ranges? The top-down view hides the object at the gripper's edge during contact, so times are given as approximate ranges based on when the object starts/stops moving with the gripper and when it becomes separately visible.\"\n    },\n    {\n      \"about\": \"Cup contents and levelness\",\n      \"question\": \"Are the yellow squares inside the cup loose contents that must stay level, or just the visible interior/pattern of the cup? The video shows the cup stays up-facing, but from directly above it does not settle tilt, height, or whether anything could spill.\"\n    },\n    {\n      \"about\": \"Marker final orientation\",\n      \"question\": \"Was the marker intentionally placed on its side, did it tip during release, or is the elongated final shape how this gripper sets it down? The video only shows it standing-appearing at the start and elongated/on its side in the tray at the end.\"\n    },\n    {\n      \"about\": \"Reason for object order and tray positions\",\n      \"question\": \"Why is the order cup, then block, then marker, and why are they placed in that west-to-east row in the tray? The video shows the order and final positions but not the reason.\"\n    },\n    {\n      \"about\": \"Reason for slow dwell movements\",\n      \"question\": \"Do the long alignment dwells reflect a care requirement, sensing/alignment limits, or simply the gripper's normal programmed motion? The behaviour is visible, but its cause is not.\"\n    },\n    {\n      \"about\": \"Height and clearance\",\n      \"question\": \"How high are objects lifted, and how tall is the wall relative to a carried object? The top-down view does not show height; it only shows the gripper routing around the wall's top end.\"\n    },\n    {\n      \"about\": \"Opening frame extra grey shape\",\n      \"question\": \"At approx. 0 s a second grey rectangle is momentarily visible centre-left in addition to the gripper beside the cup, and it is not present from approx. 1 s onward. The video does not settle whether this is a separate transient object or a start-frame/rendering artefact; it plays no later role.\"\n    }\n  ]\n}",
+  "model": "muse-wonder-1.0",
+  "usage": {
+   "input_tokens": 15660,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 6972,
+   "output_tokens_details": {
+    "reasoning_tokens": 4628
+   },
+   "total_tokens": 22632
+  },
+  "status": "completed"
+ },
+ "blobs": [],
+ "latency_s": 50.759,
+ "recorded_at": "2026-11-01T05:41:48Z"
+}
