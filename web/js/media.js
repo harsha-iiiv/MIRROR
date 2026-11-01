@@ -122,6 +122,22 @@ export function ObservationTimeline({ obs, duration, onSeek }) {
   </div>`;
 }
 
+// How well this run's reconstruction matched the simulator's ground truth, and which run it was.
+function MetricsLine({ vd, isStatic }) {
+  const mt = vd.metrics;
+  if (!mt || mt.centroid_err_cm == null) return null;
+  const which = vd.run === 'live' ? 'This live run' : vd.run === 'fixture' ? 'This fixture run' : (isStatic ? 'The recorded run shown here' : 'This run (recorded responses)');
+  const parts = [];
+  if (mt.found_rate != null) parts.push(`objects found in ${(100 * mt.found_rate).toFixed(1)}% of frames`);
+  parts.push(`mean position error ${mt.centroid_err_cm.toFixed(2)} cm`);
+  if (mt.events_true != null) parts.push(`${mt.events_matched}/${mt.events_true} grasps and releases matched${mt.event_err_s != null && mt.events_matched ? ` (mean ${mt.event_err_s.toFixed(2)} s off)` : ''}`);
+  parts.push(mt.cup_tilt_err_deg != null ? `cup tilt within ${mt.cup_tilt_err_deg.toFixed(1)}° on average` : 'cup tilt not measured');
+  return html`<div class="metrics-line">
+    <p style="margin:0"><b>${which}</b>, checked against the simulator's ground truth for this rendered video: ${parts.join(', ')}.</p>
+    <p style="margin:4px 0 0" class="faint">Model grounding differs from run to run, so these numbers vary; the pre-registered video benchmark is the reference.</p>
+  </div>`;
+}
+
 export function VideoObservations({ ctx, vd, models }) {
   const obs = vd.observations || {};
   const seek = (t) => { ctx.setPick('demo'); setTimeout(() => { const v = ctx.viewer.current; if (v) { v.pause(); v.setTime(t); } }, 60); };
@@ -131,8 +147,7 @@ export function VideoObservations({ ctx, vd, models }) {
   return html`<div>
     <p class="credits">${tm ? html`Tracked by <b>${tm.model}</b>` : ''}${om ? html` · observed by <b>${om.model}</b>` : ''}
       ${tm ? html` · <span class=${'src ' + tm.source}>${tm.source}</span>` : ''}</p>
-    ${vd.metrics && vd.metrics.centroid_err_cm != null ? html`<p class="metrics-line">Checked against the simulator's ground truth for this rendered video:
-      objects found in ${(100 * vd.metrics.found_rate).toFixed(1)}% of frames, mean position error ${vd.metrics.centroid_err_cm.toFixed(2)} cm, ${vd.metrics.events_matched}/${vd.metrics.events_true} grasps and releases (mean ${vd.metrics.event_err_s.toFixed(2)} s off)${vd.metrics.cup_tilt_err_deg != null ? `, cup tilt within ${vd.metrics.cup_tilt_err_deg.toFixed(1)}° on average` : ''}.</p>` : ''}
+    <${MetricsLine} vd=${vd} isStatic=${ctx.isStatic} />
     ${obs.summary ? html`<p class="lede" style="margin-top:6px">${obs.summary}</p>` : ''}
     <${ObservationTimeline} obs=${obs} duration=${dur} onSeek=${seek} />
     ${(obs.cues || []).some((c) => c.kind === 'care') ? html`<h3>Cues of care</h3><ol class="timeline">${obs.cues.filter((c) => c.kind === 'care').map((c) => html`

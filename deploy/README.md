@@ -70,10 +70,10 @@ Logs: `journalctl -u mirror-studio -f`. After changing the env file:
 | `MIRROR_LLM_MODEL` | muse-spark-1.3 | Model id |
 | `MODEL_API_KEY` | *(none)* | Model key, server-side only |
 | `MIRROR_LLM_TIMEOUT` | 90 | Seconds per model request |
-| `MIRROR_MODEL_CALLS_PER_HOUR` | 40 | Model requests per sliding hour, whole server |
-| `MIRROR_MODEL_CALLS_PER_SESSION` | 8 | Model requests per visitor session |
-| `MIRROR_SAM_CALLS_PER_HOUR` | 12 | Video tracking requests (SAM) per hour, whole server |
-| `MIRROR_SAM_CALLS_PER_SESSION` | 2 | Video tracking requests per session (one per camera view) |
+| `MIRROR_MODEL_CALLS_PER_HOUR` | 80 | Muse Spark requests per sliding hour, whole server (interpretation, corrections, video grounding) |
+| `MIRROR_MODEL_CALLS_PER_SESSION` | 16 | Muse Spark requests per visitor session; a video demonstration may need 11 |
+| `MIRROR_SAM_CALLS_PER_HOUR` | 24 | Video tracking requests (SAM) per hour, whole server |
+| `MIRROR_SAM_CALLS_PER_SESSION` | 8 | Video tracking requests per session; one video demonstration needs up to 8 |
 | `MIRROR_VIDEO_CALLS_PER_HOUR` | 12 | Video understanding requests per hour |
 | `MIRROR_VIDEO_CALLS_PER_SESSION` | 2 | Video understanding requests per session |
 | `MIRROR_VOICE_CALLS_PER_HOUR` | 60 | Speech-to-text requests per hour |

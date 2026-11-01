@@ -257,3 +257,80 @@ def test_perception_calls_from_track_notes():
     calls = mb._calls_from_tracks(T())
     assert [(c["model"], c["source"]) for c in calls] == [("muse-spark-1.3", "live"), ("sam-3.1", "recorded"),
                                                           ("sam-3.1", "recorded"), ("muse-spark-1.3", "live")]
+
+
+
+def test_budget_reserve_is_all_or_nothing_and_release_gives_back():
+    b = ModelBudget(per_hour=20, per_session=11)
+    assert b.reserve("a", 12) and b.remaining_session("a") == 11      # refused, nothing taken
+    assert b.reserve("a", 11) is None and b.remaining_session("a") == 0
+    b.release("a", 3)
+    assert b.remaining_session("a") == 3 and b.remaining_hour() == 12
+    assert b.reserve("b", 13) and b.remaining_hour() == 12              # hour cap, nothing taken
+
+
+def test_video_job_refused_up_front_when_worst_case_does_not_fit():
+    from mirror.studio import session_adapter as sa
+    if not mb.available()["bundled_video"]:
+        pytest.skip("no bundled video")
+    small = {"sam": ModelBudget(per_hour=24, per_session=4), "video": ModelBudget(per_hour=12, per_session=2)}
+    svc = StudioService(backend="fixture", session_id="s", budget=ModelBudget(per_hour=80, per_session=16),
+                        meta_budgets=small)
+    svc.mode = "live"                     # exercise the public-server guard; no job is started
+    svc._cap_cache = (time.time(), {"perception": True, "observe": True, "voice": True, "bundled_video": True, "video": True})
+    with pytest.raises(RuntimeError, match="8 SAM 3.1 requests"):
+        svc.process_video("bundled")
+    # nothing stays reserved after a refusal
+    assert svc.budget.remaining_session("s") == 16 and small["sam"].remaining_session("s") == 4
+    tight = ModelBudget(per_hour=80, per_session=10)
+    svc2 = StudioService(backend="fixture", session_id="s", budget=tight, meta_budgets=meta_budgets())
+    svc2.mode = "live"
+    svc2._cap_cache = svc._cap_cache
+    with pytest.raises(RuntimeError, match="11 Muse Spark requests"):
+        svc2.process_video("bundled")
+    assert tight.remaining_session("s") == 10
+
+
+def test_video_reservation_settles_to_the_real_calls():
+    from mirror.studio import session_adapter as sa
+    interp = ModelBudget(per_hour=80, per_session=30)
+    metab = {"sam": ModelBudget(per_hour=40, per_session=20), "video": ModelBudget(per_hour=12, per_session=4)}
+    svc = StudioService(backend="fixture", session_id="s", budget=interp, meta_budgets=metab)
+    svc.mode = "live"
+    held = svc._reserve_video()
+    assert held == {"interpreter": sa.VIDEO_WORST_GROUNDING, "sam": sa.VIDEO_WORST_SAM, "video": 1}
+    assert interp.remaining_session("s") == 30 - sa.VIDEO_WORST_GROUNDING   # room left for the proposal
+    svc._settle(held, "interpreter", 8)
+    svc._settle(held, "sam", 4)
+    svc._settle(held, "video", 1)
+    assert interp.remaining_session("s") == 22 and metab["sam"].remaining_session("s") == 16
+    assert metab["video"].remaining_session("s") == 3 and held == {}
+    held = svc._reserve_video()
+    svc._settle(held, "sam", 0)                 # replayed from recordings: nothing charged
+    assert metab["sam"].remaining_session("s") == 16
+
+
+def test_fixture_video_run_is_labelled_and_observation_counts_one_call(client):
+    c = client
+    assert wait(c, c.post("/api/video/process", json={"top": "bundled"}).json())["status"] == "done"
+    s = c.get("/api/state").json()
+    assert s["video_demo"]["run"] == "fixture"
+
+
+
+def test_bundled_video_gets_a_stable_demo_id(monkeypatch):
+    """The demonstration id reaches the proposal prompt, so a per-run copy must not change it."""
+    seen = {}
+
+    def fake_perceive(top, side=None, progress=None, ground_truth=None, demo_id=None):
+        seen["demo_id"], seen["top"] = demo_id, top
+        raise RuntimeError("stop here")
+    if not mb.available()["bundled_video"]:
+        pytest.skip("no bundled video")
+    svc = StudioService(backend="fixture", session_id="s")
+    svc.mode = "live"
+    svc._cap_cache = (time.time(), {"perception": True, "observe": True, "voice": True, "bundled_video": True, "video": True})
+    monkeypatch.setattr(mb, "perceive", fake_perceive)
+    j = svc.wait(svc.process_video("bundled"), timeout=60)
+    assert j.status == "error" and seen["demo_id"] == "reference_from_video"
+    assert "/reference/" not in seen["top"]                  # processed from the session's own copy

@@ -11,13 +11,14 @@ small machine responsive:
   sessions; the rest wait in arrival order and see their place in the queue.
   Each session runs one job at a time.
 * model calls: live model requests only when MIRROR_LLM_MODE=live, limited to
-  MIRROR_MODEL_CALLS_PER_HOUR across the server (default 40, sliding hour) and
-  MIRROR_MODEL_CALLS_PER_SESSION per session (default 8). Past either limit,
+  MIRROR_MODEL_CALLS_PER_HOUR across the server (default 80, sliding hour) and
+  MIRROR_MODEL_CALLS_PER_SESSION per session (default 16; a video demonstration
+  alone may need 11: up to 10 grounding requests plus the proposal). Past either limit,
   or on any model error, the offline rule-based interpreter is used and the
   interface says so.
 * other Meta models, counted per request the studio makes, each with a server
   hour budget and a session budget:
-    sam   (video tracking)        MIRROR_SAM_CALLS_PER_HOUR / _PER_SESSION     (12 / 2)
+    sam   (video tracking)        MIRROR_SAM_CALLS_PER_HOUR / _PER_SESSION     (24 / 8)
     video (video understanding)   MIRROR_VIDEO_CALLS_PER_HOUR / _PER_SESSION   (12 / 2)
     voice (speech to text)        MIRROR_VOICE_CALLS_PER_HOUR / _PER_SESSION   (60 / 10)
   Past a limit the request is refused with a clear message; recordings keep working.
@@ -109,8 +110,8 @@ class ModelBudget:
 
     def __init__(self, per_hour: Optional[int] = None, per_session: Optional[int] = None,
                  clock: Callable[[], float] = time.monotonic):
-        self.per_hour = per_hour if per_hour is not None else _env_int("MIRROR_MODEL_CALLS_PER_HOUR", 40)
-        self.per_session = per_session if per_session is not None else _env_int("MIRROR_MODEL_CALLS_PER_SESSION", 8)
+        self.per_hour = per_hour if per_hour is not None else _env_int("MIRROR_MODEL_CALLS_PER_HOUR", 80)
+        self.per_session = per_session if per_session is not None else _env_int("MIRROR_MODEL_CALLS_PER_SESSION", 16)
         self.clock = clock
         self._calls: deque = deque()
         self._by_session: dict[str, int] = {}
@@ -133,6 +134,33 @@ class ModelBudget:
             self._by_session[session_id] = self._by_session.get(session_id, 0) + 1
             return None
 
+    def reserve(self, session_id: str, n: int) -> Optional[str]:
+        """Take ``n`` requests at once, or none. Returns None if allowed, else why not."""
+        if n <= 0:
+            return None
+        with self._lock:
+            self._trim()
+            used = self._by_session.get(session_id, 0)
+            if used + n > self.per_session:
+                return (f"this session's model budget cannot cover it ({n} requests needed, "
+                        f"{max(0, self.per_session - used)} of {self.per_session} left)")
+            if len(self._calls) + n > self.per_hour:
+                return (f"the server's model budget for this hour cannot cover it ({n} requests needed, "
+                        f"{max(0, self.per_hour - len(self._calls))} of {self.per_hour} left)")
+            now = self.clock()
+            self._calls.extend([now] * n)
+            self._by_session[session_id] = used + n
+            return None
+
+    def release(self, session_id: str, n: int) -> None:
+        """Give back ``n`` reserved requests that were not used (newest first)."""
+        if n <= 0:
+            return
+        with self._lock:
+            for _ in range(min(n, len(self._calls))):
+                self._calls.pop()
+            self._by_session[session_id] = max(0, self._by_session.get(session_id, 0) - n)
+
     def remaining_hour(self) -> int:
         with self._lock:
             self._trim()
@@ -149,7 +177,7 @@ class ModelBudget:
 
 META_BUDGETS = {
     # kind: (hour env, default, session env, default, what it pays for)
-    "sam": ("MIRROR_SAM_CALLS_PER_HOUR", 12, "MIRROR_SAM_CALLS_PER_SESSION", 2, "video tracking (SAM)"),
+    "sam": ("MIRROR_SAM_CALLS_PER_HOUR", 24, "MIRROR_SAM_CALLS_PER_SESSION", 8, "video tracking (SAM)"),
     "video": ("MIRROR_VIDEO_CALLS_PER_HOUR", 12, "MIRROR_VIDEO_CALLS_PER_SESSION", 2, "video understanding"),
     "voice": ("MIRROR_VOICE_CALLS_PER_HOUR", 60, "MIRROR_VOICE_CALLS_PER_SESSION", 10, "speech to text"),
 }

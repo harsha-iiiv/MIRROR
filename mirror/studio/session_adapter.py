@@ -269,6 +269,11 @@ class Job:
 SIM_JOB_KINDS = {"run", "clarify", "evaluate", "video"}
 
 MAX_UPLOAD_MB = 40          # per video file
+# Worst case of one video demonstration (perception's own caps): Muse Spark grounding on the first
+# frame (3 per camera) plus up to 2 re-seeds per camera; SAM: per camera one video request, one
+# scene-parts request and up to 2 re-seed requests.
+VIDEO_WORST_GROUNDING = 10
+VIDEO_WORST_SAM = 8
 MAX_VIDEO_S = 90.0
 MAX_WAV_S = 30.0
 
@@ -680,7 +685,7 @@ class StudioService:
         log = os.environ.get("MIRROR_LLM_USAGE_LOG")
         if log and Path(log).exists():
             want = {e.get("key") for e in new}
-            got = {}
+            got, tok = {}, {}
             for line in Path(log).read_text().splitlines():
                 try:
                     r = json.loads(line)
@@ -688,8 +693,9 @@ class StudioService:
                     continue
                 if r.get("key") in want and not r.get("from_cassette"):
                     got[r["key"]] = float(r.get("latency_s") or 0)
+                    tok[r["key"]] = int(r.get("total_tokens") or 0)
             if want and want <= set(got):
-                return sum(got.values()), tokens
+                return sum(got.values()), tokens or (sum(tok.values()) or None)
         return None, tokens
 
     def _log_model(self, artifact: str, role: str, model: Optional[str], latency_s: float, source: str,
@@ -732,6 +738,50 @@ class StudioService:
             if why:
                 raise RuntimeError(f"{why.capitalize()}. The recorded demonstration and typing still work.")
 
+    def _budget_for(self, kind: str):
+        return self.budget if kind == "interpreter" else self.meta_budgets.get(kind)
+
+    def _reserve_video(self) -> dict:
+        """Reserve the worst case of one video demonstration up front (all or nothing).
+
+        Grounding requests count against the interpreter budget, with room left for the
+        proposal; every SAM request against the SAM budget; the video observation against
+        the video budget. Returns what was reserved, settled later against the real calls."""
+        if self.mode == "fixture":
+            return {}
+        sid = self.session_id or "local"
+        want = [("interpreter", VIDEO_WORST_GROUNDING + 1), ("sam", VIDEO_WORST_SAM), ("video", 1)]
+        held: dict = {}
+        for kind, n in want:
+            b = self._budget_for(kind)
+            if b is None:
+                continue
+            why = b.reserve(sid, n)
+            if why:
+                for k, m in held.items():
+                    self._budget_for(k).release(sid, m)
+                what = {"interpreter": "Muse Spark", "sam": "SAM 3.1", "video": "video understanding"}[kind]
+                raise RuntimeError(f"A video demonstration can need {n} {what} requests and {why}. "
+                                   "The recorded demonstration and typing still work.")
+            held[kind] = n
+        if "interpreter" in held:                # leave the proposal's request to its own client
+            self.budget.release(sid, 1)
+            held["interpreter"] -= 1
+        return held
+
+    def _settle(self, held: dict, kind: str, used: int) -> None:
+        """Charge ``used`` real requests against a reservation and give back the rest."""
+        n = held.pop(kind, None)
+        b = self._budget_for(kind)
+        if n is None or b is None:
+            return
+        sid = self.session_id or "local"
+        if used < n:
+            b.release(sid, n - used)
+        elif used > n:                           # more than the stated worst case: charge it anyway
+            for _ in range(used - n):
+                b.take(sid)
+
     def upload_video(self, data: bytes, view: str = "top") -> dict:
         if view not in ("top", "side"):
             raise ValueError("view must be top or side")
@@ -772,6 +822,7 @@ class StudioService:
             top_id, top_path = "bundled-top", b["top"]
             side_id, side_path = ("bundled-side", b["side"]) if b.get("side") and side in (None, "bundled") else (None, None)
             gt = b.get("ground_truth")
+            demo_id = Path(top_path).parent.name + "_from_video"     # same id whichever copy is processed
             # Perception writes working images next to the video; the bundled copy may live in a
             # read-only install, so each run works on its own copy in the session's runtime folder.
             src_dir = Path(top_path).parent
@@ -783,8 +834,8 @@ class StudioService:
         else:
             top_id, top_path = top, self.video_file(top)
             side_id, side_path = (side, self.video_file(side)) if side else (None, None)
-        self._spend("sam", 2 if side_path else 1)
-        self._spend("video", 1)
+            demo_id = f"upload_{top}_from_video"
+        held = self._reserve_video()
 
         def work(job):
             def stage(lo, hi):
@@ -794,9 +845,20 @@ class StudioService:
                     self._progress(job, lo + (hi - lo) * max(0.0, min(1.0, float(frac or 0))), msg or job.message)
                 return cb
             self._progress(job, 0.03, "Tracking the objects in the video (SAM 3.1)")
-            per = meta.perceive(top_path, side_path, progress=stage(0.03, 0.45), ground_truth=gt)
+            per = meta.perceive(top_path, side_path, progress=stage(0.03, 0.45), ground_truth=gt, demo_id=demo_id)
+            pcalls = per.get("calls") or []
+            ground = [c for c in pcalls if not str(c.get("model") or "").startswith("sam")]
+            samc = [c for c in pcalls if str(c.get("model") or "").startswith("sam")]
+            # Charge what was actually requested from the API (live calls), give the rest back.
+            self._settle(held, "interpreter", sum(1 for c in ground if c.get("source") == "live"))
+            self._settle(held, "sam", sum(1 for c in samc if c.get("source") == "live"))
             self._progress(job, 0.46, "Reading the video: objects, grasps, releases, care")
-            obs = meta.observe(top_path, progress=stage(0.46, 0.8))
+            try:
+                obs = meta.observe(top_path, progress=stage(0.46, 0.8))
+            except Exception:
+                held.pop("video", None)          # the request may have reached the API: keep it charged
+                raise
+            self._settle(held, "video", sum(1 for c in (obs.get("calls") or []) if c.get("source") == "live"))
             self._progress(job, 0.82, "Proposing the task from the reconstruction and the observations")
             with self.lock:
                 self._reset_session()
@@ -813,9 +875,6 @@ class StudioService:
                 if fb:
                     self.fallbacks.append({"step": "interpret", "used": fb, "version": spec.version})
                 views = ["top"] + (["side"] if side_path else [])
-                pcalls = per.get("calls") or []
-                ground = [c for c in pcalls if not str(c.get("model") or "").startswith("sam")]
-                samc = [c for c in pcalls if str(c.get("model") or "").startswith("sam")]
                 if ground:
                     self._log_model("object grounding (first frame)", "finds the table, tray, wall and objects to track",
                                     ground[0]["model"], sum(float(c.get("latency_s") or 0) for c in ground),
@@ -837,6 +896,8 @@ class StudioService:
                               **({"side": {"id": side_id, **_video_meta(per["tracks"].get("side"))}} if side_id else {})},
                     "tracks": per["tracks"], "observations": obs["observations"], "metrics": per.get("metrics"),
                     "checks": per.get("checks"), "reconstruction_s": per.get("latency_s"),
+                    "run": "live" if any(c.get("source") == "live" for c in pcalls) else (
+                        "fixture" if self.mode == "fixture" else "recorded"),
                     "bundled": top == "bundled", "fixture": self.mode == "fixture",
                     "trace_source": trace.source, "spec_version": spec.version,
                 }

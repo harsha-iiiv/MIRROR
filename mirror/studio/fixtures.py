@@ -762,7 +762,7 @@ class FixtureMeta:
         import shutil
         shutil.rmtree(tmp, ignore_errors=True)
 
-    def perceive(self, top: str, side: Optional[str] = None, progress=None, ground_truth=None) -> dict:
+    def perceive(self, top: str, side: Optional[str] = None, progress=None, ground_truth=None, demo_id=None) -> dict:
         s = self.session
         trace = s.demo or s.record_demo()
         kinds = {o.id: o.kind for o in trace.scene.objects}

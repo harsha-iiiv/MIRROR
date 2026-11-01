@@ -161,7 +161,7 @@ def available() -> dict:
 # ---------------------------------------------------------------- stages ---
 
 def perceive(top: str, side: Optional[str] = None, progress: Optional[Callable] = None,
-             ground_truth: Optional[str] = None, **kw) -> dict:
+             ground_truth: Optional[str] = None, demo_id: Optional[str] = None, **kw) -> dict:
     """Video(s) -> reconstructed DemoTrace + per-object tracks (normalised for the overlay).
 
     ``ground_truth``: a rendered demonstration's manifest; when given, the
@@ -171,11 +171,14 @@ def perceive(top: str, side: Optional[str] = None, progress: Optional[Callable] 
         raise RuntimeError("video perception is not installed on this server")
     t0 = time.time()
     try:
-        has_details = "return_details" in inspect.signature(f).parameters
+        params = inspect.signature(f).parameters
     except (TypeError, ValueError):
-        has_details = False
+        params = {}
+    extra = {"return_details": True} if "return_details" in params else {}
+    if demo_id and "demo_id" in params:
+        extra["demo_id"] = demo_id       # stable id: it reaches the proposal prompt (and its recordings)
     with capture_calls() as calls:
-        res = f(top, side, return_details=True) if has_details else f(top, side)
+        res = f(top, side, **extra)
     lat = time.time() - t0
     est = scene_checks = tracks_obj = None
     if isinstance(res, tuple):
@@ -328,6 +331,10 @@ def observe(video: str, progress: Optional[Callable] = None, model: Optional[str
         obs = _call(f, video, model, progress=progress)
     lat = time.time() - t0
     calls = _norm_calls(calls)
+    if not calls and _get(obs, "from_cassette", default=None) is not None:
+        calls = [{"model": _get(obs, "model", default=model), "endpoint": "video observation",
+                  "latency_s": _get(obs, "latency_s", default=lat), "units": None,
+                  "source": "recorded" if _get(obs, "from_cassette") else "live"}]
     out = {"raw": obs, "observations": normalize_observations(obs),
            **_summary(calls, _get(obs, "model", default=model), _get(obs, "latency_s", default=lat) or lat)}
     out["source"] = _result_source(obs, calls) or out["source"]
