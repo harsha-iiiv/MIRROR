@@ -396,3 +396,23 @@ def test_video_scores_tracking_on_sampled_frames_only(monkeypatch, tmp_path):
 
 def test_audit_tokens_cover_frame_seeds():
     assert prereg._tokens({"frames": {"seeds": [80000]}, "seeds": [1]})["seeds"] == [1, 80000]
+
+
+def test_structure_signature_and_numeric_differences():
+    from mirror.evaluate.bench_video import numeric_differences, structure_signature
+    a = dict(constraints=[("upright", "transport", '{"kind": "cup"}', '{"max_tilt_deg": 10.0}')], goals=[("g", "tray")])
+    b = dict(constraints=[("upright", "transport", '{"kind": "cup"}', '{"max_tilt_deg": 15.0}')], goals=[("g", "tray")])
+    c = dict(constraints=[("upright", "final", '{"kind": "cup"}', '{"max_tilt_deg": 15.0}')], goals=[("g", "tray")])
+    assert a != b and structure_signature(a) == structure_signature(b) and structure_signature(a) != structure_signature(c)
+    (d,) = numeric_differences(a, b)
+    assert d["param"] == "max_tilt_deg" and (d["video"], d["ground_truth"]) == (10.0, 15.0)
+    assert numeric_differences(a, c) == []
+
+
+def test_audit_ignores_digits_inside_hashes(tmp_path):
+    (tmp_path / "a.json").write_text('{"key": "a16ea8982083c38356487a7e414053c81dce4af0b58c1910d2dc70019af329ae"}')
+    assert prereg.audit({"seeds": [70019]}, [tmp_path])["hits"] == []
+    (tmp_path / "b.json").write_text('{"seed": 70019, "dir": "seed70019"}')
+    (tmp_path / "seed70019.txt").write_text("x")
+    hits = prereg.audit({"seeds": [70019]}, [tmp_path])["hits"]
+    assert {h["where"] for h in hits} == {"content", "file name"}

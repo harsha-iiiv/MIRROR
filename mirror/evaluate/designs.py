@@ -252,8 +252,14 @@ def inputs_video(from_dir: Optional[Path] = None) -> tuple[list[dict], dict]:
     os.environ["MIRROR_EVAL_LEDGER"] = str(paths("video")["ledger"])
     out = paths("video")["out"] / "inputs"
     files, demos, render_info = [], [], {}
+    staged = Path(from_dir).parent / "scenes" if from_dir is not None else None
     for seed in VIDEO_SEEDS:
-        scene = sample_layout(seed, "eval")
+        sf = staged / f"{seed}.json" if staged is not None else None
+        if sf is not None and sf.exists():      # the layout sampled (and ledgered) when the renders were staged
+            from mirror.contracts import SceneState
+            scene = SceneState.model_validate_json(sf.read_text())
+        else:
+            scene = sample_layout(seed, "eval")
         dst = out / f"seed{seed}"
         if from_dir is not None:
             src = sorted(Path(from_dir).glob(f"seed{seed}/*/video.json"))
@@ -360,32 +366,86 @@ DESIGNS = {"voice": design_voice, "video": design_video, "robustness": design_ro
 def amendment2_video() -> tuple[dict, str]:
     """(adds, rationale) for results/eval_video/design_amendment_2.json."""
     adds = dict(
-        render=dict(width=960, height=540, fps=15, cameras=["top", "side"],
-                    overlays="none (no text, labels, paths or readouts)",
-                    machine="local, or the project VM with the pinned versions of the second registration; the "
-                            "versions file is copied into inputs.json"),
+        render=dict(
+            function="mirror.perception.render_demo_video(scene, out_dir, cams=('top', 'side')) with the scripted "
+                     "teleoperation demonstration (same operator as the reference demonstration)",
+            width=960, height=540, fps=15, encoding="H.264 yuv420p", cameras=["top", "side"],
+            camera_settings="mirror.perception.cameras as frozen: top lookat (0, 0, 0), distance 1.30, azimuth 90, "
+                            "elevation -86, vertical field of view 45; side lookat (0, 0, 0.06), distance 1.75, azimuth "
+                            "60, elevation -20, vertical field of view 45",
+            overlays="none (no text, labels, paths or readouts)",
+            machine="an NVIDIA L4 GPU compute box with EGL (image with pinned mujoco 3.17.0, numpy 2.4.6, scipy 1.17.1, "
+                    "imageio 2.38.1, pydantic 2.14.2); layouts sampled and ledgered here, rendered there from the saved "
+                    "scenes; GPU, driver and package versions in versions.json, copied into inputs.json. On a "
+                    "development demonstration, EGL frames differed from software (OSMesa) renders by about 1/255 on "
+                    "average (p99 4/255) with identical poses and events."),
         tracking=dict(
             input_fps=5,
             frames="every 3rd frame of each 15 fps render, starting at frame 0, re-encoded once at the inputs stage and "
                    "frozen by sha256 (bench_video.make_sam_copies); the video models watch the full 15 fps top video",
-            procedure="mirror.perception.track.track_videos as frozen: muse-spark-1.3 grounding boxes on each camera's "
-                      "first frame (full frame, then a crop around the table), then one sam-3.1 video request per "
-                      "camera with box prompts for every object in mirror.perception.track.DEFAULT_OBJECTS",
-            reconstruction="mirror.perception.reconstruct.estimate, scene_from_video and trace_from_estimates as "
-                           "frozen, on the 5 fps tracks; scoring uses the ground-truth frames at the sampled times"),
+            procedure="mirror.perception.track.track_videos as frozen, on the 5 fps copies: per camera, three "
+                      "muse-spark-1.3 grounding calls on frame 0 (full frame for the table; a table crop for boxes and "
+                      "the visible ball count; one multi-image call of zoomed crops for cup, block and marker), then "
+                      "sam-3.1 box prompts: one video request (cup, block, marker, gripper) and one image request "
+                      "(table hypotheses, tray, wall) on frame 0",
+            re_seeding="for gaps of at least 2 s in a moving object's track (at most 2 per camera, ranked: the other "
+                       "camera also missing it, then length), SAM tracks backwards over the gap from where the object "
+                       "is visible again (SAM's own box; no model call), or, when the gap runs to the end of the clip, "
+                       "from one muse-spark-1.3 grounding call on the last frame; one SAM video request per re-seed; "
+                       "merged only into missing frames and only if the seed mask is 0.3x to 3x the object's earlier "
+                       "median area; every re-seed is recorded and reported. Worst case per demonstration: 10 Spark "
+                       "calls and 8 SAM requests.",
+            reconstruction="mirror.perception reconstruction as frozen (estimate, scene_from_video, trace_from_estimates), "
+                           "on the 5 fps tracks; scoring uses the ground-truth frames at the sampled times",
+            five_fps_check=("before this amendment, development demonstration 9001 was tracked live at 5 fps ($0.24): "
+                            "found rate 0.98, median centroid error cup 0.39 / block 0.58 / marker 0.90 cm, 5 of 6 "
+                            "events within 1 s, one re-seed; sim's 15 fps run of the same demonstration: block 2.46 cm, "
+                            "5 of 6 within 1 s. Reconstruction from every 3rd frame of the 15 fps tracks gave the same "
+                            "centroid errors. Fewer frames carry a cup tilt estimate at 5 fps (59 vs 168 sampled).")),
         observation_runs="one muse-wonder-1.0 and one muse-spark-1.3 observation per seed, no repeats",
         spend_cap_usd=14.0,
-        spend_rule=("before each seed: if spent + projected full seed > cap, the seed runs without muse-wonder-1.0 "
-                    "when that fits; otherwise the run stops and the remaining seeds are listed as not run. Tracking "
-                    "is never dropped. Projection = mean measured cost of earlier full seeds; for the first seed, "
-                    "spend_projection_per_seed_usd."),
-        spend_projection_per_seed_usd={"sam-3.1": 0.17, "muse-spark-1.3": 0.18, "muse-wonder-1.0": 0.25},
+        spend_rule=("all model calls of this registration (grounding, SAM, re-seeds, observations, proposals) count "
+                    "against the dollar cap. Before each seed: if spent + projected full seed > cap, the seed runs "
+                    "without muse-wonder-1.0 when that fits; otherwise the run stops and the remaining seeds are listed "
+                    "as not run. Tracking is never dropped. Projection = mean measured cost of earlier full seeds; for "
+                    "the first seed, spend_projection_per_seed_usd."),
+        spend_projection_per_seed_usd={"sam-3.1": 0.2, "muse-spark-1.3": 0.18, "muse-wonder-1.0": 0.25},
         budget_caps_amended={"muse-wonder-1.0": None, "muse-spark-1.3:video": None, "sam-3.1": None},
-        budget_note=("Request caps are replaced by the dollar cap (requests are still counted and reported). This "
-                     "changes a resource limit only; no threshold, metric, seed or decision rule changes."))
-    rationale = ("Fixes the settings amendment 1 left pending, from the lead's decision of 31 October 2026 (adopt the "
-                 "perception track's per-camera box-prompt tracking at 5 fps; $14 cap; one Wonder and one Spark run "
-                 "per seed), written before any input of this registration exists. Development numbers behind it: "
-                 "one 87 s demonstration took 14.5 min to render and 10 min to reconstruct; per-phrase SAM tracking "
-                 "was projected at about $20.6 for 20 seeds, box-prompt tracking at about $12.")
+        budget_note=("Request counts are bookkeeping only (still counted and reported); the dollar cap is the binding "
+                     "limit. This changes a resource limit only; no threshold, metric, seed or decision rule changes."),
+        spec_comparison=dict(
+            pass_fail="the published strict proposal signature (signature_equal_min = 18 of 20), unchanged",
+            reported_only="same structure ignoring numeric limits (items, phases, selectors and parameter names equal; "
+                          "numbers may differ), with every numeric difference listed per seed (for example a cup tilt "
+                          "limit of 10 vs 15 degrees); not a pass/fail measure, added before any input exists"),
+        development_status=("perception was tuned on the reference demonstration and development seeds 9001 and 9002 "
+                            "only. On dev 9002 it still misses the marker's grasp and release (3 of 6 events; the "
+                            "marker's carry is reconstructed wrongly) and its strict signature differs offline. Nothing "
+                            "in the design was loosened after these development results."),
+        disclosures=[
+            "camera intrinsics known (45 degree vertical field of view); table size known (1.2 x 1.0 m); object, tray "
+            "and wall-thickness sizes from the kit catalogue",
+            "the camera is assumed to be on the operator's (-y) side of the table, which resolves the table rectangle's "
+            "symmetry",
+            "the bead count is the number of balls visible to the grounding model, not the true count",
+            "the gripper opening is not observed: closed while an object is carried, open otherwise",
+            "cup tilt only where the cup is clearly visible in the side view (visibility, occlusion and temporal "
+            "consistency gates), from an in-image silhouette fit",
+            "the render look was adjusted for segmentation (soft wood grain, dark floor, opaque walls)",
+            "perception was tuned on the reference demonstration and dev 9001/9002; evaluation seeds were never "
+            "rendered or sampled by the perception track",
+            "SAM 3.1 noun-phrase prompts alone found only the blue cube, the table (top) and the wall (side) on these "
+            "renders, so muse-spark-1.3 grounding seeds box prompts",
+            "static scene parts are segmented once on frame 0 and held",
+            "one-view frames: resting objects are placed on their support; carried objects hidden under the gripper "
+            "follow it; gripper depth from apparent size",
+            "rendered video, not camera footage, rendered on an NVIDIA L4 with EGL"])
+    rationale = ("Fixes the settings amendment 1 left pending, from the lead's decisions of 31 October 2026 (15:00, "
+                 "17:10 and 17:50 PT) and the perception track's final description, written before any input of this "
+                 "registration exists and before any of its layouts is sampled: per-camera box-prompt tracking with "
+                 "re-seeding, at 5 fps (checked on dev 9001 first); a $14 cap; one Wonder and one Spark run per seed; a "
+                 "reported-only structure comparison next to the unchanged strict signature; rendering on a GPU box. "
+                 "Development numbers seen before writing it: reference 0.88 cm and 6/6 events, dev 9001 1.67 cm and "
+                 "6/6 (2 s tolerance) with a cup tilt limit of 10 vs 15 degrees in one Spark proposal, dev 9002 3/6 "
+                 "events.")
     return adds, rationale

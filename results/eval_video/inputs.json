@@ -1,0 +1,1116 @@
+{
+ "registration": "video",
+ "design_sha256": "31980f0adadd404d1c3939c111635781434d79f98dd4a329222266f914f2ad45",
+ "amendments": {
+  "design_amendment_1.json": "9aa3cc803455b8a393e4dfa2fb1173c5431c1b3764ea24634273ead04decd177",
+  "design_amendment_2.json": "92ecdc59209df6c1a22dfa8f83b8572a0ab6d98998ef9ebc49ee8808d793e6f6"
+ },
+ "created_at": "2026-11-01T01:52:39.165109+00:00",
+ "created_unix": 1793497959.1651092,
+ "files": [
+  {
+   "seed": 70000,
+   "path": "results/eval_video/inputs/seed70000/demo_eval_70000_reference/ground_truth.json.gz",
+   "sha256": "1552072c04acdfce35892b2a852d79d3c97e7be5753ecdcb81ebd36af05840f6"
+  },
+  {
+   "seed": 70000,
+   "path": "results/eval_video/inputs/seed70000/demo_eval_70000_reference/scene.json",
+   "sha256": "9b429bef8cae507704cccc7e6f8163cf524919602761e0f4e4b530e5f769ce38"
+  },
+  {
+   "seed": 70000,
+   "path": "results/eval_video/inputs/seed70000/demo_eval_70000_reference/side.mp4",
+   "sha256": "e9bad04a1aa864d59aa07cf6215e0be91eb7304965dee3569041f04e53adb754"
+  },
+  {
+   "seed": 70000,
+   "path": "results/eval_video/inputs/seed70000/demo_eval_70000_reference/side_sam5fps.mp4",
+   "sha256": "477f0243e2c2ca59dcf44d2272511d5fb7fc4941a4d8f968082ef502139641cf"
+  },
+  {
+   "seed": 70000,
+   "path": "results/eval_video/inputs/seed70000/demo_eval_70000_reference/top.mp4",
+   "sha256": "3dae4604560fb790383e0753893723ed44728f98c0c25df277d4a65c413a5c30"
+  },
+  {
+   "seed": 70000,
+   "path": "results/eval_video/inputs/seed70000/demo_eval_70000_reference/top_sam5fps.mp4",
+   "sha256": "bb080be1eacf6b4c7c6b670a81503d3dde6693aa7dd1a4ee2117eb9a6f95cb7d"
+  },
+  {
+   "seed": 70000,
+   "path": "results/eval_video/inputs/seed70000/demo_eval_70000_reference/trace.json",
+   "sha256": "b0bf0da7df34d28eed62911d42340938690696be17a2bafea52d11d8407491ba"
+  },
+  {
+   "seed": 70000,
+   "path": "results/eval_video/inputs/seed70000/demo_eval_70000_reference/video.json",
+   "sha256": "95502a5dd7473b43d6c6d9e670001869df7219f4ce4820e82c2bd48f622e10a2"
+  },
+  {
+   "seed": 70001,
+   "path": "results/eval_video/inputs/seed70001/demo_eval_70001_reference/ground_truth.json.gz",
+   "sha256": "f31ac8f41e5f23680c820707d03c1a237914da72ddc7a21933a45a72e9464f83"
+  },
+  {
+   "seed": 70001,
+   "path": "results/eval_video/inputs/seed70001/demo_eval_70001_reference/scene.json",
+   "sha256": "2be146497371597beb8abf3892a7940e9e2b9efc699f44a7b710e3966e70354d"
+  },
+  {
+   "seed": 70001,
+   "path": "results/eval_video/inputs/seed70001/demo_eval_70001_reference/side.mp4",
+   "sha256": "1420eeb4584b1d39c18636f0ff440ca621307f280da93a39489ec3f893009dcf"
+  },
+  {
+   "seed": 70001,
+   "path": "results/eval_video/inputs/seed70001/demo_eval_70001_reference/side_sam5fps.mp4",
+   "sha256": "aa2939c286acfb361e945cfbc93932a31c7da548d9849aa14a3cc71949afa513"
+  },
+  {
+   "seed": 70001,
+   "path": "results/eval_video/inputs/seed70001/demo_eval_70001_reference/top.mp4",
+   "sha256": "f95695fb916a9a61785f51603d634aec1df323ea9f2eb45d0d239d73d4857b41"
+  },
+  {
+   "seed": 70001,
+   "path": "results/eval_video/inputs/seed70001/demo_eval_70001_reference/top_sam5fps.mp4",
+   "sha256": "e33f00321b5367e802cae0d740e793c50236f49f0580cbd7d54fa58833754ae3"
+  },
+  {
+   "seed": 70001,
+   "path": "results/eval_video/inputs/seed70001/demo_eval_70001_reference/trace.json",
+   "sha256": "f78ac26726839a01ac95d5f6c699a4a6a457969db10dd614842b3eb00f9a39f7"
+  },
+  {
+   "seed": 70001,
+   "path": "results/eval_video/inputs/seed70001/demo_eval_70001_reference/video.json",
+   "sha256": "0e32bddd037c96d45776e664fb2f17a12936bcae000b2870d03909927acca2d3"
+  },
+  {
+   "seed": 70002,
+   "path": "results/eval_video/inputs/seed70002/demo_eval_70002_reference/ground_truth.json.gz",
+   "sha256": "c0799280c4f406d17c245bbad822b98a2d5d7ad1d5f7e5019ec87a0bf9e6ee8c"
+  },
+  {
+   "seed": 70002,
+   "path": "results/eval_video/inputs/seed70002/demo_eval_70002_reference/scene.json",
+   "sha256": "e2adf5166f69f7f24c02841acf570793ca81c0891952e7d9f262cd736bffd102"
+  },
+  {
+   "seed": 70002,
+   "path": "results/eval_video/inputs/seed70002/demo_eval_70002_reference/side.mp4",
+   "sha256": "76211546095913cac0fdb11becda3edb7d46bfaf12a290bb639de769f7bdbd0d"
+  },
+  {
+   "seed": 70002,
+   "path": "results/eval_video/inputs/seed70002/demo_eval_70002_reference/side_sam5fps.mp4",
+   "sha256": "91171cef787b70120ac5f10d201699c45575192b4173d9b8801aec166e27c13d"
+  },
+  {
+   "seed": 70002,
+   "path": "results/eval_video/inputs/seed70002/demo_eval_70002_reference/top.mp4",
+   "sha256": "be25bb461ae6facb3cba7dd1ee32a95ddcf02061bc3bc1f5a5742d4afeaa67d3"
+  },
+  {
+   "seed": 70002,
+   "path": "results/eval_video/inputs/seed70002/demo_eval_70002_reference/top_sam5fps.mp4",
+   "sha256": "86ff0605695cd8afdc992479bc44d84f18222e79d4eee25a84a4dbaad94e26e7"
+  },
+  {
+   "seed": 70002,
+   "path": "results/eval_video/inputs/seed70002/demo_eval_70002_reference/trace.json",
+   "sha256": "9ccfb52486f5092d07cf69f708b311d763ea61d5e3ff6e704d1793249fc4e6fd"
+  },
+  {
+   "seed": 70002,
+   "path": "results/eval_video/inputs/seed70002/demo_eval_70002_reference/video.json",
+   "sha256": "7e8d5a58291998d311674d4d88b5a8b376d9cc3d1c337627e7683aa4bfc7c9c4"
+  },
+  {
+   "seed": 70003,
+   "path": "results/eval_video/inputs/seed70003/demo_eval_70003_reference/ground_truth.json.gz",
+   "sha256": "f7a198a774d503920363a1953b6cc29b5bb6fc8b6b805d0f994279d8f25df73b"
+  },
+  {
+   "seed": 70003,
+   "path": "results/eval_video/inputs/seed70003/demo_eval_70003_reference/scene.json",
+   "sha256": "64d58aa9b2bc85267831ba05406859fa745a215b4738b4144c672866fa34d6ca"
+  },
+  {
+   "seed": 70003,
+   "path": "results/eval_video/inputs/seed70003/demo_eval_70003_reference/side.mp4",
+   "sha256": "3b3817d435fcada6cca8d15be512a4d33969ca3019d89c4822a4e6ca4f5e812b"
+  },
+  {
+   "seed": 70003,
+   "path": "results/eval_video/inputs/seed70003/demo_eval_70003_reference/side_sam5fps.mp4",
+   "sha256": "78effae140a14050ebf49f38ac7d19607b3182e59ae697f34f5cda83fa422fd9"
+  },
+  {
+   "seed": 70003,
+   "path": "results/eval_video/inputs/seed70003/demo_eval_70003_reference/top.mp4",
+   "sha256": "a8920325183e714db102743baee629086d908ddc8904c9bca2b834e898f89bfa"
+  },
+  {
+   "seed": 70003,
+   "path": "results/eval_video/inputs/seed70003/demo_eval_70003_reference/top_sam5fps.mp4",
+   "sha256": "494ea5ecfe595d87988cd9726852cf3cf02932aa55f67e269e7de3345d0e07a8"
+  },
+  {
+   "seed": 70003,
+   "path": "results/eval_video/inputs/seed70003/demo_eval_70003_reference/trace.json",
+   "sha256": "3945fcdb47ae717352cf139981c476c2208c0d5493fa482787f713c3ed90b6e6"
+  },
+  {
+   "seed": 70003,
+   "path": "results/eval_video/inputs/seed70003/demo_eval_70003_reference/video.json",
+   "sha256": "bb4fd4d5118aee9a6153a657949ab8de6e5367dc8db3b46a677036baf70d86e0"
+  },
+  {
+   "seed": 70004,
+   "path": "results/eval_video/inputs/seed70004/demo_eval_70004_reference/ground_truth.json.gz",
+   "sha256": "794db7997b8e646ac1e47bf384ceb0bbd9b780efd35777302dc8796ce3b74ece"
+  },
+  {
+   "seed": 70004,
+   "path": "results/eval_video/inputs/seed70004/demo_eval_70004_reference/scene.json",
+   "sha256": "ea9b044911034ce38ea40f72378411b7399a895f564666be35f40c460a0c7542"
+  },
+  {
+   "seed": 70004,
+   "path": "results/eval_video/inputs/seed70004/demo_eval_70004_reference/side.mp4",
+   "sha256": "008932ad290c1bce5b8fc21554017a7b0027e01895d5fc351ecb5db5932f2f1b"
+  },
+  {
+   "seed": 70004,
+   "path": "results/eval_video/inputs/seed70004/demo_eval_70004_reference/side_sam5fps.mp4",
+   "sha256": "063e24155d5ef783689979c2e3b871f28c4866f8ad6f8ccad84ade477eb03cc6"
+  },
+  {
+   "seed": 70004,
+   "path": "results/eval_video/inputs/seed70004/demo_eval_70004_reference/top.mp4",
+   "sha256": "200078e02a6d68018d73b72e21ad06c7e4b4b751463c34dbc6bdb7f876969447"
+  },
+  {
+   "seed": 70004,
+   "path": "results/eval_video/inputs/seed70004/demo_eval_70004_reference/top_sam5fps.mp4",
+   "sha256": "6beb0471b915bbb45bde0bc31c8d39e96802e086bb879ab355c5abb9b763937b"
+  },
+  {
+   "seed": 70004,
+   "path": "results/eval_video/inputs/seed70004/demo_eval_70004_reference/trace.json",
+   "sha256": "2bbb56c7a3accc67ffb224ef656c7170df6010e6910168cc590fade5cd0bf792"
+  },
+  {
+   "seed": 70004,
+   "path": "results/eval_video/inputs/seed70004/demo_eval_70004_reference/video.json",
+   "sha256": "ddd3d461fab44d5f5692221ec3dd9cc212e50491cbcf8fb80d8e6f66e1062195"
+  },
+  {
+   "seed": 70005,
+   "path": "results/eval_video/inputs/seed70005/demo_eval_70005_reference/ground_truth.json.gz",
+   "sha256": "60aa850c64d1287c117815394a4143a4d8314900e1729882ae66c700fd5985c3"
+  },
+  {
+   "seed": 70005,
+   "path": "results/eval_video/inputs/seed70005/demo_eval_70005_reference/scene.json",
+   "sha256": "38dc575e4a4e4de92f17338dfa55a3eb74fdcdb4eafb942f8dd2fb03999695aa"
+  },
+  {
+   "seed": 70005,
+   "path": "results/eval_video/inputs/seed70005/demo_eval_70005_reference/side.mp4",
+   "sha256": "b231aec975db6c19d878a5ea35daad4809f10b2dbdbc82f305971006ad6fbaf5"
+  },
+  {
+   "seed": 70005,
+   "path": "results/eval_video/inputs/seed70005/demo_eval_70005_reference/side_sam5fps.mp4",
+   "sha256": "823ecaa12e658f80812e233826e04262dc407ae4fade9b4264fc4d023a4b0168"
+  },
+  {
+   "seed": 70005,
+   "path": "results/eval_video/inputs/seed70005/demo_eval_70005_reference/top.mp4",
+   "sha256": "97a3921a52de268f9e5c1b06cb5206f1503a47195dc8c9d5dc41124f8a685850"
+  },
+  {
+   "seed": 70005,
+   "path": "results/eval_video/inputs/seed70005/demo_eval_70005_reference/top_sam5fps.mp4",
+   "sha256": "5a8851127d6827540dee86e480abb81c95bfd2aa85248ff3a00ff7aa6db2f481"
+  },
+  {
+   "seed": 70005,
+   "path": "results/eval_video/inputs/seed70005/demo_eval_70005_reference/trace.json",
+   "sha256": "85507bb7a52a5732cef8f0f0c4fea9ea35d3965146cef41ac4c34b4dfbd3c7a2"
+  },
+  {
+   "seed": 70005,
+   "path": "results/eval_video/inputs/seed70005/demo_eval_70005_reference/video.json",
+   "sha256": "dff0e599c537bd5bcd3b340367667a5199bdfe4be7115740aee160e97ed77632"
+  },
+  {
+   "seed": 70006,
+   "path": "results/eval_video/inputs/seed70006/demo_eval_70006_reference/ground_truth.json.gz",
+   "sha256": "fab39572c740c29b0299647d93f7e9eb9aa0a1ecf0762a5d7e81e1fa41fe04f2"
+  },
+  {
+   "seed": 70006,
+   "path": "results/eval_video/inputs/seed70006/demo_eval_70006_reference/scene.json",
+   "sha256": "dd1c861f0a0276df51cefd8ce366ed94b1aa7137cc30c62e6ba1f0640817c0a0"
+  },
+  {
+   "seed": 70006,
+   "path": "results/eval_video/inputs/seed70006/demo_eval_70006_reference/side.mp4",
+   "sha256": "b67adaafca604d0e23247b055f64ee2f3a66ea6343423ef46fdd6b08a3a9456b"
+  },
+  {
+   "seed": 70006,
+   "path": "results/eval_video/inputs/seed70006/demo_eval_70006_reference/side_sam5fps.mp4",
+   "sha256": "40ee98b4d466229556b608fb6d16b9b0358b72d367dffe9559a003cbe8b08ca0"
+  },
+  {
+   "seed": 70006,
+   "path": "results/eval_video/inputs/seed70006/demo_eval_70006_reference/top.mp4",
+   "sha256": "3c8b319a41c9f9df811446389a7783f852d1bc325a107ad8bf0154cf5d82a72c"
+  },
+  {
+   "seed": 70006,
+   "path": "results/eval_video/inputs/seed70006/demo_eval_70006_reference/top_sam5fps.mp4",
+   "sha256": "6b9f749fce5293f2def62a0bbadaaa76552be6ff2e5efa1ba0763a09fe7e909f"
+  },
+  {
+   "seed": 70006,
+   "path": "results/eval_video/inputs/seed70006/demo_eval_70006_reference/trace.json",
+   "sha256": "061cae6b9f9ce1b4e54009ac69f6709d44e1341a340de46f5ae3bc9a387eb337"
+  },
+  {
+   "seed": 70006,
+   "path": "results/eval_video/inputs/seed70006/demo_eval_70006_reference/video.json",
+   "sha256": "cecf0d3685fe229a77abf30761d25a2f7cc54bfd77a964d09ac4a4c3e6431972"
+  },
+  {
+   "seed": 70007,
+   "path": "results/eval_video/inputs/seed70007/demo_eval_70007_reference/ground_truth.json.gz",
+   "sha256": "a3d39aa5ce3438ca2b97372a2628ed827eee1f8a0b2fcfb36ab881852a191dfb"
+  },
+  {
+   "seed": 70007,
+   "path": "results/eval_video/inputs/seed70007/demo_eval_70007_reference/scene.json",
+   "sha256": "6b0d4eee4b2fbd2f31ac4bf9d96e9bcae48b15416e46f94bd531501a21f4c578"
+  },
+  {
+   "seed": 70007,
+   "path": "results/eval_video/inputs/seed70007/demo_eval_70007_reference/side.mp4",
+   "sha256": "05f01c8aed78893683e72d0c7990ab74a55d3e0d3104e0fa0ac25613842536a4"
+  },
+  {
+   "seed": 70007,
+   "path": "results/eval_video/inputs/seed70007/demo_eval_70007_reference/side_sam5fps.mp4",
+   "sha256": "2bd24a254828745358d44d59cb0b055ff797abd43d1df96dccbd889bc310161f"
+  },
+  {
+   "seed": 70007,
+   "path": "results/eval_video/inputs/seed70007/demo_eval_70007_reference/top.mp4",
+   "sha256": "74c1a3a5ece3cc3714a32aec58820ab2f58094d1bc2dd39fbd3c901e6e6b5e70"
+  },
+  {
+   "seed": 70007,
+   "path": "results/eval_video/inputs/seed70007/demo_eval_70007_reference/top_sam5fps.mp4",
+   "sha256": "eb4f47962e3b3f10cd70ad9ea9e3df330fba3e7d85fe29f75211406d69e68d15"
+  },
+  {
+   "seed": 70007,
+   "path": "results/eval_video/inputs/seed70007/demo_eval_70007_reference/trace.json",
+   "sha256": "a7716d46cc8b7aac0f1059b842e34ae08e737ac7e8eeb99e9b4da0d9b65a8f9a"
+  },
+  {
+   "seed": 70007,
+   "path": "results/eval_video/inputs/seed70007/demo_eval_70007_reference/video.json",
+   "sha256": "22c71ec416dbab9f75067ec2e45d35f8569a29015d1d58943de97bd1e5c66646"
+  },
+  {
+   "seed": 70008,
+   "path": "results/eval_video/inputs/seed70008/demo_eval_70008_reference/ground_truth.json.gz",
+   "sha256": "0bbf11f1340a3e493698adc3676f51e313ee7671342533bb5c409b369163c29c"
+  },
+  {
+   "seed": 70008,
+   "path": "results/eval_video/inputs/seed70008/demo_eval_70008_reference/scene.json",
+   "sha256": "e09c19c49eee7cfa1ec56e872c770d8712a3ef7408cfd73043a91ce1e3110f17"
+  },
+  {
+   "seed": 70008,
+   "path": "results/eval_video/inputs/seed70008/demo_eval_70008_reference/side.mp4",
+   "sha256": "2c393e48808e86f0c5401fe8c345331b428f522684b14e27aa7a47447b54add0"
+  },
+  {
+   "seed": 70008,
+   "path": "results/eval_video/inputs/seed70008/demo_eval_70008_reference/side_sam5fps.mp4",
+   "sha256": "410551165a829e679f7ce73a2955200d39806a4b95ab62cb59366692ff7f22a0"
+  },
+  {
+   "seed": 70008,
+   "path": "results/eval_video/inputs/seed70008/demo_eval_70008_reference/top.mp4",
+   "sha256": "022f7a7912e7211c67c13c1cb0145f471b3951eb1f0b9529e11ca8bdc2e53ad4"
+  },
+  {
+   "seed": 70008,
+   "path": "results/eval_video/inputs/seed70008/demo_eval_70008_reference/top_sam5fps.mp4",
+   "sha256": "25e0c3a3d882164b237ca9fedba5440efa2b18e1eb26e60a0e61533ec4baae55"
+  },
+  {
+   "seed": 70008,
+   "path": "results/eval_video/inputs/seed70008/demo_eval_70008_reference/trace.json",
+   "sha256": "6238e53288562fa697774ff72be52b7e57765d807d926e370ebf81689a514a70"
+  },
+  {
+   "seed": 70008,
+   "path": "results/eval_video/inputs/seed70008/demo_eval_70008_reference/video.json",
+   "sha256": "f43f394b800c9d8447886c71d769dd70b32741396b2f3879c03bdb858e63f804"
+  },
+  {
+   "seed": 70009,
+   "path": "results/eval_video/inputs/seed70009/demo_eval_70009_reference/ground_truth.json.gz",
+   "sha256": "01b025ea4a59e0975a339429299da8a6ce3854cf1d90fc8de33f7dcec600696d"
+  },
+  {
+   "seed": 70009,
+   "path": "results/eval_video/inputs/seed70009/demo_eval_70009_reference/scene.json",
+   "sha256": "866701abc2b291466cb624146174aea4fa86134272545945edf90dfa28acbbdd"
+  },
+  {
+   "seed": 70009,
+   "path": "results/eval_video/inputs/seed70009/demo_eval_70009_reference/side.mp4",
+   "sha256": "f6a0d29c8feeb5dd9677bbbe133797bc1fbb59c2a1cf475e1d7d1d594812dda1"
+  },
+  {
+   "seed": 70009,
+   "path": "results/eval_video/inputs/seed70009/demo_eval_70009_reference/side_sam5fps.mp4",
+   "sha256": "de4e39864e1dcb50588bbd14c53124056bfcf88860086f52cdcc8ba5fec592e8"
+  },
+  {
+   "seed": 70009,
+   "path": "results/eval_video/inputs/seed70009/demo_eval_70009_reference/top.mp4",
+   "sha256": "7a09356cc5873be468a7efc9bf3cda4bc5ceaf7872bebe0fd748784e6a9119c2"
+  },
+  {
+   "seed": 70009,
+   "path": "results/eval_video/inputs/seed70009/demo_eval_70009_reference/top_sam5fps.mp4",
+   "sha256": "5390091941b49c374cd85621514096dd2919a37e5d265606096308ee95bde074"
+  },
+  {
+   "seed": 70009,
+   "path": "results/eval_video/inputs/seed70009/demo_eval_70009_reference/trace.json",
+   "sha256": "f3b68540bddbef9b39617758c4ef85d13a9550cad93604c53d70558115b6d569"
+  },
+  {
+   "seed": 70009,
+   "path": "results/eval_video/inputs/seed70009/demo_eval_70009_reference/video.json",
+   "sha256": "4f9cdbe349f98f0af40dc79707971ae735c034111c547f9fdf6d713307e3f529"
+  },
+  {
+   "seed": 70010,
+   "path": "results/eval_video/inputs/seed70010/demo_eval_70010_reference/ground_truth.json.gz",
+   "sha256": "d200390428aa4d6a03c63c74f106502e718a2ab22689ec5946ad3940880d3e37"
+  },
+  {
+   "seed": 70010,
+   "path": "results/eval_video/inputs/seed70010/demo_eval_70010_reference/scene.json",
+   "sha256": "8d739bd75aa878b11e079a3e01a55ebac8c02fd562e88d8fe0c8562435860e87"
+  },
+  {
+   "seed": 70010,
+   "path": "results/eval_video/inputs/seed70010/demo_eval_70010_reference/side.mp4",
+   "sha256": "4322a77e86f0b3981879a377330f5e051da1004769830d97e60ef29fb7ef8dd9"
+  },
+  {
+   "seed": 70010,
+   "path": "results/eval_video/inputs/seed70010/demo_eval_70010_reference/side_sam5fps.mp4",
+   "sha256": "99a7e1ea45a8ef5099f325677e021e3f99bc84649305a423f7fc30d900ed25ca"
+  },
+  {
+   "seed": 70010,
+   "path": "results/eval_video/inputs/seed70010/demo_eval_70010_reference/top.mp4",
+   "sha256": "880c8567ce67a8b14d4fa231c1090243d2dd52f4ce450782be2756997184c0ee"
+  },
+  {
+   "seed": 70010,
+   "path": "results/eval_video/inputs/seed70010/demo_eval_70010_reference/top_sam5fps.mp4",
+   "sha256": "3d5273011a1d8de0f1c58af6d1ada534629c13973b0bf440345d0a7f02cb057c"
+  },
+  {
+   "seed": 70010,
+   "path": "results/eval_video/inputs/seed70010/demo_eval_70010_reference/trace.json",
+   "sha256": "a514b0c8329ada63d44b3c5912145a18d5bd9bc0b4d354a1ab0c67d499be2982"
+  },
+  {
+   "seed": 70010,
+   "path": "results/eval_video/inputs/seed70010/demo_eval_70010_reference/video.json",
+   "sha256": "e37018c2b2bc7e55d165711bdd55524257038a0a05b70b6fc117248343f70cbf"
+  },
+  {
+   "seed": 70011,
+   "path": "results/eval_video/inputs/seed70011/demo_eval_70011_reference/ground_truth.json.gz",
+   "sha256": "79deebf7151810a5f1d609e7e27f1e0c96c7c6246c4d5e71ed476d81baf030ef"
+  },
+  {
+   "seed": 70011,
+   "path": "results/eval_video/inputs/seed70011/demo_eval_70011_reference/scene.json",
+   "sha256": "e14f8c9a44c06c7f861b0c502ea35504db81b8e95865809c40d1d7889764bf7c"
+  },
+  {
+   "seed": 70011,
+   "path": "results/eval_video/inputs/seed70011/demo_eval_70011_reference/side.mp4",
+   "sha256": "af4512005255693c39d445b5ae890166c8a478ccdd88204018abe34ad41e10d4"
+  },
+  {
+   "seed": 70011,
+   "path": "results/eval_video/inputs/seed70011/demo_eval_70011_reference/side_sam5fps.mp4",
+   "sha256": "1a66d57d1fe5d5779064b20fded7bc6630f2ba7ec16c14d336e135e9f194d067"
+  },
+  {
+   "seed": 70011,
+   "path": "results/eval_video/inputs/seed70011/demo_eval_70011_reference/top.mp4",
+   "sha256": "587532f60db82b6b22369bdea5fe8433a341f85b3610095e0716bc50a6e4ced0"
+  },
+  {
+   "seed": 70011,
+   "path": "results/eval_video/inputs/seed70011/demo_eval_70011_reference/top_sam5fps.mp4",
+   "sha256": "dd8b63a7f301123b66e544bd6bf7f418da9b957b3c351d4f1113565c7ef4a940"
+  },
+  {
+   "seed": 70011,
+   "path": "results/eval_video/inputs/seed70011/demo_eval_70011_reference/trace.json",
+   "sha256": "75d34f8deb7e6374d027e48b833bcefff5fd30374d74106cb6b11f677bed6c09"
+  },
+  {
+   "seed": 70011,
+   "path": "results/eval_video/inputs/seed70011/demo_eval_70011_reference/video.json",
+   "sha256": "5269220c5384eed144e37248ed09a3fa2e669bf901ee6e769e96934f7e307c26"
+  },
+  {
+   "seed": 70012,
+   "path": "results/eval_video/inputs/seed70012/demo_eval_70012_reference/ground_truth.json.gz",
+   "sha256": "3463eed7aab5eec7c4bcdd11fc71f6dc42947a889b899bda585bf5a42906dd1d"
+  },
+  {
+   "seed": 70012,
+   "path": "results/eval_video/inputs/seed70012/demo_eval_70012_reference/scene.json",
+   "sha256": "c736ef8a67624b3bbaeefb206a38d16a21d4099edba01baa40d19a615943aeaa"
+  },
+  {
+   "seed": 70012,
+   "path": "results/eval_video/inputs/seed70012/demo_eval_70012_reference/side.mp4",
+   "sha256": "2cc151f39711eb42aa9022d6bef3868a6bb81d0b59e336245b87c28e37d3ae0b"
+  },
+  {
+   "seed": 70012,
+   "path": "results/eval_video/inputs/seed70012/demo_eval_70012_reference/side_sam5fps.mp4",
+   "sha256": "f07d04fb7e5cff66e3446fe5e939e1885a8a68c252e03bd0799dd0ed3a64a634"
+  },
+  {
+   "seed": 70012,
+   "path": "results/eval_video/inputs/seed70012/demo_eval_70012_reference/top.mp4",
+   "sha256": "229b51831bbc2c9995e020d2bf5b897300e0123e1a12232d05f30c5497e005cb"
+  },
+  {
+   "seed": 70012,
+   "path": "results/eval_video/inputs/seed70012/demo_eval_70012_reference/top_sam5fps.mp4",
+   "sha256": "3c169f57017ba699f5e5210447420cb318d13bb12da01aa8b646d9869d83ee3e"
+  },
+  {
+   "seed": 70012,
+   "path": "results/eval_video/inputs/seed70012/demo_eval_70012_reference/trace.json",
+   "sha256": "327e9917ecba63d5e8023a495305a8b7a51319242a519996d768ac3259688d6e"
+  },
+  {
+   "seed": 70012,
+   "path": "results/eval_video/inputs/seed70012/demo_eval_70012_reference/video.json",
+   "sha256": "200718a1858efd756dc16069b65cb51eb98415ed06535bf583381dd11e264a4d"
+  },
+  {
+   "seed": 70013,
+   "path": "results/eval_video/inputs/seed70013/demo_eval_70013_reference/ground_truth.json.gz",
+   "sha256": "6637b796a344530ad6a3615ffaf6d440bf19db94810f4686b1deff39954fcd6d"
+  },
+  {
+   "seed": 70013,
+   "path": "results/eval_video/inputs/seed70013/demo_eval_70013_reference/scene.json",
+   "sha256": "d48a2fb8cfaba155cadc0a5411b4a838e0a4cb5c870b9654858334377771422e"
+  },
+  {
+   "seed": 70013,
+   "path": "results/eval_video/inputs/seed70013/demo_eval_70013_reference/side.mp4",
+   "sha256": "d27ee70924fec10c45f4223ca824608154c6d8794e42d7bb9544af4d653a4d70"
+  },
+  {
+   "seed": 70013,
+   "path": "results/eval_video/inputs/seed70013/demo_eval_70013_reference/side_sam5fps.mp4",
+   "sha256": "3c0bd635fba3a1deb885f1197fb6103ba77dea9b7e6e629f4ff36f77e67ca016"
+  },
+  {
+   "seed": 70013,
+   "path": "results/eval_video/inputs/seed70013/demo_eval_70013_reference/top.mp4",
+   "sha256": "4fcbe69cf9fbe7c5e7ec1c7e599e08d3481e3ea0e7536a1d7eab3a1211d1e642"
+  },
+  {
+   "seed": 70013,
+   "path": "results/eval_video/inputs/seed70013/demo_eval_70013_reference/top_sam5fps.mp4",
+   "sha256": "f6ee774d711c3bf6d029e6c4be915ad3d4bda3a24815cbf23068f62545987b72"
+  },
+  {
+   "seed": 70013,
+   "path": "results/eval_video/inputs/seed70013/demo_eval_70013_reference/trace.json",
+   "sha256": "96455040e48efc6bd22011a79d6e39b22615863e71d673e9c4aacf5cc423ef45"
+  },
+  {
+   "seed": 70013,
+   "path": "results/eval_video/inputs/seed70013/demo_eval_70013_reference/video.json",
+   "sha256": "2c2d33042fcabbda653c87e85144f70ff995f6699ced43f63c86ffd1cd81b08f"
+  },
+  {
+   "seed": 70014,
+   "path": "results/eval_video/inputs/seed70014/demo_eval_70014_reference/ground_truth.json.gz",
+   "sha256": "b1450ca198a55e9b0c2c19a0145ce4654dd6723447f4c2ae668a7140e02cfe12"
+  },
+  {
+   "seed": 70014,
+   "path": "results/eval_video/inputs/seed70014/demo_eval_70014_reference/scene.json",
+   "sha256": "158f4770cfc2e727b4c8a41132a000cf682892b96681d80ee761dee9256cc705"
+  },
+  {
+   "seed": 70014,
+   "path": "results/eval_video/inputs/seed70014/demo_eval_70014_reference/side.mp4",
+   "sha256": "4fad0a79644ba0ca08fc46f0f1b7eeb3009d3ebff845b934bde3fb5ec6409a8f"
+  },
+  {
+   "seed": 70014,
+   "path": "results/eval_video/inputs/seed70014/demo_eval_70014_reference/side_sam5fps.mp4",
+   "sha256": "0f498237b6286fee4344164f18c96f938e611e41fdf0fa896df9927a80db82b7"
+  },
+  {
+   "seed": 70014,
+   "path": "results/eval_video/inputs/seed70014/demo_eval_70014_reference/top.mp4",
+   "sha256": "e8843596f82d9ed83d3791d794616227102da05f56ec33c3b5fa9b12dcdadb63"
+  },
+  {
+   "seed": 70014,
+   "path": "results/eval_video/inputs/seed70014/demo_eval_70014_reference/top_sam5fps.mp4",
+   "sha256": "69d02eda4212b805d77f36fe171b07afff238b2ed40c26d6ddb06896db75bb61"
+  },
+  {
+   "seed": 70014,
+   "path": "results/eval_video/inputs/seed70014/demo_eval_70014_reference/trace.json",
+   "sha256": "c4ef0fa4eb2560ea6f357c93ea22ddfc5405fb1276479f355d29799c24722377"
+  },
+  {
+   "seed": 70014,
+   "path": "results/eval_video/inputs/seed70014/demo_eval_70014_reference/video.json",
+   "sha256": "e8a232d9e82552c84a1929cc44bd07b916a748342d244588d21ef26481f51ac7"
+  },
+  {
+   "seed": 70015,
+   "path": "results/eval_video/inputs/seed70015/demo_eval_70015_reference/ground_truth.json.gz",
+   "sha256": "93ea927011b83ddf861dce7e9316a574e67677662ffce93d88da21cce76cc8ec"
+  },
+  {
+   "seed": 70015,
+   "path": "results/eval_video/inputs/seed70015/demo_eval_70015_reference/scene.json",
+   "sha256": "ea893fc50733895702a0aca9815e727e0384752d6a9ca74f38534d3dcb9dfb1e"
+  },
+  {
+   "seed": 70015,
+   "path": "results/eval_video/inputs/seed70015/demo_eval_70015_reference/side.mp4",
+   "sha256": "f9311de7de183977f515ce16c31bd7add1f0a2c6f176df9ad2facbc3b20abeca"
+  },
+  {
+   "seed": 70015,
+   "path": "results/eval_video/inputs/seed70015/demo_eval_70015_reference/side_sam5fps.mp4",
+   "sha256": "f112b35e1ab8e93b3c946f467946eff47559c4f8123581a4df5b83122f82f237"
+  },
+  {
+   "seed": 70015,
+   "path": "results/eval_video/inputs/seed70015/demo_eval_70015_reference/top.mp4",
+   "sha256": "395b7921ae522a08ced1064a134e5d8e1206cb373dfd46949dde3cf225632f85"
+  },
+  {
+   "seed": 70015,
+   "path": "results/eval_video/inputs/seed70015/demo_eval_70015_reference/top_sam5fps.mp4",
+   "sha256": "4063977dc4e45129c1c686ce8b14ef0ad8fd72f4d8b641c1743843e97306f1ea"
+  },
+  {
+   "seed": 70015,
+   "path": "results/eval_video/inputs/seed70015/demo_eval_70015_reference/trace.json",
+   "sha256": "b1745c481fc93c7c2d5c515ec994c61dabf7aacc178c58dabc6971d4dd4caee9"
+  },
+  {
+   "seed": 70015,
+   "path": "results/eval_video/inputs/seed70015/demo_eval_70015_reference/video.json",
+   "sha256": "93710d990cb561454f324d50a12f93e0a7e611d193598d6ba4581d4ecd25ce3a"
+  },
+  {
+   "seed": 70016,
+   "path": "results/eval_video/inputs/seed70016/demo_eval_70016_reference/ground_truth.json.gz",
+   "sha256": "a73b8c6eee0717ca89d260267e860ba91f49fcf1b6ad91bdea37741a6ee9587d"
+  },
+  {
+   "seed": 70016,
+   "path": "results/eval_video/inputs/seed70016/demo_eval_70016_reference/scene.json",
+   "sha256": "13cc55d932e9f84ef738aaff8c673b9b36830e3bb498a33cc32145438975663b"
+  },
+  {
+   "seed": 70016,
+   "path": "results/eval_video/inputs/seed70016/demo_eval_70016_reference/side.mp4",
+   "sha256": "fc5f198031dab99f16809525c19d4d40a84c736f982c6bba23bb9da399da13f2"
+  },
+  {
+   "seed": 70016,
+   "path": "results/eval_video/inputs/seed70016/demo_eval_70016_reference/side_sam5fps.mp4",
+   "sha256": "5b8ab0105832dd3e82ce876c6bd6315f9f63eb77d3289d2d14c776d8f692bf81"
+  },
+  {
+   "seed": 70016,
+   "path": "results/eval_video/inputs/seed70016/demo_eval_70016_reference/top.mp4",
+   "sha256": "b1691d6aeadce495321f54ed31ba14501502d9cc6b5272d9f60307b4d1a27190"
+  },
+  {
+   "seed": 70016,
+   "path": "results/eval_video/inputs/seed70016/demo_eval_70016_reference/top_sam5fps.mp4",
+   "sha256": "9262521e3be7dab2386875b7a50fdd462f415e1cdea06bd082e9af9c81619ed7"
+  },
+  {
+   "seed": 70016,
+   "path": "results/eval_video/inputs/seed70016/demo_eval_70016_reference/trace.json",
+   "sha256": "40710e8197146bdb1e1e5ad2acd0a3b5055ae8e7c34a456eab1bd315bd7b620c"
+  },
+  {
+   "seed": 70016,
+   "path": "results/eval_video/inputs/seed70016/demo_eval_70016_reference/video.json",
+   "sha256": "aee2005fee9f183004bd46316abec2ff3f8e0ab8da37e9cc295302b8a7755b5e"
+  },
+  {
+   "seed": 70017,
+   "path": "results/eval_video/inputs/seed70017/demo_eval_70017_reference/ground_truth.json.gz",
+   "sha256": "80aedb1cf14edb72ed8274cbdd51ed9236c8c6e5c2d38faa8df6554984bff896"
+  },
+  {
+   "seed": 70017,
+   "path": "results/eval_video/inputs/seed70017/demo_eval_70017_reference/scene.json",
+   "sha256": "e923ca8f00244491ef7e5ee0383192df64c5e1496ef11b44e526ae888fd057b2"
+  },
+  {
+   "seed": 70017,
+   "path": "results/eval_video/inputs/seed70017/demo_eval_70017_reference/side.mp4",
+   "sha256": "591686d11c9419a4439cd906c7b53b2551a3edb29547887494febadcb6afc05b"
+  },
+  {
+   "seed": 70017,
+   "path": "results/eval_video/inputs/seed70017/demo_eval_70017_reference/side_sam5fps.mp4",
+   "sha256": "91684a1c04efaffad3519199dfe6f559e70a3efe3b1c078eb00643ae1fa40364"
+  },
+  {
+   "seed": 70017,
+   "path": "results/eval_video/inputs/seed70017/demo_eval_70017_reference/top.mp4",
+   "sha256": "4bb8b5a06abe9c6a0d447587296c7bae9c42a2f81078abfb18d20893e83dc510"
+  },
+  {
+   "seed": 70017,
+   "path": "results/eval_video/inputs/seed70017/demo_eval_70017_reference/top_sam5fps.mp4",
+   "sha256": "1a0f730e21043462380358063fa8368fb4c190ff53380fa8fe451e41ad5e3ee9"
+  },
+  {
+   "seed": 70017,
+   "path": "results/eval_video/inputs/seed70017/demo_eval_70017_reference/trace.json",
+   "sha256": "860288d62be315b2e86ece8562130e7fc78c1faf3023e6b8420f5be141a3f388"
+  },
+  {
+   "seed": 70017,
+   "path": "results/eval_video/inputs/seed70017/demo_eval_70017_reference/video.json",
+   "sha256": "3ad326b85657748d86b0546fd74c9fe3a50efd2ca99f1b0dc8b136a25fa6ddc8"
+  },
+  {
+   "seed": 70018,
+   "path": "results/eval_video/inputs/seed70018/demo_eval_70018_reference/ground_truth.json.gz",
+   "sha256": "be77ad72524ef8daae2dca18d2f9a4019229780cf9118144a9e0890dec5ee3c5"
+  },
+  {
+   "seed": 70018,
+   "path": "results/eval_video/inputs/seed70018/demo_eval_70018_reference/scene.json",
+   "sha256": "8e231f5847b44a10368e87dcff18b2e3a5d17cd24fefda0e836dd04f0fb05133"
+  },
+  {
+   "seed": 70018,
+   "path": "results/eval_video/inputs/seed70018/demo_eval_70018_reference/side.mp4",
+   "sha256": "372c525815ae3df25f7d7623a192ef7e62082cd2154f15079300e40caf064bc0"
+  },
+  {
+   "seed": 70018,
+   "path": "results/eval_video/inputs/seed70018/demo_eval_70018_reference/side_sam5fps.mp4",
+   "sha256": "6b5c00811aff80068e331a03189efe3668cb91085d133c9bf9effcb42350574f"
+  },
+  {
+   "seed": 70018,
+   "path": "results/eval_video/inputs/seed70018/demo_eval_70018_reference/top.mp4",
+   "sha256": "10bde1296b9d70e7b2b1ff4e6e9e35c84a9990263398dfa348d12bc086f00b9b"
+  },
+  {
+   "seed": 70018,
+   "path": "results/eval_video/inputs/seed70018/demo_eval_70018_reference/top_sam5fps.mp4",
+   "sha256": "6ca5dae07d614d9b622be26e15df4e6d13cdcf5bed75f6f36fddb334f246f301"
+  },
+  {
+   "seed": 70018,
+   "path": "results/eval_video/inputs/seed70018/demo_eval_70018_reference/trace.json",
+   "sha256": "a7de3ea554629bb229c8cd4bfa302c25a4429af2c9b756bc16a5a995f3b83942"
+  },
+  {
+   "seed": 70018,
+   "path": "results/eval_video/inputs/seed70018/demo_eval_70018_reference/video.json",
+   "sha256": "8bb0ee84aeae2e72301028a56dcc0f29ae0c991a8f92aa670b6e84980a20bf16"
+  },
+  {
+   "seed": 70019,
+   "path": "results/eval_video/inputs/seed70019/demo_eval_70019_reference/ground_truth.json.gz",
+   "sha256": "652f9431c58b0d3c159daaf4ca0a8fec1ed4d252d9e5236e6cf87893ac369b04"
+  },
+  {
+   "seed": 70019,
+   "path": "results/eval_video/inputs/seed70019/demo_eval_70019_reference/scene.json",
+   "sha256": "68d36ac3da57f65a8046cb1bcfb018e5a0cfe2bce5cfd4a9d10f1b287a339e58"
+  },
+  {
+   "seed": 70019,
+   "path": "results/eval_video/inputs/seed70019/demo_eval_70019_reference/side.mp4",
+   "sha256": "bc86abafa9265abcec4384f2234f8013d4506b4d4b64edd87662c2ab488afbd1"
+  },
+  {
+   "seed": 70019,
+   "path": "results/eval_video/inputs/seed70019/demo_eval_70019_reference/side_sam5fps.mp4",
+   "sha256": "ba5dc3393f21aa64137d736c8275767478862e584083bf29672070ced2f0d348"
+  },
+  {
+   "seed": 70019,
+   "path": "results/eval_video/inputs/seed70019/demo_eval_70019_reference/top.mp4",
+   "sha256": "11cad27dd5d625460a6b3cc4b566c2241969a72466a66bc536f98650d246663a"
+  },
+  {
+   "seed": 70019,
+   "path": "results/eval_video/inputs/seed70019/demo_eval_70019_reference/top_sam5fps.mp4",
+   "sha256": "283e82f999fb957152a0b47eafb6a57b673d36e5fdc83fba2db27f78fb449d1c"
+  },
+  {
+   "seed": 70019,
+   "path": "results/eval_video/inputs/seed70019/demo_eval_70019_reference/trace.json",
+   "sha256": "2177e5700c83a2a75c3c581635b7ff5f2ebeae9e8e8c83f7652803bed6ee7553"
+  },
+  {
+   "seed": 70019,
+   "path": "results/eval_video/inputs/seed70019/demo_eval_70019_reference/video.json",
+   "sha256": "ac220629b4ba32eb2d0cb74ca1403ad45170015d52bfea74556ddea115443b29"
+  }
+ ],
+ "provenance": {
+  "demos": [
+   {
+    "seed": 70000,
+    "manifest": "results/eval_video/inputs/seed70000/demo_eval_70000_reference/video.json",
+    "demo_id": "demo_eval_70000_reference",
+    "fps": 15.0,
+    "n_frames": 1239,
+    "duration_s": 82.533
+   },
+   {
+    "seed": 70001,
+    "manifest": "results/eval_video/inputs/seed70001/demo_eval_70001_reference/video.json",
+    "demo_id": "demo_eval_70001_reference",
+    "fps": 15.0,
+    "n_frames": 1371,
+    "duration_s": 91.333
+   },
+   {
+    "seed": 70002,
+    "manifest": "results/eval_video/inputs/seed70002/demo_eval_70002_reference/video.json",
+    "demo_id": "demo_eval_70002_reference",
+    "fps": 15.0,
+    "n_frames": 1343,
+    "duration_s": 89.467
+   },
+   {
+    "seed": 70003,
+    "manifest": "results/eval_video/inputs/seed70003/demo_eval_70003_reference/video.json",
+    "demo_id": "demo_eval_70003_reference",
+    "fps": 15.0,
+    "n_frames": 1359,
+    "duration_s": 90.533
+   },
+   {
+    "seed": 70004,
+    "manifest": "results/eval_video/inputs/seed70004/demo_eval_70004_reference/video.json",
+    "demo_id": "demo_eval_70004_reference",
+    "fps": 15.0,
+    "n_frames": 1221,
+    "duration_s": 81.333
+   },
+   {
+    "seed": 70005,
+    "manifest": "results/eval_video/inputs/seed70005/demo_eval_70005_reference/video.json",
+    "demo_id": "demo_eval_70005_reference",
+    "fps": 15.0,
+    "n_frames": 1408,
+    "duration_s": 93.8
+   },
+   {
+    "seed": 70006,
+    "manifest": "results/eval_video/inputs/seed70006/demo_eval_70006_reference/video.json",
+    "demo_id": "demo_eval_70006_reference",
+    "fps": 15.0,
+    "n_frames": 1266,
+    "duration_s": 84.333
+   },
+   {
+    "seed": 70007,
+    "manifest": "results/eval_video/inputs/seed70007/demo_eval_70007_reference/video.json",
+    "demo_id": "demo_eval_70007_reference",
+    "fps": 15.0,
+    "n_frames": 1394,
+    "duration_s": 92.867
+   },
+   {
+    "seed": 70008,
+    "manifest": "results/eval_video/inputs/seed70008/demo_eval_70008_reference/video.json",
+    "demo_id": "demo_eval_70008_reference",
+    "fps": 15.0,
+    "n_frames": 1259,
+    "duration_s": 83.867
+   },
+   {
+    "seed": 70009,
+    "manifest": "results/eval_video/inputs/seed70009/demo_eval_70009_reference/video.json",
+    "demo_id": "demo_eval_70009_reference",
+    "fps": 15.0,
+    "n_frames": 1353,
+    "duration_s": 90.133
+   },
+   {
+    "seed": 70010,
+    "manifest": "results/eval_video/inputs/seed70010/demo_eval_70010_reference/video.json",
+    "demo_id": "demo_eval_70010_reference",
+    "fps": 15.0,
+    "n_frames": 1423,
+    "duration_s": 94.8
+   },
+   {
+    "seed": 70011,
+    "manifest": "results/eval_video/inputs/seed70011/demo_eval_70011_reference/video.json",
+    "demo_id": "demo_eval_70011_reference",
+    "fps": 15.0,
+    "n_frames": 1290,
+    "duration_s": 85.933
+   },
+   {
+    "seed": 70012,
+    "manifest": "results/eval_video/inputs/seed70012/demo_eval_70012_reference/video.json",
+    "demo_id": "demo_eval_70012_reference",
+    "fps": 15.0,
+    "n_frames": 1337,
+    "duration_s": 89.067
+   },
+   {
+    "seed": 70013,
+    "manifest": "results/eval_video/inputs/seed70013/demo_eval_70013_reference/video.json",
+    "demo_id": "demo_eval_70013_reference",
+    "fps": 15.0,
+    "n_frames": 1228,
+    "duration_s": 81.8
+   },
+   {
+    "seed": 70014,
+    "manifest": "results/eval_video/inputs/seed70014/demo_eval_70014_reference/video.json",
+    "demo_id": "demo_eval_70014_reference",
+    "fps": 15.0,
+    "n_frames": 1219,
+    "duration_s": 81.2
+   },
+   {
+    "seed": 70015,
+    "manifest": "results/eval_video/inputs/seed70015/demo_eval_70015_reference/video.json",
+    "demo_id": "demo_eval_70015_reference",
+    "fps": 15.0,
+    "n_frames": 1331,
+    "duration_s": 88.667
+   },
+   {
+    "seed": 70016,
+    "manifest": "results/eval_video/inputs/seed70016/demo_eval_70016_reference/video.json",
+    "demo_id": "demo_eval_70016_reference",
+    "fps": 15.0,
+    "n_frames": 1246,
+    "duration_s": 83.0
+   },
+   {
+    "seed": 70017,
+    "manifest": "results/eval_video/inputs/seed70017/demo_eval_70017_reference/video.json",
+    "demo_id": "demo_eval_70017_reference",
+    "fps": 15.0,
+    "n_frames": 1343,
+    "duration_s": 89.467
+   },
+   {
+    "seed": 70018,
+    "manifest": "results/eval_video/inputs/seed70018/demo_eval_70018_reference/video.json",
+    "demo_id": "demo_eval_70018_reference",
+    "fps": 15.0,
+    "n_frames": 1303,
+    "duration_s": 86.8
+   },
+   {
+    "seed": 70019,
+    "manifest": "results/eval_video/inputs/seed70019/demo_eval_70019_reference/video.json",
+    "demo_id": "demo_eval_70019_reference",
+    "fps": 15.0,
+    "n_frames": 1374,
+    "duration_s": 91.533
+   }
+  ],
+  "renderer": "mirror.perception.render_demo_video (top, side)",
+  "sam_copies": "every 3rd frame at 5 fps (mirror.evaluate.bench_video.make_sam_copies)",
+  "render_environment": {
+   "machine": "GPU compute box",
+   "gpu": "NVIDIA L4, 610.57.04",
+   "gl": "egl",
+   "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+   "python": "3.11.12",
+   "pip": [
+    "absl-py==2.5.1",
+    "accelerate==1.15.0",
+    "annotated-doc==0.0.5",
+    "annotated-types==0.8.0",
+    "anyio==4.15.1",
+    "beautifulsoup4==4.15.0",
+    "certifi==2026.10.23",
+    "cffi==2.1.1",
+    "charset-normalizer==3.5.2",
+    "click==8.5.0",
+    "cloudpickle==3.1.2",
+    "contourpy==1.3.3",
+    "cryptography==50.0.2",
+    "cuda-bindings==13.4.4",
+    "cuda-pathfinder==1.8.4",
+    "cuda-toolkit==13.0.3.0",
+    "cycler==0.12.1",
+    "diffusers==0.42.1",
+    "etils==1.14.0",
+    "filelock==4.2.4",
+    "fonttools==4.68.0",
+    "fsspec==2026.9.0",
+    "glfw==2.11.0",
+    "h11==0.16.0",
+    "hf-xet==1.7.0",
+    "httpcore==1.0.9",
+    "httpcore2==2.16.0",
+    "httpx==0.28.1",
+    "httpx2==2.16.0",
+    "huggingface_hub==2.3.0",
+    "idna==3.20",
+    "ImageIO==2.38.1",
+    "imageio-ffmpeg==0.7.0",
+    "importlib_metadata==10.1.0",
+    "Jinja2==3.1.6",
+    "joblib==1.6.0",
+    "kiwisolver==1.5.1",
+    "llvmlite==0.50.0",
+    "markdown-it-py==4.2.0",
+    "MarkupSafe==3.0.4",
+    "matplotlib==3.11.2",
+    "mdurl==0.1.2",
+    "mpmath==1.3.0",
+    "mujoco==3.17.0",
+    "narwhals==2.28.0",
+    "networkx==3.6.1",
+    "numba==0.68.1",
+    "numpy==2.4.6",
+    "nvidia-cublas==13.1.1.3",
+    "nvidia-cuda-cupti==13.0.85",
+    "nvidia-cuda-nvrtc==13.0.88",
+    "nvidia-cuda-runtime==13.0.96",
+    "nvidia-cudnn-cu13==9.24.0.43",
+    "nvidia-cufft==12.0.0.61",
+    "nvidia-cufile==1.15.1.6",
+    "nvidia-curand==10.4.0.35",
+    "nvidia-cusolver==12.0.4.66",
+    "nvidia-cusparse==12.6.3.3",
+    "nvidia-cusparselt-cu13==0.8.1",
+    "nvidia-nccl-cu13==2.30.7",
+    "nvidia-nvjitlink==13.4.92",
+    "nvidia-nvshmem-cu13==3.4.5",
+    "nvidia-nvtx==13.0.85",
+    "opencv-python-headless==5.0.0.93",
+    "packaging==26.3",
+    "pandas==3.1.0",
+    "pdfminer.six==20260107",
+    "pdfplumber==0.11.10",
+    "pillow==13.0.0",
+    "psutil==7.2.2",
+    "pycparser==3.12",
+    "pydantic==2.14.2",
+    "pydantic_core==2.50.2",
+    "Pygments==2.21.0",
+    "PyOpenGL==3.1.10",
+    "pyparsing==3.3.3",
+    "pypdfium2==5.14.0",
+    "python-dateutil==3.0.0",
+    "python-dotenv==1.2.4",
+    "PyYAML==6.0.3",
+    "regex==2026.9.29",
+    "requests==2.34.2",
+    "rich==15.0.0",
+    "safetensors==0.8.0",
+    "scikit-learn==1.9.1",
+    "scipy==1.17.1",
+    "seaborn==0.13.2",
+    "sentencepiece==0.2.2",
+    "shellingham==1.5.4",
+    "six==1.17.0",
+    "soupsieve==3.0.4",
+    "sympy==1.14.0",
+    "threadpoolctl==3.7.0",
+    "tokenizers==0.23.3",
+    "torch==2.14.1+cu130",
+    "torchaudio==2.11.0+cu130",
+    "torchvision==0.29.1+cu130",
+    "tqdm==4.70.1",
+    "transformers==5.21.0",
+    "triton==3.8.0",
+    "truststore==0.10.5",
+    "typer==0.27.3",
+    "typing-inspection==0.4.4",
+    "typing_extensions==4.16.0",
+    "tzdata==2026.6",
+    "urllib3==2.8.0",
+    "uv==0.8.17",
+    "websockets==17.4",
+    "zipp==4.1.2"
+   ]
+  }
+ },
+ "ledger_after_inputs": {
+  "lines": 40,
+  "bytes": 4374,
+  "sha256": "f765d6a1b6b85f21c06e3345ab4f25cc03388991aa73896a4d552cbd43dd838a"
+ },
+ "audit": {
+  "roots": [
+   "results",
+   "data",
+   "external:media",
+   "external:site_final",
+   "external:mirror-studio-rt",
+   "external:perception",
+   "external:probes",
+   "external:interpret"
+  ],
+  "text_files": 3078,
+  "hits": [],
+  "result": "no seed or input hash of this registration found"
+ }
+}

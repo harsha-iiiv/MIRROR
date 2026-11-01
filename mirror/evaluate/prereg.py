@@ -152,7 +152,7 @@ class Budget:
         self.used[line] = self.used.get(line, 0) + n
 
     def snapshot(self) -> dict:
-        return {k: {"used": self.used.get(k, 0), "cap": self.caps[k]} for k in self.caps}
+        return {k: {"used": self.used.get(k, 0), "cap": self.caps.get(k)} for k in sorted(set(self.caps) | set(self.used))}
 
 
 # ------------------------------------------------------------------- audit ---
@@ -165,8 +165,25 @@ def audit(tokens: dict[str, list], roots: list[Path | str], *, skip: tuple = ())
     seeds = {int(s) for s in tokens.get("seeds", [])}
     shas = {s.lower() for s in tokens.get("sha256", [])}
     short = {s[:16]: s for s in shas}
-    five = re.compile(r"(?<![\d.])(\d{5})(?![\d.])")
+    five_re = re.compile(r"(?<![\d.])(\d{5})(?!\d)")     # "seed70019.json" counts; "0.70019" does not
     hexes = re.compile(r"[0-9a-f]{16,64}")
+
+    class _Five:
+        """Five-digit tokens, ignoring digits inside a hash (a run of 16 or
+        more hexadecimal characters), where they are not seeds."""
+        @staticmethod
+        def findall(text):
+            out = []
+            for m in five_re.finditer(text):
+                a, b = m.start(), m.end()
+                while a > 0 and text[a - 1] in "0123456789abcdefABCDEF":
+                    a -= 1
+                while b < len(text) and text[b] in "0123456789abcdefABCDEF":
+                    b += 1
+                if b - a < 16:
+                    out.append(m.group(1))
+            return out
+    five = _Five()
     skip = tuple(Path(s).resolve() for s in skip)
     hits, files, scanned = [], 0, []
     for root in roots:

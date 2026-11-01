@@ -186,6 +186,49 @@ def proposal_signature(spec) -> dict:
     return dict(constraints=cons, goals=goals)
 
 
+def _num(x) -> bool:
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+def _strip_numbers(v):
+    if isinstance(v, dict):
+        return {k: _strip_numbers(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_strip_numbers(x) for x in v]
+    return "<number>" if _num(v) else v
+
+
+def structure_signature(sig: dict) -> dict:
+    """A proposal signature with every numeric parameter replaced by a
+    placeholder: same items, phases, selectors and parameter names."""
+    cons = sorted((t, ph, sel, json.dumps(_strip_numbers(json.loads(p)), sort_keys=True))
+                  for t, ph, sel, p in sig["constraints"])
+    return dict(constraints=cons, goals=sorted(sig["goals"]))
+
+
+def numeric_differences(sig_a: dict, sig_b: dict) -> list[dict]:
+    """Every numeric parameter that differs between items present in both
+    signatures with the same type, phase, selector and parameter names
+    (e.g. a cup tilt limit of 10 vs 15 degrees)."""
+    def index(sig):
+        out = {}
+        for t, ph, sel, p in sig["constraints"]:
+            params = json.loads(p)
+            key = (t, ph, sel, json.dumps(_strip_numbers(params), sort_keys=True))
+            out.setdefault(key, []).append(params)
+        return out
+    a, b = index(sig_a), index(sig_b)
+    diffs = []
+    for key in sorted(set(a) & set(b)):
+        for pa, pb in zip(a[key], b[key]):
+            for name in sorted(set(pa) | set(pb)):
+                va, vb = pa.get(name), pb.get(name)
+                if va != vb and (_num(va) or _num(vb)):
+                    diffs.append(dict(type=key[0], phase=key[1], applies_to=json.loads(key[2]), param=name,
+                                      video=va, ground_truth=vb))
+    return diffs
+
+
 def _get(obj, name, default=None):
     if isinstance(obj, dict):
         return obj.get(name, default)
@@ -275,7 +318,7 @@ def run(design: dict, inputs: dict, *, ledger, budget, out_dir: Path, meta_clien
     if propose is None:
         from mirror.interpret import propose_spec as propose
     if tracker is None:
-        tracker = lambda dv, gt, root: sam_tracker(dv, gt, root, prompts=design.get("sam_prompts"), client=meta_client)  # noqa: E731
+        tracker = lambda dv, gt, root: sam_tracker(dv, gt, root, client=meta_client)  # noqa: E731  (frozen default objects)
     repo_root = repo_root or Path(__file__).resolve().parents[2]
     obs_cfg = dict(design.get("observation", {}))
     cam = obs_cfg.pop("camera", "top")
@@ -308,12 +351,29 @@ def run(design: dict, inputs: dict, *, ledger, budget, out_dir: Path, meta_clien
         try:
             dv, gt = load_demo_video(manifests[seed])
             root = manifests[seed].parent
-            budget.charge("sam-3.1", design.get("sam_requests_per_video", 0) if tracker_label == "sam-3.1" else 0)
             t0 = time.monotonic()
+            n0 = len(getattr(meta_client, "usage", []))
             tracks = tracker(dv, gt, root)
+            recs = getattr(meta_client, "usage", [])[n0:]
+            budget.charge("sam-3.1", sum(1 for r in recs if str(r.get("model", "")).startswith("sam")))
+            budget.charge("muse-spark-1.3:grounding", sum(1 for r in recs if str(r.get("model", "")).startswith("muse-spark")))
+            row["tracking_cost_usd"] = round(sum(costs.record_cost(r) for r in recs), 4)
+            notes = getattr(tracks, "notes", None) or []
+            try:
+                info = json.loads(notes[0]) if notes else {}
+            except (TypeError, ValueError):
+                info = {}
+            row["reseeds"] = info.get("reseed", [])
+            try:
+                from mirror.perception.track import save_tracks
+                (Path(out_dir) / "tracks").mkdir(parents=True, exist_ok=True)
+                save_tracks(tracks, Path(out_dir) / "tracks" / f"{seed}.json.gz")
+            except Exception as exc:  # the tracks file is a convenience record, not a measure
+                row["tracks_saved"] = f"not saved: {type(exc).__name__}"
             est, scene_v, trace_v, checks = reconstruct(dv, tracks)
             row["tracking_latency_s"] = round(time.monotonic() - t0, 1)
-            ledger.append(kind="track", seed=seed, tracker=tracker_label)
+            ledger.append(kind="track", seed=seed, tracker=tracker_label, requests=len(recs),
+                          reseeds=len(row["reseeds"]), cost_usd=row["tracking_cost_usd"])
             kinds = est.scene_checks.get("kinds", {})
             row["tracking"] = frame_errors(gt_frames(gt), est_frames(est, kinds, gt_fps=dv.fps))
             row["tracking_frames"] = len(est.t)
@@ -354,8 +414,11 @@ def run(design: dict, inputs: dict, *, ledger, budget, out_dir: Path, meta_clien
             chosen = design.get("spec_observations_model", "muse-spark-1.3")
             spec_gt = propose(gt_trace, spark_client)
             spec_v = propose(trace_v, spark_client, observations=obs_by.get(chosen))
-            row["signature_equal"] = proposal_signature(spec_v) == proposal_signature(spec_gt)
-            row["signature_video"], row["signature_ground_truth"] = proposal_signature(spec_v), proposal_signature(spec_gt)
+            sv, sg = proposal_signature(spec_v), proposal_signature(spec_gt)
+            row["signature_equal"] = sv == sg
+            row["structure_equal"] = structure_signature(sv) == structure_signature(sg)       # reported only
+            row["numeric_differences"] = numeric_differences(sv, sg)
+            row["signature_video"], row["signature_ground_truth"] = sv, sg
             ledger.append(kind="spec", seed=seed, signature_equal=row["signature_equal"])
         except Exception as exc:  # every attempt is reported
             from .prereg import BudgetExceeded
@@ -383,6 +446,7 @@ def summarize(rows: list[dict], design: dict) -> dict:
     det = sum(r["timing"]["tp"] for r in ok) / max(sum(r["timing"]["n_gt"] for r in ok), 1)
     tilt = [r["tracking"]["tilt_deg"]["median"] for r in ok if r["tracking"]["tilt_deg"]]
     sig = sum(1 for r in ok if r.get("signature_equal"))
+    struct = sum(1 for r in ok if r.get("structure_equal"))
     models = {}
     for m in ("muse-wonder-1.0", "muse-spark-1.3"):
         o = [r["observations"][m] for r in ok if m in r.get("observations", {})]
@@ -414,7 +478,9 @@ def summarize(rows: list[dict], design: dict) -> dict:
     vals = dict(seeds=len(rows), completed=len(ok), found_rate=float(np.mean(found)) if found else None,
                 centroid_cm_median=float(np.median(cm)) if cm else None,
                 event_detection_rate=det, timing_abs_err_s_median=float(np.median(t_err)) if t_err else None,
-                tilt_err_deg_median=float(np.median(tilt)) if tilt else None, signature_equal=sig)
+                tilt_err_deg_median=float(np.median(tilt)) if tilt else None, signature_equal=sig,
+                structure_equal_reported_only=struct,
+                numeric_differences=sum(len(r.get("numeric_differences", [])) for r in ok))
     n = len(design["seeds"])
     checks = {
         f"found rate >= {th['found_rate_min']}": vals["found_rate"] is not None and vals["found_rate"] >= th["found_rate_min"],
@@ -455,7 +521,8 @@ def markdown(report: dict, design: dict) -> str:
           f"| grasp/release detected within 1 s | {_f(v['event_detection_rate'], 3)} |",
           f"| median timing error | {_f(v['timing_abs_err_s_median'])} s |",
           f"| median cup tilt error (in-image tilt vs true tilt) | {_f(v['tilt_err_deg_median'])} deg |",
-          f"| same proposed specification as from ground truth | {v['signature_equal']} of {v['seeds']} |", "",
+          f"| same proposed specification as from ground truth (pass/fail measure) | {v['signature_equal']} of {v['seeds']} |",
+          f"| same structure ignoring numeric limits (reported only) | {v.get('structure_equal_reported_only')} of {v['seeds']} |", "",
           "## Muse Wonder vs Muse Spark (video observations)", "",
           "| model | clips | errors | mean event F1 (0.5 s) | events within 2 s | mean timing error (within 2 s) "
           "| relevant objects right | care cue for the cup (expected) | validator issues | median latency | cost |",
@@ -489,6 +556,10 @@ def markdown(report: dict, design: dict) -> str:
                  f"{'yes' if r['signature_equal'] else 'no'} |")
     if res.get("stopped"):
         L += ["", f"**Stopped early.** {res['stopped']}. Seeds not run: {', '.join(map(str, res.get('not_run', [])))}."]
+    nd = [(r["seed"], d) for r in res["rows"] for d in r.get("numeric_differences", [])]
+    L += ["", "## Every numeric difference between the two proposals (reported only)", ""]
+    L += [f"- seed {sd}: {d['type']} ({d['phase']}) on {json.dumps(d['applies_to'])}: {d['param']} = {d['video']} from "
+          f"video vs {d['ground_truth']} from the ground-truth trace" for sd, d in nd] or ["none"]
     L += ["", "## Spend", "", "| model | network calls | replayed | input tokens | output tokens | median latency | cost |",
           "|---|---|---|---|---|---|---|"]
     for m, u in res.get("usage", {}).items():

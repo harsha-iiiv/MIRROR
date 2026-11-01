@@ -138,6 +138,7 @@ def write_site(svc: StudioService, out: Path, steps: list[dict], extra: dict) ->
     media = data / "media"
     vd = snap.get("video_demo")
     if vd:
+        vd["run"] = "recorded"           # the site replays one recorded run
         media.mkdir(exist_ok=True)
         for view, v in vd.get("views", {}).items():
             name = f"demo_{view}.mp4"
