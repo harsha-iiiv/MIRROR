@@ -277,7 +277,7 @@ box. In condition B the median centroid error on material edits was 151 px
 (18 kept objects), consistent with a fixed phrase matching another object.
 
 
-## Fifth registration: video to specification (results pending)
+## Fifth registration: video to specification (two attempts)
 
 **Question.** Can MIRROR rebuild the demonstration from rendered video (SAM 3.1
 tracking, two-view reconstruction) well enough that Muse Spark proposes the
@@ -285,48 +285,111 @@ same specification as from the simulator's own trace? And does Muse Wonder
 describe the video better than Muse Spark?
 
 **Design** (`results/eval_video/design.json`, written 31 October 2026 20:56 UTC,
-committed in `7c2cb2f`).
+committed in `7c2cb2f`; repeated unchanged in attempt 2).
 
-* Inputs: 20 new evaluation seeds (70000-70019), the scripted demonstration in
-  each layout, rendered from a top and a side camera with the simulator's
-  per-frame ground truth.
-* Pre-stated thresholds: object found rate ≥ 0.95; median table-plane centroid
-  error ≤ 1.5 cm; grasp/release detection ≥ 0.9; median timing error ≤ 0.3 s;
-  median cup tilt error ≤ 5°; specification signature from video equal to the
-  one from the true trace on at least 18 of 20 seeds.
-* Decision rule: use Muse Wonder for observations only if its mean event F1
-  is at least 0.05 above Muse Spark's and it gets the relevant objects right at
-  least as often.
+* Inputs: 20 new evaluation seeds, the scripted demonstration in each layout,
+  rendered from a top and a side camera (960x540, 15 fps, no overlays) with
+  the simulator's per-frame ground truth.
+* Tracking: Muse Spark locates each object on the first frame; SAM 3.1 tracks it
+  from that box on 5 fps copies, with re-seeding of lost tracks; the trace is
+  rebuilt on the table plane from both views.
+* Pre-stated thresholds: object found rate ≥ 0.95; median table-plane position
+  error ≤ 1.5 cm; grasp/release detected within 1 s ≥ 0.9; median timing error
+  ≤ 0.3 s; median cup tilt error ≤ 5°; specification from video with the same
+  signature as the one from the true trace on at least 18 of 20 seeds.
+* The tracking thresholds use event times from tracked object motion, never
+  from the video models. The video models have no pass/fail threshold. Decision
+  rule: use Muse Wonder for observations only if its mean event F1 is at least
+  0.05 above Muse Spark's and it gets the relevant objects right at least as
+  often; otherwise keep Muse Spark.
+* A $14 spend cap on all model calls.
 
-**Amendment 1** (21:42 UTC, before any input existed): the tracking thresholds
-apply to SAM tracking and reconstruction, with event times from tracked object
-motion, never from the video models. The video models have no pass/fail
-threshold; they are compared by the decision rule, on the full top video, using
-reported event start times. Written after development-only timing numbers from
-one reference demonstration (video models reported grasps about 2 s early;
-normal-speed video was their best input).
+**Amendments** (attempt 1, both before any input existed): amendment 1 (21:42
+UTC) scoped the thresholds as above, written after development-only timing
+numbers from one reference demonstration (video models reported grasps about 2 s
+early; normal-speed video was their best input). Amendment 2 (1 November 01:06
+UTC) fixed the render settings, the tracking procedure, one Wonder and one Spark
+observation per seed, the $14 cap and a reported-only structure comparison.
 
-**Amendment 2** (1 November 01:06 UTC, before any input existed): renders at
-960x540, 15 fps, no overlays, on an NVIDIA L4 GPU with EGL; tracking on 5 fps
-copies; Muse Spark grounding on the first frame seeds SAM box prompts, with
-re-seeding of lost tracks; one Wonder and one Spark observation per seed; a $14
-spend cap; a reported-only structure comparison next to the unchanged strict
-signature. Frozen in `8e3b369`.
+### Attempt 1 (registration `video`, seeds 70000-70019): no usable result
 
-**Results: pending.**
+Frozen in `8e3b369`; reported in full in
+[`results/eval_video/ATTEMPT_1.md`](../results/eval_video/ATTEMPT_1.md)
+(commit `69c533c`).
 
-| Check | Result |
-|---|---|
-| Found rate ≥ 0.95 | *pending* |
-| Median centroid error ≤ 1.5 cm | *pending* |
-| Event detection ≥ 0.9 | *pending* |
-| Median timing error ≤ 0.3 s | *pending* |
-| Median cup tilt error ≤ 5° | *pending* |
-| Signature equal on ≥ 18 of 20 seeds | *pending* |
-| Decision rule (Wonder vs Spark) | *pending* |
-| Structure comparison (reported only) | *pending* |
-| Spend (cap $14) | *pending* |
+* **The video-model observations never ran.** The runner passed descriptive
+  design fields to `observe()`, so all 24 calls failed before any request was
+  sent. Its unit test used a fake `observe` that accepted any argument.
+* **The specification check therefore ran without observations,** which is not
+  the registered condition (4 of 12 equal). It is not reported as a result.
+* **The run stopped after 12 of 20 seeds** when the machine restarted; the
+  runner could not resume.
+* Spend $3.75. A frozen registration cannot be patched, so the experiment was
+  repeated as a new registration on new seeds.
 
-**What the failures mean.** *Pending.* Known from development before the
-freeze: perception was tuned on the reference demonstration and development
-seeds 9001 and 9002 only; on 9002 it still missed the marker's grasp and release.
+### Attempt 2 (registration `video2`, seeds 71000-71019)
+
+Same design, thresholds and decision rule. Three harness changes: only the
+arguments `observe()` declares are passed (tested against the real function);
+finished seeds are checkpointed so a restarted run resumes; seeds run 8 at a
+time, each reserving 1.5 times its projected cost against the cap. Renders on 8
+NVIDIA L4 GPUs with EGL. Design written 1 November 06:04 UTC, frozen and pushed
+in `80750a4` before any model call on its inputs; no amendments. Results in
+[`results/eval_video2/report.md`](../results/eval_video2/report.md) and
+[`RUN_NOTES.md`](../results/eval_video2/RUN_NOTES.md) (commit `bb5eb64`).
+
+**Stopped early: 16 of 20 seeds.** With 8 seeds in flight, $8.50 spent and $6.80
+reserved, no further seed could start under the $14 cap, so seeds 71016-71019
+did not run. Actual spend for the 16 seeds was $10.44; the reservation was more
+conservative than needed, but the cap worked as written. A second invocation was
+refused by the run-once guard, which was left in place. The four missing seeds
+cannot change any verdict: even if all four were perfect, the found rate would be
+at most 0.91, detection within 1 s at most 0.71 and equal specifications at most
+12 of 20.
+
+| Check (16 seeds) | Threshold | Result | |
+|---|---|---|---|
+| Objects found (within 5 cm, visible frames) | ≥ 0.95 | 0.886 | **not met** |
+| Median position error | ≤ 1.5 cm | 0.72 cm | met |
+| Grasp/release detected within 1 s | ≥ 0.9 | 0.635 | **not met** |
+| Median timing error | ≤ 0.3 s | 0.65 s | **not met** |
+| Median cup tilt error (in-image vs true) | ≤ 5° | 2.0° | met |
+| Same specification as from the true trace | ≥ 18 of 20 | 8 of 16 | **not met** |
+
+Two of six checks met. Same structure ignoring numeric limits (reported only):
+8 of 16. The one numeric difference: seed 71007, cup upright during transport
+with a 20° limit from video vs 15° from the true trace.
+
+**Muse Wonder vs Muse Spark** (same 16 clips, one run each, no errors):
+
+| | Muse Wonder | Muse Spark |
+|---|---|---|
+| Mean event F1 (0.5 s tolerance) | 0.062 | 0.115 |
+| Events matched within 2 s | 24 / 96 | 59 / 96 |
+| Mean timing error of those | 0.99 s | 1.00 s |
+| Relevant objects right | 14 / 16 | 16 / 16 |
+| Care cue for the cup (expected on 16) | 5 | 5 |
+| Median latency | 79 s | 42 s |
+| Cost | $3.86 | $0.76 |
+
+Decision rule: Wonder is not 0.05 F1 above Spark and gets the objects right less
+often, so **Muse Spark is kept** as the video observer.
+
+**Per seed.** Seed 71010: tracking produced no position within 5 cm of the
+truth for any object (found 0.000, 0 of 6 events); the specification from video
+lost the cup entirely. The report does not diagnose why. Seed 71002: found
+0.701, 1 of 6 events. Twelve of the 16 seeds had a found rate of at least 0.93.
+
+**Spend:** $10.44 (Muse Spark $2.71, SAM 3.1 $3.88, Muse Wonder $3.86), under
+the $14 cap; every call is in the ledger.
+
+**What this means.** On these rendered videos, perception is good at where
+things are and how the cup is tilted (0.72 cm, 2.0°), but not reliable enough
+about whether an object is present and when it is grasped or released
+(found 0.886, 0.635 of events within 1 s, median timing error 0.65 s), and on one seed
+it failed outright. The specification proposed from video matched the one from
+the simulator's trace on half the seeds (8 of 16). Video-derived traces cannot
+yet replace the simulator trace that the main evaluations use. Both video models
+report events far less precisely than tracking (event F1 0.06 and 0.12 at
+0.5 s), so they are not a substitute for tracked event times either. Muse
+Wonder did not earn its higher cost and latency here.

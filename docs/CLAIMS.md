@@ -156,10 +156,21 @@ not cover keep their freedom. Evaluation numbers are in
   full stop or a comma heard as a full stop. The correction compiler is
   sensitive to punctuation.
 * **Rendered video, not camera footage.** Demonstration videos are rendered from
-  the simulator. The render look was adjusted for segmentation (soft wood
-  grain, dark floor, opaque walls) and has no overlays.
-* **GPU renders.** The 20 videos of the video registration were rendered on an
-  NVIDIA L4 GPU with EGL. On a development demonstration, EGL frames differed
+  the simulator, of a scripted demonstration in simulated layouts. The render
+  look was adjusted for segmentation (soft wood grain, dark floor, opaque walls)
+  and has no overlays. Nothing here shows perception on real camera footage of
+  people.
+* **Video benchmark: 16 of 20 seeds, 2 of 6 checks met.** The registered spend
+  cap's reservation stopped admission after 16 of 20 seeds; a second run was
+  refused by the run-once guard, and the four missing seeds cannot change any
+  verdict. Position (0.72 cm) and cup tilt (2.0°) met their targets. Objects
+  found (0.886), grasp/release within 1 s (0.635), timing (0.65 s) and the
+  specification check (same as from the true trace on 8 of 16 seeds) did not.
+  On one seed tracking found nothing. The first attempt produced no usable
+  result (a harness error, then a machine restart) and is reported in full. The
+  main evaluations therefore keep using the simulator trace, not video.
+* **GPU renders.** The videos of both video-benchmark attempts were rendered on
+  NVIDIA L4 GPUs with EGL (attempt 2: 8 machines in parallel). On a development demonstration, EGL frames differed
   from software (OSMesa) renders by about 1/255 on average (99th percentile
   4/255), with identical poses and events.
 * **Known geometry.** Reconstruction from video assumes the camera intrinsics
@@ -179,15 +190,22 @@ not cover keep their freedom. Evaluation numbers are in
   development seeds 9001 and 9002 only. The video registration's seeds were
   never rendered or sampled by that work. On 9002 it still misses the marker's
   grasp and release.
-* **Run-to-run variation.** Live perception is not deterministic. On the
+* **Run-to-run variation.** Live perception is not deterministic, and a
+  benchmark number is one run per seed. On the
   reference video, the recorded run gave a 0.88 cm mean position error with
   6 of 6 grasp/release events; a live re-run on the same video gave 1.90 cm and
   4 of 6 ([record](../results/live_checks/2026-10-31_video_rerun.md)). The
   published site replays the recorded run.
 * **Video models.** In development, Muse Spark and Muse Wonder reported grasps
-  about 2 s early.
-  Their observations are reported and compared; they never set event times for
-  the tracking thresholds and never grade a run.
+  about 2 s early. In the video benchmark their event F1 at 0.5 s was 0.062
+  (Wonder) and 0.115 (Spark). Their observations are reported and compared; they
+  never set event times for the tracking thresholds and never grade a run.
+* **Muse Spark kept over Muse Wonder.** By the rule stated before the test,
+  Wonder would have replaced Spark as the video observer only with an event F1 at
+  least 0.05 higher and at least as many correct object sets. It scored lower on
+  both (0.062 vs 0.115; 14 vs 16 of 16) at about five times the cost ($3.86 vs
+  $0.76) and twice the latency (79 s vs 42 s), so Spark was kept. The studio does
+  not use Wonder.
 * **Image edits change scenes.** Muse Image does not only restyle a frame: in
   the robustness benchmark it moved, removed or reframed objects in 42 of 261
   scored objects (16%), and it shifts and rescales the whole frame slightly.
