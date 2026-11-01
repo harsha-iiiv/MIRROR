@@ -12,6 +12,7 @@ from __future__ import annotations
 import importlib
 import json
 import os
+import shutil
 import threading
 import time
 import traceback
@@ -771,6 +772,14 @@ class StudioService:
             top_id, top_path = "bundled-top", b["top"]
             side_id, side_path = ("bundled-side", b["side"]) if b.get("side") and side in (None, "bundled") else (None, None)
             gt = b.get("ground_truth")
+            # Perception writes working images next to the video; the bundled copy may live in a
+            # read-only install, so each run works on its own copy in the session's runtime folder.
+            src_dir = Path(top_path).parent
+            dst_dir = self._runtime_dir() / f"bundled-{uuid.uuid4().hex[:8]}"
+            shutil.copytree(src_dir, dst_dir, ignore=shutil.ignore_patterns("perception_work"))
+            top_path = str(dst_dir / Path(top_path).name)
+            if side_path:
+                side_path = str(dst_dir / Path(side_path).name)
         else:
             top_id, top_path = top, self.video_file(top)
             side_id, side_path = (side, self.video_file(side)) if side else (None, None)

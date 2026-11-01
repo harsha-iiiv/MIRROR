@@ -27,7 +27,7 @@ sudo useradd --system --home /opt/mirror --shell /usr/sbin/nologin mirror
 sudo git clone https://github.com/harsha-iiiv/MIRROR.git /opt/mirror
 sudo python3 -m venv /opt/mirror/.venv
 sudo /opt/mirror/.venv/bin/pip install --upgrade pip
-sudo /opt/mirror/.venv/bin/pip install -e /opt/mirror "uvicorn[standard]"
+sudo /opt/mirror/.venv/bin/pip install -e "/opt/mirror[meta,video]" "uvicorn[standard]"
 sudo chown -R root:root /opt/mirror            # code is read-only for the service
 
 # settings (edit the REPLACE values: the Netlify origin and the model key)
@@ -51,7 +51,7 @@ curl -s https://YOUR-TUNNEL-HOST/api/health
 
 Logs: `journalctl -u mirror-studio -f`. After changing the env file:
 `sudo systemctl restart mirror-studio`. To update the code:
-`cd /opt/mirror && sudo git pull && sudo /opt/mirror/.venv/bin/pip install -e . && sudo systemctl restart mirror-studio`.
+`cd /opt/mirror && sudo git pull && sudo /opt/mirror/.venv/bin/pip install -e ".[meta,video]" && sudo systemctl restart mirror-studio`.
 
 ### Settings (`/etc/mirror/mirror.env`)
 
