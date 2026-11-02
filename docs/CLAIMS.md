@@ -12,6 +12,32 @@ rule improves on freshly sampled layouts, while objects the correction does
 not cover keep their freedom. Evaluation numbers are in
 [EVALUATION.md](EVALUATION.md) and `results/`.
 
+## What the evaluation numbers measure
+
+* **The pre-registered evaluations test one fixed specification pair.** In each
+  of the first two registrations the demonstration was interpreted once and the
+  reference correction compiled once, before the freeze. The resulting original
+  and corrected specifications were then run on 60 fresh layouts and 30 shortcut
+  layouts (33/60 → 60/60 and 3/30 → 30/30 with the Muse Spark pair), with 5
+  blocked layouts handled separately. The layouts are new; the language input is
+  not. These are not 90 new-video interpretations and not 90 independent
+  language-learning trials.
+* **The Muse Spark correction benchmark is not blind.** Its rows (44/44 frozen,
+  27/28 held-out) swap the model after development, on case sets that had
+  already been seen, with a prompt revision tuned on the development model.
+  Only the first-run rows of the development model and the offline rules (on the
+  frozen set) and the first held-out rows of those interpreters were run on
+  cases they had not seen.
+* **The demo film and the studio site show different registrations.** The film's
+  side-by-side and grid clips use first-registration seeds (30000+, development
+  model specifications); the site's evidence step loads the second registration
+  (50000+ and 60000+, Muse Spark specifications). See
+  [Evidence provenance](EVALUATION.md#evidence-provenance).
+* **No fresh authoring evaluation and no user study has been run.** The v3
+  protocol ([protocols/v3_authoring.md](protocols/v3_authoring.md)) and the
+  impact study kit (`study/`) are prepared and tested only on development and
+  clearly synthetic fixtures.
+
 ## What it does not claim
 
 * No physical robot, and no evidence of simulation-to-reality transfer.
@@ -90,9 +116,15 @@ not cover keep their freedom. Evaluation numbers are in
 * Benchmark cases are single sentences applied to one base specification in
   one scene. Gold answers follow the documented policies (for example, a rule
   with no phase applies while the object is carried). The prompt was revised
-  twice after results were seen; the blind first-revision numbers remain the
-  headline and later rows are labelled post-change
-  (`results/corrections_benchmark_summary.md`).
+  twice after results were seen; the first-revision numbers (offline rules and
+  the development model, the only rows run blind) remain the headline and later
+  rows are labelled post-change (`results/corrections_benchmark_summary.md`).
+* The Muse Spark rows of that benchmark are a post-hoc model swap: both case
+  sets had been seen and the prompt was tuned on the development model. They
+  are not a blind or held-out measurement of Muse Spark.
+* The held-out set was written by the same people who wrote the frozen set and
+  the compiler, after seeing the frozen-set failures. It is held out from the
+  interpreters, not independent of their authors.
 
 ### Planning
 * Routes are enumerated (direct, around each wall end, through each slot in

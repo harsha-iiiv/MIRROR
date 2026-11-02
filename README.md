@@ -30,6 +30,13 @@ model's description of what happened.
 * **Proofs are narrow.** "Infeasible" is claimed only with a geometric bound
   under stated assumptions; otherwise the planner reports that it found no
   plan, which is not a proof.
+* **What the headline numbers test.** One specification pair (before and after
+  one correction) is compiled once, frozen, and then executed on layouts that
+  did not exist before the freeze. The layouts are new; the demonstration, the
+  correction sentence and both specifications are not. The results show that one
+  compiled correction carries through planning and physics to new layouts. They
+  are not 90 new demonstrations interpreted, and not 90 independent
+  language-understanding trials. See [Scope of each result](docs/EVALUATION.md#scope-of-each-result).
 
 Full list: [docs/CLAIMS.md](docs/CLAIMS.md).
 
@@ -48,10 +55,15 @@ Full list: [docs/CLAIMS.md](docs/CLAIMS.md).
 
 Two pre-registered evaluations, each on layouts generated only after the code,
 both specification versions and the seed lists were frozen
-([details](docs/EVALUATION.md)). The second uses specifications compiled by
-**Muse Spark** (`muse-spark-1.3`) on 95 new layouts; the first used recorded
-responses from a development model. Both specification pairs enforce the same
-rules.
+([details](docs/EVALUATION.md)). Each runs one fixed specification pair (the
+original specification and the same specification after the reference
+correction) on 60 fresh layouts and 30 shortcut layouts, with 5 blocked layouts
+reported separately. The second pair was compiled by **Muse Spark**
+(`muse-spark-1.3`, replayed from recordings); the first pair came from recorded
+responses of a development model. Both pairs enforce the same rules. Every
+layout is new, but each evaluation interprets the demonstration and compiles the
+correction only once: these numbers measure transfer of one correction to new
+layouts, not how often new corrections are understood.
 
 | | First: fresh (60) | First: shortcut (30) | Muse Spark: fresh (60) | Muse Spark: shortcut (30) |
 |---|---|---|---|---|
@@ -63,6 +75,16 @@ rules.
 
 Full reports: [first](results/eval/report.md), [Muse Spark](results/eval_muse/report.md)
 ([run notes](results/eval_muse/RUN_NOTES.md)).
+
+Which evidence appears where: the published studio site loads the **Muse Spark**
+evaluation (seeds 50000+ and 60000+). The demo film's side-by-side and grid
+clips show rollouts from the **first** evaluation (seeds 30000+, development-model
+specifications). Both are labelled in
+[Evidence provenance](docs/EVALUATION.md#evidence-provenance).
+
+A new protocol for a genuinely fresh authoring evaluation (independent correction
+authors, held-out cases, baselines) is written and dry-run on development cases,
+but **not yet run**: [docs/protocols/v3_authoring.md](docs/protocols/v3_authoring.md).
 
 No planning failures, execution failures, timeouts or obstacle contacts in
 either condition of either evaluation. On five layouts per evaluation where the
@@ -77,7 +99,7 @@ run: motion comes from the planner and the physics, verdicts from the checker.
 
 | Model | Job in MIRROR | Why this model | Evidence |
 |---|---|---|---|
-| **Muse Spark** (`muse-spark-1.3`) | Proposes the task specification from the demonstration, compiles corrections into scoped rule changes, asks clarifying questions. In the video path it also locates the objects on the first frame so SAM can track them, and it is the video observer (kept over Muse Wonder by a rule stated before the test). | Strict JSON-schema output, and text, image and video input in one model. | [Second evaluation](results/eval_muse/report.md) (its specifications: 33/60 → 60/60, 3/30 → 30/30); [correction benchmark](results/corrections_benchmark_summary.md) |
+| **Muse Spark** (`muse-spark-1.3`) | Proposes the task specification from the demonstration, compiles corrections into scoped rule changes, asks clarifying questions. In the video path it also locates the objects on the first frame so SAM can track them, and it is the video observer (kept over Muse Wonder by a rule stated before the test). | Strict JSON-schema output, and text, image and video input in one model. | [Second evaluation](results/eval_muse/report.md): its one specification pair on new layouts, 33/60 → 60/60 and 3/30 → 30/30. [Correction benchmark](results/corrections_benchmark_summary.md): 44/44 and 27/28, but as a post-hoc model swap on cases already seen during development, not a blind test |
 | **Muse Voice Transcribe** (`muse-voice-transcribe-1.0`) | Turns a spoken correction into text for the same correction compiler. | Push-to-talk transcription; median latency 1.0 s in the spoken-correction benchmark. | [Spoken corrections](results/eval_voice/report.md): 3.0% word error rate on clean speech; corrections right from audio 141/144 vs 142/144 from text |
 | **SAM 3.1** (`sam-3.1`) | Tracks the cup, block, marker and gripper through a demonstration video and segments the table, tray and wall, so the demonstration can be rebuilt from video. | Video segmentation with object identities kept across frames. | [Video benchmark](results/eval_video2/report.md), 16 of 20 seeds. Met: median position error 0.72 cm, cup tilt error 2.0°. **Not met:** objects found 0.886 (target 0.95), grasp/release within 1 s 0.635 (target 0.9), median timing error 0.65 s (target 0.3 s), same specification as from the true trace on 8 of 16 seeds (target 18 of 20). One seed tracked nothing. Also [robustness](results/eval_robustness/report.md). |
 | **Muse Image** (`muse-image-1.0`) | Edits frames (lighting, background, distractors, material) to test whether segmentation holds up when the scene looks different. | Instruction-based edits of a frame whose true masks are still known from the simulator. | [Robustness](results/eval_robustness/report.md): on objects whose position the edit kept, median IoU change about 0 and centroid error under 2 px |

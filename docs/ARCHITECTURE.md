@@ -91,3 +91,21 @@ touch, the plan phase, bead positions and contacts.
 the scene. Because logs are kept, any recorded rollout can be re-checked
 against a later specification version; violations of rules that version did
 not enforce are reported separately as `advisory_violations`.
+
+## Evaluation layers
+
+Three parts of the pipeline are evaluated separately, then composed:
+
+| Layer | Input → output | Where it is measured |
+|---|---|---|
+| Perception | demonstration video → `DemoTrace` | Video and robustness registrations (rendered simulator video only) |
+| Authoring | demonstration summary + human corrections → validated `TaskSpec` versions | Correction-compiler benchmark (single sentences, one scene); protocol v3 (prepared, not run) |
+| Execution | fixed `TaskSpec` + new layout → plan, physics, checker verdict | First and second registrations (one fixed specification pair on new layouts) |
+
+The pre-registered evaluations exercise only the execution layer with a fixed
+specification pair. Protocol v3 (`mirror/evaluate/protocol_v3/`,
+[protocols/v3_authoring.md](protocols/v3_authoring.md)) measures authoring and
+runs each authored specification through the same planner, simulator and
+checker, so the composition of authoring and execution is measured on the same
+cases. Its modules are new and do not import or alter the frozen evaluation
+runners.
