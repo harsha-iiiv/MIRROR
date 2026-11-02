@@ -213,11 +213,14 @@ def header_rules(index_html: str, api_base: str = "", ws_base: str = "", generic
         connect = ["'self'"]
         if api_base:
             connect += [api_base, ws_base or "ws" + api_base[4:]]
+    live = generic or bool(api_base)
+    media = ["'self'", "data:", "blob:"] + ([api_base] if api_base and not generic else (["https:"] if generic else []))
     csp = "; ".join([
         "default-src 'self'",
         "script-src 'self' " + " ".join(inline_script_hashes(index_html) + list(CDN_SCRIPTS)),
         "style-src 'self' 'unsafe-inline'",
-        "img-src 'self' data: blob:",
+        "img-src " + " ".join(media),
+        "media-src " + " ".join(media),
         "font-src 'self'",
         "connect-src " + " ".join(connect),
         "worker-src 'self' blob:",
@@ -231,7 +234,8 @@ def header_rules(index_html: str, api_base: str = "", ws_base: str = "", generic
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY",
         "Referrer-Policy": "strict-origin-when-cross-origin",
-        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        # the live studio records spoken corrections, so it needs the microphone (this origin only)
+        "Permissions-Policy": "camera=(), microphone=" + ("(self)" if live else "()") + ", geolocation=(), payment=(), usb=()",
         "Cross-Origin-Opener-Policy": "same-origin",
         "Strict-Transport-Security": "max-age=31536000",
     }
