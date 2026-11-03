@@ -66,11 +66,43 @@ def test_objective_v1_statements_present():
     assert "Do not describe 27/60 → 60/60 or 33/60 → 60/60 as the effect of the correction alone" in docs["CLAIMS.md"]
 
 
-def test_headline_left_to_the_owner():
+def test_headline_is_corrections_you_can_check():
     readme = _t("README.md")
-    assert "HEADLINE: owner decision pending" in readme
-    assert "Checkable, scoped corrections: rules are checked from execution evidence, old runs are re-judged, refusals come with proofs." in readme
-    assert "Correction transfer measured under a deliberately tilt-tolerant planner objective." in readme
+    assert readme.startswith("# MIRROR **Corrections you can check.**")
+    for part in ("Old runs are re-judged from execution evidence", '"not verified", never as a pass',
+                 "The corrected rule is planned and run on new layouts",
+                 "When no compliant route exists, MIRROR refuses with a proof",
+                 "spills 38 beads at each of the six rotation prices",
+                 "the cup rule changes nothing on 120 new layouts",
+                 "measure the correction against a price of 0.05 m/rad"):
+        assert part in readme, part
+    for gone in ("HEADLINE: owner decision pending", "Teach a simulated robot what you mean",
+                 "I corrected it once, and the correction changed what it did somewhere else",
+                 "deliberately tilt-tolerant planner objective"):
+        assert gone not in readme, gone
+
+
+def test_refusal_claim_holds_at_every_price_tested(obj):
+    blocked = obj["strata"]["blocked"]["metrics"]
+    originals = [k for k in blocked if k.startswith("original@")]
+    assert len(originals) == 6
+    for k in originals:
+        assert blocked[k]["completion"] == 10 and blocked[k]["beads_lost"] == 38, k
+    correcteds = [k for k in blocked if k.startswith("corrected@")]
+    assert len(correcteds) == 2
+    for k in correcteds:
+        assert blocked[k]["completion"] == 0 and blocked[k]["planning_failures_proven"] == 10, k
+
+
+def test_single_marked_placeholder_for_ordering_and_clearance():
+    readme = _t("README.md")
+    assert readme.count("PENDING") == 1
+    i = readme.index("PENDING")
+    assert "ordering and clearance corrections at the calibrated price" in readme[i: i + 200]
+    for name in ("CLAIMS.md", "EVALUATION.md", "ARCHITECTURE.md"):
+        assert "PENDING" not in _t(name), name
+    dev = " ".join((ROOT / "docs" / "submission" / "DEVPOST.md").read_text().split())
+    assert dev.count("PENDING") == 1 and "ordering and clearance" in dev[dev.index("PENDING"): dev.index("PENDING") + 200]
 
 
 # ---------------------------------------------------------------- video, robustness
@@ -149,7 +181,10 @@ def _published() -> dict[str, str]:
 
 @pytest.mark.parametrize("pattern,why", RETIRED)
 def test_retired_phrasings_absent(pattern, why):
-    docs = _all() if pattern == "PENDING" else _published()
+    if pattern == "PENDING":
+        docs = {k: v for k, v in _all().items() if k != "README.md"}
+    else:
+        docs = _published()
     for name, t in docs.items():
         for m in re.finditer(pattern, t):
             ctx = t[max(0, m.start() - 60): m.end() + 60]
