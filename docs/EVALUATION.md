@@ -7,11 +7,12 @@ trials and what was fixed.
 
 | Result | What was new in each trial | What was fixed (reused in every trial) | What it supports | What it does not support |
 |---|---|---|---|---|
-| First and second pre-registered evaluations (60 fresh + 30 shortcut layouts each; 5 blocked layouts reported separately) | The layout: wall, slot, tray and object positions, generated after the freeze | One demonstration, one correction sentence, one compiled specification pair (original and corrected), planner, controller, checker | One compiled correction changes executed behaviour and carries to layouts it was not compiled on, without spreading to objects it does not name, under this planner's objective | Interpretation of 90 new demonstrations; 90 independent tests of language understanding; that Muse Spark caused the improvement (the pair must equal the offline-rule pair); the same failure rate under another planner objective; other corrections; other tasks |
-| Correction-compiler benchmark, development model and offline rules, first run of the frozen set (44 cases) and the held-out set (28 cases) | The sentence | Base specification, scene | Single-sentence compilation accuracy on cases intended to be unseen by that interpreter (the record does not establish the freeze order; see F-A5) | Multi-turn corrections, independent authors, new scenes, pre-registration |
+| First and second pre-registered evaluations (60 fresh + 30 shortcut layouts each; 5 blocked layouts reported separately) | The layout: wall, slot, tray and object positions, generated after the freeze | One demonstration, one correction sentence, one compiled specification pair (original and corrected), planner, controller, checker | One compiled correction changes executed behaviour and carries to layouts it was not compiled on, without spreading to objects it does not name, under the 0.05 m/rad planner objective | Interpretation of 90 new demonstrations; 90 independent tests of language understanding; that Muse Spark caused the improvement (the pair must equal the offline-rule pair); any gain under a time-calibrated objective (objective_v1: 0.000); other corrections; other tasks |
+| Correction-compiler benchmark, development model and offline rules, first run of the first set (44 cases) and the held-out set (28 cases) | The sentence | Base specification, scene | Single-sentence compilation accuracy (held-out set: by recorded response times the first model run began after the case file's final save); not pre-registered, see F-A5 | Multi-turn corrections, independent authors, new scenes, pre-registration |
 | Correction-compiler benchmark, Muse Spark rows (44/44, 27/28) | Only the model (swapped after development) | The same two case sets, already seen during development; prompt revision 3, tuned on the development model | That Muse Spark handles these known cases with the current prompt | A blind or held-out accuracy for Muse Spark |
 | Spoken corrections (288 clips) | Synthetic voice and noise condition | The 72 benchmark sentences | Transcription does not degrade compilation on clean synthetic speech | Real speakers |
-| Perception robustness, video to specification | Rendered frames and videos of new simulated layouts | Simulator renders, known kit geometry and camera intrinsics | Measured perception limits on rendered video | Camera footage, people, other objects; tilt estimation (true tilt at most 0.3°); unconditional position accuracy |
+| Perception robustness, video to specification | Rendered frames and videos of new simulated layouts | Simulator renders, known kit geometry and camera intrinsics | Measured perception limits on rendered video | Camera or phone footage, people, other objects; tilt estimation (true tilt at most 0.29°); position accuracy beyond the 5 cm gate |
+| Planner objective (objective_v1: 120 new + 10 blocked layouts) | The layout, and the rotation price | The same specification pair, controller, checker | How much of the correction's effect depends on the rotation price; never-tilt and corrected trade-offs | Other tasks, real timing, pricing of spill risk |
 
 A genuinely fresh authoring evaluation (independent authors, new wording,
 multi-turn, baselines, every attempt counted) is specified in
@@ -20,75 +21,132 @@ run**; no result from it exists.
 
 ## Audit findings and narrowed claims (2 November 2026)
 
-An audit of commit `7be0be7` (items F-A1 to F-A3 and F-A5 confirmed on `1787aa6`)
-found five places where the published wording claims more than the evidence
-shows. No original output is changed; corrected derived summaries go to new,
-versioned paths. Items marked **PENDING** wait for work in progress and have
-no result yet.
+An audit of commit `7be0be7` found five places where the published wording
+claimed more than the evidence shows. All five have now been investigated from
+stored evidence or new registrations. No original output was changed; the
+corrected derived summaries are in new, versioned paths, cited below.
 
-**F-A1, planner objective.** The planner picks the cheapest route, with route
-cost = path length + 0.05 m per radian of gripper rotation
-(`PlannerConfig.rotation_penalty`). The audit's plan-only sweep over 90 frozen
-layouts found tilted cup routes on 54 at 0.05 m/rad, 32 at 0.10, 2 at 0.20 and 0
-at 0.40 and 1.0 (planned, not executed). In the stored reports of both
-registrations, in 110 of the 113 pairs where the two specifications disagreed
-on violation-free success, the corrected (upright) run finished sooner in
-simulation (median 3.6 s shorter): the shortest route is not the fastest. The
-original-specification failure rates (27/60, 4/30, 33/60, 3/30) therefore
-belong to this objective; a planner that never tilts would spill nothing. The
-corrected rule still did what it says in every trial, but the size of the
-improvement is not a property of MIRROR in general.
-**PENDING (track `baseline`):** a new registration that executes a
-rotation-cost sweep (0.05, 0.10, 0.20, 0.40, 1.0 and a value calibrated to
-measured execution time on development layouts) and a never-tilt baseline with
-the same controller and physics, reporting completion, violations, beads kept,
-path cost and execution time.
+**F-A1, planner objective.** Resolved by registration objective_v1, frozen before
+any of its layouts existed (see [Planner objective and baselines](#planner-objective-and-baselines-objective_v1)).
+The earlier registrations planned with a rotation price of 0.05 m/rad. Calibrated
+to execution time on development layouts, the price is 0.2445 m/rad. At that
+price the original specification never tilts the cup on 120 new layouts, its
+plans equal the corrected specification's, and the retained benefit is 0.000. The
+earlier gains (27/60 → 60/60 and 33/60 → 60/60 primary; 4/30 and 3/30 → 30/30
+shortcut) measure the correction against the 0.05 price, which is also slower;
+they replicate on the new layouts at 0.05 (p = 9.3e-10 and 1.8e-12). The rule's
+remaining measurable effect: on 10 blocked layouts it turns 10/10 spilling runs
+(38 beads) into proven refusals. The plan-only audit sweep on the Muse
+registration's 90 layouts (tilted cup routes 54/32/2/0/0 at 0.05/0.10/0.20/0.40/1.0)
+and the 110-of-113 faster corrected runs were reproduced exactly
+(`results/eval_objective_v1/audit_repro/summary.json`).
 
 **F-A2, model contribution.** `mirror/evaluate/specs.py` refuses to run unless
 the replayed model specification equals the offline-rule specification. This is
-kept as a deterministic regression check and labelled so. It means the
-layout results would be identical with the offline rules alone; they do not
-show that Muse Spark caused the improvement. The Muse Spark correction-benchmark
-rows are post-hoc, on cases seen in development, and are not a fresh external
-holdout. A separate language-understanding evaluation is prepared, not run:
+kept as a deterministic regression check and labelled so. It means the layout
+results would be identical with the offline rules alone; they do not show that
+Muse Spark caused the improvement. The Muse Spark correction-benchmark rows are a
+post-hoc model swap on cases seen in development, not a fresh external holdout.
+A separate language-understanding evaluation is prepared, not run:
 [protocols/v3_language.md](protocols/v3_language.md).
 
-**F-A3, video benchmark.** In all 20 registered clips the cup's true tilt stays
-at or below 0.3° (0.217° to 0.297°, from the stored traces), so a constant-zero
-estimate beats the reported 2.0° median error: the tilt check cannot show
-tilt estimation. `bench_video.frame_errors` computes position error only for
-estimates within 5 cm of the truth, so 0.72 cm is conditional on detection, not
-overall localisation accuracy. **PENDING (track `reanalysis`):** unconditional
-error distributions, constant-zero and simple classical baselines, and missing
-detections, outliers and identity errors reported separately, from the
-existing outputs. **PENDING (track `perception`):** a new video benchmark design
-with substantial, varied tilt and the same baselines, awaiting budget.
+**F-A3, video benchmark.** Rebuilt from the stored masks
+([results/reanalysis_v1/video/report.md](../results/reanalysis_v1/video/report.md);
+every rebuilt seed row equals the stored row): position error 0.72 cm was computed
+only over estimates within 5 cm of the truth, and tilt error only on the 610 of
+6,660 side-visible frames with a tilt estimate. Without the gate, of 20,960 visible
+object-frames 88.8% are within 5 cm, 9.6% further off, 1.3% placed on another
+object (identity errors) and 0.3% without an estimate; the median of all estimates
+is 0.99 cm, the 90th percentile 6.4 cm, and while an object is carried 2.5 cm and
+26 cm. Seed 71010 failed as a whole: the camera calibration from the tracked table
+was wrong and no estimate is within 5 cm. A colour-threshold baseline has a lower
+gated median (0.54 cm, against 0.77 cm for SAM 3.1 on the same frames) with only
+60% of its estimates within 5 cm, which is why the gated median must not be read
+as overall accuracy. True cup tilt never exceeds 0.29° in any registered clip, so a
+constant-zero estimate (0.01°) beats the reported 2.0°: the benchmark cannot
+measure tilt. The out-of-plane tilt component is unobservable from the side view.
+A new video benchmark with substantial, varied tilt is designed, not run
+([VIDEO_BENCHMARK_V3.md](VIDEO_BENCHMARK_V3.md)).
 
-**F-A4, robustness denominators.** The near-zero median IoU change includes
-objects no phrase was chosen for (IoU 0 before and after the edit).
-**PENDING (track `reanalysis`):** prompted and evaluated object counts,
-detection-conditional and unconditional scores, missing detections and
-geometry-changing edits, next to the failed found-rate checks and the cup's
-segmentation failures.
+**F-A4, robustness denominators.** The registered median IoU change included 90
+of 218 geometry-kept rows (condition A) for objects that were never prompted (0
+before and after). On prompted objects only the median change is −0.039 (mean
+−0.19, 10th percentile −0.98). Counting a detection only at IoU ≥ 0.5, 97 of 218
+rows are found in A (0.445) and 81 of 218 in B (0.372). The carried cup was never
+segmented (IoU ≥ 0.5) on any original or edited frame. Both found-rate checks
+(≥ 0.9) were not met ([results/reanalysis_v1/robustness/report.json](../results/reanalysis_v1/robustness/report.json)).
 
-**F-A5, correction-benchmark chronology.** The held-out case file says
-`frozen_at` 2026-10-31T04:45:00-07:00, but its results file says `generated_at`
-2026-10-31T11:27:50Z (04:27:50 PDT), 17 minutes earlier. The frozen set's
-`frozen_at` (04:25 PDT) is also later than its results (11:22:31Z, 04:22:31
-PDT). A contemporaneous project log reports the frozen set at 04:21:15 PDT and
-the held-out set at 04:27:37 PDT, which bound when those events were reported,
-not when they happened. This is not by itself evidence of leakage, but the
-record does not establish that either set was fixed before its first run, so
-pre-registration of the correction benchmark is not claimed.
-**PENDING (track `reanalysis`):** a timeline from file, cassette, ledger,
-usage-log and commit times, with linked code, model and prompt versions and
-immutable manifests.
+**F-A5, correction-benchmark chronology.** The 28 held-out correction cases were
+written after the offline rules were fixed on the first set. The case file's hash
+matches every held-out result, and by the recorded response times the first model
+run on them began after the file's final save. The case files and results were
+committed together after the runs (06:32 PDT, 31 October), and the `frozen_at`
+fields are hand-entered and inaccurate
+([protocols/chronology.md](protocols/chronology.md)). The correction benchmark is
+therefore **not pre-registered**, and `frozen_at` is not cited as evidence.
 
-**Positive evidence.** An isolated, network-blocked replay at the audited commit
-reproduced all 95 Muse-registration scene hashes, statuses and violation-free
-outcomes. One bead-loss count differed (6 vs 2). This is reproduction at the
-outcome level, not bit-exact determinism. The README results table is
-recomputed from the stored reports by a test (`tests/release`).
+**Positive evidence.** Network-blocked replays reproduce both paired
+registrations at the outcome level (see [Reproducibility](#reproducibility)), and
+every registration has an immutable manifest in
+[results/manifests_v1](../results/manifests_v1/README.md). The README results
+table is recomputed from the stored reports by a test (`tests/release`).
+
+## Planner objective and baselines (objective_v1)
+
+Protocol: [protocols/objective_v1.md](protocols/objective_v1.md). Report:
+[results/eval_objective_v1/attempt_1/report.md](../results/eval_objective_v1/attempt_1/report.md).
+Frozen before any of its layouts was generated; one attempt, finished.
+
+* **Conditions, all executed with the same controller and physics:** original
+  specification at rotation prices 0.2445 (calibrated), 0.05, 0.10, 0.20, 0.40 and
+  1.0 m/rad; never-tilt baseline at 0.2445; corrected specification at 0.2445 and
+  0.05. Strata: 80 primary, 40 shortcut and 10 blocked new layouts.
+* **Calibration** (development layouts only): transport time
+  T = 2.30 + 6.76 L + 1.65 R (R² 0.76, leave-one-out RMSE 1.33 s), price 0.2445
+  m/rad (bootstrap 95% CI 0.225 to 0.269). On 60 development layouts the fastest
+  cup route was never a tilted one.
+
+| Rotation price | Cup tilted / violation-free, primary (80) | Cup tilted / violation-free, shortcut (40) |
+|---|---|---|
+| 0.05 | 31 / 49 | 40 / 0 |
+| 0.10 | 19 / 61 | 27 / 13 |
+| 0.20 | 2 / 78 | 5 / 35 |
+| 0.2445, 0.40, 1.0 | 0 / 80 | 0 / 40 |
+
+* **Retained benefit at the calibrated price: 0.000** in both strata; original and
+  corrected plans are identical on all 120 layouts.
+* **At 0.05 the earlier effect replicates:** 49/80 → 80/80 (p = 9.3e-10) and
+  0/40 → 40/40 (p = 1.8e-12).
+* **Time:** the calibrated objective is also faster: original −3.2 s (primary) and
+  −6.5 s (shortcut) against 0.05; corrected −1.7 s and −3.0 s against corrected at
+  0.05. Every tilted run lost beads (2 to 6 of 8).
+* **Never-tilt:** equal to corrected on 119/120 layouts (one run 2.0 s slower: the
+  marker was forced around the wall).
+* **Blocked layouts:** the original specification completes 10/10 at every price and
+  spills 38 beads; never-tilt and both corrected conditions refuse all 10 with a
+  proven infeasibility record.
+* **Post hoc:** at the calibration CI bounds the original specification tilts the
+  cup on 3/120 and 0/120 layouts.
+* **Limits:** one controller and simulated timing; the price values time, not spill
+  risk; one specification pair; 10 blocked layouts.
+
+## Reproducibility
+
+Network-blocked replays ([results/reanalysis_v1/replay](../results/reanalysis_v1/replay/README.md)):
+the first registration (development-model specifications) matches in all 95
+layouts, outcomes and bead counts, at its freeze commit and at today's code. The
+Muse registration matches in all 95 layouts and outcomes, with one bead count
+different (shortcut seed 60002, original specification: 6 stored, 2 replayed),
+identically at its freeze commit and at today's code; the stored run was made on
+a different machine. A development replay on Apple arm64
+([replay_cross_platform](../results/reanalysis_v1/replay_cross_platform/README.md))
+agrees on all 95 outcomes; 0 of 95 layout hashes are byte-identical (the layouts
+agree to about 1e-16) and bead counts in spilling runs differ by up to 2.
+Reproduction is at the outcome level, not bit-exact. This replaces the statement in
+`results/eval_muse/RUN_NOTES.md` that the simulator is deterministic (that file is
+kept unchanged as part of the record). macOS on Apple silicon is a supported
+platform ([INSTALL.md](INSTALL.md)); compare continuous quantities only within one
+platform.
 
 ## Question (first and second registrations)
 
@@ -172,8 +230,11 @@ MIRROR_EVAL_LEDGER=results/tmp/repro-ledger.jsonl \
 ```
 
 The runner re-checks the specification, source, script, data and version
-hashes before every stratum and refuses if anything differs. The simulator is
-deterministic, so a matching environment reproduces the per-seed outcomes.
+hashes before every stratum and refuses if anything differs. A matching
+environment reproduces the per-seed outcomes (status, completion, violations);
+bead counts in spilling runs and layout hashes can differ across machines and
+architectures, so reproduction is at the outcome level, not bit-exact (see
+[Reproducibility](#reproducibility)).
 
 To audit without re-running: the per-seed pairs are in
 `results/eval/<stratum>/report.json`, the ledger in `results/eval/ledger.jsonl`
@@ -258,7 +319,7 @@ Reproduce: `git checkout 864060d`, then
 clone (it writes its outputs and ledger entries into `results/eval_muse`).
 
 
-## Correction-compiler benchmark (not pre-registered as an evaluation)
+## Correction-compiler benchmark (not pre-registered)
 
 Single sentences compiled against one base specification in the shortcut scene;
 exact match of outcome and resulting enforced state. Full table and per-case
@@ -266,13 +327,17 @@ results: [`results/corrections_benchmark_summary.md`](../results/corrections_ben
 
 | Rows | Exact | How to read it |
 |---|---|---|
-| Frozen set (44), first run, prompt revision 1: offline rules / development model (`gpt-5.5`) | 38/44 / 42/44 | Intended blind; the file's `frozen_at` is later than the results (F-A5) |
-| Held-out set (28), written after the offline fixes, prompt revision 1: offline rules / development model | 21/28 / 27/28 | Intended blind; the record does not establish that the set was frozen before this run (F-A5) |
+| First set (44), first run, prompt revision 1: offline rules / development model (`gpt-5.5`) | 38/44 / 42/44 | First run on these cases; the case-file hash equals the committed file. Not pre-registered: cases and results were committed together after the runs ([chronology](protocols/chronology.md)) |
+| Held-out set (28), written after the offline fixes, prompt revision 1: offline rules / development model | 21/28 / 27/28 | By recorded response times the first model run began after the case file's final save, and the hash matches every result. Written by the same team; not pre-registered ([chronology](protocols/chronology.md)) |
 | Later prompt revisions and offline fixes | see summary | Post-change measurements on cases already seen |
 | Muse Spark (`muse-spark-1.3`), frozen / held-out | 44/44 / 27/28 | **Post-hoc model swap.** Both sets had been seen in development and prompt revision 3 was tuned on the development model. Not blind, not held-out for Muse Spark, not a fresh external holdout |
 
 The benchmark has no multi-turn cases, no independent authors and one scene. Its
-"held-out" set was written by the same team that wrote the frozen set. The v3
+"held-out" set was written by the same team that wrote the first set. The
+`frozen_at` fields in both case files are hand-entered and inaccurate and are not
+evidence of when the cases were fixed. The summary file's row labels "blind" and
+"before any run" (`results/corrections_benchmark_summary.md`, kept unchanged)
+predate this analysis; read them with the chronology above. The v3
 protocol addresses these gaps; it has not been run.
 
 
@@ -367,8 +432,18 @@ object, the cup's material), and under camera noise and blur?
 | Found rate ≥ 0.9 | **not met** (0.47) | **not met** (0.61) |
 | Median centroid error ≤ 4 px | met (0.67 px) | met (1.50 px) |
 
-\* Includes objects for which no phrase was chosen (0 before and after). Prompted
-and evaluated counts are **PENDING** (F-A4).
+\* The registered median is taken over every geometry-kept object row, including
+objects that were never prompted (no phrase chosen; IoU 0 before and after) and
+objects missed both before and after: in condition A, 90 of 218 rows were never
+prompted. On prompted objects only, the median IoU change is −0.039 (mean −0.19;
+10th percentile −0.98); on objects found both before and after, −0.032. Counting a
+detection only when SAM's top mask overlaps the object with IoU ≥ 0.5, 97 of 218
+kept rows are detected in A (0.445) and 81 of 218 in B (0.372); on unedited frames
+13 of 24 (A) and 11 of 24 (B). The registered "found" counts any returned mask: in
+B, 50 kept rows are "found" with IoU 0. The carried cup was never segmented (IoU ≥
+0.5) on any original or edited frame in either condition. Source:
+[results/reanalysis_v1/robustness/report.json](../results/reanalysis_v1/robustness/report.json).
+Do not read the met IoU check as evidence that the edits leave segmentation unchanged.
 
 * Uncorrected (A): median IoU change −0.001, centroid 1.93 px; the background
   edits lose 0.17 IoU uncorrected vs 0.04 corrected, so most of the apparent
@@ -469,10 +544,28 @@ at most 0.91, detection within 1 s at most 0.71 and equal specifications at most
 | Median position error (estimates within 5 cm only) | ≤ 1.5 cm | 0.72 cm | met, conditional on detection (F-A3) |
 | Grasp/release detected within 1 s | ≥ 0.9 | 0.635 | **not met** |
 | Median timing error | ≤ 0.3 s | 0.65 s | **not met** |
-| Median cup tilt error (in-image vs true) | ≤ 5° | 2.0° | met, but uninformative: true tilt ≤ 0.3°, a constant zero scores better (F-A3) |
+| Median cup tilt error (in-image vs true) | ≤ 5° | 2.0° | met, but cannot measure tilt: true tilt ≤ 0.29°, a constant-zero estimate scores 0.01° (F-A3) |
 | Same specification as from the true trace | ≥ 18 of 20 | 8 of 16 | **not met** |
 
-Two of six checks met. Same structure ignoring numeric limits (reported only):
+Two of six checks met, and both met checks are conditional (F-A3): unconditionally,
+88.8% of visible object-frames are within 5 cm, the median of all estimates is
+0.99 cm and the 90th percentile 6.4 cm (26 cm while an object is carried); a
+colour-threshold baseline has a lower gated median (0.54 cm) with only 60% within
+5 cm ([re-analysis](../results/reanalysis_v1/video/report.md)).
+
+**Tilt summaries fed to the model (found after the run).** Before the perception
+fix of 2 November, video-derived summaries reported unobserved tilt as measured
+0°. All 20 recorded Muse Spark proposal requests for video-derived demonstrations
+were told, for example, that the block "stayed within 0 degrees of upright for the
+whole time it was carried", although block and marker tilt are never measured from
+video; on seed 71000 the cup's tilt was measured on 18 of 69 carried frames yet
+summarised as staying within 8° the whole time. The "same specification 8 of 16"
+result therefore partly rests on these statements. The saved results are unchanged
+and remain the registered result; unobserved tilt is now marked unknown, never
+upright, and the post-hoc effect of the fix is in
+[results/perception_v2](../results/perception_v2/).
+
+Same structure ignoring numeric limits (reported only):
 8 of 16. The one numeric difference: seed 71007, cup upright during transport
 with a 20° limit from video vs 15° from the true trace.
 
@@ -493,16 +586,20 @@ often, so **Muse Spark is kept** as the video observer.
 
 **Per seed.** Seed 71010: tracking produced no position within 5 cm of the
 truth for any object (found 0.000, 0 of 6 events); the specification from video
-lost the cup entirely. The report does not diagnose why. Seed 71002: found
+lost the cup entirely. The re-analysis traced this to a failed camera calibration
+from the tracked table (top-view table fit 10.03 px against a 10 px threshold, with
+the wall box covering the image), so no estimate is within 5 cm. Seed 71002: found
 0.701, 1 of 6 events. Twelve of the 16 seeds had a found rate of at least 0.93.
 
 **Spend:** $10.44 (Muse Spark $2.71, SAM 3.1 $3.88, Muse Wonder $3.86), under
 the $14 cap; every call is in the ledger.
 
 **What this means.** On these rendered videos, where perception finds an
-object its position is close (0.72 cm, counted only within 5 cm), and the tilt
-number says nothing about tilt estimation because the cup stayed within 0.3° of
-upright (F-A3). Perception is not reliable enough
+object its position is close (0.72 cm, counted only within 5 cm; 88.8% of
+visible object-frames are within 5 cm), and the tilt number says nothing about
+tilt estimation because the cup stayed within 0.29° of upright (F-A3). None of
+this is evidence of phone or camera-video performance: no real footage has been
+processed ([REAL_FOOTAGE.md](REAL_FOOTAGE.md)). Perception is not reliable enough
 about whether an object is present and when it is grasped or released
 (found 0.886, 0.635 of events within 1 s, median timing error 0.65 s), and on one seed
 it failed outright. The specification proposed from video matched the one from
