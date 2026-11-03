@@ -52,6 +52,8 @@ class Ctx:
                      for c in ("ordering", "clearance", "ambiguous", "unsupported", "blocked_refusal")}
         self.demo_manifest = json.loads((demos / "manifest.json").read_text())
         self.camlog: list[dict] = []
+        self.app = None
+        self.tour_record_id = None
 
     def src(self, name):
         return str(self.sources / f"{name}.json")
@@ -518,6 +520,30 @@ def judging_shots(ctx):
                         dict(src=src_rec(ctx, hook_src, t=[5.4, 10.4], speed=0.6, freeze=10.4,
                                          recheck=dict(status=rc["status"], rules=[(r["rule_id"], r["verdict"]) for r in rc["rules"] if r["enforced"]])))))
 
+
+    # J4b the same check in the studio (recorded tour screenshots) -------
+    if ctx.app is not None:
+        crops = [Image.open(ctx.app / f).convert("RGB").crop((1500, 0, 1920, 470)) for f in
+                 ("tour_correction_1920.png", "tour_recheck_1920.png")]
+        crops = [c.resize((int(c.width * 1.55), int(c.height * 1.55)), Image.LANCZOS) for c in crops]
+        bg = L.base()
+        bg.paste(crops[0], (560, 150))
+        bg.paste(crops[1], (560 + crops[0].width + 40, 150))
+
+        def j4b(d, i, t):
+            col(d, 110, "The same check in the studio.", font("bold", 50))
+            col(d, 330, "MIRROR’s Test flow, recorded tour: the typed correction, its scope (cup only; block and "
+                        "marker unchanged), and the old run re-checked from its physics log.", font("regular", 28))
+            col(d, 600, "This tour was recorded with the planner set to treat tilting as nearly free "
+                        "(0.05 m/rad), on development layout 4242.", font("medium", 26), fill=RED)
+            chip(d, (560, 900), "studio screenshot · recorded tour v1 · offline rule interpreter · no model call",
+                 font("medium", 24))
+        recs.append(run_card(ctx, L, cut, "j04b_studio", 8.0, j4b,
+                             dict(src=dict(source="studio Test MIRROR, recorded tour v1 (data/challenge_tour/v1)",
+                                           record_id=ctx.tour_record_id, planner_price=0.05,
+                                           screenshots=["tour_correction_1920.png", "tour_recheck_1920.png"])),
+                             background=bg))
+
     # J5 check 2 ---------------------------------------------------------
     from scripts.film.make_sources import TRANSFER
     names = [f"dev_{f}_{s}__corrected__p{CAL}" for f, s in TRANSFER]
@@ -828,6 +854,7 @@ def main(argv=None):
     ap.add_argument("--fetch", default=None, help="URL of a .tar.gz holding sources/, demos/ and fonts/")
     ap.add_argument("--no-shadows", action="store_true", help="render without shadow maps")
     ap.add_argument("--font-dir", default=None, help="directory with Roboto and DejaVu Sans Mono TTF files")
+    ap.add_argument("--app", default=None, help="directory with studio screenshots (tour_*_1920.png)")
     ap.add_argument("--out", required=True)
     ap.add_argument("--cut", default="both", choices=["social", "judging", "both"])
     ap.add_argument("--max-frames", type=int, default=0, help="smoke test: render at most N frames per shot")
@@ -856,6 +883,11 @@ def main(argv=None):
         from scripts.film import compose
         compose.SAMPLE = [float(x) for x in a.sample.split(",")]
     ctx = Ctx(sources, demos, out)
+    if a.app:
+        ctx.app = Path(a.app)
+        meta = ctx.app / "capture.json"
+        if meta.exists():
+            ctx.tour_record_id = json.loads(meta.read_text()).get("record_id")
     t0 = time.time()
     finals = []
     for cut, fn in (("social", social_shots), ("judging", judging_shots)):
