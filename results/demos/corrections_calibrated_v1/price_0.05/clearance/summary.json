@@ -1,0 +1,4188 @@
+{
+ "case": "clearance",
+ "title": "Clearance (new constraint): keep the cup at least 6 cm from the wall",
+ "kind": "tighten",
+ "interpreter": "offline-rules (no model call)",
+ "showcase_scene": "demo",
+ "turns": [
+  {
+   "text": "Keep the cup at least 6 cm away from the wall.",
+   "outcome": "apply",
+   "version": 3,
+   "record_kind": "correction",
+   "ops": [
+    {
+     "op": "add_constraint",
+     "target_id": "c_keep_clearance_transport_cup",
+     "value": {
+      "id": "c_keep_clearance_transport_cup",
+      "type": "keep_clearance",
+      "applies_to": {
+       "kind": "cup",
+       "role": null,
+       "ids": null
+      },
+      "phase": "transport",
+      "params": {
+       "min_m": 0.06
+      },
+      "status": "confirmed",
+      "provenance": {
+       "source": "user_correction",
+       "evidence": "Keep the cup at least 6 cm away from the wall.",
+       "version_introduced": 1,
+       "model": null
+      },
+      "description": "Keep the cup at least 0.06 m from obstacles while carried."
+     },
+     "rationale": "User: \"keep the cup at least 6 cm away from the wall\""
+    }
+   ],
+   "diff": [
+    {
+     "id": "c_keep_clearance_transport_cup",
+     "item": "constraint",
+     "change": "added",
+     "before": null,
+     "after": {
+      "id": "c_keep_clearance_transport_cup",
+      "type": "keep_clearance",
+      "applies_to": {
+       "kind": "cup",
+       "role": null,
+       "ids": null
+      },
+      "phase": "transport",
+      "params": {
+       "min_m": 0.06
+      },
+      "status": "confirmed",
+      "provenance": {
+       "source": "user_correction",
+       "evidence": "Keep the cup at least 6 cm away from the wall.",
+       "version_introduced": 3,
+       "model": null
+      },
+      "description": "Keep the cup at least 0.06 m from obstacles while carried."
+     }
+    }
+   ]
+  }
+ ],
+ "spec_versions": [
+  {
+   "spec_id": "spec_demo_ref_demo_reference",
+   "version": 2,
+   "parent_version": 1,
+   "task_family": "kit_packing",
+   "summary": "Pack the cup, block and marker into the tray.",
+   "bindings": [
+    {
+     "role": "container",
+     "kind": "cup",
+     "required": true,
+     "count": 1
+    },
+    {
+     "role": "block",
+     "kind": "block",
+     "required": true,
+     "count": 1
+    },
+    {
+     "role": "marker",
+     "kind": "marker",
+     "required": true,
+     "count": 1
+    }
+   ],
+   "goals": [
+    {
+     "id": "g_inside_cup",
+     "type": "inside",
+     "object": {
+      "kind": "cup",
+      "role": null,
+      "ids": null
+     },
+     "target": "destination",
+     "status": "confirmed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "The cup ended inside the tray.",
+      "version_introduced": 1,
+      "model": null
+     }
+    },
+    {
+     "id": "g_inside_block",
+     "type": "inside",
+     "object": {
+      "kind": "block",
+      "role": null,
+      "ids": null
+     },
+     "target": "destination",
+     "status": "confirmed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "The block ended inside the tray.",
+      "version_introduced": 1,
+      "model": null
+     }
+    },
+    {
+     "id": "g_inside_marker",
+     "type": "inside",
+     "object": {
+      "kind": "marker",
+      "role": null,
+      "ids": null
+     },
+     "target": "destination",
+     "status": "confirmed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "The marker ended inside the tray.",
+      "version_introduced": 1,
+      "model": null
+     }
+    }
+   ],
+   "ordering": [
+    {
+     "id": "o_cup_before_block",
+     "before": {
+      "kind": "cup",
+      "role": null,
+      "ids": null
+     },
+     "after": {
+      "kind": "block",
+      "role": null,
+      "ids": null
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "The cup was packed before the block.",
+      "version_introduced": 1,
+      "model": null
+     }
+    },
+    {
+     "id": "o_block_before_marker",
+     "before": {
+      "kind": "block",
+      "role": null,
+      "ids": null
+     },
+     "after": {
+      "kind": "marker",
+      "role": null,
+      "ids": null
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "The block was packed before the marker.",
+      "version_introduced": 1,
+      "model": null
+     }
+    }
+   ],
+   "constraints": [
+    {
+     "id": "c_upright_transport_cup",
+     "type": "upright",
+     "applies_to": {
+      "kind": "cup",
+      "role": null,
+      "ids": null
+     },
+     "phase": "transport",
+     "params": {
+      "max_tilt_deg": 15.0
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "Shown: The cup stayed within 0.2 degrees of upright for the whole time it was carried (mean 0.1). Assumed: Scene knowledge, not demonstration evidence: the scene description lists loose beads in the cup, so its orientation may matter while it moves.",
+      "version_introduced": 1,
+      "model": null
+     },
+     "description": "Keep the cup within 15 degrees of upright while carried."
+    },
+    {
+     "id": "c_upright_final_cup",
+     "type": "upright",
+     "applies_to": {
+      "kind": "cup",
+      "role": null,
+      "ids": null
+     },
+     "phase": "final",
+     "params": {
+      "max_tilt_deg": 15.0
+     },
+     "status": "confirmed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "Shown: The cup ended upright (0 degrees of tilt). Assumed: Objects are normally packed standing the way they started.",
+      "version_introduced": 1,
+      "model": null
+     },
+     "description": "Keep the cup within 15 degrees of upright once placed."
+    },
+    {
+     "id": "c_upright_transport_block",
+     "type": "upright",
+     "applies_to": {
+      "kind": "block",
+      "role": null,
+      "ids": null
+     },
+     "phase": "transport",
+     "params": {
+      "max_tilt_deg": 15.0
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "Shown: The block stayed within 0.2 degrees of upright for the whole time it was carried (mean 0). Assumed: Carrying the block upright may simply have been convenient.",
+      "version_introduced": 1,
+      "model": null
+     },
+     "description": "Keep the block within 15 degrees of upright while carried."
+    },
+    {
+     "id": "c_upright_final_block",
+     "type": "upright",
+     "applies_to": {
+      "kind": "block",
+      "role": null,
+      "ids": null
+     },
+     "phase": "final",
+     "params": {
+      "max_tilt_deg": 15.0
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "Shown: The block ended upright (0 degrees of tilt). Assumed: Objects are normally packed standing the way they started.",
+      "version_introduced": 1,
+      "model": null
+     },
+     "description": "Keep the block within 15 degrees of upright once placed."
+    },
+    {
+     "id": "c_upright_transport_marker",
+     "type": "upright",
+     "applies_to": {
+      "kind": "marker",
+      "role": null,
+      "ids": null
+     },
+     "phase": "transport",
+     "params": {
+      "max_tilt_deg": 15.0
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "Shown: The marker stayed within 0.2 degrees of upright for the whole time it was carried (mean 0.1). Assumed: Carrying the marker upright may simply have been convenient.",
+      "version_introduced": 1,
+      "model": null
+     },
+     "description": "Keep the marker within 15 degrees of upright while carried."
+    },
+    {
+     "id": "c_upright_final_marker",
+     "type": "upright",
+     "applies_to": {
+      "kind": "marker",
+      "role": null,
+      "ids": null
+     },
+     "phase": "final",
+     "params": {
+      "max_tilt_deg": 15.0
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "Shown: The marker ended upright (0.1 degrees of tilt). Assumed: Objects are normally packed standing the way they started.",
+      "version_introduced": 1,
+      "model": null
+     },
+     "description": "Keep the marker within 15 degrees of upright once placed."
+    }
+   ],
+   "uncertainties": [
+    {
+     "id": "u_upright_transport_cup",
+     "question": "The cup stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed? (The lean towards 'required' comes from the scene description, which lists loose beads in the cup; the demonstration itself does not show that it matters.)",
+     "options": [
+      "Required (interpreter's lean)",
+      "Incidental"
+     ],
+     "related_constraint": "c_upright_transport_cup",
+     "status": "open",
+     "resolution": null
+    },
+    {
+     "id": "u_upright_final_cup",
+     "question": "Must the cup end upright in the tray?",
+     "options": [
+      "Required (interpreter's lean)",
+      "Incidental"
+     ],
+     "related_constraint": "c_upright_final_cup",
+     "status": "resolved",
+     "resolution": "required (confirmed by the user)"
+    },
+    {
+     "id": "u_upright_transport_block",
+     "question": "The block stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed?",
+     "options": [
+      "Required",
+      "Incidental"
+     ],
+     "related_constraint": "c_upright_transport_block",
+     "status": "open",
+     "resolution": null
+    },
+    {
+     "id": "u_upright_final_block",
+     "question": "Must the block end upright in the tray?",
+     "options": [
+      "Required (interpreter's lean)",
+      "Incidental"
+     ],
+     "related_constraint": "c_upright_final_block",
+     "status": "open",
+     "resolution": null
+    },
+    {
+     "id": "u_upright_transport_marker",
+     "question": "The marker stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed?",
+     "options": [
+      "Required",
+      "Incidental"
+     ],
+     "related_constraint": "c_upright_transport_marker",
+     "status": "open",
+     "resolution": null
+    },
+    {
+     "id": "u_upright_final_marker",
+     "question": "Must the marker end upright in the tray?",
+     "options": [
+      "Required (interpreter's lean)",
+      "Incidental"
+     ],
+     "related_constraint": "c_upright_final_marker",
+     "status": "open",
+     "resolution": null
+    },
+    {
+     "id": "u_cup_before_block",
+     "question": "The cup was packed before the block. Is that order required?",
+     "options": [
+      "Required",
+      "Incidental"
+     ],
+     "related_constraint": "o_cup_before_block",
+     "status": "open",
+     "resolution": null
+    },
+    {
+     "id": "u_block_before_marker",
+     "question": "The block was packed before the marker. Is that order required?",
+     "options": [
+      "Required",
+      "Incidental"
+     ],
+     "related_constraint": "o_block_before_marker",
+     "status": "open",
+     "resolution": null
+    }
+   ],
+   "tolerances": {
+    "settle_speed_mps": 0.01,
+    "inside_margin_m": 0.0
+   },
+   "demo_id": "demo_ref_demo_reference",
+   "history": [
+    {
+     "version": 2,
+     "text": "confirmed g_inside_cup, g_inside_block, g_inside_marker, c_upright_final_cup",
+     "kind": "confirmation",
+     "diff": [
+      {
+       "op": "set_status",
+       "target_id": "g_inside_cup",
+       "value": {
+        "status": "confirmed"
+       },
+       "rationale": "confirmed by the user"
+      },
+      {
+       "op": "set_status",
+       "target_id": "g_inside_block",
+       "value": {
+        "status": "confirmed"
+       },
+       "rationale": "confirmed by the user"
+      },
+      {
+       "op": "set_status",
+       "target_id": "g_inside_marker",
+       "value": {
+        "status": "confirmed"
+       },
+       "rationale": "confirmed by the user"
+      },
+      {
+       "op": "set_status",
+       "target_id": "c_upright_final_cup",
+       "value": {
+        "status": "confirmed"
+       },
+       "rationale": "confirmed by the user"
+      },
+      {
+       "op": "resolve_uncertainty",
+       "target_id": "u_upright_final_cup",
+       "value": {
+        "resolution": "required (confirmed by the user)"
+       },
+       "rationale": "answered by this change"
+      }
+     ],
+     "model": null
+    }
+   ],
+   "interpreter": "offline-rules"
+  },
+  {
+   "spec_id": "spec_demo_ref_demo_reference",
+   "version": 3,
+   "parent_version": 2,
+   "task_family": "kit_packing",
+   "summary": "Pack the cup, block and marker into the tray.",
+   "bindings": [
+    {
+     "role": "container",
+     "kind": "cup",
+     "required": true,
+     "count": 1
+    },
+    {
+     "role": "block",
+     "kind": "block",
+     "required": true,
+     "count": 1
+    },
+    {
+     "role": "marker",
+     "kind": "marker",
+     "required": true,
+     "count": 1
+    }
+   ],
+   "goals": [
+    {
+     "id": "g_inside_cup",
+     "type": "inside",
+     "object": {
+      "kind": "cup",
+      "role": null,
+      "ids": null
+     },
+     "target": "destination",
+     "status": "confirmed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "The cup ended inside the tray.",
+      "version_introduced": 1,
+      "model": null
+     }
+    },
+    {
+     "id": "g_inside_block",
+     "type": "inside",
+     "object": {
+      "kind": "block",
+      "role": null,
+      "ids": null
+     },
+     "target": "destination",
+     "status": "confirmed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "The block ended inside the tray.",
+      "version_introduced": 1,
+      "model": null
+     }
+    },
+    {
+     "id": "g_inside_marker",
+     "type": "inside",
+     "object": {
+      "kind": "marker",
+      "role": null,
+      "ids": null
+     },
+     "target": "destination",
+     "status": "confirmed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "The marker ended inside the tray.",
+      "version_introduced": 1,
+      "model": null
+     }
+    }
+   ],
+   "ordering": [
+    {
+     "id": "o_cup_before_block",
+     "before": {
+      "kind": "cup",
+      "role": null,
+      "ids": null
+     },
+     "after": {
+      "kind": "block",
+      "role": null,
+      "ids": null
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "The cup was packed before the block.",
+      "version_introduced": 1,
+      "model": null
+     }
+    },
+    {
+     "id": "o_block_before_marker",
+     "before": {
+      "kind": "block",
+      "role": null,
+      "ids": null
+     },
+     "after": {
+      "kind": "marker",
+      "role": null,
+      "ids": null
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "The block was packed before the marker.",
+      "version_introduced": 1,
+      "model": null
+     }
+    }
+   ],
+   "constraints": [
+    {
+     "id": "c_upright_transport_cup",
+     "type": "upright",
+     "applies_to": {
+      "kind": "cup",
+      "role": null,
+      "ids": null
+     },
+     "phase": "transport",
+     "params": {
+      "max_tilt_deg": 15.0
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "Shown: The cup stayed within 0.2 degrees of upright for the whole time it was carried (mean 0.1). Assumed: Scene knowledge, not demonstration evidence: the scene description lists loose beads in the cup, so its orientation may matter while it moves.",
+      "version_introduced": 1,
+      "model": null
+     },
+     "description": "Keep the cup within 15 degrees of upright while carried."
+    },
+    {
+     "id": "c_upright_final_cup",
+     "type": "upright",
+     "applies_to": {
+      "kind": "cup",
+      "role": null,
+      "ids": null
+     },
+     "phase": "final",
+     "params": {
+      "max_tilt_deg": 15.0
+     },
+     "status": "confirmed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "Shown: The cup ended upright (0 degrees of tilt). Assumed: Objects are normally packed standing the way they started.",
+      "version_introduced": 1,
+      "model": null
+     },
+     "description": "Keep the cup within 15 degrees of upright once placed."
+    },
+    {
+     "id": "c_upright_transport_block",
+     "type": "upright",
+     "applies_to": {
+      "kind": "block",
+      "role": null,
+      "ids": null
+     },
+     "phase": "transport",
+     "params": {
+      "max_tilt_deg": 15.0
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "Shown: The block stayed within 0.2 degrees of upright for the whole time it was carried (mean 0). Assumed: Carrying the block upright may simply have been convenient.",
+      "version_introduced": 1,
+      "model": null
+     },
+     "description": "Keep the block within 15 degrees of upright while carried."
+    },
+    {
+     "id": "c_upright_final_block",
+     "type": "upright",
+     "applies_to": {
+      "kind": "block",
+      "role": null,
+      "ids": null
+     },
+     "phase": "final",
+     "params": {
+      "max_tilt_deg": 15.0
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "Shown: The block ended upright (0 degrees of tilt). Assumed: Objects are normally packed standing the way they started.",
+      "version_introduced": 1,
+      "model": null
+     },
+     "description": "Keep the block within 15 degrees of upright once placed."
+    },
+    {
+     "id": "c_upright_transport_marker",
+     "type": "upright",
+     "applies_to": {
+      "kind": "marker",
+      "role": null,
+      "ids": null
+     },
+     "phase": "transport",
+     "params": {
+      "max_tilt_deg": 15.0
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "Shown: The marker stayed within 0.2 degrees of upright for the whole time it was carried (mean 0.1). Assumed: Carrying the marker upright may simply have been convenient.",
+      "version_introduced": 1,
+      "model": null
+     },
+     "description": "Keep the marker within 15 degrees of upright while carried."
+    },
+    {
+     "id": "c_upright_final_marker",
+     "type": "upright",
+     "applies_to": {
+      "kind": "marker",
+      "role": null,
+      "ids": null
+     },
+     "phase": "final",
+     "params": {
+      "max_tilt_deg": 15.0
+     },
+     "status": "proposed",
+     "provenance": {
+      "source": "demo_inference",
+      "evidence": "Shown: The marker ended upright (0.1 degrees of tilt). Assumed: Objects are normally packed standing the way they started.",
+      "version_introduced": 1,
+      "model": null
+     },
+     "description": "Keep the marker within 15 degrees of upright once placed."
+    },
+    {
+     "id": "c_keep_clearance_transport_cup",
+     "type": "keep_clearance",
+     "applies_to": {
+      "kind": "cup",
+      "role": null,
+      "ids": null
+     },
+     "phase": "transport",
+     "params": {
+      "min_m": 0.06
+     },
+     "status": "confirmed",
+     "provenance": {
+      "source": "user_correction",
+      "evidence": "Keep the cup at least 6 cm away from the wall.",
+      "version_introduced": 3,
+      "model": null
+     },
+     "description": "Keep the cup at least 0.06 m from obstacles while carried."
+    }
+   ],
+   "uncertainties": [
+    {
+     "id": "u_upright_transport_cup",
+     "question": "The cup stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed? (The lean towards 'required' comes from the scene description, which lists loose beads in the cup; the demonstration itself does not show that it matters.)",
+     "options": [
+      "Required (interpreter's lean)",
+      "Incidental"
+     ],
+     "related_constraint": "c_upright_transport_cup",
+     "status": "open",
+     "resolution": null
+    },
+    {
+     "id": "u_upright_final_cup",
+     "question": "Must the cup end upright in the tray?",
+     "options": [
+      "Required (interpreter's lean)",
+      "Incidental"
+     ],
+     "related_constraint": "c_upright_final_cup",
+     "status": "resolved",
+     "resolution": "required (confirmed by the user)"
+    },
+    {
+     "id": "u_upright_transport_block",
+     "question": "The block stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed?",
+     "options": [
+      "Required",
+      "Incidental"
+     ],
+     "related_constraint": "c_upright_transport_block",
+     "status": "open",
+     "resolution": null
+    },
+    {
+     "id": "u_upright_final_block",
+     "question": "Must the block end upright in the tray?",
+     "options": [
+      "Required (interpreter's lean)",
+      "Incidental"
+     ],
+     "related_constraint": "c_upright_final_block",
+     "status": "open",
+     "resolution": null
+    },
+    {
+     "id": "u_upright_transport_marker",
+     "question": "The marker stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed?",
+     "options": [
+      "Required",
+      "Incidental"
+     ],
+     "related_constraint": "c_upright_transport_marker",
+     "status": "open",
+     "resolution": null
+    },
+    {
+     "id": "u_upright_final_marker",
+     "question": "Must the marker end upright in the tray?",
+     "options": [
+      "Required (interpreter's lean)",
+      "Incidental"
+     ],
+     "related_constraint": "c_upright_final_marker",
+     "status": "open",
+     "resolution": null
+    },
+    {
+     "id": "u_cup_before_block",
+     "question": "The cup was packed before the block. Is that order required?",
+     "options": [
+      "Required",
+      "Incidental"
+     ],
+     "related_constraint": "o_cup_before_block",
+     "status": "open",
+     "resolution": null
+    },
+    {
+     "id": "u_block_before_marker",
+     "question": "The block was packed before the marker. Is that order required?",
+     "options": [
+      "Required",
+      "Incidental"
+     ],
+     "related_constraint": "o_block_before_marker",
+     "status": "open",
+     "resolution": null
+    }
+   ],
+   "tolerances": {
+    "settle_speed_mps": 0.01,
+    "inside_margin_m": 0.0
+   },
+   "demo_id": "demo_ref_demo_reference",
+   "history": [
+    {
+     "version": 2,
+     "text": "confirmed g_inside_cup, g_inside_block, g_inside_marker, c_upright_final_cup",
+     "kind": "confirmation",
+     "diff": [
+      {
+       "op": "set_status",
+       "target_id": "g_inside_cup",
+       "value": {
+        "status": "confirmed"
+       },
+       "rationale": "confirmed by the user"
+      },
+      {
+       "op": "set_status",
+       "target_id": "g_inside_block",
+       "value": {
+        "status": "confirmed"
+       },
+       "rationale": "confirmed by the user"
+      },
+      {
+       "op": "set_status",
+       "target_id": "g_inside_marker",
+       "value": {
+        "status": "confirmed"
+       },
+       "rationale": "confirmed by the user"
+      },
+      {
+       "op": "set_status",
+       "target_id": "c_upright_final_cup",
+       "value": {
+        "status": "confirmed"
+       },
+       "rationale": "confirmed by the user"
+      },
+      {
+       "op": "resolve_uncertainty",
+       "target_id": "u_upright_final_cup",
+       "value": {
+        "resolution": "required (confirmed by the user)"
+       },
+       "rationale": "answered by this change"
+      }
+     ],
+     "model": null
+    },
+    {
+     "version": 3,
+     "text": "Keep the cup at least 6 cm away from the wall.",
+     "kind": "correction",
+     "diff": [
+      {
+       "op": "add_constraint",
+       "target_id": "c_keep_clearance_transport_cup",
+       "value": {
+        "id": "c_keep_clearance_transport_cup",
+        "type": "keep_clearance",
+        "applies_to": {
+         "kind": "cup",
+         "role": null,
+         "ids": null
+        },
+        "phase": "transport",
+        "params": {
+         "min_m": 0.06
+        },
+        "status": "confirmed",
+        "provenance": {
+         "source": "user_correction",
+         "evidence": "Keep the cup at least 6 cm away from the wall.",
+         "version_introduced": 1,
+         "model": null
+        },
+        "description": "Keep the cup at least 0.06 m from obstacles while carried."
+       },
+       "rationale": "User: \"keep the cup at least 6 cm away from the wall\""
+      }
+     ],
+     "model": "offline-rules"
+    }
+   ],
+   "interpreter": "offline-rules"
+  }
+ ],
+ "old": {
+  "scene_id": "ref_demo",
+  "seed": null,
+  "spec_version": 2,
+  "condition": "old_v2",
+  "status": "success",
+  "plan_status": "ok",
+  "plan_reason": "cup_0: around:wall_0:+y; block_0: around:wall_0:+y; marker_0: around:wall_0:+y | c_upright_final_cup: objects are always placed upright",
+  "object_order": [
+   "cup_0",
+   "block_0",
+   "marker_0"
+  ],
+  "routes": [
+   "around:wall_0:+y"
+  ],
+  "rules": [
+   {
+    "rule_id": "g_inside_cup",
+    "kind": "goal",
+    "status": "confirmed",
+    "enforced": true,
+    "verdict": "satisfied",
+    "detail": "inside the tray, released and settled"
+   },
+   {
+    "rule_id": "g_inside_block",
+    "kind": "goal",
+    "status": "confirmed",
+    "enforced": true,
+    "verdict": "satisfied",
+    "detail": "inside the tray, released and settled"
+   },
+   {
+    "rule_id": "g_inside_marker",
+    "kind": "goal",
+    "status": "confirmed",
+    "enforced": true,
+    "verdict": "satisfied",
+    "detail": "inside the tray, released and settled"
+   },
+   {
+    "rule_id": "c_upright_transport_cup",
+    "kind": "constraint",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": ""
+   },
+   {
+    "rule_id": "c_upright_final_cup",
+    "kind": "constraint",
+    "status": "confirmed",
+    "enforced": true,
+    "verdict": "satisfied",
+    "detail": ""
+   },
+   {
+    "rule_id": "c_upright_transport_block",
+    "kind": "constraint",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": ""
+   },
+   {
+    "rule_id": "c_upright_final_block",
+    "kind": "constraint",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": ""
+   },
+   {
+    "rule_id": "c_upright_transport_marker",
+    "kind": "constraint",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": ""
+   },
+   {
+    "rule_id": "c_upright_final_marker",
+    "kind": "constraint",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": ""
+   },
+   {
+    "rule_id": "o_cup_before_block",
+    "kind": "ordering",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": "cup_0 was placed at 17.92 s, block_0 was grasped at 24.47 s"
+   },
+   {
+    "rule_id": "o_block_before_marker",
+    "kind": "ordering",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": "block_0 was placed at 38.74 s, marker_0 was grasped at 44.04 s"
+   }
+  ],
+  "violations": [],
+  "beads": [
+   [
+    "cup_0",
+    8,
+    8
+   ]
+  ],
+  "measures": {
+   "cup_0": {
+    "max_transport_tilt_deg": 0.21,
+    "min_transport_clearance_m": 0.0315
+   },
+   "block_0": {
+    "max_transport_tilt_deg": 0.12,
+    "min_transport_clearance_m": 0.0509
+   },
+   "_events": {
+    "cup_0": {
+     "object_id": "cup_0",
+     "present": true,
+     "grasp_start": 3.4480000000000026,
+     "placement": "occurred",
+     "placement_complete": 17.915999999999457,
+     "carried": [
+      [
+       3.448,
+       17.832
+      ]
+     ],
+     "notes": []
+    },
+    "block_0": {
+     "object_id": "block_0",
+     "present": true,
+     "grasp_start": 24.468000000001645,
+     "placement": "occurred",
+     "placement_complete": 38.73600000000007,
+     "carried": [
+      [
+       24.468,
+       38.64
+      ]
+     ],
+     "notes": []
+    },
+    "marker_0": {
+     "object_id": "marker_0",
+     "present": true,
+     "grasp_start": 44.03599999999713,
+     "placement": "occurred",
+     "placement_complete": 51.155999999993185,
+     "carried": [
+      [
+       44.036,
+       51.056
+      ]
+     ],
+     "notes": []
+    }
+   }
+  },
+  "infeasibility": null,
+  "planning_outcome": {
+   "kind": "planned",
+   "headline": "Planned"
+  },
+  "execution_time_s": 52.33599999999253,
+  "wall_time_s": 4.74
+ },
+ "old_rechecked": [
+  {
+   "spec_version": 3,
+   "status": "constraint_violated",
+   "rules": [
+    {
+     "rule_id": "g_inside_cup",
+     "kind": "goal",
+     "status": "confirmed",
+     "enforced": true,
+     "verdict": "satisfied",
+     "detail": "inside the tray, released and settled"
+    },
+    {
+     "rule_id": "g_inside_block",
+     "kind": "goal",
+     "status": "confirmed",
+     "enforced": true,
+     "verdict": "satisfied",
+     "detail": "inside the tray, released and settled"
+    },
+    {
+     "rule_id": "g_inside_marker",
+     "kind": "goal",
+     "status": "confirmed",
+     "enforced": true,
+     "verdict": "satisfied",
+     "detail": "inside the tray, released and settled"
+    },
+    {
+     "rule_id": "c_upright_transport_cup",
+     "kind": "constraint",
+     "status": "proposed",
+     "enforced": false,
+     "verdict": "satisfied",
+     "detail": ""
+    },
+    {
+     "rule_id": "c_upright_final_cup",
+     "kind": "constraint",
+     "status": "confirmed",
+     "enforced": true,
+     "verdict": "satisfied",
+     "detail": ""
+    },
+    {
+     "rule_id": "c_upright_transport_block",
+     "kind": "constraint",
+     "status": "proposed",
+     "enforced": false,
+     "verdict": "satisfied",
+     "detail": ""
+    },
+    {
+     "rule_id": "c_upright_final_block",
+     "kind": "constraint",
+     "status": "proposed",
+     "enforced": false,
+     "verdict": "satisfied",
+     "detail": ""
+    },
+    {
+     "rule_id": "c_upright_transport_marker",
+     "kind": "constraint",
+     "status": "proposed",
+     "enforced": false,
+     "verdict": "satisfied",
+     "detail": ""
+    },
+    {
+     "rule_id": "c_upright_final_marker",
+     "kind": "constraint",
+     "status": "proposed",
+     "enforced": false,
+     "verdict": "satisfied",
+     "detail": ""
+    },
+    {
+     "rule_id": "c_keep_clearance_transport_cup",
+     "kind": "constraint",
+     "status": "confirmed",
+     "enforced": true,
+     "verdict": "violated",
+     "detail": "cup_0: clearance below 0.06 m (closest 0.0315 m, solid shape) during transport; cup_0: clearance below 0.06 m (closest 0.0354 m, solid shape) during transport"
+    },
+    {
+     "rule_id": "o_cup_before_block",
+     "kind": "ordering",
+     "status": "proposed",
+     "enforced": false,
+     "verdict": "satisfied",
+     "detail": "cup_0 was placed at 17.92 s, block_0 was grasped at 24.47 s"
+    },
+    {
+     "rule_id": "o_block_before_marker",
+     "kind": "ordering",
+     "status": "proposed",
+     "enforced": false,
+     "verdict": "satisfied",
+     "detail": "block_0 was placed at 38.74 s, marker_0 was grasped at 44.04 s"
+    }
+   ]
+  }
+ ],
+ "new": {
+  "scene_id": "ref_demo",
+  "seed": null,
+  "spec_version": 3,
+  "condition": "new_v3",
+  "status": "success",
+  "plan_status": "ok",
+  "plan_reason": "cup_0: around:wall_0:+y; block_0: around:wall_0:+y; marker_0: around:wall_0:+y | c_upright_final_cup: objects are always placed upright",
+  "object_order": [
+   "cup_0",
+   "block_0",
+   "marker_0"
+  ],
+  "routes": [
+   "around:wall_0:+y"
+  ],
+  "rules": [
+   {
+    "rule_id": "g_inside_cup",
+    "kind": "goal",
+    "status": "confirmed",
+    "enforced": true,
+    "verdict": "satisfied",
+    "detail": "inside the tray, released and settled"
+   },
+   {
+    "rule_id": "g_inside_block",
+    "kind": "goal",
+    "status": "confirmed",
+    "enforced": true,
+    "verdict": "satisfied",
+    "detail": "inside the tray, released and settled"
+   },
+   {
+    "rule_id": "g_inside_marker",
+    "kind": "goal",
+    "status": "confirmed",
+    "enforced": true,
+    "verdict": "satisfied",
+    "detail": "inside the tray, released and settled"
+   },
+   {
+    "rule_id": "c_upright_transport_cup",
+    "kind": "constraint",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": ""
+   },
+   {
+    "rule_id": "c_upright_final_cup",
+    "kind": "constraint",
+    "status": "confirmed",
+    "enforced": true,
+    "verdict": "satisfied",
+    "detail": ""
+   },
+   {
+    "rule_id": "c_upright_transport_block",
+    "kind": "constraint",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": ""
+   },
+   {
+    "rule_id": "c_upright_final_block",
+    "kind": "constraint",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": ""
+   },
+   {
+    "rule_id": "c_upright_transport_marker",
+    "kind": "constraint",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": ""
+   },
+   {
+    "rule_id": "c_upright_final_marker",
+    "kind": "constraint",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": ""
+   },
+   {
+    "rule_id": "c_keep_clearance_transport_cup",
+    "kind": "constraint",
+    "status": "confirmed",
+    "enforced": true,
+    "verdict": "satisfied",
+    "detail": ""
+   },
+   {
+    "rule_id": "o_cup_before_block",
+    "kind": "ordering",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": "cup_0 was placed at 21.62 s, block_0 was grasped at 28.17 s"
+   },
+   {
+    "rule_id": "o_block_before_marker",
+    "kind": "ordering",
+    "status": "proposed",
+    "enforced": false,
+    "verdict": "satisfied",
+    "detail": "block_0 was placed at 42.44 s, marker_0 was grasped at 47.74 s"
+   }
+  ],
+  "violations": [],
+  "beads": [
+   [
+    "cup_0",
+    8,
+    8
+   ]
+  ],
+  "measures": {
+   "cup_0": {
+    "max_transport_tilt_deg": 0.26,
+    "min_transport_clearance_m": 0.096
+   },
+   "block_0": {
+    "max_transport_tilt_deg": 0.12,
+    "min_transport_clearance_m": 0.0509
+   },
+   "_events": {
+    "cup_0": {
+     "object_id": "cup_0",
+     "present": true,
+     "grasp_start": 3.4480000000000026,
+     "placement": "occurred",
+     "placement_complete": 21.624000000000695,
+     "carried": [
+      [
+       3.448,
+       21.532
+      ]
+     ],
+     "notes": []
+    },
+    "block_0": {
+     "object_id": "block_0",
+     "present": true,
+     "grasp_start": 28.16800000000288,
+     "placement": "occurred",
+     "placement_complete": 42.43599999999802,
+     "carried": [
+      [
+       28.168,
+       42.34
+      ]
+     ],
+     "notes": []
+    },
+    "marker_0": {
+     "object_id": "marker_0",
+     "present": true,
+     "grasp_start": 47.73599999999508,
+     "placement": "occurred",
+     "placement_complete": 54.855999999991134,
+     "carried": [
+      [
+       47.736,
+       54.756
+      ]
+     ],
+     "notes": []
+    }
+   }
+  },
+  "infeasibility": null,
+  "planning_outcome": {
+   "kind": "planned",
+   "headline": "Planned"
+  },
+  "execution_time_s": 56.03599999999048,
+  "wall_time_s": 4.87
+ },
+ "transfer": [
+  {
+   "family": "mixed",
+   "seed": 6200,
+   "old": {
+    "scene_id": "dev_6200",
+    "seed": 6200,
+    "spec_version": 2,
+    "condition": "old_v2",
+    "status": "success",
+    "plan_status": "ok",
+    "plan_reason": "cup_0: around:wall_0:-y; block_0: around:wall_0:-y; marker_0: around:wall_0:-y | c_upright_final_cup: objects are always placed upright",
+    "object_order": [
+     "cup_0",
+     "block_0",
+     "marker_0"
+    ],
+    "routes": [
+     "around:wall_0:-y"
+    ],
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 13.50 s, block_0 was grasped at 20.84 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 29.44 s, marker_0 was grasped at 35.94 s"
+     }
+    ],
+    "violations": [],
+    "beads": [
+     [
+      "cup_0",
+      8,
+      8
+     ]
+    ],
+    "measures": {
+     "cup_0": {
+      "max_transport_tilt_deg": 0.16,
+      "min_transport_clearance_m": 0.0402
+     },
+     "block_0": {
+      "max_transport_tilt_deg": 0.16,
+      "min_transport_clearance_m": 0.0563
+     },
+     "_events": {
+      "cup_0": {
+       "object_id": "cup_0",
+       "present": true,
+       "grasp_start": 4.335999999999921,
+       "placement": "occurred",
+       "placement_complete": 13.499999999998913,
+       "carried": [
+        [
+         4.336,
+         13.4
+        ]
+       ],
+       "notes": []
+      },
+      "block_0": {
+       "object_id": "block_0",
+       "present": true,
+       "grasp_start": 20.836000000000432,
+       "placement": "occurred",
+       "placement_complete": 29.440000000003305,
+       "carried": [
+        [
+         20.836,
+         29.348
+        ]
+       ],
+       "notes": []
+      },
+      "marker_0": {
+       "object_id": "marker_0",
+       "present": true,
+       "grasp_start": 35.944000000001616,
+       "placement": "occurred",
+       "placement_complete": 47.835999999995025,
+       "carried": [
+        [
+         35.944,
+         47.748
+        ]
+       ],
+       "notes": []
+      }
+     }
+    },
+    "infeasibility": null,
+    "planning_outcome": {
+     "kind": "planned",
+     "headline": "Planned"
+    },
+    "execution_time_s": 49.027999999994364,
+    "wall_time_s": 3.95
+   },
+   "new": {
+    "scene_id": "dev_6200",
+    "seed": 6200,
+    "spec_version": 3,
+    "condition": "new_v3",
+    "status": "success",
+    "plan_status": "ok",
+    "plan_reason": "cup_0: around:wall_0:-y; block_0: around:wall_0:-y; marker_0: around:wall_0:-y | c_upright_final_cup: objects are always placed upright",
+    "object_order": [
+     "cup_0",
+     "block_0",
+     "marker_0"
+    ],
+    "routes": [
+     "around:wall_0:-y"
+    ],
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_keep_clearance_transport_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 17.45 s, block_0 was grasped at 24.81 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 33.41 s, marker_0 was grasped at 39.92 s"
+     }
+    ],
+    "violations": [],
+    "beads": [
+     [
+      "cup_0",
+      8,
+      8
+     ]
+    ],
+    "measures": {
+     "cup_0": {
+      "max_transport_tilt_deg": 0.17,
+      "min_transport_clearance_m": 0.0904
+     },
+     "block_0": {
+      "max_transport_tilt_deg": 0.16,
+      "min_transport_clearance_m": 0.0563
+     },
+     "_events": {
+      "cup_0": {
+       "object_id": "cup_0",
+       "present": true,
+       "grasp_start": 4.335999999999921,
+       "placement": "occurred",
+       "placement_complete": 17.451999999999302,
+       "carried": [
+        [
+         4.336,
+         17.372
+        ]
+       ],
+       "notes": []
+      },
+      "block_0": {
+       "object_id": "block_0",
+       "present": true,
+       "grasp_start": 24.80800000000176,
+       "placement": "occurred",
+       "placement_complete": 33.41200000000302,
+       "carried": [
+        [
+         24.808,
+         33.32
+        ]
+       ],
+       "notes": []
+      },
+      "marker_0": {
+       "object_id": "marker_0",
+       "present": true,
+       "grasp_start": 39.915999999999414,
+       "placement": "occurred",
+       "placement_complete": 51.80799999999282,
+       "carried": [
+        [
+         39.916,
+         51.72
+        ]
+       ],
+       "notes": []
+      }
+     }
+    },
+    "infeasibility": null,
+    "planning_outcome": {
+     "kind": "planned",
+     "headline": "Planned"
+    },
+    "execution_time_s": 52.99999999999216,
+    "wall_time_s": 4.4
+   },
+   "old_under_new": {
+    "status": "constraint_violated",
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_keep_clearance_transport_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "violated",
+      "detail": "cup_0: clearance below 0.06 m (closest 0.0402 m, solid shape) during transport"
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 13.50 s, block_0 was grasped at 20.84 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 29.44 s, marker_0 was grasped at 35.94 s"
+     }
+    ]
+   }
+  },
+  {
+   "family": "mixed",
+   "seed": 6201,
+   "old": {
+    "scene_id": "dev_6201",
+    "seed": 6201,
+    "spec_version": 2,
+    "condition": "old_v2",
+    "status": "success",
+    "plan_status": "ok",
+    "plan_reason": "cup_0: through_slot:wall_0:0:pitched+90; block_0: through_slot:wall_0:0:pitched+90; marker_0: through_slot:wall_0:0:pitched-90 | c_upright_final_cup: objects are always placed upright",
+    "object_order": [
+     "cup_0",
+     "block_0",
+     "marker_0"
+    ],
+    "routes": [
+     "through_slot:wall_0:0:pitched+90",
+     "through_slot:wall_0:0:pitched-90"
+    ],
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "cup_0: tilt > 15 deg during transport for 4.152 s (1038 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "block_0: tilt > 15 deg during transport for 3.840 s (960 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "marker_0: tilt > 15 deg during transport for 4.232 s (1058 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 17.68 s, block_0 was grasped at 27.99 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 42.79 s, marker_0 was grasped at 49.33 s"
+     }
+    ],
+    "violations": [],
+    "beads": [
+     [
+      "cup_0",
+      5,
+      8
+     ]
+    ],
+    "measures": {
+     "cup_0": {
+      "max_transport_tilt_deg": 89.68,
+      "min_transport_clearance_m": 0.0183
+     },
+     "block_0": {
+      "max_transport_tilt_deg": 89.97,
+      "min_transport_clearance_m": 0.0297
+     },
+     "_events": {
+      "cup_0": {
+       "object_id": "cup_0",
+       "present": true,
+       "grasp_start": 4.047999999999953,
+       "placement": "occurred",
+       "placement_complete": 17.68399999999938,
+       "carried": [
+        [
+         4.048,
+         17.612
+        ]
+       ],
+       "notes": []
+      },
+      "block_0": {
+       "object_id": "block_0",
+       "present": true,
+       "grasp_start": 27.99200000000282,
+       "placement": "occurred",
+       "placement_complete": 42.79199999999782,
+       "carried": [
+        [
+         27.992,
+         42.696
+        ]
+       ],
+       "notes": []
+      },
+      "marker_0": {
+       "object_id": "marker_0",
+       "present": true,
+       "grasp_start": 49.331999999994196,
+       "placement": "occurred",
+       "placement_complete": 61.2319999999876,
+       "carried": [
+        [
+         49.332,
+         61.12
+        ]
+       ],
+       "notes": []
+      }
+     }
+    },
+    "infeasibility": null,
+    "planning_outcome": {
+     "kind": "planned",
+     "headline": "Planned"
+    },
+    "execution_time_s": 62.39999999998695,
+    "wall_time_s": 6.88
+   },
+   "new": {
+    "scene_id": "dev_6201",
+    "seed": 6201,
+    "spec_version": 3,
+    "condition": "new_v3",
+    "status": "success",
+    "plan_status": "ok",
+    "plan_reason": "cup_0: around:wall_0:+y; block_0: through_slot:wall_0:0:pitched+90; marker_0: through_slot:wall_0:0:pitched-90 | c_upright_final_cup: objects are always placed upright",
+    "object_order": [
+     "cup_0",
+     "block_0",
+     "marker_0"
+    ],
+    "routes": [
+     "around:wall_0:+y",
+     "through_slot:wall_0:0:pitched+90",
+     "through_slot:wall_0:0:pitched-90"
+    ],
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "block_0: tilt > 15 deg during transport for 3.840 s (960 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "marker_0: tilt > 15 deg during transport for 4.236 s (1059 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_keep_clearance_transport_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 18.63 s, block_0 was grasped at 28.92 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 43.72 s, marker_0 was grasped at 50.26 s"
+     }
+    ],
+    "violations": [],
+    "beads": [
+     [
+      "cup_0",
+      8,
+      8
+     ]
+    ],
+    "measures": {
+     "cup_0": {
+      "max_transport_tilt_deg": 0.15,
+      "min_transport_clearance_m": 0.0805
+     },
+     "block_0": {
+      "max_transport_tilt_deg": 89.97,
+      "min_transport_clearance_m": 0.0297
+     },
+     "_events": {
+      "cup_0": {
+       "object_id": "cup_0",
+       "present": true,
+       "grasp_start": 4.047999999999953,
+       "placement": "occurred",
+       "placement_complete": 18.627999999999695,
+       "carried": [
+        [
+         4.048,
+         18.544
+        ]
+       ],
+       "notes": []
+      },
+      "block_0": {
+       "object_id": "block_0",
+       "present": true,
+       "grasp_start": 28.924000000003133,
+       "placement": "occurred",
+       "placement_complete": 43.723999999997304,
+       "carried": [
+        [
+         28.924,
+         43.628
+        ]
+       ],
+       "notes": []
+      },
+      "marker_0": {
+       "object_id": "marker_0",
+       "present": true,
+       "grasp_start": 50.26399999999368,
+       "placement": "occurred",
+       "placement_complete": 62.159999999987086,
+       "carried": [
+        [
+         50.264,
+         62.052
+        ]
+       ],
+       "notes": []
+      }
+     }
+    },
+    "infeasibility": null,
+    "planning_outcome": {
+     "kind": "planned",
+     "headline": "Planned"
+    },
+    "execution_time_s": 63.33199999998644,
+    "wall_time_s": 9.73
+   },
+   "old_under_new": {
+    "status": "constraint_violated",
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "cup_0: tilt > 15 deg during transport for 4.152 s (1038 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "block_0: tilt > 15 deg during transport for 3.840 s (960 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "marker_0: tilt > 15 deg during transport for 4.232 s (1058 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_keep_clearance_transport_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "violated",
+      "detail": "cup_0: clearance below 0.06 m (closest 0.0183 m, solid shape) during transport"
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 17.68 s, block_0 was grasped at 27.99 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 42.79 s, marker_0 was grasped at 49.33 s"
+     }
+    ]
+   }
+  },
+  {
+   "family": "mixed",
+   "seed": 6202,
+   "old": {
+    "scene_id": "dev_6202",
+    "seed": 6202,
+    "spec_version": 2,
+    "condition": "old_v2",
+    "status": "success",
+    "plan_status": "ok",
+    "plan_reason": "cup_0: through_slot:wall_0:0:pitched+90; block_0: around:wall_0:+y; marker_0: around:wall_0:+y | c_upright_final_cup: objects are always placed upright",
+    "object_order": [
+     "cup_0",
+     "block_0",
+     "marker_0"
+    ],
+    "routes": [
+     "through_slot:wall_0:0:pitched+90",
+     "around:wall_0:+y"
+    ],
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "cup_0: tilt > 15 deg during transport for 4.148 s (1037 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 17.96 s, block_0 was grasped at 28.48 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 38.34 s, marker_0 was grasped at 44.53 s"
+     }
+    ],
+    "violations": [],
+    "beads": [
+     [
+      "cup_0",
+      3,
+      8
+     ]
+    ],
+    "measures": {
+     "cup_0": {
+      "max_transport_tilt_deg": 89.61,
+      "min_transport_clearance_m": 0.0183
+     },
+     "block_0": {
+      "max_transport_tilt_deg": 0.15,
+      "min_transport_clearance_m": 0.0462
+     },
+     "_events": {
+      "cup_0": {
+       "object_id": "cup_0",
+       "present": true,
+       "grasp_start": 4.667999999999885,
+       "placement": "occurred",
+       "placement_complete": 17.95599999999947,
+       "carried": [
+        [
+         4.668,
+         17.868
+        ]
+       ],
+       "notes": []
+      },
+      "block_0": {
+       "object_id": "block_0",
+       "present": true,
+       "grasp_start": 28.480000000002985,
+       "placement": "occurred",
+       "placement_complete": 38.33600000000029,
+       "carried": [
+        [
+         28.48,
+         38.244
+        ]
+       ],
+       "notes": []
+      },
+      "marker_0": {
+       "object_id": "marker_0",
+       "present": true,
+       "grasp_start": 44.52799999999686,
+       "placement": "occurred",
+       "placement_complete": 54.41199999999138,
+       "carried": [
+        [
+         44.528,
+         54.332
+        ]
+       ],
+       "notes": []
+      }
+     }
+    },
+    "infeasibility": null,
+    "planning_outcome": {
+     "kind": "planned",
+     "headline": "Planned"
+    },
+    "execution_time_s": 55.611999999990715,
+    "wall_time_s": 9.84
+   },
+   "new": {
+    "scene_id": "dev_6202",
+    "seed": 6202,
+    "spec_version": 3,
+    "condition": "new_v3",
+    "status": "success",
+    "plan_status": "ok",
+    "plan_reason": "cup_0: around:wall_0:+y; block_0: around:wall_0:+y; marker_0: around:wall_0:+y | c_upright_final_cup: objects are always placed upright",
+    "object_order": [
+     "cup_0",
+     "block_0",
+     "marker_0"
+    ],
+    "routes": [
+     "around:wall_0:+y"
+    ],
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_keep_clearance_transport_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 23.09 s, block_0 was grasped at 33.61 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 43.47 s, marker_0 was grasped at 49.66 s"
+     }
+    ],
+    "violations": [],
+    "beads": [
+     [
+      "cup_0",
+      8,
+      8
+     ]
+    ],
+    "measures": {
+     "cup_0": {
+      "max_transport_tilt_deg": 0.15,
+      "min_transport_clearance_m": 0.0901
+     },
+     "block_0": {
+      "max_transport_tilt_deg": 0.15,
+      "min_transport_clearance_m": 0.0462
+     },
+     "_events": {
+      "cup_0": {
+       "object_id": "cup_0",
+       "present": true,
+       "grasp_start": 4.667999999999885,
+       "placement": "occurred",
+       "placement_complete": 23.092000000001185,
+       "carried": [
+        [
+         4.668,
+         23.0
+        ]
+       ],
+       "notes": []
+      },
+      "block_0": {
+       "object_id": "block_0",
+       "present": true,
+       "grasp_start": 33.61200000000291,
+       "placement": "occurred",
+       "placement_complete": 43.467999999997446,
+       "carried": [
+        [
+         33.612,
+         43.376
+        ]
+       ],
+       "notes": []
+      },
+      "marker_0": {
+       "object_id": "marker_0",
+       "present": true,
+       "grasp_start": 49.659999999994014,
+       "placement": "occurred",
+       "placement_complete": 59.543999999988536,
+       "carried": [
+        [
+         49.66,
+         59.464
+        ]
+       ],
+       "notes": []
+      }
+     }
+    },
+    "infeasibility": null,
+    "planning_outcome": {
+     "kind": "planned",
+     "headline": "Planned"
+    },
+    "execution_time_s": 60.74399999998787,
+    "wall_time_s": 9.3
+   },
+   "old_under_new": {
+    "status": "constraint_violated",
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "cup_0: tilt > 15 deg during transport for 4.148 s (1037 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_keep_clearance_transport_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "violated",
+      "detail": "cup_0: clearance below 0.06 m (closest 0.0183 m, solid shape) during transport"
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 17.96 s, block_0 was grasped at 28.48 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 38.34 s, marker_0 was grasped at 44.53 s"
+     }
+    ]
+   }
+  },
+  {
+   "family": "shortcut",
+   "seed": 6300,
+   "old": {
+    "scene_id": "dev_shortcut_6300",
+    "seed": 6300,
+    "spec_version": 2,
+    "condition": "old_v2",
+    "status": "success",
+    "plan_status": "ok",
+    "plan_reason": "cup_0: through_slot:wall_0:0:pitched+90; block_0: around:wall_0:-y; marker_0: through_slot:wall_0:0:pitched-90 | c_upright_final_cup: objects are always placed upright",
+    "object_order": [
+     "cup_0",
+     "block_0",
+     "marker_0"
+    ],
+    "routes": [
+     "through_slot:wall_0:0:pitched+90",
+     "around:wall_0:-y",
+     "through_slot:wall_0:0:pitched-90"
+    ],
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "cup_0: tilt > 15 deg during transport for 4.152 s (1038 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "marker_0: tilt > 15 deg during transport for 4.232 s (1058 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 18.16 s, block_0 was grasped at 25.68 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 34.47 s, marker_0 was grasped at 43.19 s"
+     }
+    ],
+    "violations": [],
+    "beads": [
+     [
+      "cup_0",
+      5,
+      8
+     ]
+    ],
+    "measures": {
+     "cup_0": {
+      "max_transport_tilt_deg": 89.69,
+      "min_transport_clearance_m": 0.0183
+     },
+     "block_0": {
+      "max_transport_tilt_deg": 0.14,
+      "min_transport_clearance_m": 0.0576
+     },
+     "_events": {
+      "cup_0": {
+       "object_id": "cup_0",
+       "present": true,
+       "grasp_start": 4.695999999999882,
+       "placement": "occurred",
+       "placement_complete": 18.15999999999954,
+       "carried": [
+        [
+         4.696,
+         18.088
+        ]
+       ],
+       "notes": []
+      },
+      "block_0": {
+       "object_id": "block_0",
+       "present": true,
+       "grasp_start": 25.68400000000205,
+       "placement": "occurred",
+       "placement_complete": 34.468000000002434,
+       "carried": [
+        [
+         25.684,
+         34.376
+        ]
+       ],
+       "notes": []
+      },
+      "marker_0": {
+       "object_id": "marker_0",
+       "present": true,
+       "grasp_start": 43.1879999999976,
+       "placement": "occurred",
+       "placement_complete": 54.93199999999109,
+       "carried": [
+        [
+         43.188,
+         54.82
+        ]
+       ],
+       "notes": []
+      }
+     }
+    },
+    "infeasibility": null,
+    "planning_outcome": {
+     "kind": "planned",
+     "headline": "Planned"
+    },
+    "execution_time_s": 56.099999999990445,
+    "wall_time_s": 5.31
+   },
+   "new": {
+    "scene_id": "dev_shortcut_6300",
+    "seed": 6300,
+    "spec_version": 3,
+    "condition": "new_v3",
+    "status": "success",
+    "plan_status": "ok",
+    "plan_reason": "cup_0: around:wall_0:-y; block_0: around:wall_0:-y; marker_0: through_slot:wall_0:0:pitched-90 | c_upright_final_cup: objects are always placed upright",
+    "object_order": [
+     "cup_0",
+     "block_0",
+     "marker_0"
+    ],
+    "routes": [
+     "around:wall_0:-y",
+     "through_slot:wall_0:0:pitched-90"
+    ],
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "marker_0: tilt > 15 deg during transport for 4.232 s (1058 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_keep_clearance_transport_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 23.74 s, block_0 was grasped at 31.26 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 40.05 s, marker_0 was grasped at 48.77 s"
+     }
+    ],
+    "violations": [],
+    "beads": [
+     [
+      "cup_0",
+      8,
+      8
+     ]
+    ],
+    "measures": {
+     "cup_0": {
+      "max_transport_tilt_deg": 0.16,
+      "min_transport_clearance_m": 0.0907
+     },
+     "block_0": {
+      "max_transport_tilt_deg": 0.14,
+      "min_transport_clearance_m": 0.0576
+     },
+     "_events": {
+      "cup_0": {
+       "object_id": "cup_0",
+       "present": true,
+       "grasp_start": 4.695999999999882,
+       "placement": "occurred",
+       "placement_complete": 23.744000000001403,
+       "carried": [
+        [
+         4.696,
+         23.668
+        ]
+       ],
+       "notes": []
+      },
+      "block_0": {
+       "object_id": "block_0",
+       "present": true,
+       "grasp_start": 31.264000000003914,
+       "placement": "occurred",
+       "placement_complete": 40.04799999999934,
+       "carried": [
+        [
+         31.264,
+         39.956
+        ]
+       ],
+       "notes": []
+      },
+      "marker_0": {
+       "object_id": "marker_0",
+       "present": true,
+       "grasp_start": 48.76799999999451,
+       "placement": "occurred",
+       "placement_complete": 60.511999999988,
+       "carried": [
+        [
+         48.768,
+         60.4
+        ]
+       ],
+       "notes": []
+      }
+     }
+    },
+    "infeasibility": null,
+    "planning_outcome": {
+     "kind": "planned",
+     "headline": "Planned"
+    },
+    "execution_time_s": 61.67999999998735,
+    "wall_time_s": 5.74
+   },
+   "old_under_new": {
+    "status": "constraint_violated",
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "cup_0: tilt > 15 deg during transport for 4.152 s (1038 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "marker_0: tilt > 15 deg during transport for 4.232 s (1058 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_keep_clearance_transport_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "violated",
+      "detail": "cup_0: clearance below 0.06 m (closest 0.0183 m, solid shape) during transport"
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 18.16 s, block_0 was grasped at 25.68 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 34.47 s, marker_0 was grasped at 43.19 s"
+     }
+    ]
+   }
+  },
+  {
+   "family": "shortcut",
+   "seed": 6301,
+   "old": {
+    "scene_id": "dev_shortcut_6301",
+    "seed": 6301,
+    "spec_version": 2,
+    "condition": "old_v2",
+    "status": "success",
+    "plan_status": "ok",
+    "plan_reason": "cup_0: through_slot:wall_0:0:pitched-90; block_0: through_slot:wall_0:0:pitched+90; marker_0: through_slot:wall_0:0:pitched-90 | c_upright_final_cup: objects are always placed upright",
+    "object_order": [
+     "cup_0",
+     "block_0",
+     "marker_0"
+    ],
+    "routes": [
+     "through_slot:wall_0:0:pitched-90",
+     "through_slot:wall_0:0:pitched+90"
+    ],
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "cup_0: tilt > 15 deg during transport for 4.148 s (1037 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "block_0: tilt > 15 deg during transport for 3.840 s (960 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "marker_0: tilt > 15 deg during transport for 4.444 s (1111 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 17.16 s, block_0 was grasped at 26.54 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 39.84 s, marker_0 was grasped at 49.06 s"
+     }
+    ],
+    "violations": [],
+    "beads": [
+     [
+      "cup_0",
+      6,
+      8
+     ]
+    ],
+    "measures": {
+     "cup_0": {
+      "max_transport_tilt_deg": 89.61,
+      "min_transport_clearance_m": 0.0188
+     },
+     "block_0": {
+      "max_transport_tilt_deg": 89.96,
+      "min_transport_clearance_m": 0.0297
+     },
+     "_events": {
+      "cup_0": {
+       "object_id": "cup_0",
+       "present": true,
+       "grasp_start": 3.747999999999986,
+       "placement": "occurred",
+       "placement_complete": 17.163999999999206,
+       "carried": [
+        [
+         3.748,
+         17.096
+        ]
+       ],
+       "notes": []
+      },
+      "block_0": {
+       "object_id": "block_0",
+       "present": true,
+       "grasp_start": 26.544000000002338,
+       "placement": "occurred",
+       "placement_complete": 39.839999999999456,
+       "carried": [
+        [
+         26.544,
+         39.744
+        ]
+       ],
+       "notes": []
+      },
+      "marker_0": {
+       "object_id": "marker_0",
+       "present": true,
+       "grasp_start": 49.059999999994346,
+       "placement": "occurred",
+       "placement_complete": 61.69999999998734,
+       "carried": [
+        [
+         49.06,
+         61.592
+        ]
+       ],
+       "notes": []
+      }
+     }
+    },
+    "infeasibility": null,
+    "planning_outcome": {
+     "kind": "planned",
+     "headline": "Planned"
+    },
+    "execution_time_s": 62.87199999998669,
+    "wall_time_s": 6.45
+   },
+   "new": {
+    "scene_id": "dev_shortcut_6301",
+    "seed": 6301,
+    "spec_version": 3,
+    "condition": "new_v3",
+    "status": "success",
+    "plan_status": "ok",
+    "plan_reason": "cup_0: around:wall_0:+y; block_0: through_slot:wall_0:0:pitched+90; marker_0: through_slot:wall_0:0:pitched-90 | c_upright_final_cup: objects are always placed upright",
+    "object_order": [
+     "cup_0",
+     "block_0",
+     "marker_0"
+    ],
+    "routes": [
+     "around:wall_0:+y",
+     "through_slot:wall_0:0:pitched+90",
+     "through_slot:wall_0:0:pitched-90"
+    ],
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "block_0: tilt > 15 deg during transport for 3.840 s (960 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "marker_0: tilt > 15 deg during transport for 4.444 s (1111 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_keep_clearance_transport_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 21.58 s, block_0 was grasped at 30.94 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 44.24 s, marker_0 was grasped at 53.46 s"
+     }
+    ],
+    "violations": [],
+    "beads": [
+     [
+      "cup_0",
+      8,
+      8
+     ]
+    ],
+    "measures": {
+     "cup_0": {
+      "max_transport_tilt_deg": 0.25,
+      "min_transport_clearance_m": 0.0797
+     },
+     "block_0": {
+      "max_transport_tilt_deg": 89.96,
+      "min_transport_clearance_m": 0.0297
+     },
+     "_events": {
+      "cup_0": {
+       "object_id": "cup_0",
+       "present": true,
+       "grasp_start": 3.747999999999986,
+       "placement": "occurred",
+       "placement_complete": 21.58400000000068,
+       "carried": [
+        [
+         3.748,
+         21.496
+        ]
+       ],
+       "notes": []
+      },
+      "block_0": {
+       "object_id": "block_0",
+       "present": true,
+       "grasp_start": 30.944000000003808,
+       "placement": "occurred",
+       "placement_complete": 44.23999999999702,
+       "carried": [
+        [
+         30.944,
+         44.144
+        ]
+       ],
+       "notes": []
+      },
+      "marker_0": {
+       "object_id": "marker_0",
+       "present": true,
+       "grasp_start": 53.45999999999191,
+       "placement": "occurred",
+       "placement_complete": 66.10399999998934,
+       "carried": [
+        [
+         53.46,
+         65.992
+        ]
+       ],
+       "notes": []
+      }
+     }
+    },
+    "infeasibility": null,
+    "planning_outcome": {
+     "kind": "planned",
+     "headline": "Planned"
+    },
+    "execution_time_s": 67.27199999999077,
+    "wall_time_s": 6.76
+   },
+   "old_under_new": {
+    "status": "constraint_violated",
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "cup_0: tilt > 15 deg during transport for 4.148 s (1037 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "block_0: tilt > 15 deg during transport for 3.840 s (960 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "marker_0: tilt > 15 deg during transport for 4.444 s (1111 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_keep_clearance_transport_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "violated",
+      "detail": "cup_0: clearance below 0.06 m (closest 0.0545 m, solid shape) during transport; cup_0: clearance below 0.06 m (closest 0.0188 m, solid shape) during transport"
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 17.16 s, block_0 was grasped at 26.54 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 39.84 s, marker_0 was grasped at 49.06 s"
+     }
+    ]
+   }
+  },
+  {
+   "family": "shortcut",
+   "seed": 6302,
+   "old": {
+    "scene_id": "dev_shortcut_6302",
+    "seed": 6302,
+    "spec_version": 2,
+    "condition": "old_v2",
+    "status": "success",
+    "plan_status": "ok",
+    "plan_reason": "cup_0: through_slot:wall_0:0:pitched-90; block_0: around:wall_0:+y; marker_0: around:wall_0:+y | c_upright_final_cup: objects are always placed upright",
+    "object_order": [
+     "cup_0",
+     "block_0",
+     "marker_0"
+    ],
+    "routes": [
+     "through_slot:wall_0:0:pitched-90",
+     "around:wall_0:+y"
+    ],
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "cup_0: tilt > 15 deg during transport for 4.144 s (1036 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 20.76 s, block_0 was grasped at 27.48 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 34.37 s, marker_0 was grasped at 40.40 s"
+     }
+    ],
+    "violations": [],
+    "beads": [
+     [
+      "cup_0",
+      4,
+      8
+     ]
+    ],
+    "measures": {
+     "cup_0": {
+      "max_transport_tilt_deg": 89.61,
+      "min_transport_clearance_m": 0.0188
+     },
+     "block_0": {
+      "max_transport_tilt_deg": 0.14,
+      "min_transport_clearance_m": 0.0554
+     },
+     "_events": {
+      "cup_0": {
+       "object_id": "cup_0",
+       "present": true,
+       "grasp_start": 4.431999999999911,
+       "placement": "occurred",
+       "placement_complete": 20.756000000000405,
+       "carried": [
+        [
+         4.432,
+         20.684
+        ]
+       ],
+       "notes": []
+      },
+      "block_0": {
+       "object_id": "block_0",
+       "present": true,
+       "grasp_start": 27.48000000000265,
+       "placement": "occurred",
+       "placement_complete": 34.37200000000249,
+       "carried": [
+        [
+         27.48,
+         34.284
+        ]
+       ],
+       "notes": []
+      },
+      "marker_0": {
+       "object_id": "marker_0",
+       "present": true,
+       "grasp_start": 40.403999999999144,
+       "placement": "occurred",
+       "placement_complete": 50.74799999999341,
+       "carried": [
+        [
+         40.404,
+         50.664
+        ]
+       ],
+       "notes": []
+      }
+     }
+    },
+    "infeasibility": null,
+    "planning_outcome": {
+     "kind": "planned",
+     "headline": "Planned"
+    },
+    "execution_time_s": 51.94399999999275,
+    "wall_time_s": 5.45
+   },
+   "new": {
+    "scene_id": "dev_shortcut_6302",
+    "seed": 6302,
+    "spec_version": 3,
+    "condition": "new_v3",
+    "status": "success",
+    "plan_status": "ok",
+    "plan_reason": "cup_0: around:wall_0:+y; block_0: around:wall_0:+y; marker_0: around:wall_0:+y | c_upright_final_cup: objects are always placed upright",
+    "object_order": [
+     "cup_0",
+     "block_0",
+     "marker_0"
+    ],
+    "routes": [
+     "around:wall_0:+y"
+    ],
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_keep_clearance_transport_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 18.76 s, block_0 was grasped at 25.47 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 32.36 s, marker_0 was grasped at 38.40 s"
+     }
+    ],
+    "violations": [],
+    "beads": [
+     [
+      "cup_0",
+      8,
+      8
+     ]
+    ],
+    "measures": {
+     "cup_0": {
+      "max_transport_tilt_deg": 0.22,
+      "min_transport_clearance_m": 0.087
+     },
+     "block_0": {
+      "max_transport_tilt_deg": 0.14,
+      "min_transport_clearance_m": 0.0554
+     },
+     "_events": {
+      "cup_0": {
+       "object_id": "cup_0",
+       "present": true,
+       "grasp_start": 4.431999999999911,
+       "placement": "occurred",
+       "placement_complete": 18.75999999999974,
+       "carried": [
+        [
+         4.432,
+         18.676
+        ]
+       ],
+       "notes": []
+      },
+      "block_0": {
+       "object_id": "block_0",
+       "present": true,
+       "grasp_start": 25.47200000000198,
+       "placement": "occurred",
+       "placement_complete": 32.3640000000036,
+       "carried": [
+        [
+         25.472,
+         32.276
+        ]
+       ],
+       "notes": []
+      },
+      "marker_0": {
+       "object_id": "marker_0",
+       "present": true,
+       "grasp_start": 38.39600000000026,
+       "placement": "occurred",
+       "placement_complete": 48.739999999994524,
+       "carried": [
+        [
+         38.396,
+         48.656
+        ]
+       ],
+       "notes": []
+      }
+     }
+    },
+    "infeasibility": null,
+    "planning_outcome": {
+     "kind": "planned",
+     "headline": "Planned"
+    },
+    "execution_time_s": 49.93599999999386,
+    "wall_time_s": 4.35
+   },
+   "old_under_new": {
+    "status": "constraint_violated",
+    "rules": [
+     {
+      "rule_id": "g_inside_cup",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_block",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "g_inside_marker",
+      "kind": "goal",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": "inside the tray, released and settled"
+     },
+     {
+      "rule_id": "c_upright_transport_cup",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "violated",
+      "detail": "cup_0: tilt > 15 deg during transport for 4.144 s (1036 steps)"
+     },
+     {
+      "rule_id": "c_upright_final_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_block",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_transport_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_upright_final_marker",
+      "kind": "constraint",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": ""
+     },
+     {
+      "rule_id": "c_keep_clearance_transport_cup",
+      "kind": "constraint",
+      "status": "confirmed",
+      "enforced": true,
+      "verdict": "violated",
+      "detail": "cup_0: clearance below 0.06 m (closest 0.0553 m, solid shape) during transport; cup_0: clearance below 0.06 m (closest 0.0188 m, solid shape) during transport"
+     },
+     {
+      "rule_id": "o_cup_before_block",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "cup_0 was placed at 20.76 s, block_0 was grasped at 27.48 s"
+     },
+     {
+      "rule_id": "o_block_before_marker",
+      "kind": "ordering",
+      "status": "proposed",
+      "enforced": false,
+      "verdict": "satisfied",
+      "detail": "block_0 was placed at 34.37 s, marker_0 was grasped at 40.40 s"
+     }
+    ]
+   }
+  }
+ ]
+}

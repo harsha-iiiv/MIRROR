@@ -29,9 +29,25 @@ specification already plans upright routes there. The earlier 60/60 results
 (from 27/60 and 33/60) measure the correction against a price of 0.05 m/rad,
 under which slow tilted routes look cheap.
 
-> **PENDING:** results for ordering and clearance corrections at the calibrated
-> price (0.2445 m/rad) on development layouts. No result is stated until they
-> arrive.
+Corrections that are not about tilting do change behaviour at the calibrated
+price. On development layouts (6 per case, offline interpreter; a demonstration,
+not a frozen evaluation:
+[results/demos/corrections_calibrated_v1](results/demos/corrections_calibrated_v1/README.md)),
+at 0.2445 m/rad:
+
+* **Ordering.** "Pack the marker before the cup": the old runs violate the new
+  rule on 6/6 layouts; the new runs succeed on 6/6 and change the packing order
+  on 6/6. "Start with the block" gives the same result.
+* **Clearance.** "Keep the cup at least 6 cm away from the wall": the old runs
+  pass 3.0 to 4.1 cm from the wall and violate the rule on 6/6; the new runs keep
+  8.0 to 9.1 cm and succeed on 6/6. A 6 cm, then 10 cm, then undo sequence also
+  behaves as stated on 6/6.
+* **Refusal.** On 3 blocked development layouts the old run tilts the cup about
+  90° through the slot; the corrected specification is refused with a proof on
+  3/3.
+* **Tilt corrections change nothing at this price** ("only the cup must stay
+  upright" violates on 0/6 old runs at 0.2445, against 5/6 at 0.05). Vague and
+  unsupported requests get a clarifying question at both prices.
 
 It is not a video-to-animation generator. Every motion you see is produced by
 position-controlled actuators and contact physics, and every verdict comes

@@ -130,6 +130,20 @@ Frozen before any of its layouts was generated; one attempt, finished.
 * **Limits:** one controller and simulated timing; the price values time, not spill
   risk; one specification pair; 10 blocked layouts.
 
+## Correction demonstrations at two planner prices (development, not an evaluation)
+
+[results/demos/corrections_calibrated_v1](../results/demos/corrections_calibrated_v1/README.md):
+nine correction cases run on development seeds (6 transfer layouts per case;
+3 blocked layouts for the refusal case) at 0.2445 and 0.05 m/rad, with the offline
+interpreter, from commit `09bb0a4` on Linux x86_64. At 0.2445, ordering ("Pack the
+marker before the cup", "Start with the block") and clearance ("at least 6 cm from
+the wall"; old runs 3.0 to 4.1 cm, new 8.0 to 9.1 cm) corrections are violated by
+the old runs on 6/6 layouts and met by the new runs on 6/6; a 6 cm, 10 cm, undo
+sequence behaves as stated on 6/6; the blocked case is refused with a proof on 3/3.
+The cup-only tilt correction is violated by old runs on 0/6 at 0.2445 and 5/6 at
+0.05. These were written and run by the project team on development layouts; they
+show capability, not a measured rate.
+
 ## Reproducibility
 
 Network-blocked replays ([results/reanalysis_v1/replay](../results/reanalysis_v1/replay/README.md)):

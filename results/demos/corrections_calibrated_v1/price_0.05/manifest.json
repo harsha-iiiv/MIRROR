@@ -1,0 +1,61 @@
+{
+ "script": "scripts/demo_corrections.py",
+ "argv": [
+  "--out",
+  "results/dev_v2/demo_corrections_calibrated/price_0.05",
+  "--cases",
+  "object_scope,phase_scope,ordering,ordering_start,clearance,multi_turn,blocked_refusal,ambiguous,unsupported",
+  "--rotation-penalty",
+  "0.05"
+ ],
+ "commit": "09bb0a4b4623b3b7f0c60c63ec4a129d4f25066a",
+ "dirty": false,
+ "python": "3.11.18",
+ "numpy": "2.4.6",
+ "base_spec": {
+  "source": "offline interpreter on the pinned reference demonstration (replay not used)",
+  "version": 2,
+  "sha256": "50923f1d3ba600569179f506c2cbbcaa964b23fe3cb6f5032d8ce767d7dbd637"
+ },
+ "transfer_seeds": [
+  [
+   "mixed",
+   6200
+  ],
+  [
+   "mixed",
+   6201
+  ],
+  [
+   "mixed",
+   6202
+  ],
+  [
+   "shortcut",
+   6300
+  ],
+  [
+   "shortcut",
+   6301
+  ],
+  [
+   "shortcut",
+   6302
+  ]
+ ],
+ "split": "dev",
+ "wall_time_s": 502.0,
+ "model_calls": 0,
+ "interpreter": "offline-rules",
+ "planner_config": {
+  "rotation_penalty": 0.05,
+  "clearance_tracking_margin": 0.0
+ },
+ "platform": {
+  "system": "Linux",
+  "machine": "x86_64",
+  "platform": "Linux-6.12.94+-x86_64-with-glibc2.39",
+  "processor": "x86_64"
+ },
+ "mujoco": "3.17.0"
+}
