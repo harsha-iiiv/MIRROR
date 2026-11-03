@@ -158,3 +158,36 @@ def test_audio_is_not_stored_by_default_and_expires_when_it_is(tmp_path, monkeyp
     rec2 = StudyRecorder({"participant": "P02", "consent": {"recorded": True, "audio": False}}, tmp_path / "s", None)
     t2 = rec2.start_attempt(versions={}, scene={}, lineage={}, input_={"kind": "spoken"}, text="x", spec_before=None)
     assert rec2.keep_audio(t2["trial_id"], wav) is None
+
+
+def test_challenge_manual_edit_goes_through_review_and_run(api):
+    c = api
+    c.post("/api/study/start", json={"participant": "P05", "condition": "manual", "task": "C3",
+                                      "consent": {"recorded": True}})
+    cid = challenge(c)
+    bad = c.post(f"/api/challenge/{cid}/manual", json={"edits": [{"action": "nope"}]}).json()
+    assert bad["outcome"] == "error" and not bad["changed"]
+    p = c.post(f"/api/challenge/{cid}/manual", json={"edits": [{"action": "set_status", "id": "c_upright_transport",
+                                                                "status": "confirmed"}]}).json()
+    assert p["changed"] and p["step_provenance"]["kind"] == "manual" and p["trial_id"]
+    st = c.post(f"/api/challenge/{cid}/review", json={"accept": True}).json()
+    assert st["state"] == "reviewed" and any(r.get("is_before") for r in st["rechecks"])
+    wait(c, c.post(f"/api/challenge/{cid}/execute").json())
+    recs = load_trials(c.tmp / "trials", "usability_pilot")
+    ok = [r for r in recs if r["proposal"]["outcome"] == "apply"][0]
+    assert ok["input"]["kind"] == "manual_form" and ok["review"]["accepted"] and ok["execution"]["status"] == "success"
+
+
+def test_an_answer_needs_an_open_question(api):
+    c = api
+    cid = challenge(c)
+    r = c.post(f"/api/challenge/{cid}/correction", json={"answer": "the cup"})
+    assert r.status_code == 409 and "no open question" in r.json()["detail"]
+
+
+def test_options_describe_study_retention(api, monkeypatch):
+    o = api.get("/api/challenge/options").json()["study"]
+    assert o["retention"]["audio"].startswith("never stored") and "names" in o["retention"]["never_kept"]
+    monkeypatch.setenv("MIRROR_STUDY_AUDIO_RETENTION_DAYS", "14")
+    o = api.get("/api/challenge/options").json()["study"]
+    assert o["retention"]["audio_retention_days"] == 14

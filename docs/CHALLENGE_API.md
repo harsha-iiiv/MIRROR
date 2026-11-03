@@ -124,6 +124,14 @@ conservatively because a frozen design names them). Anything else: 403 `evaluati
   unaffected_objects}, question, options, rejected, provenance, step_provenance, fallback_reason,
   trial_id}` (live backend: from `mirror.interpret.outcome.interpret`; vague input asks which measurable
   requirement is meant, unsupported input is refused with the supported changes listed).
+* Answering a clarifying question: `POST /api/challenge/{cid}/correction {answer, focus_kind?}` (no `text`).
+  For a "which object?" question the original sentence is re-interpreted with the named object
+  selected; otherwise the answer is interpreted with the object the question was about selected.
+  Result adds `answer`, `answered_question`, `interpreted_text`, `focus_kind`; the trial attempt
+  continues (clarification answered). 409 when no question is open.
+* `POST /api/challenge/{cid}/manual {edits, note}` → a manual structured edit (no model) as a proposal
+  (`input: manual_form`, `step_provenance.kind: manual`, `validation`); then review, re-check and execute
+  exactly as for a correction. Invalid edits return `outcome: error` with `rejected` and change nothing.
 * `POST /api/challenge/{cid}/review {accept, note}` → accept commits the version (409 if the spec moved)
   and re-checks the prior behaviour and every rollout of the generation from step logs
   (`rechecks[]` with `is_before`, `was`, `status`, `violations`, `step_provenance` kind `new_check`).
@@ -149,6 +157,9 @@ conservatively because a frozen design names them). Anything else: 403 `evaluati
 
 ## 5. Study mode and trial export (consented trials only)
 
+* `GET /api/challenge/options` → `study {recording_available, event_log, contexts, retention
+  {trial_records, correction_text, audio, audio_retention_days, never_kept, identifier}, consent_fields}`
+  for the consent panel (wording follows this server's settings).
 * `POST /api/study/start {participant P01-P99|DEV, context dev_smoke|usability_pilot, task, task_origin
   prepared|developer_written|independently_authored, condition mirror|manual, consent {recorded, text,
   audio, quote}, task_packet_sha256}`. Refused without `consent.recorded`; `frozen_benchmark` never runs
