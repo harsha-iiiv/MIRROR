@@ -482,6 +482,7 @@ class StudioService:
         self.media = SessionMedia(self.upload_limits, media_quota)
         self.challenges: dict = {}
         self.challenge_order: list[str] = []
+        self.study = None                       # StudyRecorder when a facilitator started study mode
         self._seen_generation = self.session.generation.id
         if self.mode == "live" and (gate is not None or budget is not None):
             from .sessions import make_client
@@ -598,6 +599,11 @@ class StudioService:
         on disk for the restored session; only in-memory resources are released."""
         if keep_files:
             self.persist()
+        if self.study is not None and not keep_files:
+            try:
+                self.study.close()
+            except Exception:  # noqa: BLE001 - never block closing
+                pass
         self.closed = True
         for j in self.jobs.values():
             if j.status in ("queued", "running"):
@@ -1288,7 +1294,9 @@ class StudioService:
             self._progress(job, 0.2, "Transcribing (Muse voice)")
             res = meta.transcribe(wav)
             tid = "t" + uuid.uuid4().hex[:8]
-            (self._runtime_dir() / f"{tid}.wav").write_bytes(wav)     # kept for recorded sessions (export)
+            if self.study is None or self.study.keeps_audio:
+                # kept for recorded sessions (export); in study mode only with audio consent and a retention policy
+                (self._runtime_dir() / f"{tid}.wav").write_bytes(wav)
             rec = {"id": tid, "text": res["text"], "model": res.get("model"), "latency_s": res.get("latency_s"),
                    "source": res.get("source"), "provenance": provenance_of(res.get("source")),
                    "audio_sha256": sha256_of(bytes(wav)), "audio_s": info["seconds"], "at": time.time(),
@@ -1724,6 +1732,15 @@ class StudioService:
             with self.lock:
                 self._guard(job)
                 base = self.session.spec
+                tid = None
+                if self.study is not None:
+                    tid = self.study.start_attempt(
+                        versions=self._versions(), scene=self._study_scene(ch),
+                        lineage=self._study_lineage(self._spec_vid(base.version)),
+                        input_={"kind": how, "transcript_approved": True if tr is not None else None},
+                        text=text, spec_before=base, challenge_id=ch.id)["trial_id"]
+                    if tr is not None:
+                        self.study.keep_audio(tid, self._runtime_dir() / f"{transcript_id}.wav")
                 t0, mark = time.time(), self._llm_mark()
                 prop = {"text": text, "input": how, "transcript_id": transcript_id, "changed": False,
                         "base_spec_version_id": self._spec_vid(base.version), "ops": [], "diff": None, "scope": None,
@@ -1737,6 +1754,10 @@ class StudioService:
                     elif name in ("CorrectionRejected", "InterpretError"):
                         prop["rejected"] = str(exc)
                     else:
+                        if tid:
+                            self.study.update(tid, proposal={"outcome": "error", "error": f"{type(exc).__name__}: {exc}"[:300],
+                                                             "provenance": None, "latency_s": round(time.time() - t0, 3)})
+                            self.study.finish(tid, failure_reason="interpretation error")
                         raise
                     new, record, fb = base, None, None
                 src = self._client_source(fb)
@@ -1763,18 +1784,46 @@ class StudioService:
                         prop["rejected"] = "the correction did not change the specification"
                 ch.proposal = prop
                 ch.state = "proposed" if prop["changed"] else "scene_ready"
+                if tid:
+                    self._study_proposal(tid, prop, new if prop["changed"] else None)
+                prop["trial_id"] = tid
             return prop
         return self.submit("challenge_correction", {"challenge_id": cid, "input": how}, work)
+
+    def _study_proposal(self, tid: str, prop: dict, new_spec) -> None:
+        errors = []
+        if new_spec is not None and self.mode != "fixture":
+            from ..interpret import validate_spec
+            errors = list(validate_spec(new_spec))
+        outcome = "apply" if prop["changed"] else "asks" if prop.get("question") else "rejects"
+        sp = prop.get("step_provenance") or {}
+        self.study.update(tid, proposal={
+            "outcome": outcome, "ops": prop.get("ops") or [], "scope": prop.get("scope"),
+            "question": prop.get("question"), "rejected": prop.get("rejected"),
+            "validation": {"passed": not errors, "errors": errors, "checked": new_spec is not None},
+            "provenance": prop.get("provenance"), "step_provenance": sp, "fallback_reason": prop.get("fallback_reason"),
+            "latency_s": sp.get("latency_s"), "cost_usd": sp.get("cost_usd")})
+        if prop.get("question"):
+            self.study.update(tid, clarification={"question": prop["question"], "answered": False, "useful": None})
+            self.study.event("clarification_shown", question_chars=len(prop["question"]))
+        self.study.event("interpretation_returned", outcome=outcome, provenance=prop.get("provenance"),
+                         fallback_reason=prop.get("fallback_reason"), latency_s=sp.get("latency_s"))
+        if outcome != "apply":
+            self.study.finish(tid)
 
     def challenge_review(self, cid: str, accept: bool, note: str = "") -> dict:
         with self.lock:
             ch = self._challenge_current(cid)
             if ch.pending_spec is None or ch.proposal is None:
                 raise RuntimeError("nothing to review: submit a correction that changes the specification first")
+            tid = self.study.trial_for(ch.id) if self.study is not None else None
             if not accept:
                 ch.proposal = {**ch.proposal, "decision": "discarded"}
                 ch.pending_spec = None
                 ch.state = "scene_ready"
+                if tid:
+                    self.study.update(tid, review={"accepted": False})
+                    self.study.finish(tid)
                 self._changed()
                 return ch.public()
             spec = self.session.commit_spec(ch.pending_spec, ch.pending_base_version, ch.proposal["text"])
@@ -1798,6 +1847,17 @@ class StudioService:
             out.sort(key=lambda r: not r.get("is_before"))
             ch.rechecks = out
             ch.state = "reviewed"
+            if tid:
+                from .trials import semantic_state
+                b = next((r for r in out if r.get("is_before")), None)
+                self.study.update(tid, review={"accepted": True}, lineage={"revised_spec_version_id": ch.revised_spec_version_id},
+                                  spec_state_after=semantic_state(spec),
+                                  recheck=({"rollout_id": b["rollout_id"], "status": b.get("status"),
+                                            "violations": b.get("violations", []), "provenance": "new_check"} if b else None))
+                self.study.event("spec_version_created", spec_version_id=ch.revised_spec_version_id,
+                                 spec_state=semantic_state(spec), source="correction")
+                if b:
+                    self.study.event("recheck_run", rollout_id=b["rollout_id"], verdict=b.get("status"))
             self._changed()
             return ch.public()
 
@@ -1817,6 +1877,17 @@ class StudioService:
                 self.tags[entry.rollout_id] = ["challenge", "after"]
                 ch.after = {**self._rollout_brief(entry), "step_provenance": sim_step(self.mode, wall_s=time.time() - t0)}
                 ch.state = "executed"
+                tid = self.study.trial_for(ch.id) if self.study is not None else None
+                if tid:
+                    inf = entry.plan.infeasibility if isinstance(entry.plan.infeasibility, dict) else {}
+                    self.study.update(tid, execution={
+                        "rollout_id": entry.rollout_id, "status": entry.rollout.report.status,
+                        "violations": ch.after["violations"],
+                        "proven_infeasible": bool(entry.rollout.report.status == "planning_failed" and inf.get("proven")),
+                        "provenance": "fixture" if self.mode == "fixture" else "simulated"})
+                    self.study.event("execution_run", rollout_id=entry.rollout_id, verdict=entry.rollout.report.status,
+                                     scene_key=ch.scene.scene_id)
+                    self.study.finish(tid)
             return {"challenge_id": ch.id, "after_rollout_id": entry.rollout_id, "status": entry.rollout.report.status,
                     "generation_id": self.generation_id,
                     "provenance": "fixture" if self.mode == "fixture" else "simulated",
@@ -1872,6 +1943,140 @@ class StudioService:
 
     def challenge_public(self, cid: str) -> dict:
         return self._challenge(cid).public()
+
+    # ------------------------------------------------------------ study mode
+    def _versions(self) -> dict:
+        from .provenance import interpreter_version
+        from .trials import code_commit
+        c = getattr(self.session, "client", None)
+        try:
+            interp = self.session.spec.interpreter
+        except RuntimeError:
+            interp = None
+        return {"code_commit": code_commit(), "server_version": os.environ.get("MIRROR_SERVER_VERSION") or "0.3",
+                "prompt_revision": interpreter_version()["prompt_revision"],
+                "model": None if self.mode == "fixture" or getattr(c, "offline", True) else getattr(c, "label", None),
+                "interpreter": interp}
+
+    def study_start(self, cfg: dict) -> dict:
+        from .trials import StudyRecorder, code_commit
+        if self.study is not None:
+            self.study.close()
+        store = os.environ.get("MIRROR_TRIAL_STORE") or None
+        log = os.environ.get("MIRROR_STUDY_LOG") or None
+        self.study = StudyRecorder(cfg, Path(store) if store else None, Path(log) if log else None)
+        self.study.event("session_start", app_commit=code_commit(), task_packet_sha256=cfg.get("task_packet_sha256"),
+                         consent={k: self.study.cfg["consent"][k] for k in ("text", "audio", "quote")})
+        self._changed()
+        return self.study.public()
+
+    def study_task(self, task: Optional[str], task_origin: Optional[str] = None,
+                   condition: Optional[str] = None) -> dict:
+        if self.study is None:
+            raise RuntimeError("study mode is not on")
+        try:
+            spec = self.session.spec
+        except RuntimeError:
+            spec = None
+        self.study.set_task(task, task_origin, condition, self._spec_vid() if spec else None, spec,
+                            getattr(self.session.scene, "scene_id", None))
+        return self.study.public()
+
+    def study_end(self, reason: str = "participant_done") -> dict:
+        if self.study is None:
+            raise RuntimeError("study mode is not on")
+        self.study.event("task_end", reason=reason if reason in ("participant_done", "time_limit", "gave_up",
+                                                                 "technical_problem") else "participant_done")
+        out = self.study.public()
+        self.study.close()
+        self.study = None
+        self._changed()
+        return out
+
+    def study_comprehension(self, trial_id: str, answer: str) -> dict:
+        if self.study is None or trial_id not in self.study.attempts:
+            raise KeyError(f"trial {trial_id}")
+        if answer not in ("fresh", "recorded", "unsure"):
+            raise ValueError("answer is fresh, recorded or unsure")
+        rec = self.study.attempts[trial_id]
+        truth = ((rec.get("execution") or {}).get("provenance") or (rec.get("proposal") or {}).get("provenance"))
+        self.study.update(trial_id, comprehension={"answer": answer, "truth": truth})
+        return self.study.attempts[trial_id]["comprehension"]
+
+    def study_clarification(self, trial_id: str, answered: bool, useful: Optional[int] = None) -> dict:
+        if self.study is None or trial_id not in self.study.attempts:
+            raise KeyError(f"trial {trial_id}")
+        if useful is not None and not 1 <= int(useful) <= 5:
+            raise ValueError("useful is a rating from 1 to 5")
+        rec = self.study.attempts[trial_id]
+        cl = rec.get("clarification") or {"question": (rec.get("proposal") or {}).get("question")}
+        cl.update(answered=bool(answered), useful=int(useful) if useful is not None else None)
+        self.study.update(trial_id, clarification=cl)
+        if answered:
+            self.study.event("clarification_answered", chars=0)
+        return cl
+
+    def _study_scene(self, ch=None) -> dict:
+        if ch is not None:
+            o = ch.origin
+            return {k: o.get(k) for k in ("family", "split", "seed", "edits", "scene_id", "content_sha256")}
+        sc = self.session.scene
+        return {"family": None, "split": getattr(sc, "split", None), "seed": getattr(sc, "seed", None), "edits": [],
+                "scene_id": getattr(sc, "scene_id", None), "content_sha256": scene_sha256(sc) if sc else None}
+
+    def _study_lineage(self, base_vid: Optional[str], revised_vid: Optional[str] = None) -> dict:
+        g = self.session.generation
+        return {"generation_id": g.id, "demo_id": g.demo_id, "demo_sha256": g.demo_sha256,
+                "base_spec_version_id": base_vid, "revised_spec_version_id": revised_vid}
+
+    # ------------------------------------------------------------ manual form
+    def manual_edit(self, edits: list, note: str = "") -> dict:
+        """Apply a manual structured edit (no model) as one new specification version."""
+        from .manual import ManualEditError, apply_manual
+        with self.lock:
+            base = self.session.spec
+            base_vid = self._spec_vid(base.version)
+            tid = None
+            if self.study is not None:
+                rec = self.study.start_attempt(versions=self._versions(), scene=self._study_scene(),
+                                               lineage=self._study_lineage(base_vid),
+                                               input_={"kind": "manual_form", "edits": len(edits or [])},
+                                               text=None, spec_before=base)
+                tid = rec["trial_id"]
+            try:
+                new, record, errors = apply_manual(base, edits, note, fixture=self.mode == "fixture")
+            except ManualEditError as exc:
+                new, record, errors = None, None, [str(exc)]
+            ok = new is not None and not errors
+            if self.study is not None:
+                self.study.event("manual_edit_saved", valid=ok, errors=len(errors))
+            if not ok:
+                if tid:
+                    self.study.update(tid, proposal={"outcome": "error", "ops": [], "scope": None, "question": None,
+                                                     "rejected": None, "validation": {"passed": False, "errors": errors},
+                                                     "provenance": None, "fallback_reason": None, "latency_s": None,
+                                                     "cost_usd": None})
+                    self.study.finish(tid, failure_reason="invalid manual edit")
+                raise ValueError("the manual edit is not a valid specification: " + "; ".join(errors))
+            spec = self.session.commit_spec(new, base.version, record.text)
+            vid = self._spec_vid(spec.version)
+            from .challenge import spec_scope
+            diff, scope = spec_scope(base, spec, self.session.scene)
+            if tid:
+                from .trials import semantic_state
+                self.study.update(tid, proposal={"outcome": "apply", "ops": [o.model_dump(mode="json") for o in record.diff],
+                                                 "scope": scope, "question": None, "rejected": None,
+                                                 "validation": {"passed": True, "errors": []}, "provenance": None,
+                                                 "fallback_reason": None, "latency_s": None, "cost_usd": None},
+                                  review={"accepted": True}, lineage={"revised_spec_version_id": vid},
+                                  spec_state_after=semantic_state(spec))
+                self.study.event("spec_version_created", spec_version_id=vid, spec_state=semantic_state(spec),
+                                 source="manual")
+            self._changed()
+            return {"spec_version_id": vid, "version": spec.version, "diff": diff, "scope": scope, "trial_id": tid,
+                    "step_provenance": {"kind": "manual", "label": "Manual edit (no model)", "model": None,
+                                        "interpreter": "manual-form", "request_status": "ok", "latency_s": None,
+                                        "cost_usd": None, "fallback_reason": None}}
 
     # ------------------------------------------------------------ persistence
     def persist(self) -> None:
@@ -2131,6 +2336,7 @@ class StudioService:
                 "rechecks": [r for r in self.rechecks if r.get("generation_id", s.generation.id) == s.generation.id
                              or r["rollout_id"] in s.rollouts],
                 "challenges": [self.challenges[c].public() for c in self.challenge_order[-5:] if c in self.challenges],
+                "study": self.study.public() if self.study is not None else None,
                 "clarification": self.clarification,
                 "evaluation": self.evaluation,
                 "jobs": [j.public() for j in sorted(self.jobs.values(), key=lambda j: j.started)[-12:]],

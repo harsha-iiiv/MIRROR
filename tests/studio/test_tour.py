@@ -27,7 +27,7 @@ def test_tour_uses_only_development_layouts_and_ships_every_rollout_it_names():
     rec = tour_record()
     fenced = fenced_seeds()
     seeds = [rec["scene"]["seed"]] + [t["seed"] for t in rec.get("transfer", [])]
-    assert all(s not in fenced and s < 9000 for s in seeds)
+    assert all(s not in fenced and s < 10000 for s in seeds)
     assert rec["scene"]["split"] == "dev"
     ids = [rec["rollouts"]["before"]["rollout_id"], rec["rollouts"]["after"]["rollout_id"]]
     for t in rec.get("transfer", []):

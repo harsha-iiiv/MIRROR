@@ -23,7 +23,7 @@ from ..lineage import scene_sha256, sha256_of
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEV_SEED_LIMIT = 10_000          # mirror.scenes.sampling.EVAL_SEED_BASE
-CHALLENGE_SEED_RANGE = (0, 8999)  # 9000-9099 is the studio's showcase range
+CHALLENGE_SEED_RANGE = (0, 9999)  # every development seed; frozen-evaluation seeds are refused individually
 FAMILIES = {
     "mixed": {"split": "dev", "family": "mixed"},
     "shortcut": {"split": "dev", "family": "shortcut"},

@@ -96,6 +96,42 @@ class ReviewIn(BaseModel):
     note: str = ""
 
 
+class StudyIn(BaseModel):
+    participant: str
+    context: Optional[str] = None
+    task: Optional[str] = None
+    task_origin: Optional[str] = None
+    condition: Optional[str] = None
+    consent: dict[str, bool] = {}
+    task_packet_sha256: Optional[str] = None
+
+
+class StudyTaskIn(BaseModel):
+    task: Optional[str] = None
+    task_origin: Optional[str] = None
+    condition: Optional[str] = None
+
+
+class StudyEndIn(BaseModel):
+    reason: str = "participant_done"
+
+
+class ComprehensionIn(BaseModel):
+    trial_id: str
+    answer: str
+
+
+class ClarificationRatingIn(BaseModel):
+    trial_id: str
+    answered: bool
+    useful: Optional[int] = None
+
+
+class ManualEditIn(BaseModel):
+    edits: list[dict[str, Any]]
+    note: str = ""
+
+
 class EvalIn(BaseModel):
     seeds: list[int]
     spec_a: Optional[int] = None
@@ -443,6 +479,40 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
     @app.post("/api/challenge/{cid}/publish")
     def challenge_publish(cid: str, svc: StudioService = Depends(session)):
         return guard(svc.challenge_publish, cid)
+
+    # ------------------------------------------------------------ study mode (consented trials)
+    def study_guard(fn, *a, **k):
+        from .trials import StudyError
+        try:
+            return fn(*a, **k)
+        except StudyError as exc:
+            raise StudioError(422, "invalid_study", str(exc))
+
+    @app.post("/api/study/start")
+    def study_start(body: StudyIn, svc: StudioService = Depends(session)):
+        return guard(study_guard, svc.study_start, body.model_dump())
+
+    @app.post("/api/study/task")
+    def study_task(body: StudyTaskIn, svc: StudioService = Depends(session)):
+        return guard(study_guard, svc.study_task, body.task, body.task_origin, body.condition)
+
+    @app.post("/api/study/end")
+    def study_end(body: StudyEndIn, svc: StudioService = Depends(session)):
+        return guard(svc.study_end, body.reason)
+
+    @app.post("/api/study/comprehension")
+    def study_comprehension(body: ComprehensionIn, svc: StudioService = Depends(session)):
+        return guard(svc.study_comprehension, body.trial_id, body.answer)
+
+    @app.post("/api/study/clarification")
+    def study_clarification(body: ClarificationRatingIn, svc: StudioService = Depends(session)):
+        return guard(svc.study_clarification, body.trial_id, body.answered, body.useful)
+
+    @app.post("/api/spec/manual")
+    def spec_manual(body: ManualEditIn, svc: StudioService = Depends(session)):
+        if not svc.session.specs:
+            raise StudioError(409, "conflict", "interpret the demonstration first")
+        return guard(svc.manual_edit, body.edits, body.note)
 
     # Records and the recorded tour need no session: they are immutable and public.
     @app.get("/api/records/{record_id}")

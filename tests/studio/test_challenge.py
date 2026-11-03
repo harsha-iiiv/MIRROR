@@ -69,7 +69,8 @@ def test_fence_bounds():
     with pytest.raises(FenceError):
         check_challenge_seed("shortcut", DEV_SEED_LIMIT)
     with pytest.raises(FenceError):
-        check_challenge_seed("mixed", CHALLENGE_SEED_RANGE[1] + 1)          # showcase range
+        check_challenge_seed("mixed", -1)
+    check_challenge_seed("mixed", 9740)                                     # usability-pilot task card seed
     with pytest.raises(ValueError):
         check_challenge_seed("eval", 5)
     check_challenge_seed("shortcut", 4242)
