@@ -80,6 +80,10 @@ def test_forwarded_for_is_ignored_unless_the_proxy_is_trusted(monkeypatch):
     assert client_address("10.1.2.3", "1.2.3.4, 5.6.7.8", trust_proxy=True) == "5.6.7.8"
     assert normalise_address("2001:db8::1") == normalise_address("2001:db8::ffff") == "2001:db8::/64"
     assert normalise_address("not an ip") == "unknown"
+    assert client_address("127.0.0.1", None) == "loopback"                    # a local tunnel: indistinguishable
+    adm = Admission(limits={"session": 1})
+    for _ in range(5):
+        adm.check("session", "loopback")                                      # exempt; global limits still apply
 
 
 def test_request_rate_limit_answers_429_with_retry_after():

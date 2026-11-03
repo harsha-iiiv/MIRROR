@@ -752,7 +752,8 @@ class FixtureMeta:
         import shutil
         shutil.rmtree(tmp, ignore_errors=True)
 
-    def perceive(self, top: str, side: Optional[str] = None, progress=None, ground_truth=None, demo_id=None) -> dict:
+    def perceive(self, top: str, side: Optional[str] = None, progress=None, ground_truth=None, demo_id=None,
+                 footage=None) -> dict:
         s = self.session
         trace = s.demo or s.record_demo()
         kinds = {o.id: o.kind for o in trace.scene.objects}
@@ -775,6 +776,12 @@ class FixtureMeta:
                 objects[oid].append({"t": round(fr.t, 3), "box": [round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)],
                                      "polygon": poly, "score": 1.0})
         vt = trace.model_copy(update={"source": "video_grounded", "source_note": FIXTURE_NOTE, "video_path": top})
+        if "evidence" in type(vt).model_fields:
+            try:   # never mistaken for video evidence (mirror.observability, when present)
+                from ..observability import simulator_evidence
+                vt = vt.model_copy(update={"evidence": simulator_evidence(trace, kind="interface_fixture")})
+            except Exception:  # noqa: BLE001
+                pass
         return {"trace": vt, "tracks": {"top": {"fps": _VID_FPS, "width": _VID_W, "height": _VID_H, "objects": objects}},
                 "metrics": None, "model": FIXTURE_META_MODEL, "latency_s": 0.0, "source": "fixture", "calls": []}
 

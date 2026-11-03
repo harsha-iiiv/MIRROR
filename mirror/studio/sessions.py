@@ -396,7 +396,8 @@ class SessionManager:
             self.sweep()
             self.admission.check("session", addr)
             mine = [s for s in sorted(self._last, key=self._last.get) if self._addr.get(s) == addr]
-            if self.admission.live_per_addr > 0 and len(mine) >= self.admission.live_per_addr:
+            from .admission import LOOPBACK
+            if addr != LOOPBACK and self.admission.live_per_addr > 0 and len(mine) >= self.admission.live_per_addr:
                 idle = [s for s in mine if not self._busy(s)]
                 if not idle:
                     self.admission.give_back("session", addr)

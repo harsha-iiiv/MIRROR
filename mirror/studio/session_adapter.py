@@ -1192,7 +1192,13 @@ class StudioService:
                     self._progress(job, lo + (hi - lo) * max(0.0, min(1.0, float(frac or 0))), msg or job.message)
                 return cb
             self._progress(job, 0.03, "Tracking the objects in the video (SAM 3.1)")
-            per = meta.perceive(top_path, side_path, progress=stage(0.03, 0.45), ground_truth=gt, demo_id=demo_id)
+            import inspect as _inspect
+            try:
+                takes_footage = "footage" in _inspect.signature(meta.perceive).parameters
+            except (TypeError, ValueError):
+                takes_footage = False
+            per = meta.perceive(top_path, side_path, progress=stage(0.03, 0.45), ground_truth=gt, demo_id=demo_id,
+                                **({"footage": "rendered" if top == "bundled" else None} if takes_footage else {}))
             pcalls = per.get("calls") or []
             ground = [c for c in pcalls if not str(c.get("model") or "").startswith("sam")]
             samc = [c for c in pcalls if str(c.get("model") or "").startswith("sam")]
@@ -2449,6 +2455,7 @@ class StudioService:
                         "events": [e.model_dump(mode="json") for e in d.events],
                         "video_path": d.video_path, "rollout_id": "demo",
                         "playback_id": self.demo_playback_id, "content_sha256": s.generation.demo_sha256,
+                        "evidence": _dump(getattr(d, "evidence", None)),
                         "scene": d.scene.model_dump(mode="json")}
             scene = s.scene.model_dump(mode="json") if s.scene is not None else None
             return {

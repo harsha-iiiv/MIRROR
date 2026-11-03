@@ -16,7 +16,9 @@ can make the server do is bounded per client address and globally:
 
 An address is a coarse identity (shared networks share it, a determined
 client can rotate it); the global session, job and model budgets in
-mirror/studio/sessions.py remain the hard ceiling.
+mirror/studio/sessions.py remain the hard ceiling. Requests from the loopback
+address without a trusted X-Forwarded-For (a local tunnel) are exempt from the
+per-address limits, because they cannot be told apart.
 """
 from __future__ import annotations
 
@@ -66,12 +68,26 @@ def normalise_address(addr: Optional[str]) -> str:
     return str(ip)
 
 
+LOOPBACK = "loopback"
+
+
 def client_address(peer: Optional[str], forwarded_for: Optional[str], trust_proxy: Optional[bool] = None) -> str:
+    """The client address limits are counted against.
+
+    Behind a local tunnel that adds no X-Forwarded-For, every visitor arrives from the loopback
+    address; per-address limits cannot tell them apart, so they are returned as LOOPBACK, which
+    Admission exempts (only the global limits apply). Counting them together would let one
+    visitor push the others out."""
     if trust_proxy is None:
         trust_proxy = os.environ.get("MIRROR_TRUST_PROXY", "0") == "1"
     if trust_proxy and forwarded_for:
         # The proxy appends the peer it saw; the right-most entry is the one our proxy wrote.
         return normalise_address(forwarded_for.split(",")[-1])
+    try:
+        if peer and ipaddress.ip_address(peer.strip()).is_loopback:
+            return LOOPBACK
+    except ValueError:
+        pass
     return normalise_address(peer)
 
 
@@ -92,7 +108,7 @@ class Admission:
         """Count ``n`` units of ``kind`` for ``addr`` or raise RateLimited (nothing counted)."""
         env, _d, window, what = WINDOWS[kind]
         limit = self.limits[kind]
-        if limit <= 0:
+        if limit <= 0 or addr == LOOPBACK:
             return
         now = self.clock()
         with self._lock:
