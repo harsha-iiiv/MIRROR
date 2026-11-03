@@ -369,7 +369,7 @@ def scene_prims(plan: TakePlan, spec: TargetSpec = DEFAULT_TARGET, *, sync_cente
 
 def default_cameras(width=960, height=540) -> dict:
     return {
-        "top": SynthCamera.make("top", width, height, 70, (0.0, -0.20, 0.74), (0.02, 0.0, 0.0), dist=(0.06, -0.12, 0.0, 0.0, 0.0)),
+        "top": SynthCamera.make("top", width, height, 70, (0.0, -0.36, 0.68), (0.02, 0.02, 0.0), dist=(0.06, -0.12, 0.0, 0.0, 0.0)),
         "side": SynthCamera.make("side", width, height, 62, (0.0, -0.56, 0.40), (0.03, 0.0, 0.03), dist=(-0.04, 0.05, 0.0, 0.0, 0.0)),
     }
 

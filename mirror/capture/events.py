@@ -81,71 +81,87 @@ def _observed(tr: ObjectTrajectory, k: int) -> bool:
 
 
 def _state(tr: ObjectTrajectory, k: int, anchor) -> Optional[str]:
-    """'still' / 'moving' / None (unknown) at frame k relative to a rest position."""
+    """'still' / 'moving' / None (unknown) at frame k relative to a rest position.
+    Clean (measured) 3D positions decide by distance; otherwise only sustained
+    2D motion counts as moving, and a resting estimate without 2D motion as still."""
     mv = tr.moving_2d[k] if k < len(tr.moving_2d) else None
     if _observed(tr, k) and tr.pos_status[k] == "measured":
         d = float(np.linalg.norm(np.asarray(tr.pos[k])[:2] - anchor[:2]))
         if d > DEPART_M:
             return "moving"
-        if d <= SETTLE_M:
+        if d <= SETTLE_M and mv is not True:
             return "still"
-        return None
     if mv is True:
         return "moving"
-    if mv is False and _observed(tr, k):
+    if _observed(tr, k) and tr.resting[k] and mv is not True:
         return "still"
     return None
 
 
-def detect_events(tr: ObjectTrajectory, tray: Optional[TrayRegion] = None) -> list[HumanEvent]:
-    """Pick/place brackets from rest segments (3D) and the 2D motion any view saw."""
-    t = np.asarray(tr.t)
-    N = len(t)
+def _rest_segments(tr: ObjectTrajectory):
+    N = len(tr.t)
     rest = [bool(r) if r is not None else False for r in tr.resting]
-    obs = [_observed(tr, k) and tr.pos_status[k] == "measured" for k in range(N)]
-    segs = []
+    obs = [_observed(tr, k) for k in range(N)]
+    raw = []
     k = 0
     while k < N:
         if obs[k] and rest[k]:
             j = k
             while j + 1 < N and obs[j + 1] and rest[j + 1]:
                 j += 1
-            pts = np.array([tr.pos[q] for q in range(k, j + 1)])
-            if segs and np.linalg.norm(np.median(pts, 0)[:2] - segs[-1][2][:2]) < SETTLE_M * 2 and \
-                    not any(tr.moving_2d[q] for q in range(segs[-1][1], k) if q < len(tr.moving_2d)):
-                a0, _, _ = segs[-1]
-                pts = np.array([tr.pos[q] for q in range(a0, j + 1) if obs[q]])
-                segs[-1] = (a0, j, np.median(pts, 0))
-            else:
-                segs.append((k, j, np.median(pts, 0)))
+            raw.append([k, j])
             k = j + 1
         else:
             k += 1
+    # merge segments with no motion evidence between them (a hand arriving shifts a centroid but is not a carry)
+    segs = []
+    for s in raw:
+        if segs:
+            a0, a1 = segs[-1]
+            between = range(a1 + 1, s[0])
+            moved = any(tr.moving_2d[q] for q in between if q < len(tr.moving_2d)) or \
+                    any(_observed(tr, q) and tr.pos_status[q] == "measured" and tr.resting[q] is False for q in between)
+            if not moved:
+                segs[-1] = [a0, s[1]]
+                continue
+        segs.append(s)
+
+    def anchor(a, b):
+        clean = [tr.pos[q] for q in range(a, b + 1) if obs[q] and tr.pos_status[q] == "measured"]
+        pts = clean or [tr.pos[q] for q in range(a, b + 1) if obs[q]]
+        return np.median(np.array(pts), 0), bool(clean)
+
+    return [(a, b, *anchor(a, b)) for a, b in segs]
+
+
+def detect_events(tr: ObjectTrajectory, tray: Optional[TrayRegion] = None) -> list[HumanEvent]:
+    """Pick/place brackets from rest segments and the motion any view saw."""
+    t = np.asarray(tr.t)
+    N = len(t)
+    segs = _rest_segments(tr)
     events = []
     n = 0
-    for (a0, a1, pa), (b0, b1, pb) in zip(segs, segs[1:]):
+    for (a0, a1, pa, ca), (b0, b1, pb, cb) in zip(segs, segs[1:]):
         if np.linalg.norm(pb[:2] - pa[:2]) < MIN_CARRY_M:
             continue
-        # departure: last frame known still at pa .. first frame known moving
         lo = a1
-        for q in range(a1, b0):
+        for q in range(a0, b0):
             s = _state(tr, q, pa)
             if s == "still":
                 lo = q
             elif s == "moving":
                 break
         hi = next((q for q in range(lo + 1, b0 + 1) if _state(tr, q, pa) == "moving"), b0)
-        # arrival: last frame known moving .. first frame known still at pb
         hi2 = b0
-        for q in range(b0, a1, -1):
+        for q in range(b1, lo, -1):
             s = _state(tr, q, pb)
             if s == "still":
                 hi2 = q
             elif s == "moving":
                 break
-        lo2 = next((q for q in range(hi2 - 1, a1 - 1, -1) if _state(tr, q, pb) == "moving"), a1)
-        for typ, l, h, p in (("pick", lo, hi, pa), ("place", lo2, hi2, pb)):
-            occl = sum(1 for q in range(l + 1, h) if _state(tr, q, pa if typ == "pick" else pb) is None)
+        lo2 = next((q for q in range(hi2 - 1, lo, -1) if _state(tr, q, pb) == "moving"), max(hi, a1))
+        for typ, l, h, p, clean in (("pick", lo, hi, pa, ca), ("place", lo2, hi2, pb, cb)):
+            occl = sum(1 for q in range(l + 1, h) if _state(tr, q, p) is None)
             idu = any(tr.identity_uncertain[q] for q in range(l, h + 1))
             width = float(t[h] - t[l])
             ev = HumanEvent(id=f"{tr.label}:{typ}:{n}", object=tr.label, type=typ, t=float(0.5 * (t[l] + t[h])),

@@ -28,6 +28,8 @@ from mirror.capture.media import ClipMeta, iter_frames
 
 TRACK_THRESHOLDS = {
     "lost_score": 0.35,             # back-projection mass in the window relative to the first frame
+    "partial_ratio": 0.82,          # mass below this fraction of its recent unhidden level = partly hidden (a hand)
+    "partial_history": 12,          # frames of unhidden history used as that level
     "max_area_ratio": 3.0,          # window area change that counts as a different blob
     "reacquire_min_area_ratio": 0.3,
     "elongation_for_axis": 1.6,     # principal axis only reported when major/minor >= this
@@ -52,8 +54,11 @@ class Obs2D(_M):
     elongation: Optional[float] = None
     score: Optional[float] = None
     identity_confirmed: bool = True
+    partial: bool = False                  # partly hidden (e.g. by a hand): position biased, not a clean measurement
     tag_R: Optional[list[list[float]]] = None   # tag pose in the camera frame (tag observations only)
     tag_t: Optional[list[float]] = None
+    tag_R_alt: Optional[list[list[float]]] = None   # the other planar-pose solution (a small square tag is ambiguous)
+    tag_err: Optional[tuple[float, float]] = None   # reprojection error of the two solutions (px)
 
     @property
     def seen(self) -> bool:
@@ -159,6 +164,7 @@ def classical_track(meta: ClipMeta, prompts: Sequence[Prompt], *, camera: str, s
                     out[p.label].append(Obs2D(frame=i, t=t, status="lost", identity_confirmed=False))
                     continue
                 s["win"], s["lost"] = best[1], False
+                s["good_mass"] = []
                 status = "reacquired"
                 s["unconfirmed"] = True
             rot, win = cv2.CamShift(bp, s["win"], crit)
@@ -171,6 +177,13 @@ def classical_track(meta: ClipMeta, prompts: Sequence[Prompt], *, camera: str, s
                 out[p.label].append(Obs2D(frame=i, t=t, status="lost", score=score, identity_confirmed=False))
                 continue
             s["win"] = (x, y, w, h)
+            mass = float(bp[y:y + h, x:x + w].sum())
+            hist_m = s.setdefault("good_mass", [])
+            level = float(np.median(hist_m)) if hist_m else mass
+            partial = bool(hist_m) and mass < T["partial_ratio"] * level
+            if not partial:
+                hist_m.append(mass)
+                del hist_m[:-T["partial_history"]]
             ang, el = _axis(bp, (x, y, w, h))
             if el is not None and el < T["elongation_for_axis"]:
                 ang = None
@@ -178,7 +191,7 @@ def classical_track(meta: ClipMeta, prompts: Sequence[Prompt], *, camera: str, s
             cx, cy = (x + m["m10"] / m["m00"], y + m["m01"] / m["m00"]) if m["m00"] > 0 else (x + w / 2, y + h / 2)
             out[p.label].append(Obs2D(frame=i, t=t, status="reacquired" if s.get("unconfirmed") else "tracked",
                                       cx=float(cx), cy=float(cy), box=(float(x), float(y), float(w), float(h)),
-                                      axis_deg=ang, elongation=el, score=score,
+                                      axis_deg=ang, elongation=el, score=score, partial=partial,
                                       identity_confirmed=not s.get("unconfirmed", False)))
     return TrackSet(camera=camera, clip_sha256=meta.sha256, source="classical", tracks=out,
                     notes=["colour back-projection + CamShift from person-drawn boxes; no model call"])
@@ -240,15 +253,17 @@ def tag_track(meta: ClipMeta, K, dist, *, camera: str, tag_labels: dict[int, str
                 out[lab].append(Obs2D(frame=i, t=t, status="lost"))
                 continue
             c = seen[k]
-            ok, rvec, tvec = cv2.solvePnP(obj, c.astype(np.float64), np.asarray(K, float), np.asarray(dist, float),
-                                          flags=cv2.SOLVEPNP_IPPE_SQUARE)
-            if not ok:
+            n, rvecs, tvecs, errs = cv2.solvePnPGeneric(obj, c.astype(np.float64), np.asarray(K, float), np.asarray(dist, float),
+                                                       flags=cv2.SOLVEPNP_IPPE_SQUARE)
+            if not n:
                 out[lab].append(Obs2D(frame=i, t=t, status="lost"))
                 continue
-            R = cv2.Rodrigues(rvec)[0]
+            Rs = [cv2.Rodrigues(rv)[0] for rv in rvecs]
+            e = [float(x) for x in np.asarray(errs).ravel()] + [float("inf")]
             cx, cy = c.mean(0)
-            out[lab].append(Obs2D(frame=i, t=t, status="tag", cx=float(cx), cy=float(cy), tag_R=R.tolist(),
-                                  tag_t=[float(x) for x in tvec.ravel()]))
+            out[lab].append(Obs2D(frame=i, t=t, status="tag", cx=float(cx), cy=float(cy), tag_R=Rs[0].tolist(),
+                                  tag_t=[float(x) for x in tvecs[0].ravel()],
+                                  tag_R_alt=Rs[1].tolist() if n > 1 else None, tag_err=(e[0], e[1])))
     return TrackSet(camera=camera, clip_sha256=meta.sha256, source="tag", tracks=out,
                     notes=[f"printed {tag_size_mm:.0f} mm ArUco tags; pose by planar PnP"])
 

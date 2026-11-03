@@ -41,6 +41,11 @@ REST_MIN_S = 0.4
 LIFT_RANGE_M = 0.25                 # possible carry height above rest, for single-view parallax bounds
 MAX_VIEW_DISAGREEMENT_M = 0.025
 PIXEL_SIGMA = 1.5                   # assumed centroid noise for uncertainty propagation (px)
+TAG_MAX_OBLIQUITY_DEG = 60.0        # tag views more oblique than this are not used
+TAG_AMBIGUITY_RATIO = 1.5
+TAG_MAX_STEP_DEG = 30.0             # a tag pose further than this from the previous one starts a new chain
+TAG_MOUNT_TOLERANCE_DEG = 25.0      # at rest the tag's 'up' must be within this of vertical (else remount it)           # without a previous pose, accept the better planar solution only if clearly better
+PARTIAL_SIGMA_M = 0.03             # extra uncertainty when the object is partly hidden
 PLANE_MAX_RAY_ANGLE_DEG = 45.0      # single-view table-plane positions only from steep (top-like) views
 PIXEL_MOTION_PX_S = 60.0            # 2D speed that counts as moving in an image (sustained over 2 frame pairs)
 
@@ -173,7 +178,7 @@ def reconstruct(cams: dict[str, CameraModel], tracks: dict[str, Sequence[TrackSe
         pos = [None] * N; st = ["unobserved"] * N; sig = [None] * N; basis = [""] * N
         idu = [False] * N; views = [[] for _ in range(N)]; resid = [None] * N
         for i, t in enumerate(ref_times):
-            rays, used, unc = [], [], False
+            rays, used, unc, partial = [], [], False, []
             for c in [reference] + others:
                 tc = t if c == reference else float(sync.to_side(t))
                 got = _obs_at(per_cam[c], per_times[c], tc, per_dt[c])
@@ -185,6 +190,8 @@ def reconstruct(cams: dict[str, CameraModel], tracks: dict[str, Sequence[TrackSe
                 rays.append((origin, d[0], cm))
                 used.append(c)
                 unc = unc or not o.identity_confirmed
+                if o.partial:
+                    partial.append(c)
             if not rays:
                 continue
             idu[i] = unc
@@ -202,6 +209,10 @@ def reconstruct(cams: dict[str, CameraModel], tracks: dict[str, Sequence[TrackSe
                 if r > MAX_VIEW_DISAGREEMENT_M:
                     st[i] = "inferred"
                     basis[i] = f"views disagree by {r * 100:.1f} cm (identity or sync problem)"
+                elif partial:
+                    st[i] = "inferred"
+                    basis[i] = "two-view triangulation, but partly hidden in " + ", ".join(partial) + " (centroid biased)"
+                    sig[i] = float(sig[i] + PARTIAL_SIGMA_M)
                 else:
                     st[i] = "measured"
                     basis[i] = "two-view triangulation of object centroids"
@@ -214,12 +225,18 @@ def reconstruct(cams: dict[str, CameraModel], tracks: dict[str, Sequence[TrackSe
                 if not np.all(np.isfinite(X)):
                     continue
                 pos[i] = tuple(float(v) for v in X)
-                st[i] = "measured_pending"  # resolved after rest detection
+                st[i] = "measured_pending" if not partial else "partial_pending"  # resolved after rest detection
                 basis[i] = f"single view {used[0]} on the plane z = {z_rest * 100:.1f} cm ({hsrc or 'unknown'} height)"
         # rest detection from positions
         P = np.array([p if p is not None else (np.nan,) * 3 for p in pos], float)
         rest = _resting(ref_times, P)
         for i in range(N):
+            if st[i] == "partial_pending":
+                st[i] = "inferred"
+                cm = cams[views[i][0]]
+                sig[i] = float(PARTIAL_SIGMA_M + PIXEL_SIGMA * np.linalg.norm(np.asarray(pos[i]) - cm.pose.centre) / cm.intrinsics.Km[0, 0])
+                basis[i] += "; partly hidden (centroid biased)"
+                continue
             if st[i] == "measured_pending":
                 cm = cams[views[i][0]]
                 if rest[i]:
@@ -247,8 +264,9 @@ def reconstruct(cams: dict[str, CameraModel], tracks: dict[str, Sequence[TrackSe
         # tilt
         tilt = [None] * N; tst = ["unobserved"] * N; tkind = [None] * N
         tag_ref = None
+        prev = None
         for i, t in enumerate(ref_times):
-            best = None
+            cands = []
             for c in names:
                 tg = tags.get(c)
                 if tg is None:
@@ -258,11 +276,36 @@ def reconstruct(cams: dict[str, CameraModel], tracks: dict[str, Sequence[TrackSe
                     continue
                 tt = np.array([o.t for o in tg])
                 j = int(np.argmin(np.abs(tt - tc)))
-                if abs(tt[j] - tc) <= 0.5 * per_dt.get(c, dt_ref) and tg[j].status == "tag":
-                    Rw = cams[c].pose.Rm.T @ np.asarray(tg[j].tag_R)
-                    best = Rw
-                    break
+                o = tg[j]
+                if abs(tt[j] - tc) > 0.5 * per_dt.get(c, dt_ref) or o.status != "tag":
+                    continue
+                sols = [np.asarray(o.tag_R)] + ([np.asarray(o.tag_R_alt)] if o.tag_R_alt is not None else [])
+                tv = np.asarray(o.tag_t)
+                obliq = float(np.degrees(np.arccos(abs(sols[0][:, 2] @ (tv / np.linalg.norm(tv))))))
+                if obliq > TAG_MAX_OBLIQUITY_DEG:
+                    continue
+                Rw = [cams[c].pose.Rm.T @ Rs for Rs in sols]
+                cands.append((obliq, Rw, o.tag_err))
+            best = None
+            if cands:
+                obliq, Rw, err = min(cands, key=lambda x: x[0])
+                if prev is not None:
+                    near = min(Rw, key=lambda R: np.linalg.norm(R - prev))
+                    if np.degrees(np.arccos(np.clip((np.trace(near @ prev.T) - 1) / 2, -1, 1))) <= TAG_MAX_STEP_DEG:
+                        best = near
+                if best is None and rest[i]:
+                    # documented mounting: the tag's printed 'up' points to the mug's opening, so at rest it points up
+                    up = [float(np.degrees(np.arccos(np.clip(R[2, 1], -1, 1)))) for R in Rw]
+                    k = int(np.argmin(up))
+                    if up[k] <= TAG_MOUNT_TOLERANCE_DEG:
+                        best = Rw[k]
+                if best is None and prev is None and len(Rw) > 1 and err and err[1] > TAG_AMBIGUITY_RATIO * max(err[0], 1e-3) \
+                        and tag_ref is not None:
+                    best = Rw[0]
+            if best is None:
+                prev = None
             if best is not None:
+                prev = best
                 if tag_ref is None and rest[i]:
                     tag_ref = best
                 if tag_ref is not None:
@@ -297,20 +340,38 @@ def reconstruct(cams: dict[str, CameraModel], tracks: dict[str, Sequence[TrackSe
                 a, b = j - 1, j
                 if a < 0 or b >= len(ob) or not (ob[a].seen and ob[b].seen) or tt[b] - tt[a] > 1.5 * per_dt[c]:
                     continue
-                if b + 1 >= len(ob) or not ob[b + 1].seen or a - 1 < 0 or not ob[a - 1].seen:
-                    continue
-                sp = [np.hypot(ob[q + 1].cx - ob[q].cx, ob[q + 1].cy - ob[q].cy) / max(tt[q + 1] - tt[q], 1e-6)
-                      for q in (a - 1, a, b)]
-                moving = bool(min(sp[0:2]) > PIXEL_MOTION_PX_S or min(sp[1:3]) > PIXEL_MOTION_PX_S)
-                if not moving and max(sp) > PIXEL_MOTION_PX_S:
-                    continue  # a single jump (tracker re-centring) is not evidence either way
+                if any(ob[q].partial for q in (a, b)):
+                    # partly hidden: a hand can shift the centroid by up to about half the object, so only a
+                    # displacement larger than the object's own image size over half a second counts as motion
+                    def _disp(t_from, t_to):
+                        qa = int(np.clip(np.searchsorted(tt, t_from), 0, len(ob) - 1))
+                        qb = int(np.clip(np.searchsorted(tt, t_to), 0, len(ob) - 1))
+                        if qa == qb or not (ob[qa].seen and ob[qb].seen) or ob[qa].box is None:
+                            return None, None
+                        return (float(np.hypot(ob[qb].cx - ob[qa].cx, ob[qb].cy - ob[qa].cy)),
+                                float(np.hypot(ob[qa].box[2], ob[qa].box[3])))
+                    d_past, size = _disp(tc - 0.4, tc)
+                    d_next, _ = _disp(tc, tc + 0.4)
+                    if d_past is None or d_next is None or not (d_past > size and d_next > size):
+                        continue
+                    moving = True
+                else:
+                    if b + 1 >= len(ob) or not ob[b + 1].seen or a - 1 < 0 or not ob[a - 1].seen:
+                        continue
+                    if any(ob[q].partial for q in (a - 1, b + 1)):
+                        continue
+                    sp = [np.hypot(ob[q + 1].cx - ob[q].cx, ob[q + 1].cy - ob[q].cy) / max(tt[q + 1] - tt[q], 1e-6)
+                          for q in (a - 1, a, b)]
+                    moving = bool(min(sp[0:2]) > PIXEL_MOTION_PX_S or min(sp[1:3]) > PIXEL_MOTION_PX_S)
+                    if not moving and max(sp) > PIXEL_MOTION_PX_S:
+                        continue  # a single jump (tracker re-centring) is not evidence either way
                 mv[i] = moving if mv[i] is None else (mv[i] or moving)
         tnotes = []
         if not any(s == "measured" for s in tst):
             tnotes.append("tilt never observed: no tag and no elongated silhouette in a side view")
         out[m.track_label] = ObjectTrajectory(
             label=m.track_label, proxy=m.proxy, t=[float(x) for x in ref_times], pos=pos,
-            pos_status=[s if s != "measured_pending" else "unobserved" for s in st], pos_sigma_m=sig, pos_basis=basis,
+            pos_status=[s if not s.endswith("_pending") else "unobserved" for s in st], pos_sigma_m=sig, pos_basis=basis,
             tilt_deg=tilt, tilt_status=tst, tilt_kind=tkind, identity_uncertain=idu, views=views,
             triangulation_residual_m=resid, resting=[None if np.isnan(P[k, 0]) else bool(rest[k]) for k in range(N)],
             moving_2d=mv,

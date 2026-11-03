@@ -1,0 +1,106 @@
+{
+ "name": "phone_capture_validation",
+ "version": 1,
+ "status": "awaiting footage",
+ "frozen_before_any_real_footage": true,
+ "purpose": "Validate the calibrated phone-capture path (M2 section 7) on independently recorded clips. Synthetic renders are test data only and never count toward any check.",
+ "clips": {
+  "development": [
+   {
+    "id": "D1",
+    "condition": "two_view_upright",
+    "use": "build and debug the workflow; never scored as evidence"
+   }
+  ],
+  "evaluation": [
+   {
+    "id": "E1",
+    "condition": "two_view_upright",
+    "expected": "reconstruct"
+   },
+   {
+    "id": "E2",
+    "condition": "two_view_tilted",
+    "expected": "reconstruct",
+    "instruction": "tilt the mug by roughly 30 degrees during the carry (tag on the mug)"
+   },
+   {
+    "id": "E3",
+    "condition": "two_view_occlusion",
+    "expected": "reconstruct_with_uncertainty",
+    "instruction": "hand covers the mug from above for most of the carry"
+   },
+   {
+    "id": "E4",
+    "condition": "two_view_dim_light",
+    "expected": "reconstruct_or_abstain",
+    "instruction": "one dim lamp, no overhead light"
+   },
+   {
+    "id": "E5",
+    "condition": "invalid_calibration",
+    "expected": "reject",
+    "instruction": "change the zoom (or move the top phone) after the board view, then record"
+   },
+   {
+    "id": "E6",
+    "condition": "single_view_top",
+    "expected": "reconstruct_reduced",
+    "instruction": "top phone only"
+   },
+   {
+    "id": "E7a",
+    "condition": "retest_1",
+    "expected": "reconstruct",
+    "instruction": "repeat of E1 by the same person"
+   },
+   {
+    "id": "E7b",
+    "condition": "retest_2",
+    "expected": "reconstruct",
+    "instruction": "second repeat of E1"
+   }
+  ],
+  "rule": "Evaluation clips are recorded after this design is committed, by following docs/CAMERA_CAPTURE.md; none is used for development. If anything is changed after seeing evaluation results, a new design version is created and the earlier results stay."
+ },
+ "labels": {
+  "rest_positions": "start and end position of every object centre measured with a ruler on the table in the board frame (independent of the video)",
+  "keyframes": "a person clicks each object's centre in every view every 0.5 s; triangulated with the session calibration (a manual reference, not independent physical truth)",
+  "events": "a person steps through the frames and marks the first frame each object leaves its rest and the first frame it is at rest again",
+  "tilt_reference": "full tilt from the printed tag on the mug (instrumented reference); the estimator under test runs without the tag track",
+  "identity": "for every keyframe the person names the object",
+  "intended_spec": "the task card filled in BEFORE recording: which objects go into the tray, which must stay upright, order if any",
+  "labeller": "recorded per clip; labels are written before the pipeline output is inspected"
+ },
+ "thresholds": {
+  "calibration_intrinsics_rms_px": 1.0,
+  "calibration_pose_rms_px": 1.5,
+  "calibration_multiview_board_error_mm": 4.0,
+  "rest_position_error_median_cm": 1.5,
+  "rest_position_error_p90_cm": 3.0,
+  "keyframe_coverage_min": 0.9,
+  "keyframe_measured_min": 0.7,
+  "outlier_cm": 5.0,
+  "outlier_rate_max": 0.05,
+  "identity_errors_max": 0,
+  "tilt_error_median_deg": 5.0,
+  "tilt_lower_bound_slack_deg": 3.0,
+  "tilt_lower_bound_valid_min": 0.95,
+  "event_timing_s": 0.3,
+  "event_within_min": 0.8,
+  "event_bracket_contains_min": 0.9,
+  "spec_agreement": "exact match of goals and constraints with the intended spec",
+  "retest_agreement": "E7a and E7b proposals identical to E1",
+  "invalid_calibration": "E5 must be rejected (blocking review item) - a reconstruction from E5 is a failure"
+ },
+ "unconditional_reporting": "Position errors are reported over ALL labelled keyframes; a missing estimate is counted as missing (and as an error beyond every threshold in the unconditional percentiles), never dropped. Conditional (found-only) errors are reported only next to the unconditional ones and labelled conditional.",
+ "baselines": {
+  "tilt_constant_zero": "always report 0 degrees tilt",
+  "tracking_manual_keyframes": "positions from the person's clicks only (the cost is the person's time)",
+  "tracking_classical": "person-drawn boxes + colour CamShift (default offline pipeline)",
+  "tracking_model": "SAM 3.1 video tracks from Muse Spark boxes (needs budget; not run offline)",
+  "single_view": "E1's top clip alone"
+ },
+ "correction_effort": "number of corrections, seconds spent (timed in the review UI) and identity confirmations per clip",
+ "failures": "every clip is reported, including abstentions, crashes and rejected calibrations"
+}
