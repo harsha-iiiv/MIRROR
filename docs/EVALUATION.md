@@ -1,6 +1,24 @@
 # Evaluation
 
-## Question
+## Scope of each result
+
+Read every number below with its scope. The table says what varied between
+trials and what was fixed.
+
+| Result | What was new in each trial | What was fixed (reused in every trial) | What it supports | What it does not support |
+|---|---|---|---|---|
+| First and second pre-registered evaluations (60 fresh + 30 shortcut layouts each; 5 blocked layouts reported separately) | The layout: wall, slot, tray and object positions, generated after the freeze | One demonstration, one correction sentence, one compiled specification pair (original and corrected), planner, controller, checker | One compiled correction changes executed behaviour and carries to layouts it was not compiled on, without spreading to objects it does not name | Interpretation of 90 new demonstrations; 90 independent tests of language understanding; other corrections; other tasks |
+| Correction-compiler benchmark, development model and offline rules, first run of the frozen set (44 cases) and the held-out set (28 cases) | The sentence | Base specification, scene | Single-sentence compilation accuracy on cases written before that interpreter ran on them (blind for these rows only) | Multi-turn corrections, independent authors, new scenes |
+| Correction-compiler benchmark, Muse Spark rows (44/44, 27/28) | Only the model (swapped after development) | The same two case sets, already seen during development; prompt revision 3, tuned on the development model | That Muse Spark handles these known cases with the current prompt | A blind or held-out accuracy for Muse Spark |
+| Spoken corrections (288 clips) | Synthetic voice and noise condition | The 72 benchmark sentences | Transcription does not degrade compilation on clean synthetic speech | Real speakers |
+| Perception robustness, video to specification | Rendered frames and videos of new simulated layouts | Simulator renders, known kit geometry and camera intrinsics | Measured perception limits on rendered video | Camera footage, people, other objects |
+
+A genuinely fresh authoring evaluation (independent authors, new wording,
+multi-turn, baselines, every attempt counted) is specified in
+[protocols/v3_authoring.md](protocols/v3_authoring.md). It has **not yet been
+run**; no result from it exists.
+
+## Question (first and second registrations)
 
 Does a single confirmed correction ("this container must remain upright
 throughout transport") change executed behaviour and improve compliance on
@@ -124,7 +142,10 @@ evaluation layout was generated; full report in
   by the frozen runner.
 
 What this does not show: behaviour outside this task family, with other
-corrections, or on physical hardware. These specifications were produced from
+corrections, or on physical hardware. It also does not measure how often a
+correction is understood: the demonstration was interpreted once and the
+correction compiled once, before the freeze, and that one pair was run on every
+layout. These specifications were produced from
 recorded development-model responses (the offline rules produce the same
 enforced constraints); the second registration below repeats the evaluation
 with specifications compiled by Muse Spark.
@@ -161,6 +182,24 @@ commit with the same runtime. Both attempts are in its ledger. Details:
 Reproduce: `git checkout 864060d`, then
 `python scripts/run_eval.py final --registration muse --workers 2` in a scratch
 clone (it writes its outputs and ledger entries into `results/eval_muse`).
+
+
+## Correction-compiler benchmark (not pre-registered as an evaluation)
+
+Single sentences compiled against one base specification in the shortcut scene;
+exact match of outcome and resulting enforced state. Full table and per-case
+results: [`results/corrections_benchmark_summary.md`](../results/corrections_benchmark_summary.md).
+
+| Rows | Exact | How to read it |
+|---|---|---|
+| Frozen set (44), first run, prompt revision 1: offline rules / development model (`gpt-5.5`) | 38/44 / 42/44 | Blind: cases frozen before either interpreter ran on them |
+| Held-out set (28), written after the offline fixes and before any run, prompt revision 1: offline rules / development model | 21/28 / 27/28 | Blind for these interpreters |
+| Later prompt revisions and offline fixes | see summary | Post-change measurements on cases already seen |
+| Muse Spark (`muse-spark-1.3`), frozen / held-out | 44/44 / 27/28 | **Post-hoc model swap.** Both sets had been seen in development and prompt revision 3 was tuned on the development model. Not blind, not held-out for Muse Spark |
+
+The benchmark has no multi-turn cases, no independent authors and one scene. Its
+"held-out" set was written by the same team that wrote the frozen set. The v3
+protocol addresses these gaps; it has not been run.
 
 
 ## Third registration: spoken corrections
@@ -393,3 +432,24 @@ yet replace the simulator trace that the main evaluations use. Both video models
 report events far less precisely than tracking (event F1 0.06 and 0.12 at
 0.5 s), so they are not a substitute for tracked event times either. Muse
 Wonder did not earn its higher cost and latency here.
+
+
+## Evidence provenance
+
+Different published artifacts draw on different registrations. None is relabelled
+as another.
+
+| Artifact | Source of the rollouts and numbers shown | Specification pair | Seeds |
+|---|---|---|---|
+| Studio site, evidence step | Second registration, loaded unchanged from `results/eval_muse` | Muse Spark (`muse-spark-1.3`), replayed | primary 50000–50059, shortcut 60000–60029, blocked 50000–50004 |
+| Studio site, live runs (with `?live=1`) | Development showcase layouts, run on request | whatever the visitor's session holds | dev 9000–9099 only; never evaluation seeds |
+| Demo film, side-by-side clip (seed 30002) and the nine-layout grid | First registration: these trials were re-run for rendering at 30 Hz with the frozen code and specifications; status, routes, beads in cup, maximum tilt and placement match the saved rollouts in `results/eval/primary` for every one | development model (`gpt-5.5`), replayed | 30002; 30000, 30002, 30004, 30005, 30006, 30008, 30010, 30012, 30015 |
+| Demo film, evidence cards | Numbers from `results/eval/report.json`, `results/eval_muse/report.json`, `results/eval_voice`, `results/eval_robustness`, `results/eval_video2` | as in each report | as in each report |
+| Demo film, Watch and Interpret steps | Recorded studio session: rendered simulator video of the reference demonstration, with recorded SAM 3.1 and Muse Spark outputs (no call while filming) | recorded Muse Spark proposal | reference demonstration only |
+| Demo film, spill, correction and corrected run | Reference scenes `ref_shortcut` and `ref_blocked`, not evaluation layouts. The spoken correction is a synthetic voice sample (not a person, not in any benchmark), transcribed by a recorded Muse Voice Transcribe call | the first registration's frozen specifications (development model, replayed) in the rendered clips; recorded Muse Spark responses in the studio shots | none |
+| README and this page | All registrations, each named in its own section | as named | as named |
+
+Both specification pairs enforce the same rules (`results/muse_spec_comparison.json`),
+so film clips from the first registration show the same rules the site
+evaluates, but they are rollouts of a different registration with different
+seeds. A film or page that shows a seed number should name its registration.

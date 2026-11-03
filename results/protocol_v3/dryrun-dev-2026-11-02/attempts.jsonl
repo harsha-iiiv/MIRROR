@@ -1,0 +1,108 @@
+{"run_id": "dev-20261102T163609", "unix": 1793666169.605, "event": "start", "attempt": 1, "case_id": "d01", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666174.385, "event": "end", "attempt": 1, "case_id": "d01", "condition": "mirror_model", "wall_s": 4.779, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666174.385, "event": "start", "attempt": 2, "case_id": "d01", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666174.483, "event": "end", "attempt": 2, "case_id": "d01", "condition": "offline_rules", "wall_s": 0.098, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666174.483, "event": "start", "attempt": 3, "case_id": "d01", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666174.591, "event": "end", "attempt": 3, "case_id": "d01", "condition": "manual_structured", "wall_s": 0.108, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666174.592, "event": "start", "attempt": 4, "case_id": "d02", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666178.995, "event": "end", "attempt": 4, "case_id": "d02", "condition": "mirror_model", "wall_s": 4.404, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666178.996, "event": "start", "attempt": 5, "case_id": "d02", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666179.128, "event": "end", "attempt": 5, "case_id": "d02", "condition": "offline_rules", "wall_s": 0.132, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666179.128, "event": "start", "attempt": 6, "case_id": "d02", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666183.128, "event": "end", "attempt": 6, "case_id": "d02", "condition": "manual_structured", "wall_s": 4.0, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666183.128, "event": "start", "attempt": 7, "case_id": "d03", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666187.657, "event": "end", "attempt": 7, "case_id": "d03", "condition": "mirror_model", "wall_s": 4.528, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666187.657, "event": "start", "attempt": 8, "case_id": "d03", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666187.821, "event": "end", "attempt": 8, "case_id": "d03", "condition": "offline_rules", "wall_s": 0.163, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666187.821, "event": "start", "attempt": 9, "case_id": "d03", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666192.266, "event": "end", "attempt": 9, "case_id": "d03", "condition": "manual_structured", "wall_s": 4.444, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666192.266, "event": "start", "attempt": 10, "case_id": "d04", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.158, "event": "end", "attempt": 10, "case_id": "d04", "condition": "mirror_model", "wall_s": 3.892, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.158, "event": "start", "attempt": 11, "case_id": "d04", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.29, "event": "end", "attempt": 11, "case_id": "d04", "condition": "offline_rules", "wall_s": 0.131, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.29, "event": "start", "attempt": 12, "case_id": "d04", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.419, "event": "end", "attempt": 12, "case_id": "d04", "condition": "manual_structured", "wall_s": 0.129, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.419, "event": "start", "attempt": 13, "case_id": "d05", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.42, "event": "end", "attempt": 13, "case_id": "d05", "condition": "mirror_model", "wall_s": 0.001, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.42, "event": "start", "attempt": 14, "case_id": "d05", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.421, "event": "end", "attempt": 14, "case_id": "d05", "condition": "offline_rules", "wall_s": 0.001, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.421, "event": "start", "attempt": 15, "case_id": "d05", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.421, "event": "end", "attempt": 15, "case_id": "d05", "condition": "manual_structured", "wall_s": 0.0, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.421, "event": "start", "attempt": 16, "case_id": "d06", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.422, "event": "end", "attempt": 16, "case_id": "d06", "condition": "mirror_model", "wall_s": 0.001, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.422, "event": "start", "attempt": 17, "case_id": "d06", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.423, "event": "end", "attempt": 17, "case_id": "d06", "condition": "offline_rules", "wall_s": 0.001, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.423, "event": "start", "attempt": 18, "case_id": "d06", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.424, "event": "end", "attempt": 18, "case_id": "d06", "condition": "manual_structured", "wall_s": 0.0, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.424, "event": "start", "attempt": 19, "case_id": "d07", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.424, "event": "end", "attempt": 19, "case_id": "d07", "condition": "mirror_model", "wall_s": 0.001, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.424, "event": "start", "attempt": 20, "case_id": "d07", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.425, "event": "end", "attempt": 20, "case_id": "d07", "condition": "offline_rules", "wall_s": 0.0, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.425, "event": "start", "attempt": 21, "case_id": "d07", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.426, "event": "end", "attempt": 21, "case_id": "d07", "condition": "manual_structured", "wall_s": 0.0, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.426, "event": "start", "attempt": 22, "case_id": "d08", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.647, "event": "end", "attempt": 22, "case_id": "d08", "condition": "mirror_model", "wall_s": 0.221, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.647, "event": "start", "attempt": 23, "case_id": "d08", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.65, "event": "end", "attempt": 23, "case_id": "d08", "condition": "offline_rules", "wall_s": 0.003, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.65, "event": "start", "attempt": 24, "case_id": "d08", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.652, "event": "end", "attempt": 24, "case_id": "d08", "condition": "manual_structured", "wall_s": 0.002, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666196.652, "event": "start", "attempt": 25, "case_id": "d09", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666201.005, "event": "end", "attempt": 25, "case_id": "d09", "condition": "mirror_model", "wall_s": 4.352, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666201.005, "event": "start", "attempt": 26, "case_id": "d09", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666201.088, "event": "end", "attempt": 26, "case_id": "d09", "condition": "offline_rules", "wall_s": 0.083, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666201.088, "event": "start", "attempt": 27, "case_id": "d09", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666201.18, "event": "end", "attempt": 27, "case_id": "d09", "condition": "manual_structured", "wall_s": 0.092, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666201.181, "event": "start", "attempt": 28, "case_id": "d10", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666205.994, "event": "end", "attempt": 28, "case_id": "d10", "condition": "mirror_model", "wall_s": 4.813, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666205.994, "event": "start", "attempt": 29, "case_id": "d10", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666206.184, "event": "end", "attempt": 29, "case_id": "d10", "condition": "offline_rules", "wall_s": 0.19, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666206.184, "event": "start", "attempt": 30, "case_id": "d10", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666211.304, "event": "end", "attempt": 30, "case_id": "d10", "condition": "manual_structured", "wall_s": 5.12, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666211.305, "event": "start", "attempt": 31, "case_id": "d11", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666216.125, "event": "end", "attempt": 31, "case_id": "d11", "condition": "mirror_model", "wall_s": 4.82, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666216.125, "event": "start", "attempt": 32, "case_id": "d11", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666216.269, "event": "end", "attempt": 32, "case_id": "d11", "condition": "offline_rules", "wall_s": 0.144, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666216.269, "event": "start", "attempt": 33, "case_id": "d11", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666216.39, "event": "end", "attempt": 33, "case_id": "d11", "condition": "manual_structured", "wall_s": 0.121, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666216.391, "event": "start", "attempt": 34, "case_id": "d12", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666221.534, "event": "end", "attempt": 34, "case_id": "d12", "condition": "mirror_model", "wall_s": 5.143, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666221.534, "event": "start", "attempt": 35, "case_id": "d12", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666221.693, "event": "end", "attempt": 35, "case_id": "d12", "condition": "offline_rules", "wall_s": 0.159, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666221.693, "event": "start", "attempt": 36, "case_id": "d12", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666225.97, "event": "end", "attempt": 36, "case_id": "d12", "condition": "manual_structured", "wall_s": 4.276, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666225.97, "event": "start", "attempt": 37, "case_id": "d13", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666229.658, "event": "end", "attempt": 37, "case_id": "d13", "condition": "mirror_model", "wall_s": 3.688, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666229.658, "event": "start", "attempt": 38, "case_id": "d13", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666229.78, "event": "end", "attempt": 38, "case_id": "d13", "condition": "offline_rules", "wall_s": 0.121, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666229.78, "event": "start", "attempt": 39, "case_id": "d13", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666229.904, "event": "end", "attempt": 39, "case_id": "d13", "condition": "manual_structured", "wall_s": 0.124, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666229.904, "event": "start", "attempt": 40, "case_id": "d14", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666232.408, "event": "end", "attempt": 40, "case_id": "d14", "condition": "mirror_model", "wall_s": 2.504, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666232.408, "event": "start", "attempt": 41, "case_id": "d14", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666232.489, "event": "end", "attempt": 41, "case_id": "d14", "condition": "offline_rules", "wall_s": 0.08, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666232.489, "event": "start", "attempt": 42, "case_id": "d14", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666232.568, "event": "end", "attempt": 42, "case_id": "d14", "condition": "manual_structured", "wall_s": 0.079, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666232.568, "event": "start", "attempt": 43, "case_id": "d15", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666236.386, "event": "end", "attempt": 43, "case_id": "d15", "condition": "mirror_model", "wall_s": 3.817, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666236.386, "event": "start", "attempt": 44, "case_id": "d15", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666236.498, "event": "end", "attempt": 44, "case_id": "d15", "condition": "offline_rules", "wall_s": 0.111, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666236.498, "event": "start", "attempt": 45, "case_id": "d15", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.489, "event": "end", "attempt": 45, "case_id": "d15", "condition": "manual_structured", "wall_s": 3.991, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.49, "event": "start", "attempt": 46, "case_id": "d16", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.492, "event": "end", "attempt": 46, "case_id": "d16", "condition": "mirror_model", "wall_s": 0.001, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.492, "event": "start", "attempt": 47, "case_id": "d16", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.495, "event": "end", "attempt": 47, "case_id": "d16", "condition": "offline_rules", "wall_s": 0.001, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.495, "event": "start", "attempt": 48, "case_id": "d16", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.497, "event": "end", "attempt": 48, "case_id": "d16", "condition": "manual_structured", "wall_s": 0.001, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.497, "event": "start", "attempt": 49, "case_id": "d17", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.609, "event": "end", "attempt": 49, "case_id": "d17", "condition": "mirror_model", "wall_s": 0.112, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.609, "event": "start", "attempt": 50, "case_id": "d17", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.745, "event": "end", "attempt": 50, "case_id": "d17", "condition": "offline_rules", "wall_s": 0.135, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.745, "event": "start", "attempt": 51, "case_id": "d17", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.883, "event": "end", "attempt": 51, "case_id": "d17", "condition": "manual_structured", "wall_s": 0.138, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666240.883, "event": "start", "attempt": 52, "case_id": "d18", "condition": "mirror_model"}
+{"run_id": "dev-20261102T163609", "unix": 1793666241.009, "event": "end", "attempt": 52, "case_id": "d18", "condition": "mirror_model", "wall_s": 0.125, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666241.009, "event": "start", "attempt": 53, "case_id": "d18", "condition": "offline_rules"}
+{"run_id": "dev-20261102T163609", "unix": 1793666241.128, "event": "end", "attempt": 53, "case_id": "d18", "condition": "offline_rules", "wall_s": 0.119, "status": "completed", "cost_usd": 0}
+{"run_id": "dev-20261102T163609", "unix": 1793666241.129, "event": "start", "attempt": 54, "case_id": "d18", "condition": "manual_structured"}
+{"run_id": "dev-20261102T163609", "unix": 1793666241.243, "event": "end", "attempt": 54, "case_id": "d18", "condition": "manual_structured", "wall_s": 0.114, "status": "completed", "cost_usd": 0}

@@ -1,0 +1,78 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      slow:
+        description: "also run slow simulation tests"
+        type: boolean
+        default: false
+
+env:
+  MUJOCO_GL: osmesa
+  PYOPENGL_PLATFORM: osmesa
+  MIRROR_LLM_MODE: replay
+  MIRROR_META_MODE: replay
+
+jobs:
+  core:
+    name: core tests (no key, replay)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-lock.txt
+      - name: system packages
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libosmesa6 libgl1 ffmpeg
+      - name: install (tested lock)
+        run: |
+          python -m pip install -r requirements-lock.txt
+          python -m pip install -e . --no-deps
+          python -m playwright install --with-deps chromium
+      - run: mirror doctor
+      - name: fast suite
+        run: python -m pytest -q -m "not slow"
+      - name: slow suite
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.slow }}
+        run: python -m pytest -q -m slow
+
+  semantics:
+    name: semantic regression (checker, compiler, planner, protocol v3)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-lock.txt
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libosmesa6 libgl1 ffmpeg
+      - run: |
+          python -m pip install -r requirements-lock.txt
+          python -m pip install -e . --no-deps
+      - name: semantic tests
+        run: python -m pytest -q -m "not slow" tests/evaluate tests/interpret tests/plan tests/protocol_v3 tests/study tests/release
+      - name: protocol v3 dry run (authoring only, development cases)
+        run: |
+          python -m mirror.evaluate.protocol_v3 dry-run --no-execute --out "$RUNNER_TEMP/v3" --mirror-mode replay
+          test -s "$RUNNER_TEMP/v3/report.md"
+      - name: published numbers and historical evidence
+        run: python -m pytest -q tests/release
+
+  release-scan:
+    name: secrets and personal data
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python scripts/release_scan.py

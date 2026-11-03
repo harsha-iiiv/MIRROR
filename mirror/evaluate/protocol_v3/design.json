@@ -1,0 +1,172 @@
+{
+  "protocol": "mirror-authoring-v3",
+  "version": "3.0",
+  "status": "draft: written and dry-run on development cases only; not frozen, not run",
+  "question": "When independent task authors correct a robot task specification in their own words, across new scenes, object scopes and multi-turn changes, how often does MIRROR (Muse Spark compiling corrections) produce the intended specification and a compliant execution, compared with the offline rule compiler and with manual structured-spec editing, all through an identical planner, simulator and checker?",
+  "layers": {
+    "authoring": "text or speech -> TaskSpec version (scored against an adjudicated gold edit)",
+    "execution": "authored TaskSpec -> plan -> MuJoCo -> checker under the gold TaskSpec",
+    "perception": "not in this protocol; demonstration traces are the simulator's (reported separately by the video and robustness registrations)",
+    "composition": "end-to-end success per case = authoring then execution on the same case"
+  },
+  "conditions": {
+    "mirror_model": {
+      "compiler": "mirror.interpret.compile_correction with LLMClient",
+      "model": "muse-spark-1.3",
+      "client_mode": "record (fresh calls, each saved)",
+      "validation_layer": true,
+      "speech": "spoken turns transcribed by muse-voice-transcribe-1.0 (PUSH_TO_TALK), transcript compiled"
+    },
+    "offline_rules": {
+      "compiler": "mirror.interpret.compile_correction without a model (deterministic rules)",
+      "speech": "typed text of the turn"
+    },
+    "manual_structured": {
+      "editor": "an independent editor (not the case author, not the adjudicator) enters a StructuredEdit per turn from the turn text and the scene description, without seeing the gold",
+      "speech": "typed text of the turn",
+      "time": "editor's own measured seconds per turn (reported; authoring time is the impact study's endpoint, not this protocol's)"
+    }
+  },
+  "identical_across_conditions": [
+    "base specification (reference demonstration after review)",
+    "scene per case",
+    "planner (mirror.plan.plan, default PlannerConfig)",
+    "simulator (mirror.sim.SimEnv, seed 0)",
+    "checker (mirror.evaluate.check)",
+    "gold specification per case"
+  ],
+  "cases": {
+    "authors": "5-8 independent authors (robotics engineers or integrators), none of whom wrote MIRROR's compiler, prompts or earlier benchmarks",
+    "per_author": "15 cases; at least 3 multi-turn; categories in the proportions below",
+    "categories": {
+      "positive": 0.45,
+      "negative": 0.15,
+      "ambiguous": 0.15,
+      "unsupported": 0.1,
+      "infeasible": 0.15
+    },
+    "must_cover": [
+      "new wording (no sentence from the earlier benchmark or prompts; checked by word-bigram overlap before the freeze, overlapping cases flagged and scored separately)",
+      "object scopes cup, block, marker and every object",
+      "phases transport, final, always",
+      "rule types upright, forbidden_contact, keep_clearance",
+      "orderings",
+      "goal changes",
+      "reversals and exceptions in later turns",
+      "spoken turns by real speakers (consented), never mixed with synthetic speech"
+    ],
+    "scenes": {
+      "reference": [
+        "shortcut",
+        "blocked"
+      ],
+      "sampled": "assigned by the custodian at freeze from reserved seed ranges"
+    },
+    "gold": "each turn adjudicated by two people who did not author the case; disagreements resolved before the freeze and recorded; ambiguous and unsupported turns have gold asks/rejects",
+    "manual_edits": "collected from editors before the freeze; an empty edit means the editor declined to change the spec"
+  },
+  "access": {
+    "dev": "mirror/evaluate/protocol_v3/dev_cases.json, team-written, dev seeds 9600-9699 and reference scenes; used to build and debug the harness",
+    "holdout": "bundle held by a custodian outside the repository; freeze manifest commits to its sha256, case-id hash, count per author and per category; loader refuses a bundle inside the repository before the run finishes or one that does not match the commitment; committed to results/protocol_v3/ only after the run",
+    "submission": "authors fill the packet in docs/protocols/v3_author_packet.md and send it to the custodian only; developers receive hashes and counts, never text, until the run has finished"
+  },
+  "seeds": {
+    "dev": [
+      9600,
+      9699
+    ],
+    "holdout": {
+      "eval:mixed": [
+        90000,
+        90199
+      ],
+      "eval:shortcut": [
+        91000,
+        91099
+      ],
+      "blocked:mixed": [
+        90000,
+        90049
+      ]
+    },
+    "ledger": "results/protocol_v3/<version>/layout_ledger.jsonl (never the earlier registrations' ledgers)",
+    "check": "no earlier ledger contains any reserved seed (verified 2026-11-02: largest recorded evaluation seed 80007)"
+  },
+  "metrics": {
+    "turn": [
+      "exact (outcome and semantic enforced state equal gold)",
+      "false accept",
+      "false refusal",
+      "wrong-scope edit (changed an object kind the gold turn did not)",
+      "clarification asked",
+      "invalid or error",
+      "latency"
+    ],
+    "case": [
+      "final specification exact",
+      "end-to-end success: compliant_completion = rollout of the authored spec passes the checker under the gold spec; proven_infeasible = the planner stops with a proof; unknown when any requirement could not be verified (never success)",
+      "violations under gold",
+      "completion",
+      "planning time, simulated execution time, path length, routes"
+    ],
+    "run": [
+      "cost (list prices, mirror.evaluate.costs)",
+      "network calls",
+      "attempt status counts"
+    ],
+    "old_behaviour": "base-spec rollout on each scene re-checked under the gold spec (independent rejection of the old behaviour)"
+  },
+  "scoring_notes": [
+    "semantic comparison: an every-object rule equals the same rule on each object kind (unlike the earlier benchmark's strict id match)",
+    "a manual abstention on an ambiguous or unsupported turn counts as a refusal of unspecified type",
+    "replay without a recording is 'not measured', excluded and listed, never replaced by another interpreter"
+  ],
+  "analysis": {
+    "primary": "case-level end-to-end success, mirror_model vs offline_rules and mirror_model vs manual_structured, exact McNemar (two-sided), unknown cases excluded and counted",
+    "secondary": [
+      "turn exact, false accepts, wrong-scope turns per condition with Wilson intervals",
+      "per category and per author",
+      "spoken (real speakers) vs typed for mirror_model"
+    ],
+    "pre_stated_checks": {
+      "mirror_model false accepts": "<= 5% of non-apply turns",
+      "mirror_model wrong-scope turns": "<= 5% of applied turns",
+      "mirror_model end-to-end success": ">= manual_structured - 10 points",
+      "real-speaker turns exact": ">= typed exact - 10 points"
+    },
+    "disclosure": "these thresholds were written after a dry run on the team's 18 development cases; the dev numbers are reported with the protocol"
+  },
+  "every_attempt": "attempts.jsonl records a start and an end line per case x condition; statuses completed, timeout, error, budget_stopped, interrupted; nothing is filtered by outcome",
+  "timeouts": {
+    "per_attempt_s": 600,
+    "isolation": "forked process per attempt"
+  },
+  "amendments": "none allowed after the freeze; a change after any failure creates protocol version 3.1 with a new manifest, new seeds and a new held-out bundle",
+  "needs_budget": {
+    "jobs": [
+      {
+        "id": "J0",
+        "optional": true,
+        "what": "record Muse Spark on the 18 development cases so the mirror_model dry run is measured end to end",
+        "calls": "<= 22 compile_correction requests (+ repair retries <= 2 each) to muse-spark-1.3",
+        "max_cost_usd": 1.5
+      },
+      {
+        "id": "J1",
+        "what": "the frozen held-out run",
+        "calls": "<= 250 turns x <= 3 attempts of compile_correction to muse-spark-1.3; <= 120 real-speaker clips (<= 15 min audio) to muse-voice-transcribe-1.0",
+        "expected_cost_usd": 3.0,
+        "max_cost_usd": 8.5,
+        "reserve_per_turn_usd": 0.05,
+        "compute": "CPU only, about 400 simulated executions at about 5 s each"
+      }
+    ],
+    "max_cost_usd": 10.0,
+    "prerequisites": [
+      "owner approval of the spend",
+      "recruited independent authors, editors, adjudicators and real speakers with signed consent (study/consent_form.md)",
+      "a custodian who is not a developer",
+      "freeze committed before the bundle is opened"
+    ]
+  }
+}
