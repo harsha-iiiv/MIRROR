@@ -26,6 +26,7 @@ from ..contracts import (DemoTrace, ObjectSpec, ObstacleSpec, PlanResult, Pose, 
                          SpecOp, TaskSpec, TraySpec, VisualScene)
 from ..geometry import WORLD
 from ..lineage import file_sha256, scene_sha256, sha256_of
+from .provenance import check_step, media_step, model_step, sim_step
 from .uploads import MediaQuota, SessionMedia, UploadEntry, UploadLimits, UploadRejected, validate_video
 
 SNAPSHOT_FORMAT = "mirror-studio-session/1"
@@ -770,12 +771,13 @@ class StudioService:
                 if fb:
                     self.fallbacks.append({"step": "interpret", "used": fb, "version": spec.version})
                 lat, tok = self._llm_latency(mark, t0)
+                sp = self._model_prov(fb, mark, t0, spec.interpreter)
                 self._log_model(f"specification v{spec.version}", "proposes the task from the demonstration",
-                                spec.interpreter, lat, self._client_source(fb), tokens=tok)
+                                spec.interpreter, lat, self._client_source(fb), tokens=tok, step_provenance=sp)
                 job.generation_id = self.generation_id      # interpreting may start a new generation
             return {"version": spec.version, "fallback": fb, "spec_version_id": self._spec_vid(spec.version),
                     "generation_id": self.generation_id, "provenance": provenance_of(self._client_source(fb)),
-                    "fallback_reason": fb}
+                    "fallback_reason": fb, "step_provenance": sp}
         return self.submit("interpret", {}, work)
 
     def commit_decisions(self, decisions: dict[str, str], note: str = "") -> dict:
@@ -829,6 +831,7 @@ class StudioService:
                 try:
                     t0, mark = time.time(), self._llm_mark()
                     (spec, record), fb = self._with_fallback(lambda: self.session.correct(text), job)
+                    sp = self._model_prov(fb, mark, t0)
                     if fb:
                         self.fallbacks.append({"step": "correction", "used": fb, "version": spec.version})
                     if spec.version != before:
@@ -839,7 +842,7 @@ class StudioService:
                                                                      else " (spoken)" if tr else " (typed)"),
                                         rec_model or self._client_label(), *self._llm_latency(mark, t0)[:1],
                                         self._client_source(fb), input=transcript_id,
-                                        tokens=self._llm_latency(mark, t0)[1])
+                                        tokens=self._llm_latency(mark, t0)[1], step_provenance=sp)
                 except Exception as exc:  # noqa: BLE001 - typed outcomes from the interpreter
                     name = type(exc).__name__
                     if name == "NeedsClarification":
@@ -851,7 +854,8 @@ class StudioService:
                 changed = spec.version != before
                 result = {"version": spec.version, "changed": changed, "record": _dump(record),
                           "spec_version_id": self._spec_vid(spec.version), "generation_id": self.generation_id,
-                          "provenance": provenance_of(self._client_source(fb)), "fallback_reason": fb}
+                          "provenance": provenance_of(self._client_source(fb)), "fallback_reason": fb,
+                          "step_provenance": sp}
                 question = getattr(record, "question", None) or (record.get("question") if isinstance(record, dict) else None)
                 if question:
                     result["question"] = question
@@ -872,7 +876,10 @@ class StudioService:
             item = {"rollout_id": rid, "spec_version": version, "spec_version_id": svid,
                     "generation_id": self.generation_id}
             try:
+                t0 = time.time()
                 item["report"] = _dump(self.session.recheck(rid, version))
+                item["step_provenance"] = check_step(time.time() - t0, "fixture" if self.mode == "fixture"
+                                                     else "new_simulation")
             except Exception as exc:  # noqa: BLE001
                 item["error"] = str(exc)
             self.rechecks = [r for r in self.rechecks
@@ -926,6 +933,24 @@ class StudioService:
             if want and want <= set(got):
                 return sum(got.values()), tokens or (sum(tok.values()) or None)
         return None, tokens
+
+    def _model_prov(self, fb: Optional[str], mark: int, t0: float, model: Optional[str] = None) -> dict:
+        """Step provenance of the interpreter calls made since ``mark`` (see provenance.py)."""
+        if self.mode == "fixture":
+            return model_step("fixture", model=None, latency_s=time.time() - t0)
+        c = getattr(self.session, "client", None)
+        new = (getattr(c, "usage", None) or [])[mark:]
+        lat, tok = self._llm_latency(mark, t0)
+        if fb:
+            return model_step("offline rules (fallback)", model=None, latency_s=time.time() - t0, fallback_reason=fb)
+        if not new:
+            return model_step("offline rules", model=None, latency_s=time.time() - t0)
+        live = [e for e in new if not e.get("from_cassette")]
+        mdl = model or next((e.get("model") for e in new if e.get("model")), None)
+        if live:
+            return model_step("live", model=mdl, latency_s=lat, tokens=tok)
+        return model_step("recorded", model=mdl, latency_s=lat, tokens=tok,
+                          latency_source="recorded_with_cassette" if lat is not None else None)
 
     def _log_model(self, artifact: str, role: str, model: Optional[str], latency_s: float, source: str,
                    **extra) -> dict:
@@ -1207,8 +1232,21 @@ class StudioService:
                                 obs.get("model"), obs.get("latency_s", 0.0), obs.get("source", "unknown"),
                                 calls=len(obs.get("calls") or []))
                 lat, tok = self._llm_latency(mark, t0)
+                sp = self._model_prov(fb, mark, t0, spec.interpreter)
                 self._log_model(f"specification v{spec.version}", "proposes the task from the video reconstruction",
-                                spec.interpreter, lat, self._client_source(fb), tokens=tok)
+                                spec.interpreter, lat, self._client_source(fb), tokens=tok, step_provenance=sp)
+                stages = []
+                if ground:
+                    stages.append({"stage": "object grounding", **{"step_provenance": media_step(
+                        "live" if any(c["source"] == "live" for c in ground) else "recorded", model=ground[0].get("model"),
+                        latency_s=sum(float(c.get("latency_s") or 0) for c in ground))}})
+                stages.append({"stage": "object tracks", "step_provenance": media_step(
+                    ("live" if any(c["source"] == "live" for c in samc) else "recorded") if samc else per.get("source"),
+                    model=per.get("model"), latency_s=(sum(float(c.get("latency_s") or 0) for c in samc) if samc
+                                                       else per.get("latency_s")))})
+                stages.append({"stage": "video observations", "step_provenance": media_step(
+                    obs.get("source"), model=obs.get("model"), latency_s=obs.get("latency_s"))})
+                stages.append({"stage": "specification proposal", "step_provenance": sp})
                 self.demo_rollout = self._make_demo_rollout()
                 self.video_demo = {
                     "generation_id": self.generation_id, "source_media": media,
@@ -1220,13 +1258,14 @@ class StudioService:
                         "fixture" if self.mode == "fixture" else "recorded"),
                     "bundled": top == "bundled", "fixture": self.mode == "fixture",
                     "trace_source": trace.source, "spec_version": spec.version,
-                    "spec_version_id": self._spec_vid(spec.version),
+                    "spec_version_id": self._spec_vid(spec.version), "stages": stages,
+                    "evidence": _dump(getattr(trace, "evidence", None)),
                 }
                 release_media(self.generation_id)
                 self._changed()
             return {"version": spec.version, "fallback": fb, "generation_id": self.generation_id,
                     "spec_version_id": self._spec_vid(spec.version), "provenance": provenance_of(self._client_source(fb)),
-                    "fallback_reason": fb}
+                    "fallback_reason": fb, "step_provenance": sp, "stages": stages}
         return self.submit("video", {"top": top_id, "side": side_id}, work)
 
     def _reset_session(self) -> None:
@@ -1253,7 +1292,9 @@ class StudioService:
             rec = {"id": tid, "text": res["text"], "model": res.get("model"), "latency_s": res.get("latency_s"),
                    "source": res.get("source"), "provenance": provenance_of(res.get("source")),
                    "audio_sha256": sha256_of(bytes(wav)), "audio_s": info["seconds"], "at": time.time(),
-                   "generation_id": self.generation_id}
+                   "generation_id": self.generation_id,
+                   "step_provenance": media_step(res.get("source"), model=res.get("model"),
+                                                 latency_s=res.get("latency_s"))}
             self.transcripts[tid] = rec
             while len(self.transcripts) > 20:            # bounded: the oldest audio is deleted
                 old = next(iter(self.transcripts))
@@ -1286,23 +1327,29 @@ class StudioService:
             self._progress(job, 0.05, "Planning")
             with self.lock:
                 self._guard(job)
+                t0 = time.time()
                 entry = self.session.run(spec_version=spec_version, condition=condition)
+                wall = time.time() - t0
             rid = entry.rollout.report.rollout_id
             self.tags[rid] = list(tags or [])
             return {"rollout_id": rid, "status": entry.rollout.report.status, "label": entry.label,
                     "generation_id": entry.generation_id, "spec_version_id": entry.spec_version_id,
                     "content_sha256": entry.content_sha256,
-                    "provenance": "fixture" if self.mode == "fixture" else "simulated"}
+                    "provenance": "fixture" if self.mode == "fixture" else "simulated",
+                    "step_provenance": sim_step(self.mode, wall_s=wall)}
         return self.submit("run", {"spec_version": spec_version, "condition": condition}, work)
 
     def recheck(self, rollout_id: str, spec_version: Optional[int] = None,
                 spec_version_id: Optional[str] = None) -> dict:
         with self.lock:
             entry, spec, svid, own = self.session.recheck_target(rollout_id, spec_version, spec_version_id)
+            t0 = time.time()
             rep = self.session.recheck(rollout_id, spec.version if spec_version_id is None else None,
                                        spec_version_id=spec_version_id)
             item = {"rollout_id": rollout_id, "spec_version": spec.version, "spec_version_id": svid,
-                    "generation_id": own, "cross_generation": not svid.startswith(own + "."), "report": _dump(rep)}
+                    "generation_id": own, "cross_generation": not svid.startswith(own + "."), "report": _dump(rep),
+                    "step_provenance": check_step(time.time() - t0, "fixture" if self.mode == "fixture"
+                                                  else "new_simulation")}
             self.rechecks = [r for r in self.rechecks
                              if not (r["rollout_id"] == rollout_id and r.get("spec_version_id", r["spec_version"]) == svid)]
             self.rechecks.append(item)
@@ -1373,13 +1420,16 @@ class StudioService:
         def work(job):
             with self.lock:
                 self._guard(job)
+                t0, mark = time.time(), self._llm_mark()
                 (spec, record), fb = self._with_fallback(lambda: self.session.answer(text), job)
+                sp = self._model_prov(fb, mark, t0)
                 if fb:
                     self.fallbacks.append({"step": "answer", "used": fb, "version": spec.version})
                 self.clarification = None
             return {"version": spec.version, "record": _dump(record), "fallback": fb,
                     "spec_version_id": self._spec_vid(spec.version), "generation_id": self.generation_id,
-                    "provenance": provenance_of(self._client_source(fb)), "fallback_reason": fb}
+                    "provenance": provenance_of(self._client_source(fb)), "fallback_reason": fb,
+                    "step_provenance": sp}
         return self.submit("answer", {"text": text}, work)
 
     def evaluate(self, seeds: list[int], spec_a: Optional[int] = None, spec_b: Optional[int] = None,
@@ -1626,10 +1676,12 @@ class StudioService:
                     if fb:
                         self.fallbacks.append({"step": "interpret", "used": fb, "version": spec.version})
                     lat, tok = self._llm_latency(mark, t0)
+                    sp = self._model_prov(fb, mark, t0, spec.interpreter)
                     self._log_model(f"specification v{spec.version}", "proposes the task from the demonstration",
-                                    spec.interpreter, lat, self._client_source(fb), tokens=tok)
+                                    spec.interpreter, lat, self._client_source(fb), tokens=tok, step_provenance=sp)
                     prep.append({"step": "demonstration interpreted", "spec_version_id": self._spec_vid(spec.version),
-                                 "provenance": provenance_of(self._client_source(fb)), "fallback_reason": fb})
+                                 "provenance": provenance_of(self._client_source(fb)), "fallback_reason": fb,
+                                 "step_provenance": sp})
                 job.generation_id = self.generation_id
                 ch = ChallengeState(self.generation_id, scene, origin, self._spec_vid())
                 ch.preparation = prep
@@ -1639,13 +1691,15 @@ class StudioService:
                     self.challenges.pop(self.challenge_order.pop(0), None)
                 self.session.set_scene(scene)
                 self._progress(job, 0.3, "Executing the current specification on the challenge layout")
+                t0 = time.time()
                 entry = self.session.run(condition=f"challenge {ch.id}: before")
                 self.tags[entry.rollout_id] = ["challenge", "before"]
-                ch.before = self._rollout_brief(entry)
+                ch.before = {**self._rollout_brief(entry), "step_provenance": sim_step(self.mode, wall_s=time.time() - t0)}
                 ch.state = "scene_ready"
             return {"challenge_id": ch.id, "before_rollout_id": entry.rollout_id, "status": entry.rollout.report.status,
                     "generation_id": self.generation_id,
-                    "provenance": "fixture" if self.mode == "fixture" else "simulated"}
+                    "provenance": "fixture" if self.mode == "fixture" else "simulated",
+                    "step_provenance": ch.before["step_provenance"], "preparation": prep}
         return self.submit("challenge", {"family": family, "seed": seed, "preset": preset, "edits": len(edits or [])}, work)
 
     def challenge_correction(self, cid: str, text: Optional[str] = None, transcript_id: Optional[str] = None) -> Job:
@@ -1687,7 +1741,8 @@ class StudioService:
                     new, record, fb = base, None, None
                 src = self._client_source(fb)
                 prop.update(provenance=provenance_of(src), fallback_reason=fb,
-                            model=getattr(record, "model", None) if record is not None else None)
+                            model=getattr(record, "model", None) if record is not None else None,
+                            step_provenance=self._model_prov(fb, mark, t0))
                 q = getattr(record, "question", None) if record is not None else None
                 if q:
                     prop["question"] = q
@@ -1735,6 +1790,7 @@ class StudioService:
                     br = self._rollout_brief(e, RolloutReport.model_validate(it["report"]))
                     br["spec_version_id"] = it["spec_version_id"]
                     br["was"] = e.rollout.report.status
+                    br["step_provenance"] = it.get("step_provenance")
                 else:
                     br = {"rollout_id": it["rollout_id"], "error": it["error"], "status": "unknown"}
                 br["is_before"] = it["rollout_id"] == (ch.before or {}).get("rollout_id")
@@ -1756,13 +1812,15 @@ class StudioService:
             with self.lock:
                 self._guard(job)
                 self.session.set_scene(ch.scene)
+                t0 = time.time()
                 entry = self.session.run(spec_version=version, condition=f"challenge {ch.id}: after")
                 self.tags[entry.rollout_id] = ["challenge", "after"]
-                ch.after = self._rollout_brief(entry)
+                ch.after = {**self._rollout_brief(entry), "step_provenance": sim_step(self.mode, wall_s=time.time() - t0)}
                 ch.state = "executed"
             return {"challenge_id": ch.id, "after_rollout_id": entry.rollout_id, "status": entry.rollout.report.status,
                     "generation_id": self.generation_id,
-                    "provenance": "fixture" if self.mode == "fixture" else "simulated"}
+                    "provenance": "fixture" if self.mode == "fixture" else "simulated",
+                    "step_provenance": ch.after["step_provenance"]}
         return self.submit("challenge_execute", {"challenge_id": cid}, work)
 
     def challenge_record(self, cid: str) -> dict:
