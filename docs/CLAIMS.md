@@ -110,6 +110,15 @@ not cover keep their freedom. Evaluation numbers are in
 ### Robot and physics
 * The robot is a free-flying parallel-jaw gripper on three prismatic and
   three revolute actuated joints, with no arm body. Only the gripper collides.
+  Every evaluation result uses this baseline.
+* The optional arm backend (simulated UR10e/UR5e, `mirror/arm`) has a
+  development report only (`results/arm/v1`: reference scenes and development
+  layouts 300-309 on one platform, Darwin arm64 with MuJoCo 3.17.0). It never
+  takes slot routes, so in those layouts its uncorrected runs did not spill and
+  the correction changed nothing; the spill-then-correct story is a gripper
+  baseline result. Its mount and tool were tuned on development seeds 100-107,
+  excluded from that report. Servo gains are chosen, gravity compensation is
+  exact, and nothing is claimed about a physical arm.
 * Its workspace is a box (0.45 m reach in height). The wall is taller than
   this, so no route goes over it.
 * Grasps are contact-based (the jaw closes at 12 N per finger; friction

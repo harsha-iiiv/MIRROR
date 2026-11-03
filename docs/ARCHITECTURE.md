@@ -89,6 +89,23 @@ actuator commands. Grasps are friction grasps. Every physics step (0.004 s)
 is logged: object and gripper poses, jaw width, which object both fingers
 touch, the plan phase, bead positions and contacts.
 
+### Arm backend (optional)
+
+`mirror.arm` is a second execution backend, selected with `--backend arm` or
+`mirror.backends.get_backend("arm")`. It takes the same plan and turns each TCP
+segment into a validated joint path on a simulated UR10e or UR5e (inverse
+kinematics, joint limits, discontinuities, arm-link and self collisions), then
+executes it with joint servos. Grasp, drop and settle detection and the step log
+are the baseline's, so the checker reads both backends the same way. When no
+plan can be executed it reports `arm_motion_planning_failure`, which is never a
+proof; a planner certificate passes through unchanged. A fixed-base arm cannot
+pass the wall slot with the tool horizontal, so slot routes are always rejected
+and the spill-then-correct story occurs only on the gripper baseline. Mount and
+tool were tuned on development seeds 100-107, excluded from the development
+report (`results/arm/v1`, which names its physics platform). Vendored models
+and their BSD-3-Clause licences live in `mirror/assets/`. Every evaluation
+result uses the gripper baseline.
+
 ## Checking
 
 `evaluate.check` is a pure function of the step log, the specification and

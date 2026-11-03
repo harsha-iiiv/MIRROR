@@ -19,7 +19,9 @@ model's description of what happened.
 * **Simulation only.** MuJoCo physics; no physical robot, no sim-to-real claim.
 * **Robot:** a free-flying parallel-jaw gripper on six actuated axes (no arm
   body). Grasps are friction grasps; objects are never moved by anything but
-  actuators and contacts.
+  actuators and contacts. This baseline produced every evaluation result. An
+  optional articulated arm backend (simulated UR10e or UR5e) runs the same
+  scenes and specifications; see [Arm backend (optional)](#arm-backend-optional).
 * **Demonstration:** a scripted teleoperation trace through the same command
   interface a person uses in the studio. Not human-video understanding.
 * **Model:** Meta Model API (Muse Spark, `muse-spark-1.3`). Recorded Muse Spark
@@ -210,6 +212,43 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/INSTALL.md](doc
 [docs/CLAIMS.md](docs/CLAIMS.md), and the concept brief
 [docs/CONCEPT.md](docs/CONCEPT.md).
 
+## Arm backend (optional)
+
+`mirror run --scene demo --backend arm` executes plans on a simulated Universal
+Robots UR10e (default) or UR5e carrying the same parallel-jaw gripper. The task
+planner, specifications and independent checker are unchanged; the backend
+adds inverse kinematics, collision validation of every planned segment and
+joint-space execution, and reports `arm_motion_planning_failure` (never a
+proof) when it cannot execute any plan. Details and limitations:
+[mirror/arm/README.md](mirror/arm/README.md).
+
+* **Optional, not the evaluated robot.** Every evaluation in this README used
+  the free-flying gripper baseline. The arm has a development report only
+  ([results/arm/v1/report.md](results/arm/v1/report.md)): the reference scenes
+  and development layouts 300-309, run on Apple M3 Pro (Darwin arm64), MuJoCo
+  3.17.0, Python 3.12.11, at commit `b5b234b`. Physics differs slightly between
+  platforms (about 1e-4 m), so compare runs within one platform.
+* **The spill-then-correct story happens on the gripper baseline only.** A
+  fixed-base arm cannot pass the 0.10 m wall slot with the tool horizontal, so it
+  never takes a slot route. In that report the arm's uncorrected runs took no
+  slot route and kept 8/8 beads on all 12 layouts it completed (the blocked
+  reference scene is a planning failure, not proven), while the gripper's
+  uncorrected runs went through the slot on 11 of 13 scenes and violated the
+  corrected rule on 8. The correction has nothing to fix on the arm in these
+  layouts.
+* **Tuned on separate seeds.** The ceiling mount (0.95 m above the table) and
+  the 0.30 m tool tube were chosen on development seeds 100-107, which are
+  excluded from the report.
+* **Simulation only.** Servo gains are chosen, not identified from a robot;
+  gravity compensation uses the exact model; contact is MuJoCo's soft model.
+  No hardware and no sim-to-real claim.
+* **Third-party models.** The UR5e and UR10e models come from MuJoCo Menagerie
+  (BSD-3-Clause, Copyright 2018 ROS Industrial Consortium), with visual meshes
+  removed and kinematics, inertias, joint ranges and collision geometry
+  unchanged. Their licences and `NOTICE` are in `mirror/assets/` and ship in the
+  wheel. "Universal Robots", "UR5e" and "UR10e" are trademarks of Universal
+  Robots A/S; their use identifies the kinematic model only.
+
 ## Repository layout
 
 | Path | Contents |
@@ -218,6 +257,7 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/INSTALL.md](doc
 | `mirror/sim`, `mirror/scenes` | MuJoCo model builder, executor, teleoperation, reference and sampled layouts |
 | `mirror/interpret` | Demo summary, model client, specification proposal, correction compiler, clarification |
 | `mirror/plan` | Grounding, route and orientation-mode planning, infeasibility certificates |
+| `mirror/arm`, `mirror/assets` | Optional articulated arm backend; vendored UR5e/UR10e models (BSD-3-Clause, see `mirror/assets/NOTICE`) |
 | `mirror/evaluate` | Step-log checker, paired evaluation, freeze manifest, reports |
 | `mirror/studio`, `web/` | Studio backend and browser frontend |
 | `mirror/pipeline.py` | `Session`: the end-to-end flow used by the CLI and the studio |
@@ -228,4 +268,6 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/INSTALL.md](doc
 
 ## License
 
-MIT
+MIT, except the vendored robot models in `mirror/assets/`, which are
+BSD-3-Clause (MuJoCo Menagerie, from the ROS-Industrial `ur_e_description`);
+their licence files and `NOTICE` must stay with any redistribution.
