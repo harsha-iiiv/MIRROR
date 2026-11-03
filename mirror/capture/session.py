@@ -292,7 +292,9 @@ def build_session(*, take: dict[str, str], lens: dict[str, str] | None = None, i
                         (dd.value_m / 2) if dd else PX.SUPPORTED["tray"]["proxy_dims_m"][1] / 2)
                 c = np.median(np.array(pts), 0)
                 tray_region = EV.TrayRegion(center_xy=(float(c[0]), float(c[1])), inner_half=half, yaw_deg=0.0,
-                                            source="assumed_aligned_with_board")
+                                            source="assumed_aligned_with_board",
+                                            footprint_source="measured_ruler" if (w and dd) else "assumed_proxy")
+    review += tray_review(tray_region, mappings)
     s.tray = tray_region
     evs = []
     for lab, tr in rec.objects.items():
@@ -312,6 +314,32 @@ def build_session(*, take: dict[str, str], lens: dict[str, str] | None = None, i
     s.review = review
     s.finalise_kind()
     return s
+
+
+TRAY_HALF_RANGE_M = (0.03, 0.30)   # inside half-width/half-depth the simulated tray accepts
+
+
+def tray_review(tray: Optional[EV.TrayRegion], mappings: list[PX.ObjectMapping]) -> list[ReviewItem]:
+    """The tray is the task's destination: without it there is no packing task to propose."""
+    if tray is None:
+        mapped = any(m.proxy == "tray" and m.confirmed_by_person for m in mappings)
+        why = ("the tray is mapped but was never located at rest in the footage"
+               if mapped else "no object is mapped to the tray and no tray region was entered")
+        return [ReviewItem(code="tray_not_mapped", severity="abstain", object=None,
+                           message=f"Map the tray: {why}. MIRROR needs one destination tray before it can propose a task. "
+                                   "Draw a box on the tray in each camera and confirm it as the tray (with its measured inside "
+                                   "width and depth), or enter the tray region (centre and inside half-sizes on the board).")]
+    out = []
+    if not all(TRAY_HALF_RANGE_M[0] <= h <= TRAY_HALF_RANGE_M[1] for h in tray.inner_half):
+        out.append(ReviewItem(code="tray_size_unsupported", severity="abstain", object=None,
+                              message=f"Tray inside {2 * tray.inner_half[0] * 100:.0f} x {2 * tray.inner_half[1] * 100:.0f} cm is "
+                                      f"outside the supported {2 * TRAY_HALF_RANGE_M[0] * 100:.0f}-{2 * TRAY_HALF_RANGE_M[1] * 100:.0f} cm "
+                                      "per side; check the measurement."))
+    if tray.footprint_source == "assumed_proxy":
+        out.append(ReviewItem(code="tray_footprint_assumed", severity="review", object=None,
+                              message="The tray's inside width and depth were not measured; the simulated tray uses the "
+                                      "catalogue size. Measure them with a ruler for a faithful destination."))
+    return out
 
 
 def summary_lines(s: CaptureSession) -> list[str]:
@@ -334,6 +362,13 @@ def summary_lines(s: CaptureSession) -> list[str]:
             out.append(f"{lab} -> {tr.proxy}: located {100 * tr.coverage(('measured',)):.0f}% measured, "
                        f"{100 * tr.coverage(('inferred',)):.0f}% inferred, {100 * tr.coverage(('interpolated',)):.0f}% interpolated; "
                        f"tilt observed {100 * tr.tilt_coverage():.0f}%.")
+    if s.tray is not None:
+        t = s.tray
+        out.append(f"Destination tray: inside {2 * t.inner_half[0] * 100:.1f} x {2 * t.inner_half[1] * 100:.1f} cm "
+                   f"({t.footprint_source.replace('_', ' ')}), centre ({t.center_xy[0] * 100:.1f}, {t.center_xy[1] * 100:.1f}) cm "
+                   f"on the board ({t.source.replace('_', ' ')}).")
+    else:
+        out.append("Destination tray: not mapped.")
     for e in s.events:
         out.append(f"{e.object} {e.type} at {e.t:.2f} s (between {e.t_lo:.2f} and {e.t_hi:.2f} s){', in ' + e.placed_in if e.placed_in else ''}"
                    f" [{e.status}; {e.label}].")

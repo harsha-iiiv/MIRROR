@@ -51,14 +51,33 @@ def _take(tmp_path_factory, name, plan, **kw):
     return d, truth
 
 
-def _session(d, truth, plan, intrinsics, *, cams=("top", "side"), tags=None, confirm=True):
+TRAY_MAP = PX.ObjectMapping(track_label="tray", real_identity="grey tray (SYNTHETIC)", proxy="tray",
+                            real_dims={"width": PX.Dimension(value_m=2 * S.TRAY["inner_half"][0], source="measured_ruler"),
+                                       "depth": PX.Dimension(value_m=2 * S.TRAY["inner_half"][1], source="measured_ruler")},
+                            confirmed_by_person=True)
+
+
+def _tray_prompt(truth, cam):
+    w = S.TRAY["wall"]
+    hx, hy = S.TRAY["inner_half"]
+    return S.truth_prompt(truth, cam, "tray", [*S.TRAY["center"], w / 2], (hx + w, hy + w, w / 2))
+
+
+def _session(d, truth, plan, intrinsics, *, cams=("top", "side"), tags=None, confirm=True, tray="region"):
+    """tray: "region" (entered by the person), "tracked" (box on the tray, measured inside size) or None."""
     p0, _ = plan.mug_pose(0.0)
     tray_xy = S.truth_table_xyz([*S.TRAY["center"], 0.0], truth)[:2]
+    prompts = [S.truth_prompt(truth, c, "mug", p0, (0.04, 0.04, 0.0475)) for c in cams]
+    mappings = [MUG]
+    if tray == "tracked":
+        prompts += [_tray_prompt(truth, c) for c in cams]
+        mappings = [MUG, TRAY_MAP]
+    region = (EV.TrayRegion(center_xy=tuple(float(v) for v in tray_xy), inner_half=S.TRAY["inner_half"], source="person_supplied")
+              if tray == "region" else None)
     return SE.build_session(
         take={c: str(d / f"synthetic_{c}.mp4") for c in cams}, intrinsics=intrinsics, print_check=PC,
-        prompts=[S.truth_prompt(truth, c, "mug", p0, (0.04, 0.04, 0.0475)) for c in cams], mappings=[MUG], synthetic=True,
-        tags=tags, tray=EV.TrayRegion(center_xy=tuple(float(v) for v in tray_xy), inner_half=S.TRAY["inner_half"], source="person_supplied"),
-        identity_confirmations=[(c, "mug", 0) for c in cams] if confirm else [])
+        prompts=prompts, mappings=mappings, synthetic=True, tags=tags, tray=region,
+        identity_confirmations=[(c, lab, 0) for c in cams for lab in {m.track_label for m in mappings}] if confirm else [])
 
 
 @pytest.fixture(scope="module")
@@ -171,6 +190,29 @@ def test_ingest_cli_demo_end_to_end(tmp_path, ffmpeg):
     row = json.loads((tmp_path / "demo" / "score_synthetic.json").read_text())
     assert row["synthetic"] and row["split"] == "synthetic_rehearsal"
     assert (tmp_path / "demo" / "review.md").read_text().startswith("# Capture review (SYNTHETIC demo)")
+    assert "Destination tray: inside 24.0 x 18.0 cm" in (tmp_path / "demo" / "review.md").read_text()
+    scene = json.loads((tmp_path / "demo" / "scene.json").read_text())
+    assert len(scene["trays"]) == 1 and [round(v, 3) for v in scene["trays"][0]["inner_half"]] == list(S.TRAY["inner_half"])
+
+
+def test_capture_without_a_tray_is_refused_early(upright, intrinsics):
+    d, truth, plan, _ = upright
+    s = _session(d, truth, plan, intrinsics, tray=None)
+    ok, blocking = s.gate()
+    assert not ok and any(b.code == "tray_not_mapped" for b in blocking)
+    assert "Destination tray: not mapped." in SE.summary_lines(s)
+
+
+def test_tracked_tray_gives_the_destination_with_its_measured_footprint(upright, intrinsics):
+    d, truth, plan, _ = upright
+    s = _session(d, truth, plan, intrinsics, tray="tracked")
+    assert s.tray is not None and s.tray.footprint_source == "measured_ruler"
+    assert s.tray.source == "assumed_aligned_with_board"
+    true_xy = S.truth_table_xyz([*S.TRAY["center"], 0.0], truth)[:2]
+    assert np.linalg.norm(np.array(s.tray.center_xy) - true_xy) < 0.02
+    assert tuple(round(v, 3) for v in s.tray.inner_half) == tuple(S.TRAY["inner_half"])
+    assert not any(r.code.startswith("tray_") for r in s.review)
+    assert any(e.type == "place" and e.placed_in for e in s.events)
 
 
 def test_camera_bumped_during_take_is_rejected(tmp_path_factory, intrinsics):
