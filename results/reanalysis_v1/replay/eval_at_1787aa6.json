@@ -1,0 +1,48 @@
+{
+ "blocked_reference": [
+  {
+   "condition": "original",
+   "status": "success"
+  },
+  {
+   "condition": "corrected",
+   "status": "planning_failed"
+  }
+ ],
+ "code_identical_to_freeze": false,
+ "code_state_label": "1787aa6",
+ "frozen_code_sha256": "b498c4b41664c5897b4c1757b7c0c89681925bb475eb99439e9b2337b7584eed",
+ "ledger": "scratch copy (registration ledger untouched)",
+ "network_calls_refused": 0,
+ "registration": "eval",
+ "replay_code_sha256": "f5f36cb8adc240be99de436a616115d53e3e66cd669113a4a0b48e519e681db6",
+ "spec_pair_identical": {
+  "a": true,
+  "b": true
+ },
+ "strata": {
+  "blocked": {
+   "detail": 5,
+   "mismatches": [],
+   "outcome": 5,
+   "scene": 5,
+   "trials": 5
+  },
+  "primary": {
+   "detail": 60,
+   "mismatches": [],
+   "outcome": 60,
+   "scene": 60,
+   "trials": 60
+  },
+  "shortcut": {
+   "detail": 30,
+   "mismatches": [],
+   "outcome": 30,
+   "scene": 30,
+   "trials": 30
+  }
+ },
+ "version": "reanalysis_v1/replay",
+ "wall_time_s": 702.4
+}

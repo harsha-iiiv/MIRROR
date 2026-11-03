@@ -50,6 +50,11 @@ class FakeStudio:
         self.seq = 0
         self.stale_challenge_payloads = False
         self.study_enabled = False
+        self.captures: dict[str, dict] = {}
+        self.capture_hooks = False          # processing hooks present on this (fake) server
+        self.capture_session = None         # SYNTHETIC session returned after tracking
+        self.capture_reviews: list[dict] = []
+        self.uploads = 0
         self.study_events: list[dict] = []
         self.lock = threading.Lock()
         rs = {r["id"]: r for r in self.base["rollouts"]}
@@ -280,6 +285,9 @@ def make_handler(studio: FakeStudio):
                 if len(parts) == 4 and parts[2] == "rollouts":
                     return self._json(200, studio.rollout_payload(urllib.parse.unquote(parts[3])))
                 return self._json(200, rec)
+            if p.startswith("capture/"):
+                cid = p.split("/")[1]
+                return self._json(200, studio.captures[cid]) if cid in studio.captures else self._json(404, {"error": "not_found", "detail": cid})
             if p == "tour":
                 return self._json(404, {"error": "not_found", "detail": "no tour"})
             return self._json(404, {"error": "not_found", "detail": p})
@@ -321,6 +329,41 @@ def make_handler(studio: FakeStudio):
                     return self._json(*studio.execute(cid))
                 if act == "publish":
                     return self._json(*studio.publish(cid))
+            if p == "video/upload":
+                studio.uploads += 1
+                return self._json(200, {"id": f"v{studio.uploads}", "view": urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query).get("view", ["top"])[0]})
+            if p == "capture":
+                cid = f"cap{len(studio.captures) + 1:04d}"
+                hooks = {k: studio.capture_hooks for k in ("calibrate", "track", "reconstruct")}
+                studio.captures[cid] = {"id": cid, "mode": body.get("mode"), "state": "awaiting_clips", "clips": {}, "sync": None, "calibration": None,
+                                        "tracking": None, "review": None, "errors": [], "hooks": hooks, "print_check": body.get("print_check")}
+                return self._json(200, studio.captures[cid])
+            if len(parts) == 3 and parts[0] == "capture" and parts[1] in studio.captures:
+                cap, act = studio.captures[parts[1]], parts[2]
+                if act == "clips":
+                    need = ["top", "side", "calibration"] if cap["mode"] == "two_view" else ["single", "calibration"]
+                    if sorted(body.get("clips") or {}) != sorted(need):
+                        return self._json(422, {"error": "invalid_capture", "detail": f"needs clips {need}"})
+                    s = body.get("sync")
+                    if cap["mode"] == "two_view":
+                        cap["sync"] = {**s, "offset_s": round(s["side_t"] - s["top_t"], 3), "status": "declared"}
+                    cap["clips"], cap["state"] = body["clips"], "clips_ready"
+                    return self._json(200, cap)
+                if act in ("calibrate", "track", "propose") and not studio.capture_hooks and act != "propose":
+                    return self._json(409, {"error": "conflict", "detail": f"phone {act} is not available on this server"})
+                if act == "calibrate":
+                    cap["calibration"], cap["state"] = {"ok": True, "errors": []}, "calibrated"
+                    return self._json(200, studio.job("capture_calibrate", {}))
+                if act == "track":
+                    cap["state"], cap["session"] = "tracked", studio.capture_session
+                    return self._json(200, studio.job("capture_track", {}))
+                if act == "review":
+                    studio.capture_reviews.append(body)
+                    cap["review"], cap["state"] = body, "reviewed"
+                    return self._json(200, cap)
+                if act == "propose":
+                    cap["state"] = "proposed"
+                    return self._json(200, studio.job("capture_propose", {}))
             if p in ("study/start", "study/comprehension", "study/clarification"):
                 if not studio.study_enabled:
                     return self._json(404, {"error": "not_found", "detail": "study mode is off"})

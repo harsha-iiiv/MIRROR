@@ -1,0 +1,74 @@
+{
+ "blocked_reference": [
+  {
+   "condition": "original",
+   "status": "success"
+  },
+  {
+   "condition": "corrected",
+   "status": "planning_failed"
+  }
+ ],
+ "code_identical_to_freeze": true,
+ "code_state_label": "864060d",
+ "frozen_code_sha256": "e77c4cec9c4d414d1157b9e4193ef2d2257e6e32e3815f76abb64668e804bb58",
+ "ledger": "scratch copy (registration ledger untouched)",
+ "network_calls_refused": 0,
+ "registration": "eval_muse",
+ "replay_code_sha256": "e77c4cec9c4d414d1157b9e4193ef2d2257e6e32e3815f76abb64668e804bb58",
+ "spec_pair_identical": {
+  "a": true,
+  "b": true
+ },
+ "strata": {
+  "blocked": {
+   "detail": 5,
+   "mismatches": [],
+   "outcome": 5,
+   "scene": 5,
+   "trials": 5
+  },
+  "primary": {
+   "detail": 60,
+   "mismatches": [],
+   "outcome": 60,
+   "scene": 60,
+   "trials": 60
+  },
+  "shortcut": {
+   "detail": 29,
+   "mismatches": [
+    {
+     "detail": false,
+     "differences": {
+      "a": {
+       "beads": [
+        {
+         "cup_0": [
+          6,
+          8
+         ]
+        },
+        {
+         "cup_0": [
+          2,
+          8
+         ]
+        }
+       ]
+      },
+      "b": {}
+     },
+     "outcome": true,
+     "scene": true,
+     "seed": 60002
+    }
+   ],
+   "outcome": 30,
+   "scene": 30,
+   "trials": 30
+  }
+ },
+ "version": "reanalysis_v1/replay",
+ "wall_time_s": 594.2
+}

@@ -1,0 +1,2255 @@
+{
+ "calibrated_rotation_penalty": 0.2445,
+ "calibrated_key": "0.2445",
+ "strata": {
+  "primary": {
+   "seeds": 80,
+   "missing": {},
+   "metrics": {
+    "original@0.2445": {
+     "n": 80,
+     "completion": 80,
+     "success": 80,
+     "violation_free_success": 80,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": 0.1745,
+     "beads_total": 640,
+     "beads_lost": 0,
+     "beads_retained": 640,
+     "trials_losing_beads": 0,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 80
+     },
+     "exec_time_s_mean_completed": 49.8882,
+     "path_length_m_mean": 5.0665,
+     "path_rotation_rad_mean": 1.6365,
+     "path_cost_calibrated_mean": 5.4666,
+     "obstacle_contact_trials": 0
+    },
+    "original@0.05": {
+     "n": 80,
+     "completion": 80,
+     "success": 80,
+     "violation_free_success": 49,
+     "cup_tilted_planned": 31,
+     "corrected_rule_violation_trials": 31,
+     "cup_max_transport_tilt_deg_mean": 34.8323,
+     "beads_total": 640,
+     "beads_lost": 125,
+     "beads_retained": 515,
+     "trials_losing_beads": 31,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 80
+     },
+     "exec_time_s_mean_completed": 53.0813,
+     "path_length_m_mean": 4.5374,
+     "path_rotation_rad_mean": 5.9562,
+     "path_cost_calibrated_mean": 5.9937,
+     "obstacle_contact_trials": 0
+    },
+    "original@0.10": {
+     "n": 80,
+     "completion": 80,
+     "success": 80,
+     "violation_free_success": 61,
+     "cup_tilted_planned": 19,
+     "corrected_rule_violation_trials": 19,
+     "cup_max_transport_tilt_deg_mean": 21.4164,
+     "beads_total": 640,
+     "beads_lost": 76,
+     "beads_retained": 564,
+     "trials_losing_beads": 19,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 80
+     },
+     "exec_time_s_mean_completed": 51.2739,
+     "path_length_m_mean": 4.6616,
+     "path_rotation_rad_mean": 4.3069,
+     "path_cost_calibrated_mean": 5.7146,
+     "obstacle_contact_trials": 0
+    },
+    "original@0.20": {
+     "n": 80,
+     "completion": 80,
+     "success": 80,
+     "violation_free_success": 78,
+     "cup_tilted_planned": 2,
+     "corrected_rule_violation_trials": 2,
+     "cup_max_transport_tilt_deg_mean": 2.4121,
+     "beads_total": 640,
+     "beads_lost": 10,
+     "beads_retained": 630,
+     "trials_losing_beads": 2,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 80
+     },
+     "exec_time_s_mean_completed": 49.8955,
+     "path_length_m_mean": 4.9887,
+     "path_rotation_rad_mean": 1.9899,
+     "path_cost_calibrated_mean": 5.4752,
+     "obstacle_contact_trials": 0
+    },
+    "original@0.40": {
+     "n": 80,
+     "completion": 80,
+     "success": 80,
+     "violation_free_success": 80,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": 0.1745,
+     "beads_total": 640,
+     "beads_lost": 0,
+     "beads_retained": 640,
+     "trials_losing_beads": 0,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 80
+     },
+     "exec_time_s_mean_completed": 49.9134,
+     "path_length_m_mean": 5.0762,
+     "path_rotation_rad_mean": 1.5972,
+     "path_cost_calibrated_mean": 5.4667,
+     "obstacle_contact_trials": 0
+    },
+    "original@1.0": {
+     "n": 80,
+     "completion": 80,
+     "success": 80,
+     "violation_free_success": 80,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": 0.1745,
+     "beads_total": 640,
+     "beads_lost": 0,
+     "beads_retained": 640,
+     "trials_losing_beads": 0,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 80
+     },
+     "exec_time_s_mean_completed": 49.9134,
+     "path_length_m_mean": 5.0762,
+     "path_rotation_rad_mean": 1.5972,
+     "path_cost_calibrated_mean": 5.4667,
+     "obstacle_contact_trials": 0
+    },
+    "never_tilt@0.2445": {
+     "n": 80,
+     "completion": 80,
+     "success": 80,
+     "violation_free_success": 80,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": 0.1745,
+     "beads_total": 640,
+     "beads_lost": 0,
+     "beads_retained": 640,
+     "trials_losing_beads": 0,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 80
+     },
+     "exec_time_s_mean_completed": 49.9134,
+     "path_length_m_mean": 5.0762,
+     "path_rotation_rad_mean": 1.5972,
+     "path_cost_calibrated_mean": 5.4667,
+     "obstacle_contact_trials": 0
+    },
+    "corrected@0.2445": {
+     "n": 80,
+     "completion": 80,
+     "success": 80,
+     "violation_free_success": 80,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": 0.1745,
+     "beads_total": 640,
+     "beads_lost": 0,
+     "beads_retained": 640,
+     "trials_losing_beads": 0,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 80
+     },
+     "exec_time_s_mean_completed": 49.8882,
+     "path_length_m_mean": 5.0665,
+     "path_rotation_rad_mean": 1.6365,
+     "path_cost_calibrated_mean": 5.4666,
+     "obstacle_contact_trials": 0
+    },
+    "corrected@0.05": {
+     "n": 80,
+     "completion": 80,
+     "success": 80,
+     "violation_free_success": 80,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": 0.1745,
+     "beads_total": 640,
+     "beads_lost": 0,
+     "beads_retained": 640,
+     "trials_losing_beads": 0,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 80
+     },
+     "exec_time_s_mean_completed": 51.6099,
+     "path_length_m_mean": 4.6782,
+     "path_rotation_rad_mean": 4.7388,
+     "path_cost_calibrated_mean": 5.8368,
+     "obstacle_contact_trials": 0
+    }
+   },
+   "vfs": {
+    "corrected@cal vs original@cal": {
+     "n": 80,
+     "both": 80,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 80; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@0.05 vs original@0.05": {
+     "n": 80,
+     "both": 49,
+     "only_a": 0,
+     "only_b": 31,
+     "neither": 0,
+     "rate_a": 0.6125,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.5029365721075572,
+      0.7117543487469493
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.3875,
+     "diff_ci95_bootstrap": [
+      0.275,
+      0.5
+     ],
+     "mcnemar_p_exact": 9.313225746154785e-10,
+     "power_note": "31 discordant pair(s) of 80"
+    },
+    "corrected@cal vs original@0.05": {
+     "n": 80,
+     "both": 49,
+     "only_a": 0,
+     "only_b": 31,
+     "neither": 0,
+     "rate_a": 0.6125,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.5029365721075572,
+      0.7117543487469493
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.3875,
+     "diff_ci95_bootstrap": [
+      0.275,
+      0.5
+     ],
+     "mcnemar_p_exact": 9.313225746154785e-10,
+     "power_note": "31 discordant pair(s) of 80"
+    },
+    "corrected@cal vs original@0.10": {
+     "n": 80,
+     "both": 61,
+     "only_a": 0,
+     "only_b": 19,
+     "neither": 0,
+     "rate_a": 0.7625,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.6585922106615945,
+      0.8423532713322537
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.2375,
+     "diff_ci95_bootstrap": [
+      0.15,
+      0.3375
+     ],
+     "mcnemar_p_exact": 3.814697265625e-06,
+     "power_note": "19 discordant pair(s) of 80"
+    },
+    "corrected@cal vs original@0.20": {
+     "n": 80,
+     "both": 78,
+     "only_a": 0,
+     "only_b": 2,
+     "neither": 0,
+     "rate_a": 0.975,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9133556701442198,
+      0.9931171067970292
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.025,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0625
+     ],
+     "mcnemar_p_exact": 0.5,
+     "power_note": "2 discordant pair(s) of 80; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@cal vs original@0.40": {
+     "n": 80,
+     "both": 80,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 80; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@cal vs original@1.0": {
+     "n": 80,
+     "both": 80,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 80; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "never_tilt@cal vs original@cal": {
+     "n": 80,
+     "both": 80,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 80; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    }
+   },
+   "completion": {
+    "original@0.2445 vs corrected@cal": {
+     "n": 80,
+     "both": 80,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 80; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "original@0.05 vs corrected@cal": {
+     "n": 80,
+     "both": 80,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 80; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "original@0.10 vs corrected@cal": {
+     "n": 80,
+     "both": 80,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 80; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "original@0.20 vs corrected@cal": {
+     "n": 80,
+     "both": 80,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 80; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "original@0.40 vs corrected@cal": {
+     "n": 80,
+     "both": 80,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 80; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "original@1.0 vs corrected@cal": {
+     "n": 80,
+     "both": 80,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 80; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "never_tilt@0.2445 vs corrected@cal": {
+     "n": 80,
+     "both": 80,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 80; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@0.05 vs corrected@cal": {
+     "n": 80,
+     "both": 80,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "rate_b_ci95": [
+      0.9541818704644728,
+      0.9999999999999999
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 80; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    }
+   },
+   "retained_benefit": {
+    "n": 80,
+    "gap_cal": 0.0,
+    "gap_005": 0.3875,
+    "retained": 0.0,
+    "retained_ci95_bootstrap": [
+     0.0,
+     0.0
+    ],
+    "note": "(VFS corrected@cal - VFS original@cal) / (VFS corrected@0.05 - VFS original@0.05)"
+   },
+   "exec_time": {
+    "corrected@cal - original@cal": {
+     "n": 80,
+     "mean_a": 49.88819999999389,
+     "mean_b": 49.88819999999389,
+     "mean_diff": 0.0,
+     "mean_diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "b_faster": 0,
+     "equal": 80,
+     "b_slower": 0,
+     "note": "B minus A, seeds where both completed"
+    },
+    "never_tilt@cal - corrected@cal": {
+     "n": 80,
+     "mean_a": 49.88819999999389,
+     "mean_b": 49.91344999999387,
+     "mean_diff": 0.025249999999986006,
+     "mean_diff_ci95_bootstrap": [
+      0.0,
+      0.07574999999995802
+     ],
+     "b_faster": 0,
+     "equal": 79,
+     "b_slower": 1,
+     "note": "B minus A, seeds where both completed"
+    },
+    "never_tilt@cal - original@cal": {
+     "n": 80,
+     "mean_a": 49.88819999999389,
+     "mean_b": 49.91344999999387,
+     "mean_diff": 0.025249999999986006,
+     "mean_diff_ci95_bootstrap": [
+      0.0,
+      0.07574999999995802
+     ],
+     "b_faster": 0,
+     "equal": 79,
+     "b_slower": 1,
+     "note": "B minus A, seeds where both completed"
+    },
+    "corrected@0.05 - original@0.05": {
+     "n": 80,
+     "mean_a": 53.081349999992554,
+     "mean_b": 51.609949999993,
+     "mean_diff": -1.4713999999995493,
+     "mean_diff_ci95_bootstrap": [
+      -1.9267524999992411,
+      -1.03129249999951
+     ],
+     "b_faster": 31,
+     "equal": 49,
+     "b_slower": 0,
+     "note": "B minus A, seeds where both completed"
+    },
+    "corrected@cal - corrected@0.05": {
+     "n": 80,
+     "mean_a": 51.609949999993,
+     "mean_b": 49.88819999999389,
+     "mean_diff": -1.7217499999991148,
+     "mean_diff_ci95_bootstrap": [
+      -2.4476362499988435,
+      -1.0633474999994108
+     ],
+     "b_faster": 30,
+     "equal": 47,
+     "b_slower": 3,
+     "note": "B minus A, seeds where both completed"
+    }
+   },
+   "path_cost_calibrated": {
+    "corrected@cal - original@cal": {
+     "n": 80,
+     "mean_a": 5.46660875,
+     "mean_b": 5.46660875,
+     "mean_diff": 0.0,
+     "mean_diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ]
+    },
+    "never_tilt@cal - corrected@cal": {
+     "n": 80,
+     "mean_a": 5.46660875,
+     "mean_b": 5.466695124999999,
+     "mean_diff": 8.637499999999409e-05,
+     "mean_diff_ci95_bootstrap": [
+      0.0,
+      0.0002591249999999823
+     ]
+    },
+    "original@0.05 - original@cal": {
+     "n": 80,
+     "mean_a": 5.46660875,
+     "mean_b": 5.993658,
+     "mean_diff": 0.52704925,
+     "mean_diff_ci95_bootstrap": [
+      0.380335684375,
+      0.6809093406250001
+     ]
+    }
+   },
+   "tradeoffs": [
+    {
+     "a": "corrected@0.2445",
+     "b": "never_tilt@0.2445",
+     "only_a_completes": [],
+     "only_b_completes": [],
+     "only_a_vfs": [],
+     "only_b_vfs": []
+    },
+    {
+     "a": "original@0.2445",
+     "b": "never_tilt@0.2445",
+     "only_a_completes": [],
+     "only_b_completes": [],
+     "only_a_vfs": [],
+     "only_b_vfs": []
+    },
+    {
+     "a": "original@0.2445",
+     "b": "corrected@0.2445",
+     "only_a_completes": [],
+     "only_b_completes": [],
+     "only_a_vfs": [],
+     "only_b_vfs": []
+    },
+    {
+     "a": "original@1.0",
+     "b": "never_tilt@0.2445",
+     "only_a_completes": [],
+     "only_b_completes": [],
+     "only_a_vfs": [],
+     "only_b_vfs": []
+    }
+   ],
+   "identical_plans": {
+    "original@0.2445 == original@0.05": 40,
+    "original@0.2445 == original@0.10": 47,
+    "original@0.2445 == original@0.20": 73,
+    "original@0.2445 == corrected@0.2445": 80,
+    "corrected@0.2445 == corrected@0.05": 47,
+    "corrected@0.2445 == never_tilt@0.2445": 79,
+    "original@1.0 == never_tilt@0.2445": 80
+   }
+  },
+  "shortcut": {
+   "seeds": 40,
+   "missing": {},
+   "metrics": {
+    "original@0.2445": {
+     "n": 40,
+     "completion": 40,
+     "success": 40,
+     "violation_free_success": 40,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": 0.1817,
+     "beads_total": 320,
+     "beads_lost": 0,
+     "beads_retained": 320,
+     "trials_losing_beads": 0,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 40
+     },
+     "exec_time_s_mean_completed": 52.999,
+     "path_length_m_mean": 5.5168,
+     "path_rotation_rad_mean": 1.49,
+     "path_cost_calibrated_mean": 5.8811,
+     "obstacle_contact_trials": 0
+    },
+    "original@0.05": {
+     "n": 40,
+     "completion": 40,
+     "success": 40,
+     "violation_free_success": 0,
+     "cup_tilted_planned": 40,
+     "corrected_rule_violation_trials": 40,
+     "cup_max_transport_tilt_deg_mean": 89.6169,
+     "beads_total": 320,
+     "beads_lost": 153,
+     "beads_retained": 167,
+     "trials_losing_beads": 40,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 40
+     },
+     "exec_time_s_mean_completed": 59.4743,
+     "path_length_m_mean": 4.2968,
+     "path_rotation_rad_mean": 10.6791,
+     "path_cost_calibrated_mean": 6.9079,
+     "obstacle_contact_trials": 0
+    },
+    "original@0.10": {
+     "n": 40,
+     "completion": 40,
+     "success": 40,
+     "violation_free_success": 13,
+     "cup_tilted_planned": 27,
+     "corrected_rule_violation_trials": 27,
+     "cup_max_transport_tilt_deg_mean": 60.5423,
+     "beads_total": 320,
+     "beads_lost": 102,
+     "beads_retained": 218,
+     "trials_losing_beads": 27,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 40
+     },
+     "exec_time_s_mean_completed": 56.5403,
+     "path_length_m_mean": 4.5176,
+     "path_rotation_rad_mean": 7.8517,
+     "path_cost_calibrated_mean": 6.4373,
+     "obstacle_contact_trials": 0
+    },
+    "original@0.20": {
+     "n": 40,
+     "completion": 40,
+     "success": 40,
+     "violation_free_success": 35,
+     "cup_tilted_planned": 5,
+     "corrected_rule_violation_trials": 5,
+     "cup_max_transport_tilt_deg_mean": 11.3591,
+     "beads_total": 320,
+     "beads_lost": 19,
+     "beads_retained": 301,
+     "trials_losing_beads": 5,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 40
+     },
+     "exec_time_s_mean_completed": 53.0472,
+     "path_length_m_mean": 5.3092,
+     "path_rotation_rad_mean": 2.4324,
+     "path_cost_calibrated_mean": 5.9039,
+     "obstacle_contact_trials": 0
+    },
+    "original@0.40": {
+     "n": 40,
+     "completion": 40,
+     "success": 40,
+     "violation_free_success": 40,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": 0.1817,
+     "beads_total": 320,
+     "beads_lost": 0,
+     "beads_retained": 320,
+     "trials_losing_beads": 0,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 40
+     },
+     "exec_time_s_mean_completed": 52.999,
+     "path_length_m_mean": 5.5168,
+     "path_rotation_rad_mean": 1.49,
+     "path_cost_calibrated_mean": 5.8811,
+     "obstacle_contact_trials": 0
+    },
+    "original@1.0": {
+     "n": 40,
+     "completion": 40,
+     "success": 40,
+     "violation_free_success": 40,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": 0.1817,
+     "beads_total": 320,
+     "beads_lost": 0,
+     "beads_retained": 320,
+     "trials_losing_beads": 0,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 40
+     },
+     "exec_time_s_mean_completed": 52.999,
+     "path_length_m_mean": 5.5168,
+     "path_rotation_rad_mean": 1.49,
+     "path_cost_calibrated_mean": 5.8811,
+     "obstacle_contact_trials": 0
+    },
+    "never_tilt@0.2445": {
+     "n": 40,
+     "completion": 40,
+     "success": 40,
+     "violation_free_success": 40,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": 0.1817,
+     "beads_total": 320,
+     "beads_lost": 0,
+     "beads_retained": 320,
+     "trials_losing_beads": 0,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 40
+     },
+     "exec_time_s_mean_completed": 52.999,
+     "path_length_m_mean": 5.5168,
+     "path_rotation_rad_mean": 1.49,
+     "path_cost_calibrated_mean": 5.8811,
+     "obstacle_contact_trials": 0
+    },
+    "corrected@0.2445": {
+     "n": 40,
+     "completion": 40,
+     "success": 40,
+     "violation_free_success": 40,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": 0.1817,
+     "beads_total": 320,
+     "beads_lost": 0,
+     "beads_retained": 320,
+     "trials_losing_beads": 0,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 40
+     },
+     "exec_time_s_mean_completed": 52.999,
+     "path_length_m_mean": 5.5168,
+     "path_rotation_rad_mean": 1.49,
+     "path_cost_calibrated_mean": 5.8811,
+     "obstacle_contact_trials": 0
+    },
+    "corrected@0.05": {
+     "n": 40,
+     "completion": 40,
+     "success": 40,
+     "violation_free_success": 40,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": 0.1817,
+     "beads_total": 320,
+     "beads_lost": 0,
+     "beads_retained": 320,
+     "trials_losing_beads": 0,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 40
+     },
+     "exec_time_s_mean_completed": 55.997,
+     "path_length_m_mean": 4.6991,
+     "path_rotation_rad_mean": 7.5375,
+     "path_cost_calibrated_mean": 6.542,
+     "obstacle_contact_trials": 0
+    }
+   },
+   "vfs": {
+    "corrected@cal vs original@cal": {
+     "n": 40,
+     "both": 40,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 40; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@0.05 vs original@0.05": {
+     "n": 40,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 40,
+     "neither": 0,
+     "rate_a": 0.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.0,
+      0.08762160119728664
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 1.0,
+     "diff_ci95_bootstrap": [
+      1.0,
+      1.0
+     ],
+     "mcnemar_p_exact": 1.8189894035458565e-12,
+     "power_note": "40 discordant pair(s) of 40"
+    },
+    "corrected@cal vs original@0.05": {
+     "n": 40,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 40,
+     "neither": 0,
+     "rate_a": 0.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.0,
+      0.08762160119728664
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 1.0,
+     "diff_ci95_bootstrap": [
+      1.0,
+      1.0
+     ],
+     "mcnemar_p_exact": 1.8189894035458565e-12,
+     "power_note": "40 discordant pair(s) of 40"
+    },
+    "corrected@cal vs original@0.10": {
+     "n": 40,
+     "both": 13,
+     "only_a": 0,
+     "only_b": 27,
+     "neither": 0,
+     "rate_a": 0.325,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.200845022317827,
+      0.47982253810122333
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.675,
+     "diff_ci95_bootstrap": [
+      0.525,
+      0.8
+     ],
+     "mcnemar_p_exact": 1.4901161193847656e-08,
+     "power_note": "27 discordant pair(s) of 40"
+    },
+    "corrected@cal vs original@0.20": {
+     "n": 40,
+     "both": 35,
+     "only_a": 0,
+     "only_b": 5,
+     "neither": 0,
+     "rate_a": 0.875,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.738878801611489,
+      0.945404997490546
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.125,
+     "diff_ci95_bootstrap": [
+      0.025,
+      0.225
+     ],
+     "mcnemar_p_exact": 0.0625,
+     "power_note": "5 discordant pair(s) of 40; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@cal vs original@0.40": {
+     "n": 40,
+     "both": 40,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 40; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@cal vs original@1.0": {
+     "n": 40,
+     "both": 40,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 40; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "never_tilt@cal vs original@cal": {
+     "n": 40,
+     "both": 40,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 40; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    }
+   },
+   "completion": {
+    "original@0.2445 vs corrected@cal": {
+     "n": 40,
+     "both": 40,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 40; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "original@0.05 vs corrected@cal": {
+     "n": 40,
+     "both": 40,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 40; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "original@0.10 vs corrected@cal": {
+     "n": 40,
+     "both": 40,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 40; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "original@0.20 vs corrected@cal": {
+     "n": 40,
+     "both": 40,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 40; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "original@0.40 vs corrected@cal": {
+     "n": 40,
+     "both": 40,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 40; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "original@1.0 vs corrected@cal": {
+     "n": 40,
+     "both": 40,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 40; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "never_tilt@0.2445 vs corrected@cal": {
+     "n": 40,
+     "both": 40,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 40; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@0.05 vs corrected@cal": {
+     "n": 40,
+     "both": 40,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 0,
+     "rate_a": 1.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "rate_b_ci95": [
+      0.9123783988027135,
+      1.0
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 40; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    }
+   },
+   "retained_benefit": {
+    "n": 40,
+    "gap_cal": 0.0,
+    "gap_005": 1.0,
+    "retained": 0.0,
+    "retained_ci95_bootstrap": [
+     0.0,
+     0.0
+    ],
+    "note": "(VFS corrected@cal - VFS original@cal) / (VFS corrected@0.05 - VFS original@0.05)"
+   },
+   "exec_time": {
+    "corrected@cal - original@cal": {
+     "n": 40,
+     "mean_a": 52.99899999999216,
+     "mean_b": 52.99899999999216,
+     "mean_diff": 0.0,
+     "mean_diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "b_faster": 0,
+     "equal": 40,
+     "b_slower": 0,
+     "note": "B minus A, seeds where both completed"
+    },
+    "never_tilt@cal - corrected@cal": {
+     "n": 40,
+     "mean_a": 52.99899999999216,
+     "mean_b": 52.99899999999216,
+     "mean_diff": 0.0,
+     "mean_diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "b_faster": 0,
+     "equal": 40,
+     "b_slower": 0,
+     "note": "B minus A, seeds where both completed"
+    },
+    "never_tilt@cal - original@cal": {
+     "n": 40,
+     "mean_a": 52.99899999999216,
+     "mean_b": 52.99899999999216,
+     "mean_diff": 0.0,
+     "mean_diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "b_faster": 0,
+     "equal": 40,
+     "b_slower": 0,
+     "note": "B minus A, seeds where both completed"
+    },
+    "corrected@0.05 - original@0.05": {
+     "n": 40,
+     "mean_a": 59.4742999999901,
+     "mean_b": 55.996999999990734,
+     "mean_diff": -3.477299999999371,
+     "mean_diff_ci95_bootstrap": [
+      -3.8805024999994444,
+      -3.0570924999995728
+     ],
+     "b_faster": 39,
+     "equal": 0,
+     "b_slower": 1,
+     "note": "B minus A, seeds where both completed"
+    },
+    "corrected@cal - corrected@0.05": {
+     "n": 40,
+     "mean_a": 55.996999999990734,
+     "mean_b": 52.99899999999216,
+     "mean_diff": -2.997999999998574,
+     "mean_diff_ci95_bootstrap": [
+      -4.049612499998314,
+      -1.923707499999312
+     ],
+     "b_faster": 26,
+     "equal": 9,
+     "b_slower": 5,
+     "note": "B minus A, seeds where both completed"
+    }
+   },
+   "path_cost_calibrated": {
+    "corrected@cal - original@cal": {
+     "n": 40,
+     "mean_a": 5.881093,
+     "mean_b": 5.881093,
+     "mean_diff": 0.0,
+     "mean_diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ]
+    },
+    "never_tilt@cal - corrected@cal": {
+     "n": 40,
+     "mean_a": 5.881093,
+     "mean_b": 5.881093,
+     "mean_diff": 0.0,
+     "mean_diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ]
+    },
+    "original@0.05 - original@cal": {
+     "n": 40,
+     "mean_a": 5.881093,
+     "mean_b": 6.907891749999999,
+     "mean_diff": 1.02679875,
+     "mean_diff_ci95_bootstrap": [
+      0.8799050874999998,
+      1.1719161374999998
+     ]
+    }
+   },
+   "tradeoffs": [
+    {
+     "a": "corrected@0.2445",
+     "b": "never_tilt@0.2445",
+     "only_a_completes": [],
+     "only_b_completes": [],
+     "only_a_vfs": [],
+     "only_b_vfs": []
+    },
+    {
+     "a": "original@0.2445",
+     "b": "never_tilt@0.2445",
+     "only_a_completes": [],
+     "only_b_completes": [],
+     "only_a_vfs": [],
+     "only_b_vfs": []
+    },
+    {
+     "a": "original@0.2445",
+     "b": "corrected@0.2445",
+     "only_a_completes": [],
+     "only_b_completes": [],
+     "only_a_vfs": [],
+     "only_b_vfs": []
+    },
+    {
+     "a": "original@1.0",
+     "b": "never_tilt@0.2445",
+     "only_a_completes": [],
+     "only_b_completes": [],
+     "only_a_vfs": [],
+     "only_b_vfs": []
+    }
+   ],
+   "identical_plans": {
+    "original@0.2445 == original@0.05": 0,
+    "original@0.2445 == original@0.10": 5,
+    "original@0.2445 == original@0.20": 31,
+    "original@0.2445 == corrected@0.2445": 40,
+    "corrected@0.2445 == corrected@0.05": 9,
+    "corrected@0.2445 == never_tilt@0.2445": 40,
+    "original@1.0 == never_tilt@0.2445": 40
+   }
+  },
+  "blocked": {
+   "seeds": 10,
+   "missing": {},
+   "metrics": {
+    "original@0.2445": {
+     "n": 10,
+     "completion": 10,
+     "success": 10,
+     "violation_free_success": 0,
+     "cup_tilted_planned": 10,
+     "corrected_rule_violation_trials": 10,
+     "cup_max_transport_tilt_deg_mean": 89.6248,
+     "beads_total": 80,
+     "beads_lost": 38,
+     "beads_retained": 42,
+     "trials_losing_beads": 10,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 10
+     },
+     "exec_time_s_mean_completed": 70.712,
+     "path_length_m_mean": 4.6358,
+     "path_rotation_rad_mean": 17.471,
+     "path_cost_calibrated_mean": 8.9075,
+     "obstacle_contact_trials": 0
+    },
+    "original@0.05": {
+     "n": 10,
+     "completion": 10,
+     "success": 10,
+     "violation_free_success": 0,
+     "cup_tilted_planned": 10,
+     "corrected_rule_violation_trials": 10,
+     "cup_max_transport_tilt_deg_mean": 89.6248,
+     "beads_total": 80,
+     "beads_lost": 38,
+     "beads_retained": 42,
+     "trials_losing_beads": 10,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 10
+     },
+     "exec_time_s_mean_completed": 70.712,
+     "path_length_m_mean": 4.6358,
+     "path_rotation_rad_mean": 17.471,
+     "path_cost_calibrated_mean": 8.9075,
+     "obstacle_contact_trials": 0
+    },
+    "original@0.10": {
+     "n": 10,
+     "completion": 10,
+     "success": 10,
+     "violation_free_success": 0,
+     "cup_tilted_planned": 10,
+     "corrected_rule_violation_trials": 10,
+     "cup_max_transport_tilt_deg_mean": 89.6248,
+     "beads_total": 80,
+     "beads_lost": 38,
+     "beads_retained": 42,
+     "trials_losing_beads": 10,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 10
+     },
+     "exec_time_s_mean_completed": 70.712,
+     "path_length_m_mean": 4.6358,
+     "path_rotation_rad_mean": 17.471,
+     "path_cost_calibrated_mean": 8.9075,
+     "obstacle_contact_trials": 0
+    },
+    "original@0.20": {
+     "n": 10,
+     "completion": 10,
+     "success": 10,
+     "violation_free_success": 0,
+     "cup_tilted_planned": 10,
+     "corrected_rule_violation_trials": 10,
+     "cup_max_transport_tilt_deg_mean": 89.6248,
+     "beads_total": 80,
+     "beads_lost": 38,
+     "beads_retained": 42,
+     "trials_losing_beads": 10,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 10
+     },
+     "exec_time_s_mean_completed": 70.712,
+     "path_length_m_mean": 4.6358,
+     "path_rotation_rad_mean": 17.471,
+     "path_cost_calibrated_mean": 8.9075,
+     "obstacle_contact_trials": 0
+    },
+    "original@0.40": {
+     "n": 10,
+     "completion": 10,
+     "success": 10,
+     "violation_free_success": 0,
+     "cup_tilted_planned": 10,
+     "corrected_rule_violation_trials": 10,
+     "cup_max_transport_tilt_deg_mean": 89.6248,
+     "beads_total": 80,
+     "beads_lost": 38,
+     "beads_retained": 42,
+     "trials_losing_beads": 10,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 10
+     },
+     "exec_time_s_mean_completed": 70.712,
+     "path_length_m_mean": 4.6358,
+     "path_rotation_rad_mean": 17.471,
+     "path_cost_calibrated_mean": 8.9075,
+     "obstacle_contact_trials": 0
+    },
+    "original@1.0": {
+     "n": 10,
+     "completion": 10,
+     "success": 10,
+     "violation_free_success": 0,
+     "cup_tilted_planned": 10,
+     "corrected_rule_violation_trials": 10,
+     "cup_max_transport_tilt_deg_mean": 89.6248,
+     "beads_total": 80,
+     "beads_lost": 38,
+     "beads_retained": 42,
+     "trials_losing_beads": 10,
+     "planning_failures": 0,
+     "planning_failures_proven": 0,
+     "status_counts": {
+      "success": 10
+     },
+     "exec_time_s_mean_completed": 70.712,
+     "path_length_m_mean": 4.6358,
+     "path_rotation_rad_mean": 17.471,
+     "path_cost_calibrated_mean": 8.9075,
+     "obstacle_contact_trials": 0
+    },
+    "never_tilt@0.2445": {
+     "n": 10,
+     "completion": 0,
+     "success": 0,
+     "violation_free_success": 0,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": null,
+     "beads_total": 0,
+     "beads_lost": 0,
+     "beads_retained": 0,
+     "trials_losing_beads": 0,
+     "planning_failures": 10,
+     "planning_failures_proven": 10,
+     "status_counts": {
+      "planning_failed": 10
+     },
+     "exec_time_s_mean_completed": null,
+     "path_length_m_mean": null,
+     "path_rotation_rad_mean": null,
+     "path_cost_calibrated_mean": null,
+     "obstacle_contact_trials": 0
+    },
+    "corrected@0.2445": {
+     "n": 10,
+     "completion": 0,
+     "success": 0,
+     "violation_free_success": 0,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": null,
+     "beads_total": 0,
+     "beads_lost": 0,
+     "beads_retained": 0,
+     "trials_losing_beads": 0,
+     "planning_failures": 10,
+     "planning_failures_proven": 10,
+     "status_counts": {
+      "planning_failed": 10
+     },
+     "exec_time_s_mean_completed": null,
+     "path_length_m_mean": null,
+     "path_rotation_rad_mean": null,
+     "path_cost_calibrated_mean": null,
+     "obstacle_contact_trials": 0
+    },
+    "corrected@0.05": {
+     "n": 10,
+     "completion": 0,
+     "success": 0,
+     "violation_free_success": 0,
+     "cup_tilted_planned": 0,
+     "corrected_rule_violation_trials": 0,
+     "cup_max_transport_tilt_deg_mean": null,
+     "beads_total": 0,
+     "beads_lost": 0,
+     "beads_retained": 0,
+     "trials_losing_beads": 0,
+     "planning_failures": 10,
+     "planning_failures_proven": 10,
+     "status_counts": {
+      "planning_failed": 10
+     },
+     "exec_time_s_mean_completed": null,
+     "path_length_m_mean": null,
+     "path_rotation_rad_mean": null,
+     "path_cost_calibrated_mean": null,
+     "obstacle_contact_trials": 0
+    }
+   },
+   "vfs": {
+    "corrected@cal vs original@cal": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 10,
+     "rate_a": 0.0,
+     "rate_b": 0.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 10; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@0.05 vs original@0.05": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 10,
+     "rate_a": 0.0,
+     "rate_b": 0.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 10; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@cal vs original@0.05": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 10,
+     "rate_a": 0.0,
+     "rate_b": 0.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 10; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@cal vs original@0.10": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 10,
+     "rate_a": 0.0,
+     "rate_b": 0.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 10; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@cal vs original@0.20": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 10,
+     "rate_a": 0.0,
+     "rate_b": 0.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 10; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@cal vs original@0.40": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 10,
+     "rate_a": 0.0,
+     "rate_b": 0.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 10; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@cal vs original@1.0": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 10,
+     "rate_a": 0.0,
+     "rate_b": 0.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 10; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "never_tilt@cal vs original@cal": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 10,
+     "rate_a": 0.0,
+     "rate_b": 0.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 10; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    }
+   },
+   "completion": {
+    "original@0.2445 vs corrected@cal": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 10,
+     "neither": 0,
+     "rate_a": 0.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.7224672001371107,
+      0.9999999999999999
+     ],
+     "diff": 1.0,
+     "diff_ci95_bootstrap": [
+      1.0,
+      1.0
+     ],
+     "mcnemar_p_exact": 0.001953125,
+     "power_note": "10 discordant pair(s) of 10"
+    },
+    "original@0.05 vs corrected@cal": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 10,
+     "neither": 0,
+     "rate_a": 0.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.7224672001371107,
+      0.9999999999999999
+     ],
+     "diff": 1.0,
+     "diff_ci95_bootstrap": [
+      1.0,
+      1.0
+     ],
+     "mcnemar_p_exact": 0.001953125,
+     "power_note": "10 discordant pair(s) of 10"
+    },
+    "original@0.10 vs corrected@cal": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 10,
+     "neither": 0,
+     "rate_a": 0.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.7224672001371107,
+      0.9999999999999999
+     ],
+     "diff": 1.0,
+     "diff_ci95_bootstrap": [
+      1.0,
+      1.0
+     ],
+     "mcnemar_p_exact": 0.001953125,
+     "power_note": "10 discordant pair(s) of 10"
+    },
+    "original@0.20 vs corrected@cal": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 10,
+     "neither": 0,
+     "rate_a": 0.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.7224672001371107,
+      0.9999999999999999
+     ],
+     "diff": 1.0,
+     "diff_ci95_bootstrap": [
+      1.0,
+      1.0
+     ],
+     "mcnemar_p_exact": 0.001953125,
+     "power_note": "10 discordant pair(s) of 10"
+    },
+    "original@0.40 vs corrected@cal": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 10,
+     "neither": 0,
+     "rate_a": 0.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.7224672001371107,
+      0.9999999999999999
+     ],
+     "diff": 1.0,
+     "diff_ci95_bootstrap": [
+      1.0,
+      1.0
+     ],
+     "mcnemar_p_exact": 0.001953125,
+     "power_note": "10 discordant pair(s) of 10"
+    },
+    "original@1.0 vs corrected@cal": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 10,
+     "neither": 0,
+     "rate_a": 0.0,
+     "rate_b": 1.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.7224672001371107,
+      0.9999999999999999
+     ],
+     "diff": 1.0,
+     "diff_ci95_bootstrap": [
+      1.0,
+      1.0
+     ],
+     "mcnemar_p_exact": 0.001953125,
+     "power_note": "10 discordant pair(s) of 10"
+    },
+    "never_tilt@0.2445 vs corrected@cal": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 10,
+     "rate_a": 0.0,
+     "rate_b": 0.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 10; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    },
+    "corrected@0.05 vs corrected@cal": {
+     "n": 10,
+     "both": 0,
+     "only_a": 0,
+     "only_b": 0,
+     "neither": 10,
+     "rate_a": 0.0,
+     "rate_b": 0.0,
+     "rate_a_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "rate_b_ci95": [
+      0.0,
+      0.2775327998628892
+     ],
+     "diff": 0.0,
+     "diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "mcnemar_p_exact": 1.0,
+     "power_note": "0 discordant pair(s) of 10; exact McNemar needs at least 6 discordant pairs all in one direction to reach p < 0.05, so this sample cannot establish significance either way"
+    }
+   },
+   "retained_benefit": {
+    "n": 10,
+    "gap_cal": 0.0,
+    "gap_005": 0.0,
+    "retained": null,
+    "note": "no benefit at 0.05 in this stratum; ratio undefined"
+   },
+   "exec_time": {
+    "corrected@cal - original@cal": {
+     "n": 0
+    },
+    "never_tilt@cal - corrected@cal": {
+     "n": 0
+    },
+    "never_tilt@cal - original@cal": {
+     "n": 0
+    },
+    "corrected@0.05 - original@0.05": {
+     "n": 0
+    },
+    "corrected@cal - corrected@0.05": {
+     "n": 0
+    }
+   },
+   "path_cost_calibrated": {
+    "corrected@cal - original@cal": {
+     "n": 0
+    },
+    "never_tilt@cal - corrected@cal": {
+     "n": 0
+    },
+    "original@0.05 - original@cal": {
+     "n": 10,
+     "mean_a": 8.907452000000001,
+     "mean_b": 8.907452000000001,
+     "mean_diff": 0.0,
+     "mean_diff_ci95_bootstrap": [
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "tradeoffs": [
+    {
+     "a": "corrected@0.2445",
+     "b": "never_tilt@0.2445",
+     "only_a_completes": [],
+     "only_b_completes": [],
+     "only_a_vfs": [],
+     "only_b_vfs": []
+    },
+    {
+     "a": "original@0.2445",
+     "b": "never_tilt@0.2445",
+     "only_a_completes": [
+      82600,
+      82601,
+      82602,
+      82603,
+      82604,
+      82605,
+      82606,
+      82607,
+      82608,
+      82609
+     ],
+     "only_b_completes": [],
+     "only_a_vfs": [],
+     "only_b_vfs": []
+    },
+    {
+     "a": "original@0.2445",
+     "b": "corrected@0.2445",
+     "only_a_completes": [
+      82600,
+      82601,
+      82602,
+      82603,
+      82604,
+      82605,
+      82606,
+      82607,
+      82608,
+      82609
+     ],
+     "only_b_completes": [],
+     "only_a_vfs": [],
+     "only_b_vfs": []
+    },
+    {
+     "a": "original@1.0",
+     "b": "never_tilt@0.2445",
+     "only_a_completes": [
+      82600,
+      82601,
+      82602,
+      82603,
+      82604,
+      82605,
+      82606,
+      82607,
+      82608,
+      82609
+     ],
+     "only_b_completes": [],
+     "only_a_vfs": [],
+     "only_b_vfs": []
+    }
+   ],
+   "identical_plans": {
+    "original@0.2445 == original@0.05": 10,
+    "original@0.2445 == original@0.10": 10,
+    "original@0.2445 == original@0.20": 10,
+    "original@0.2445 == corrected@0.2445": 0,
+    "corrected@0.2445 == corrected@0.05": 0,
+    "corrected@0.2445 == never_tilt@0.2445": 0,
+    "original@1.0 == never_tilt@0.2445": 0
+   }
+  }
+ },
+ "attempt": {
+  "registration": "objective_v1",
+  "attempt": "attempt_1",
+  "git_head": "8be4d2efb4c45c6e59bb35c7f2def5f934a069dc",
+  "started_at": "2026-11-03T03:10:22.098224+00:00",
+  "workers": 2,
+  "freeze_created_at": "2026-11-03T02:28:45.345118+00:00",
+  "status": "finished",
+  "finished_at": "2026-11-03T03:53:17.098578+00:00",
+  "wall_s": 2575.0,
+  "layouts": 130
+ }
+}

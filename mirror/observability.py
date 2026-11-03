@@ -51,7 +51,10 @@ VIDEO_KINDS = ("rendered_video_reconstruction", "camera_video_reconstruction",
 
 ModelOrigin = Literal["fresh_model_call", "recorded_replay", "offline_rules", "oracle_ground_truth", "unknown"]
 IntrinsicsSource = Literal["simulator", "rendered_camera_model", "checkerboard", "user_supplied",
-                           "assumed_rendered_model"]
+                           "assumed_rendered_model", "charuco_board"]
+# Camera intrinsics measured from a physical calibration target (a real camera's footage can be
+# reconstructed as camera_video_reconstruction only with one of these or user-supplied values).
+MEASURED_INTRINSICS = ("checkerboard", "charuco_board")
 ExtrinsicsSource = Literal["simulator", "table_outline_known_size", "scene_geometry", "calibration_board",
                            "user_supplied"]
 Identity = Literal["simulator", "assumed_from_label", "confirmed_by_user", "ambiguous", "not_found"]

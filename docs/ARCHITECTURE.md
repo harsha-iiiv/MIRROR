@@ -67,11 +67,15 @@ sampling fallback for extra obstacles. Collision checks use a conservative
 envelope of the gripper plus the held object. Confirmed upright rules remove
 orientation modes whose tilt exceeds the limit, for the matching objects
 only. The cheapest feasible route wins; every candidate is recorded with its
-cost or rejection reason. Cost is path length plus 0.05 m per radian of
-gripper rotation (`PlannerConfig.rotation_penalty`). That weight decides how
-often a tilted slot route beats an upright detour when no rule forbids tilting,
-and the shorter route is usually not the faster one in execution; see
-[F-A1](EVALUATION.md#audit-findings-and-narrowed-claims-2-november-2026).
+cost or rejection reason. Cost is path length plus a rotation price per radian
+of gripper rotation (`PlannerConfig.rotation_penalty`, default 0.05 m/rad, used by
+the first two registrations). That price decides how often a tilted slot route
+beats an upright detour when no rule forbids tilting. Calibrated to execution
+time on development layouts it is 0.2445 m/rad, and at that price the
+uncorrected specification takes no tilted cup route on 120 new layouts; see
+[Planner objective and baselines](EVALUATION.md#planner-objective-and-baselines-objective_v1).
+A never-tilt baseline is a planner wrapper that adds upright-transport rules to a
+planning copy of the specification.
 
 When nothing is feasible the planner returns `no_plan`. It attaches a proof
 (`proven: true`, `scope: any_motion`) only when a geometric bound shows that
@@ -111,7 +115,36 @@ result uses the gripper baseline.
 `evaluate.check` is a pure function of the step log, the specification and
 the scene. Because logs are kept, any recorded rollout can be re-checked
 against a later specification version; violations of rules that version did
-not enforce are reported separately as `advisory_violations`.
+not enforce are reported separately as `advisory_violations`. Ordering rules are
+monitored from execution evidence (grasp start, placement completion) and
+reported per rule in `report.rule_results`; a confirmed rule the evidence cannot
+settle makes the status `unverified`, never success. Clearance is measured
+against the solid shapes. Rules, phases and which component honours each are in
+one support matrix (`mirror.rules_support`, [RULES.md](RULES.md)).
+
+## Evidence and observability
+
+Every `DemoTrace` can carry `evidence`: per frame, whether each object's position
+and tilt (and the gripper) were measured, inferred, interpolated or unobserved;
+the evidence kind (simulator ground truth, rendered video reconstructed from
+pixels, calibrated camera footage, unverified video, legacy unannotated video,
+interface fixture); camera calibration records; the origin of each model output
+(fresh call, recorded replay, offline rules, oracle); and review items that make
+the system ask instead of propose (`mirror/observability.py`). Unobserved values
+are display placeholders, never evidence: unobserved tilt is unknown, not upright.
+
+## Real-phone capture
+
+`mirror/capture` is a phone capture path for the supported kitting task: a
+printable ChArUco target with checked physical dimensions, per-phone lens
+calibration and per-take table pose with metric scale from the measured print,
+two-phone synchronisation from shared observable events on original timestamps
+(clips that do not share them are refused), a single-view mode with reduced
+observability, person-reviewed mapping of real objects to simulation proxies, and
+object-centric pick and place intervals for human-hand demonstrations (inferred,
+never labelled as robot contact). Tested on synthetic renders only; real-footage
+validation awaits footage ([CAMERA_CAPTURE.md](CAMERA_CAPTURE.md),
+[REAL_FOOTAGE.md](REAL_FOOTAGE.md)).
 
 ## Evaluation layers
 
@@ -121,9 +154,9 @@ Three parts of the pipeline are evaluated separately, then composed:
 |---|---|---|
 | Perception | demonstration video → `DemoTrace` | Video and robustness registrations (rendered simulator video only) |
 | Authoring | demonstration summary + human corrections → validated `TaskSpec` versions | Correction-compiler benchmark (single sentences, one scene); protocol v3 (prepared, not run) |
-| Execution | fixed `TaskSpec` + new layout → plan, physics, checker verdict | First and second registrations (one fixed specification pair on new layouts) |
+| Execution | fixed `TaskSpec` + new layout → plan, physics, checker verdict | First and second registrations (one fixed specification pair on new layouts, rotation price 0.05 m/rad); objective_v1 (same pair, price swept and calibrated, never-tilt baseline) |
 
-The pre-registered evaluations exercise only the execution layer with a fixed
+The layout evaluations exercise only the execution layer with a fixed
 specification pair; the agreement check in `mirror/evaluate/specs.py` (replayed
 model specification must equal the offline-rule specification) is a
 deterministic regression check, so they say nothing about the model's

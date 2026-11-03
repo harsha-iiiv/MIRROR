@@ -1,0 +1,7202 @@
+[
+ {
+  "layout": "mixed:8000",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.2738286638161105,
+  "R": 0.5310058604580096,
+  "N": 4,
+  "T": 2.552
+ },
+ {
+  "layout": "mixed:8000",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.97134120215294,
+  "R": 0.5310058604580096,
+  "N": 6,
+  "T": 8.744
+ },
+ {
+  "layout": "mixed:8000",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.924649094372902,
+  "R": 0.5048981484167347,
+  "N": 5,
+  "T": 5.532
+ },
+ {
+  "layout": "mixed:8000",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9107546809619159,
+  "R": 0.5048981484167347,
+  "N": 5,
+  "T": 8.172
+ },
+ {
+  "layout": "mixed:8000",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.031674505515939,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.284
+ },
+ {
+  "layout": "mixed:8000",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2334954342526656,
+  "R": 0.0,
+  "N": 6,
+  "T": 10.776
+ },
+ {
+  "layout": "mixed:8001",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.34540175676528206,
+  "R": 0.2816355698838392,
+  "N": 4,
+  "T": 2.624
+ },
+ {
+  "layout": "mixed:8001",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9641603501113062,
+  "R": 0.2816355698838392,
+  "N": 6,
+  "T": 8.488
+ },
+ {
+  "layout": "mixed:8001",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.2266451599374362,
+  "R": 0.1041389795888275,
+  "N": 6,
+  "T": 6.596
+ },
+ {
+  "layout": "mixed:8001",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2216595009841986,
+  "R": 0.1041389795888275,
+  "N": 6,
+  "T": 9.996
+ },
+ {
+  "layout": "mixed:8001",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.9487587481672056,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.956
+ },
+ {
+  "layout": "mixed:8001",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.156886579871903,
+  "R": 0.0,
+  "N": 6,
+  "T": 10.264
+ },
+ {
+  "layout": "mixed:8002",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.41468162696121635,
+  "R": 0.4389301884479005,
+  "N": 4,
+  "T": 3.04
+ },
+ {
+  "layout": "mixed:8002",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1817896185230736,
+  "R": 0.4389301884479005,
+  "N": 6,
+  "T": 10.072
+ },
+ {
+  "layout": "mixed:8002",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.8478213182490356,
+  "R": 0.3237771761134411,
+  "N": 6,
+  "T": 5.328
+ },
+ {
+  "layout": "mixed:8002",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8399521579305926,
+  "R": 0.3237771761134411,
+  "N": 6,
+  "T": 7.696
+ },
+ {
+  "layout": "mixed:8002",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.9538789784917265,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.976
+ },
+ {
+  "layout": "mixed:8002",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.9491620377276359,
+  "R": 0.0,
+  "N": 5,
+  "T": 12.448
+ },
+ {
+  "layout": "mixed:8003",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.41789060619366625,
+  "R": 0.07044227143574402,
+  "N": 4,
+  "T": 2.652
+ },
+ {
+  "layout": "mixed:8003",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.708940680076734,
+  "R": 0.07044227143574402,
+  "N": 6,
+  "T": 6.52
+ },
+ {
+  "layout": "mixed:8003",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7885370968519568,
+  "R": 0.0488189444934071,
+  "N": 6,
+  "T": 4.744
+ },
+ {
+  "layout": "mixed:8003",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.7567091873003844,
+  "R": 0.04882647328205912,
+  "N": 6,
+  "T": 6.796
+ },
+ {
+  "layout": "mixed:8003",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7790254913374941,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.276
+ },
+ {
+  "layout": "mixed:8003",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9676272255949633,
+  "R": 0.0,
+  "N": 6,
+  "T": 9.004
+ },
+ {
+  "layout": "mixed:8004",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.39952098967043437,
+  "R": 0.19571054583301825,
+  "N": 4,
+  "T": 2.756
+ },
+ {
+  "layout": "mixed:8004",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 0.7184700317402634,
+  "R": 0.19571692513133487,
+  "N": 6,
+  "T": 6.76
+ },
+ {
+  "layout": "mixed:8004",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.179971873211273,
+  "R": 0.5298378817484956,
+  "N": 6,
+  "T": 6.832
+ },
+ {
+  "layout": "mixed:8004",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1672729163428308,
+  "R": 0.5298378817484956,
+  "N": 7,
+  "T": 10.204
+ },
+ {
+  "layout": "mixed:8004",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.9088933457142507,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.796
+ },
+ {
+  "layout": "mixed:8004",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.9411509507271044,
+  "R": 0.0,
+  "N": 5,
+  "T": 10.884
+ },
+ {
+  "layout": "mixed:8005",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.3327520450247925,
+  "R": 0.26175040933593496,
+  "N": 4,
+  "T": 2.556
+ },
+ {
+  "layout": "mixed:8005",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8053519627952223,
+  "R": 0.2617528231400764,
+  "N": 5,
+  "T": 7.256
+ },
+ {
+  "layout": "mixed:8005",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:direct",
+  "L": 0.6318308284474509,
+  "R": 0.09565061986621597,
+  "N": 4,
+  "T": 3.7
+ },
+ {
+  "layout": "mixed:8005",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "direct",
+  "L": 0.5139192435720865,
+  "R": 0.09565347015883341,
+  "N": 4,
+  "T": 4.964
+ },
+ {
+  "layout": "mixed:8005",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7824511640444587,
+  "R": 0.0,
+  "N": 3,
+  "T": 4.036
+ },
+ {
+  "layout": "mixed:8005",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0635412103110553,
+  "R": 0.0,
+  "N": 4,
+  "T": 13.888
+ },
+ {
+  "layout": "mixed:8006",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.41964908589076066,
+  "R": 0.2177892895294957,
+  "N": 4,
+  "T": 2.86
+ },
+ {
+  "layout": "mixed:8006",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.0209786085283776,
+  "R": 0.21779324875428463,
+  "N": 6,
+  "T": 8.8
+ },
+ {
+  "layout": "mixed:8006",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.7001336958599468,
+  "R": 3.4086391355928414,
+  "N": 8,
+  "T": 7.868
+ },
+ {
+  "layout": "mixed:8006",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8027013679034131,
+  "R": 3.4086411667473806,
+  "N": 8,
+  "T": 14.512
+ },
+ {
+  "layout": "mixed:8006",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6512202574289232,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.172
+ },
+ {
+  "layout": "mixed:8006",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.6951729198045555,
+  "R": 3.141592653587234,
+  "N": 8,
+  "T": 11.26
+ },
+ {
+  "layout": "mixed:8006",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.961219435456287,
+  "R": 3.3593845825999225,
+  "N": 9,
+  "T": 14.948
+ },
+ {
+  "layout": "mixed:8006",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.9630709953925849,
+  "R": 3.3593845825999225,
+  "N": 9,
+  "T": 14.768
+ },
+ {
+  "layout": "mixed:8006",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.1166411434917451,
+  "R": 0.2670464820056079,
+  "N": 6,
+  "T": 6.352
+ },
+ {
+  "layout": "mixed:8006",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1433317246787378,
+  "R": 0.2670546066237621,
+  "N": 7,
+  "T": 9.824
+ },
+ {
+  "layout": "mixed:8006",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.8658809342899554,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.624
+ },
+ {
+  "layout": "mixed:8006",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8586541570297878,
+  "R": 0.0,
+  "N": 5,
+  "T": 12.516
+ },
+ {
+  "layout": "mixed:8007",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4831056032074883,
+  "R": 0.4137471791315094,
+  "N": 4,
+  "T": 3.292
+ },
+ {
+  "layout": "mixed:8007",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8717928065668102,
+  "R": 0.4137471791315094,
+  "N": 5,
+  "T": 7.836
+ },
+ {
+  "layout": "mixed:8007",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.9389957911536676,
+  "R": 0.6547437274612201,
+  "N": 6,
+  "T": 5.968
+ },
+ {
+  "layout": "mixed:8007",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9280272213200557,
+  "R": 0.6547437274612201,
+  "N": 6,
+  "T": 8.564
+ },
+ {
+  "layout": "mixed:8007",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.180199210818158,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.88
+ },
+ {
+  "layout": "mixed:8007",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.383516198376703,
+  "R": 0.0,
+  "N": 6,
+  "T": 11.776
+ },
+ {
+  "layout": "mixed:8008",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.30917643214131774,
+  "R": 0.2797810808278179,
+  "N": 4,
+  "T": 2.48
+ },
+ {
+  "layout": "mixed:8008",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0056296168735248,
+  "R": 0.27978382490810866,
+  "N": 6,
+  "T": 8.764
+ },
+ {
+  "layout": "mixed:8008",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.9265735875003694,
+  "R": 0.22109447421529502,
+  "N": 6,
+  "T": 5.544
+ },
+ {
+  "layout": "mixed:8008",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8994110318713326,
+  "R": 0.22110132012726294,
+  "N": 6,
+  "T": 7.996
+ },
+ {
+  "layout": "mixed:8008",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7447224237697482,
+  "R": 0.0,
+  "N": 3,
+  "T": 3.888
+ },
+ {
+  "layout": "mixed:8008",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.7801286404211024,
+  "R": 0.0,
+  "N": 4,
+  "T": 11.268
+ },
+ {
+  "layout": "mixed:8008",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7739011058913697,
+  "R": 3.4213746491084818,
+  "N": 8,
+  "T": 14.616
+ },
+ {
+  "layout": "mixed:8008",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.770108172972613,
+  "R": 3.4213746491084818,
+  "N": 8,
+  "T": 14.372
+ },
+ {
+  "layout": "mixed:8009",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.5238048733504048,
+  "R": 0.3017699353879241,
+  "N": 4,
+  "T": 3.36
+ },
+ {
+  "layout": "mixed:8009",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1434152527728667,
+  "R": 0.3017699353879241,
+  "N": 6,
+  "T": 9.704
+ },
+ {
+  "layout": "mixed:8009",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.8491152034097069,
+  "R": 0.4471526088843244,
+  "N": 6,
+  "T": 5.436
+ },
+ {
+  "layout": "mixed:8009",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.835958941532726,
+  "R": 0.4471582578199996,
+  "N": 6,
+  "T": 7.776
+ },
+ {
+  "layout": "mixed:8009",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:detour",
+  "L": 0.567391896026857,
+  "R": 0.0,
+  "N": 3,
+  "T": 3.176
+ },
+ {
+  "layout": "mixed:8009",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "detour",
+  "L": 0.5075863052305849,
+  "R": 0.0,
+  "N": 4,
+  "T": 6.836
+ },
+ {
+  "layout": "mixed:8009",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.9081365535493487,
+  "R": 3.443362588975158,
+  "N": 8,
+  "T": 15.68
+ },
+ {
+  "layout": "mixed:8009",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.9060170895942715,
+  "R": 3.443362588975158,
+  "N": 8,
+  "T": 15.472
+ },
+ {
+  "layout": "mixed:8010",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.380042007535737,
+  "R": 0.12344455699012065,
+  "N": 4,
+  "T": 2.584
+ },
+ {
+  "layout": "mixed:8010",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.345793460343402,
+  "R": 0.12344455699012065,
+  "N": 6,
+  "T": 12.464
+ },
+ {
+  "layout": "mixed:8010",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.9339250926994919,
+  "R": 0.639332227871641,
+  "N": 5,
+  "T": 5.684
+ },
+ {
+  "layout": "mixed:8010",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 1.0963112769615928,
+  "R": 0.639332227871641,
+  "N": 5,
+  "T": 11.132
+ },
+ {
+  "layout": "mixed:8010",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6107564518238466,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.008
+ },
+ {
+  "layout": "mixed:8010",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.702843126812107,
+  "R": 3.141592653587234,
+  "N": 8,
+  "T": 11.2
+ },
+ {
+  "layout": "mixed:8010",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7517099890223276,
+  "R": 3.265037210577354,
+  "N": 8,
+  "T": 12.892
+ },
+ {
+  "layout": "mixed:8010",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7517536231077264,
+  "R": 3.265037210577354,
+  "N": 8,
+  "T": 12.664
+ },
+ {
+  "layout": "mixed:8010",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.290650861111809,
+  "R": 0.0,
+  "N": 4,
+  "T": 6.324
+ },
+ {
+  "layout": "mixed:8010",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 1.432425665521336,
+  "R": 0.0,
+  "N": 6,
+  "T": 17.484
+ },
+ {
+  "layout": "mixed:8011",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4714663887100835,
+  "R": 0.7050600673966924,
+  "N": 4,
+  "T": 3.484
+ },
+ {
+  "layout": "mixed:8011",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.092174853675952,
+  "R": 0.7050656607138348,
+  "N": 5,
+  "T": 9.544
+ },
+ {
+  "layout": "mixed:8011",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.5872636421334745,
+  "R": 3.755466832269423,
+  "N": 8,
+  "T": 7.708
+ },
+ {
+  "layout": "mixed:8011",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.6911746317850933,
+  "R": 3.7554668322694225,
+  "N": 10,
+  "T": 13.516
+ },
+ {
+  "layout": "mixed:8011",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7885558723244211,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.312
+ },
+ {
+  "layout": "mixed:8011",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9965097243530453,
+  "R": 0.0,
+  "N": 6,
+  "T": 9.196
+ },
+ {
+  "layout": "mixed:8011",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 1.025125200399043,
+  "R": 3.846655517642497,
+  "N": 8,
+  "T": 15.92
+ },
+ {
+  "layout": "mixed:8011",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 1.0230305385391507,
+  "R": 3.846655517642497,
+  "N": 8,
+  "T": 15.72
+ },
+ {
+  "layout": "mixed:8011",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.088521431151362,
+  "R": 0.6138741786821891,
+  "N": 6,
+  "T": 6.528
+ },
+ {
+  "layout": "mixed:8011",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2493913151395726,
+  "R": 0.6138741786821891,
+  "N": 6,
+  "T": 10.668
+ },
+ {
+  "layout": "mixed:8012",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4587936990559872,
+  "R": 0.10815958392397244,
+  "N": 4,
+  "T": 2.88
+ },
+ {
+  "layout": "mixed:8012",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8816614352234347,
+  "R": 0.10816441300386281,
+  "N": 5,
+  "T": 7.588
+ },
+ {
+  "layout": "mixed:8012",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.1754869049549508,
+  "R": 0.5941975142063187,
+  "N": 6,
+  "T": 6.864
+ },
+ {
+  "layout": "mixed:8012",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.172588532765072,
+  "R": 0.5941975142063187,
+  "N": 6,
+  "T": 10.14
+ },
+ {
+  "layout": "mixed:8012",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.9769708594732476,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.068
+ },
+ {
+  "layout": "mixed:8012",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.189114566953818,
+  "R": 0.0,
+  "N": 6,
+  "T": 10.48
+ },
+ {
+  "layout": "mixed:8013",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.20697889367289232,
+  "R": 0.07213293800972669,
+  "N": 4,
+  "T": 1.804
+ },
+ {
+  "layout": "mixed:8013",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 0.7674623189715306,
+  "R": 0.07213293800972669,
+  "N": 6,
+  "T": 6.916
+ },
+ {
+  "layout": "mixed:8013",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6037486472817738,
+  "R": 3.7713066121365038,
+  "N": 8,
+  "T": 7.788
+ },
+ {
+  "layout": "mixed:8013",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7302947729492348,
+  "R": 3.771310372429104,
+  "N": 9,
+  "T": 14.136
+ },
+ {
+  "layout": "mixed:8013",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.6245137858982956,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.064
+ },
+ {
+  "layout": "mixed:8013",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8673721471057363,
+  "R": 0.0,
+  "N": 5,
+  "T": 10.508
+ },
+ {
+  "layout": "mixed:8013",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7362174203581624,
+  "R": 3.2137255915969605,
+  "N": 8,
+  "T": 13.128
+ },
+ {
+  "layout": "mixed:8013",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7254650760063517,
+  "R": 3.2137255915969605,
+  "N": 8,
+  "T": 12.836
+ },
+ {
+  "layout": "mixed:8013",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.9912294595116081,
+  "R": 0.6297139585492698,
+  "N": 6,
+  "T": 6.156
+ },
+ {
+  "layout": "mixed:8013",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.9655522060131214,
+  "R": 0.6297195989881705,
+  "N": 6,
+  "T": 8.792
+ },
+ {
+  "layout": "mixed:8013",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.8548385834362584,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.58
+ },
+ {
+  "layout": "mixed:8014",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.38321940293658585,
+  "R": 0.3639192832741758,
+  "N": 4,
+  "T": 2.848
+ },
+ {
+  "layout": "mixed:8014",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.167055817002569,
+  "R": 0.3639235887557746,
+  "N": 6,
+  "T": 9.912
+ },
+ {
+  "layout": "mixed:8014",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6285207190777409,
+  "R": 3.279137561221855,
+  "N": 8,
+  "T": 7.432
+ },
+ {
+  "layout": "mixed:8014",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.732943582136753,
+  "R": 3.279138978948121,
+  "N": 9,
+  "T": 12.724
+ },
+ {
+  "layout": "mixed:8014",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.9057514059227161,
+  "R": 0.0,
+  "N": 3,
+  "T": 4.532
+ },
+ {
+  "layout": "mixed:8014",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.90030441848049,
+  "R": 0.0,
+  "N": 4,
+  "T": 13.132
+ },
+ {
+  "layout": "mixed:8014",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8804746803273549,
+  "R": 3.5055133720219427,
+  "N": 9,
+  "T": 14.612
+ },
+ {
+  "layout": "mixed:8014",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8811700719309666,
+  "R": 3.5055133720219427,
+  "N": 8,
+  "T": 14.4
+ },
+ {
+  "layout": "mixed:8014",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.0033356226430572,
+  "R": 0.13754490763462168,
+  "N": 6,
+  "T": 5.748
+ },
+ {
+  "layout": "mixed:8014",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.9967070045001347,
+  "R": 0.13754916081341806,
+  "N": 6,
+  "T": 8.544
+ },
+ {
+  "layout": "mixed:8015",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.5547437073873035,
+  "R": 0.15602857997899547,
+  "N": 4,
+  "T": 3.328
+ },
+ {
+  "layout": "mixed:8015",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1824155850733429,
+  "R": 0.15603580272415637,
+  "N": 7,
+  "T": 9.96
+ },
+ {
+  "layout": "mixed:8015",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.7195902745598002,
+  "R": 0.07507401858616713,
+  "N": 6,
+  "T": 4.516
+ },
+ {
+  "layout": "mixed:8015",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.6801868625903426,
+  "R": 0.07507401858616713,
+  "N": 6,
+  "T": 6.34
+ },
+ {
+  "layout": "mixed:8015",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.6719438279103416,
+  "R": 0.0,
+  "N": 3,
+  "T": 3.596
+ },
+ {
+  "layout": "mixed:8015",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "detour",
+  "L": 0.6114982325786346,
+  "R": 0.0,
+  "N": 4,
+  "T": 6.72
+ },
+ {
+  "layout": "mixed:8015",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 1.102225075447679,
+  "R": 3.2976248449388095,
+  "N": 9,
+  "T": 17.22
+ },
+ {
+  "layout": "mixed:8015",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 1.1025027425542808,
+  "R": 3.2976248449388095,
+  "N": 9,
+  "T": 17.056
+ },
+ {
+  "layout": "mixed:8016",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.23828683396081454,
+  "R": 0.07771359008965452,
+  "N": 4,
+  "T": 1.944
+ },
+ {
+  "layout": "mixed:8016",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 0.7836537342891332,
+  "R": 0.07771359008965452,
+  "N": 5,
+  "T": 6.88
+ },
+ {
+  "layout": "mixed:8016",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.7562272977331514,
+  "R": 0.4040303687912635,
+  "N": 5,
+  "T": 4.776
+ },
+ {
+  "layout": "mixed:8016",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "direct",
+  "L": 0.6380188992237121,
+  "R": 0.4040303687912635,
+  "N": 4,
+  "T": 6.116
+ },
+ {
+  "layout": "mixed:8016",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.44848676433607576,
+  "R": 0.0,
+  "N": 3,
+  "T": 2.7
+ },
+ {
+  "layout": "mixed:8016",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.4971860961394814,
+  "R": 0.0,
+  "N": 5,
+  "T": 6.088
+ },
+ {
+  "layout": "mixed:8017",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.37568950092968556,
+  "R": 0.6652456859809817,
+  "N": 4,
+  "T": 3.072
+ },
+ {
+  "layout": "mixed:8017",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0398087829490805,
+  "R": 0.6652456859809817,
+  "N": 6,
+  "T": 9.316
+ },
+ {
+  "layout": "mixed:8017",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7885378503145676,
+  "R": 0.776745507634143,
+  "N": 5,
+  "T": 5.212
+ },
+ {
+  "layout": "mixed:8017",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.7775944539440922,
+  "R": 0.7767490982883926,
+  "N": 5,
+  "T": 7.508
+ },
+ {
+  "layout": "mixed:8017",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.5644150770639735,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 6.824
+ },
+ {
+  "layout": "mixed:8017",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.6185855499032681,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 9.828
+ },
+ {
+  "layout": "mixed:8017",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.666811995355795,
+  "R": 3.8068383395682153,
+  "N": 8,
+  "T": 12.468
+ },
+ {
+  "layout": "mixed:8017",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.6664346082286525,
+  "R": 3.8068383395682153,
+  "N": 8,
+  "T": 12.252
+ },
+ {
+  "layout": "mixed:8017",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.0656187331931786,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.424
+ },
+ {
+  "layout": "mixed:8017",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2725985192651998,
+  "R": 0.0,
+  "N": 6,
+  "T": 11.036
+ },
+ {
+  "layout": "mixed:8018",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4066454067947496,
+  "R": 0.14234973150047328,
+  "N": 4,
+  "T": 2.72
+ },
+ {
+  "layout": "mixed:8018",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9873589019473722,
+  "R": 0.14235577755366685,
+  "N": 6,
+  "T": 8.492
+ },
+ {
+  "layout": "mixed:8018",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7859702236468024,
+  "R": 0.040384475097102565,
+  "N": 5,
+  "T": 4.46
+ },
+ {
+  "layout": "mixed:8018",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.7554817425005227,
+  "R": 0.040384475097102565,
+  "N": 5,
+  "T": 6.616
+ },
+ {
+  "layout": "mixed:8018",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.6159412507509411,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.028
+ },
+ {
+  "layout": "mixed:8018",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.6501905016862985,
+  "R": 3.141592653587234,
+  "N": 8,
+  "T": 12.468
+ },
+ {
+  "layout": "mixed:8018",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.9683793087074468,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.032
+ },
+ {
+  "layout": "mixed:8018",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.1498095769572638,
+  "R": 0.0,
+  "N": 6,
+  "T": 10.22
+ },
+ {
+  "layout": "mixed:8019",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.39842540129557447,
+  "R": 0.599179568760696,
+  "N": 4,
+  "T": 3.104
+ },
+ {
+  "layout": "mixed:8019",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9952894772531053,
+  "R": 0.5991864275047502,
+  "N": 6,
+  "T": 8.964
+ },
+ {
+  "layout": "mixed:8019",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.7202505432423808,
+  "R": 3.913914372232004,
+  "N": 8,
+  "T": 8.372
+ },
+ {
+  "layout": "mixed:8019",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8260665509714091,
+  "R": 3.9139143722320036,
+  "N": 8,
+  "T": 15.096
+ },
+ {
+  "layout": "mixed:8019",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7324695407251003,
+  "R": 0.0,
+  "N": 3,
+  "T": 3.836
+ },
+ {
+  "layout": "mixed:8019",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9231841411289845,
+  "R": 0.0,
+  "N": 5,
+  "T": 8.556
+ },
+ {
+  "layout": "mixed:8019",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7830376567486615,
+  "R": 3.7407745085959476,
+  "N": 8,
+  "T": 13.984
+ },
+ {
+  "layout": "mixed:8019",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7835305198800923,
+  "R": 3.7407745085959476,
+  "N": 8,
+  "T": 13.76
+ },
+ {
+  "layout": "mixed:8019",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.0815974879211145,
+  "R": 0.7723217186447702,
+  "N": 6,
+  "T": 6.636
+ },
+ {
+  "layout": "mixed:8019",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0575155776045657,
+  "R": 0.7723217186447702,
+  "N": 6,
+  "T": 9.524
+ },
+ {
+  "layout": "mixed:8020",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.31778397814234316,
+  "R": 0.35840371945672983,
+  "N": 4,
+  "T": 2.584
+ },
+ {
+  "layout": "mixed:8020",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.002034341161862,
+  "R": 0.35840887181199577,
+  "N": 6,
+  "T": 8.808
+ },
+ {
+  "layout": "mixed:8020",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.768060293872962,
+  "R": 3.7301435296855874,
+  "N": 9,
+  "T": 8.6
+ },
+ {
+  "layout": "mixed:8020",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8792171541852637,
+  "R": 3.7301471937959834,
+  "N": 10,
+  "T": 14.828
+ },
+ {
+  "layout": "mixed:8020",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.5143124384219776,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 6.628
+ },
+ {
+  "layout": "mixed:8020",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.5723279575172942,
+  "R": 3.141592653587234,
+  "N": 8,
+  "T": 10.616
+ },
+ {
+  "layout": "mixed:8020",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 1.0212511590138653,
+  "R": 3.499998090495719,
+  "N": 9,
+  "T": 15.836
+ },
+ {
+  "layout": "mixed:8020",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.844727733566033,
+  "R": 3.499998090495719,
+  "N": 8,
+  "T": 13.948
+ },
+ {
+  "layout": "mixed:8020",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.3483625962137558,
+  "R": 0.5885508760983534,
+  "N": 6,
+  "T": 7.548
+ },
+ {
+  "layout": "mixed:8020",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 1.3410381496020471,
+  "R": 0.5885563722639471,
+  "N": 6,
+  "T": 11.26
+ },
+ {
+  "layout": "mixed:8020",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.1769117868263792,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.868
+ },
+ {
+  "layout": "mixed:8020",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1719478207939764,
+  "R": 0.0,
+  "N": 5,
+  "T": 14.976
+ },
+ {
+  "layout": "mixed:8021",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.2928415740907472,
+  "R": 0.3858042024206624,
+  "N": 4,
+  "T": 2.508
+ },
+ {
+  "layout": "mixed:8021",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.893432496575651,
+  "R": 0.3858042024206624,
+  "N": 6,
+  "T": 8.108
+ },
+ {
+  "layout": "mixed:8021",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.7443551439656407,
+  "R": 3.665156073413272,
+  "N": 8,
+  "T": 8.264
+ },
+ {
+  "layout": "mixed:8021",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8520260756502047,
+  "R": 3.6651573880977226,
+  "N": 8,
+  "T": 15.02
+ },
+ {
+  "layout": "mixed:8021",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.6256612004699069,
+  "R": 0.0,
+  "N": 4,
+  "T": 3.66
+ },
+ {
+  "layout": "mixed:8021",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8164292805074912,
+  "R": 0.0,
+  "N": 6,
+  "T": 7.996
+ },
+ {
+  "layout": "mixed:8021",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.6421000593511953,
+  "R": 3.527396856007896,
+  "N": 8,
+  "T": 12.784
+ },
+ {
+  "layout": "mixed:8021",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.6437163800529219,
+  "R": 3.527396856007896,
+  "N": 8,
+  "T": 12.604
+ },
+ {
+  "layout": "mixed:8021",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.0434688531795262,
+  "R": 0.5235634198260383,
+  "N": 6,
+  "T": 6.28
+ },
+ {
+  "layout": "mixed:8021",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0163097126338934,
+  "R": 0.5235673638793902,
+  "N": 6,
+  "T": 9.04
+ },
+ {
+  "layout": "mixed:8022",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.27976881420054833,
+  "R": 0.37635773494096353,
+  "N": 4,
+  "T": 2.448
+ },
+ {
+  "layout": "mixed:8022",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8767269650208085,
+  "R": 0.37636393439711524,
+  "N": 6,
+  "T": 7.988
+ },
+ {
+  "layout": "mixed:8022",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.013146763353142,
+  "R": 0.6942576514698446,
+  "N": 6,
+  "T": 6.296
+ },
+ {
+  "layout": "mixed:8022",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.002327573165837,
+  "R": 0.6942643683077173,
+  "N": 6,
+  "T": 9.092
+ },
+ {
+  "layout": "mixed:8022",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.009956111871662,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.2
+ },
+ {
+  "layout": "mixed:8022",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2156624353636043,
+  "R": 0.0,
+  "N": 6,
+  "T": 10.656
+ },
+ {
+  "layout": "mixed:8023",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.49736217501093594,
+  "R": 0.715080388891422,
+  "N": 4,
+  "T": 3.596
+ },
+ {
+  "layout": "mixed:8023",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 0.6732255178120892,
+  "R": 0.7150862647123459,
+  "N": 5,
+  "T": 6.76
+ },
+ {
+  "layout": "mixed:8023",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.018022628462504,
+  "R": 0.4380438975870258,
+  "N": 6,
+  "T": 6.104
+ },
+ {
+  "layout": "mixed:8023",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 1.2337204982125942,
+  "R": 0.43804817512879934,
+  "N": 6,
+  "T": 10.424
+ },
+ {
+  "layout": "mixed:8023",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.7546624591902336,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.18
+ },
+ {
+  "layout": "mixed:8023",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.7955043187248614,
+  "R": 0.0,
+  "N": 4,
+  "T": 13.06
+ },
+ {
+  "layout": "mixed:8024",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4890162462007114,
+  "R": 0.23897010535258328,
+  "N": 4,
+  "T": 3.16
+ },
+ {
+  "layout": "mixed:8024",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.3055176258374694,
+  "R": 0.23897010535258328,
+  "N": 7,
+  "T": 10.876
+ },
+ {
+  "layout": "mixed:8024",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.833932182606128,
+  "R": 0.5696556877955158,
+  "N": 5,
+  "T": 5.224
+ },
+ {
+  "layout": "mixed:8024",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8277774267198124,
+  "R": 0.5696556877955158,
+  "N": 5,
+  "T": 7.672
+ },
+ {
+  "layout": "mixed:8024",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.9704414757076204,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.04
+ },
+ {
+  "layout": "mixed:8024",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.9645128694396903,
+  "R": 0.0,
+  "N": 5,
+  "T": 12.732
+ },
+ {
+  "layout": "mixed:8025",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.5366783863032661,
+  "R": 0.5262528405858435,
+  "N": 4,
+  "T": 3.6
+ },
+ {
+  "layout": "mixed:8025",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.1171113805085,
+  "R": 0.5262554139607283,
+  "N": 5,
+  "T": 9.56
+ },
+ {
+  "layout": "mixed:8025",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.5577601540072172,
+  "R": 0.23531283257556146,
+  "N": 4,
+  "T": 3.58
+ },
+ {
+  "layout": "mixed:8025",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.4477011773340768,
+  "R": 0.23531788387139926,
+  "N": 5,
+  "T": 4.848
+ },
+ {
+  "layout": "mixed:8025",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8100584122008935,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.4
+ },
+ {
+  "layout": "mixed:8025",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7906100470402726,
+  "R": 3.141592653587234,
+  "N": 8,
+  "T": 13.632
+ },
+ {
+  "layout": "mixed:8025",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 1.0409483474060237,
+  "R": 3.6678467808605193,
+  "N": 8,
+  "T": 17.316
+ },
+ {
+  "layout": "mixed:8025",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 1.0422289011638703,
+  "R": 3.6678467808605193,
+  "N": 8,
+  "T": 17.188
+ },
+ {
+  "layout": "mixed:8025",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0682111620398547,
+  "R": 0.0,
+  "N": 5,
+  "T": 10.896
+ },
+ {
+  "layout": "mixed:8026",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.47568644059404974,
+  "R": 0.217683833068193,
+  "N": 4,
+  "T": 3.084
+ },
+ {
+  "layout": "mixed:8026",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0864091279739563,
+  "R": 0.2176859881285069,
+  "N": 6,
+  "T": 9.236
+ },
+ {
+  "layout": "mixed:8026",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8852680027066041,
+  "R": 0.33756512901981034,
+  "N": 5,
+  "T": 5.236
+ },
+ {
+  "layout": "mixed:8026",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8804518003692996,
+  "R": 0.33756512901981034,
+  "N": 5,
+  "T": 7.832
+ },
+ {
+  "layout": "mixed:8026",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.7143328932315002,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.424
+ },
+ {
+  "layout": "mixed:8026",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.9320198959221809,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 12.068
+ },
+ {
+  "layout": "mixed:8026",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.9849186537229818,
+  "R": 3.3592772050088646,
+  "N": 8,
+  "T": 15.548
+ },
+ {
+  "layout": "mixed:8026",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.9838899436844544,
+  "R": 3.3592772050088646,
+  "N": 8,
+  "T": 15.368
+ },
+ {
+  "layout": "mixed:8026",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.2172122642217293,
+  "R": 0.0,
+  "N": 4,
+  "T": 6.028
+ },
+ {
+  "layout": "mixed:8026",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.4252007928610397,
+  "R": 0.0,
+  "N": 6,
+  "T": 12.052
+ },
+ {
+  "layout": "mixed:8027",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.23858850943591667,
+  "R": 0.04381848015971145,
+  "N": 4,
+  "T": 1.88
+ },
+ {
+  "layout": "mixed:8027",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.112390926810346,
+  "R": 0.04381848015971145,
+  "N": 6,
+  "T": 9.156
+ },
+ {
+  "layout": "mixed:8027",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.9414303447205198,
+  "R": 0.14050901501278487,
+  "N": 5,
+  "T": 5.252
+ },
+ {
+  "layout": "mixed:8027",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9316226662958618,
+  "R": 0.14051100262884708,
+  "N": 5,
+  "T": 7.964
+ },
+ {
+  "layout": "mixed:8027",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.7037558627277789,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.38
+ },
+ {
+  "layout": "mixed:8027",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.9314183204881397,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 12.064
+ },
+ {
+  "layout": "mixed:8027",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.6569060520102877,
+  "R": 3.1854111337469453,
+  "N": 8,
+  "T": 12.86
+ },
+ {
+  "layout": "mixed:8027",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.6502497650343783,
+  "R": 3.1854111337469453,
+  "N": 8,
+  "T": 12.608
+ },
+ {
+  "layout": "mixed:8027",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.2540821323154505,
+  "R": 0.0,
+  "N": 4,
+  "T": 6.18
+ },
+ {
+  "layout": "mixed:8027",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.4579041517232474,
+  "R": 0.0,
+  "N": 6,
+  "T": 12.276
+ },
+ {
+  "layout": "mixed:8028",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.32654227194452845,
+  "R": 0.19395082839821184,
+  "N": 4,
+  "T": 2.464
+ },
+ {
+  "layout": "mixed:8028",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9195124088197111,
+  "R": 0.19395518280206353,
+  "N": 6,
+  "T": 8.1
+ },
+ {
+  "layout": "mixed:8028",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.8969012696737425,
+  "R": 3.4681560094156554,
+  "N": 8,
+  "T": 8.708
+ },
+ {
+  "layout": "mixed:8028",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.1581847612478804,
+  "R": 0.32656981544312796,
+  "N": 6,
+  "T": 9.824
+ },
+ {
+  "layout": "mixed:8028",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.6762705824723128,
+  "R": 0.0,
+  "N": 3,
+  "T": 3.612
+ },
+ {
+  "layout": "mixed:8028",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8439022557635618,
+  "R": 0.0,
+  "N": 5,
+  "T": 8.028
+ },
+ {
+  "layout": "mixed:8028",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8357060442376675,
+  "R": 3.335544933453396,
+  "N": 8,
+  "T": 15.076
+ },
+ {
+  "layout": "mixed:8028",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8339315433132924,
+  "R": 3.335544933453396,
+  "N": 8,
+  "T": 14.84
+ },
+ {
+  "layout": "mixed:8028",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.1937461785609658,
+  "R": 0.3265633558284214,
+  "N": 6,
+  "T": 6.712
+ },
+ {
+  "layout": "mixed:8029",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4844109222083678,
+  "R": 0.6294171249242448,
+  "N": 4,
+  "T": 3.476
+ },
+ {
+  "layout": "mixed:8029",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1314242605033875,
+  "R": 0.6294171249242448,
+  "N": 7,
+  "T": 10.048
+ },
+ {
+  "layout": "mixed:8029",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.8487074905993243,
+  "R": 0.3768643959143963,
+  "N": 6,
+  "T": 5.376
+ },
+ {
+  "layout": "mixed:8029",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8384887792751357,
+  "R": 0.3768705096776085,
+  "N": 6,
+  "T": 7.736
+ },
+ {
+  "layout": "mixed:8029",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.606767690005951,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 6.992
+ },
+ {
+  "layout": "mixed:8029",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.7626820465016173,
+  "R": 0.0,
+  "N": 5,
+  "T": 9.828
+ },
+ {
+  "layout": "mixed:8029",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.6968001331341543,
+  "R": 3.7710097785114787,
+  "N": 8,
+  "T": 13.204
+ },
+ {
+  "layout": "mixed:8029",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7006687103181833,
+  "R": 3.7710097785114787,
+  "N": 8,
+  "T": 13.064
+ },
+ {
+  "layout": "mixed:8029",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.7658467000148893,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.224
+ },
+ {
+  "layout": "mixed:8030",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.35650346139169387,
+  "R": 0.20406897820323408,
+  "N": 4,
+  "T": 2.592
+ },
+ {
+  "layout": "mixed:8030",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 0.918949782836376,
+  "R": 0.20406897820323408,
+  "N": 6,
+  "T": 8.108
+ },
+ {
+  "layout": "mixed:8030",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.5887874398648292,
+  "R": 0.024613449285826865,
+  "N": 6,
+  "T": 3.88
+ },
+ {
+  "layout": "mixed:8030",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.5600914059078828,
+  "R": 0.024621463561990103,
+  "N": 6,
+  "T": 5.42
+ },
+ {
+  "layout": "mixed:8030",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.9284023753079254,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.872
+ },
+ {
+  "layout": "mixed:8030",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.9462115128330337,
+  "R": 0.0,
+  "N": 5,
+  "T": 9.672
+ },
+ {
+  "layout": "mixed:8031",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.26613074153787264,
+  "R": 0.061042842539175954,
+  "N": 4,
+  "T": 2.024
+ },
+ {
+  "layout": "mixed:8031",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8463466647973814,
+  "R": 0.061042842539175954,
+  "N": 6,
+  "T": 7.42
+ },
+ {
+  "layout": "mixed:8031",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.6539155792647092,
+  "R": 0.5887967400419605,
+  "N": 5,
+  "T": 4.52
+ },
+ {
+  "layout": "mixed:8031",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.5686184069639736,
+  "R": 0.5887967400419605,
+  "N": 5,
+  "T": 5.96
+ },
+ {
+  "layout": "mixed:8031",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6113311268625958,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.012
+ },
+ {
+  "layout": "mixed:8031",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8092884822351344,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 12.62
+ },
+ {
+  "layout": "mixed:8031",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.6701780064388337,
+  "R": 3.20263549612641,
+  "N": 8,
+  "T": 12.424
+ },
+ {
+  "layout": "mixed:8031",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.6711277026365833,
+  "R": 3.20263549612641,
+  "N": 8,
+  "T": 12.224
+ },
+ {
+  "layout": "mixed:8031",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.9307869902689929,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.884
+ },
+ {
+  "layout": "mixed:8031",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 1.0028625522683192,
+  "R": 0.0,
+  "N": 5,
+  "T": 10.888
+ },
+ {
+  "layout": "mixed:8032",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.3660742583077208,
+  "R": 0.44453453087450245,
+  "N": 4,
+  "T": 2.848
+ },
+ {
+  "layout": "mixed:8032",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.0368027538667326,
+  "R": 0.44453453087450245,
+  "N": 5,
+  "T": 8.96
+ },
+ {
+  "layout": "mixed:8032",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:direct",
+  "L": 0.6340703745418987,
+  "R": 0.005300583406181268,
+  "N": 4,
+  "T": 3.476
+ },
+ {
+  "layout": "mixed:8032",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "direct",
+  "L": 0.5129342039122565,
+  "R": 0.005300583406181268,
+  "N": 4,
+  "T": 4.724
+ },
+ {
+  "layout": "mixed:8032",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.4500194915495822,
+  "R": 0.0,
+  "N": 3,
+  "T": 2.708
+ },
+ {
+  "layout": "mixed:8032",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.46904168629563875,
+  "R": 0.0,
+  "N": 4,
+  "T": 7.848
+ },
+ {
+  "layout": "mixed:8033",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.37895239699521943,
+  "R": 0.6532557125469038,
+  "N": 4,
+  "T": 3.076
+ },
+ {
+  "layout": "mixed:8033",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9244760421219964,
+  "R": 0.6532557125469038,
+  "N": 6,
+  "T": 8.54
+ },
+ {
+  "layout": "mixed:8033",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.568170822672585,
+  "R": 0.6931683493775898,
+  "N": 6,
+  "T": 4.516
+ },
+ {
+  "layout": "mixed:8033",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.535250799304988,
+  "R": 0.6931683493775898,
+  "N": 6,
+  "T": 5.976
+ },
+ {
+  "layout": "mixed:8033",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.6368514293937054,
+  "R": 0.0,
+  "N": 3,
+  "T": 3.456
+ },
+ {
+  "layout": "mixed:8033",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.6926181855931334,
+  "R": 0.0,
+  "N": 4,
+  "T": 7.86
+ },
+ {
+  "layout": "mixed:8034",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.3281264848790655,
+  "R": 0.41636150423003343,
+  "N": 4,
+  "T": 2.672
+ },
+ {
+  "layout": "mixed:8034",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.001088890216173,
+  "R": 0.41636150423003343,
+  "N": 6,
+  "T": 8.848
+ },
+ {
+  "layout": "mixed:8034",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7908804876759935,
+  "R": 0.2500070648980222,
+  "N": 5,
+  "T": 4.78
+ },
+ {
+  "layout": "mixed:8034",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.7739566269296709,
+  "R": 0.2500070648980222,
+  "N": 5,
+  "T": 7.04
+ },
+ {
+  "layout": "mixed:8034",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8366676217437277,
+  "R": 0.0,
+  "N": 3,
+  "T": 4.256
+ },
+ {
+  "layout": "mixed:8034",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0360607552107843,
+  "R": 0.0,
+  "N": 5,
+  "T": 9.308
+ },
+ {
+  "layout": "mixed:8035",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.3980254159271044,
+  "R": 0.07749036822841467,
+  "N": 4,
+  "T": 2.584
+ },
+ {
+  "layout": "mixed:8035",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1056064831657562,
+  "R": 0.07749036822841467,
+  "N": 6,
+  "T": 10.788
+ },
+ {
+  "layout": "mixed:8035",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.0475217881061027,
+  "R": 0.05109053436848787,
+  "N": 6,
+  "T": 5.78
+ },
+ {
+  "layout": "mixed:8035",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1749761626740187,
+  "R": 0.05109053436848787,
+  "N": 6,
+  "T": 11.2
+ },
+ {
+  "layout": "mixed:8035",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.6988495052882873,
+  "R": 0.0,
+  "N": 4,
+  "T": 3.956
+ },
+ {
+  "layout": "mixed:8035",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8842453518194009,
+  "R": 0.0,
+  "N": 5,
+  "T": 11.868
+ },
+ {
+  "layout": "mixed:8036",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4298082705524886,
+  "R": 0.3748717270858112,
+  "N": 4,
+  "T": 3.048
+ },
+ {
+  "layout": "mixed:8036",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.363561140159202,
+  "R": 0.3748799174667354,
+  "N": 6,
+  "T": 11.236
+ },
+ {
+  "layout": "mixed:8036",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.1063343817393125,
+  "R": 0.46065529757666135,
+  "N": 6,
+  "T": 6.472
+ },
+ {
+  "layout": "mixed:8036",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.1003535693808797,
+  "R": 0.46065529757666135,
+  "N": 6,
+  "T": 9.548
+ },
+ {
+  "layout": "mixed:8036",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.9348463569222417,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.9
+ },
+ {
+  "layout": "mixed:8036",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.1414306862429917,
+  "R": 0.0,
+  "N": 6,
+  "T": 10.164
+ },
+ {
+  "layout": "mixed:8037",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.22720067723907833,
+  "R": 0.0896529756452226,
+  "N": 4,
+  "T": 1.92
+ },
+ {
+  "layout": "mixed:8037",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8797282027024478,
+  "R": 0.08966120011432933,
+  "N": 6,
+  "T": 7.692
+ },
+ {
+  "layout": "mixed:8037",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.9596978895896456,
+  "R": 0.3450225872423712,
+  "N": 6,
+  "T": 5.792
+ },
+ {
+  "layout": "mixed:8037",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.9418341318531666,
+  "R": 0.34502869773601624,
+  "N": 6,
+  "T": 8.396
+ },
+ {
+  "layout": "mixed:8037",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.9423807242154983,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.932
+ },
+ {
+  "layout": "mixed:8037",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.9461547771943448,
+  "R": 0.0,
+  "N": 5,
+  "T": 12.12
+ },
+ {
+  "layout": "mixed:8038",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.47127079268516614,
+  "R": 0.11930836598388499,
+  "N": 4,
+  "T": 2.944
+ },
+ {
+  "layout": "mixed:8038",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1483084846414287,
+  "R": 0.11930836598388499,
+  "N": 6,
+  "T": 9.528
+ },
+ {
+  "layout": "mixed:8038",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.659896141012645,
+  "R": 0.11165095550375517,
+  "N": 6,
+  "T": 4.34
+ },
+ {
+  "layout": "mixed:8038",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.6301943750515513,
+  "R": 0.11165932783491567,
+  "N": 6,
+  "T": 6.064
+ },
+ {
+  "layout": "mixed:8038",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6225129451222283,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.06
+ },
+ {
+  "layout": "mixed:8038",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8543774745915412,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 11.552
+ },
+ {
+  "layout": "mixed:8038",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8833801495876134,
+  "R": 3.2609010195711186,
+  "N": 8,
+  "T": 14.756
+ },
+ {
+  "layout": "mixed:8038",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8832635259755964,
+  "R": 3.2609010195711186,
+  "N": 8,
+  "T": 14.564
+ },
+ {
+  "layout": "mixed:8038",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.9998794173968706,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.16
+ },
+ {
+  "layout": "mixed:8038",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 1.0178473498996194,
+  "R": 0.0,
+  "N": 5,
+  "T": 11.404
+ },
+ {
+  "layout": "mixed:8039",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.35563747548685176,
+  "R": 0.42910862766131547,
+  "N": 4,
+  "T": 2.796
+ },
+ {
+  "layout": "mixed:8039",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9094759541391798,
+  "R": 0.4291165878945405,
+  "N": 6,
+  "T": 8.248
+ },
+ {
+  "layout": "mixed:8039",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.6008756235065537,
+  "R": 0.6916376085018033,
+  "N": 6,
+  "T": 4.648
+ },
+ {
+  "layout": "mixed:8039",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.5661116956340643,
+  "R": 0.6916376085018033,
+  "N": 6,
+  "T": 6.184
+ },
+ {
+  "layout": "mixed:8039",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7921242067120595,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.332
+ },
+ {
+  "layout": "mixed:8039",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7650936865061816,
+  "R": 3.141592653587234,
+  "N": 8,
+  "T": 13.788
+ },
+ {
+  "layout": "mixed:8039",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 1.0567158608612224,
+  "R": 3.570706588070699,
+  "N": 9,
+  "T": 17.74
+ },
+ {
+  "layout": "mixed:8039",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 1.06617374228185,
+  "R": 3.570706588070699,
+  "N": 9,
+  "T": 17.7
+ },
+ {
+  "layout": "mixed:8039",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.974507910829678,
+  "R": 0.0,
+  "N": 6,
+  "T": 9.048
+ },
+ {
+  "layout": "shortcut:8000",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.271343070277287,
+  "R": 0.6605930157434214,
+  "N": 4,
+  "T": 2.648
+ },
+ {
+  "layout": "shortcut:8000",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.0432236687693688,
+  "R": 0.6606004079209824,
+  "N": 6,
+  "T": 9.336
+ },
+ {
+  "layout": "shortcut:8000",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.5571884399087293,
+  "R": 3.814181371584416,
+  "N": 8,
+  "T": 7.64
+ },
+ {
+  "layout": "shortcut:8000",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.6698709105819468,
+  "R": 3.814181371584416,
+  "N": 8,
+  "T": 12.824
+ },
+ {
+  "layout": "shortcut:8000",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.5614353265377199,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 6.812
+ },
+ {
+  "layout": "shortcut:8000",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8855406693926062,
+  "R": 0.0,
+  "N": 5,
+  "T": 12.064
+ },
+ {
+  "layout": "shortcut:8000",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.5498864363694661,
+  "R": 3.8021881333898424,
+  "N": 8,
+  "T": 11.332
+ },
+ {
+  "layout": "shortcut:8000",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.5482918561987975,
+  "R": 3.8021881333898424,
+  "N": 8,
+  "T": 11.092
+ },
+ {
+  "layout": "shortcut:8000",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.1717133802417847,
+  "R": 0.6725887179971823,
+  "N": 6,
+  "T": 6.916
+ },
+ {
+  "layout": "shortcut:8000",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1722379007855144,
+  "R": 0.6725887179971823,
+  "N": 6,
+  "T": 10.208
+ },
+ {
+  "layout": "shortcut:8000",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.8958117197302948,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.744
+ },
+ {
+  "layout": "shortcut:8001",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.5086017392767388,
+  "R": 0.5821627444684345,
+  "N": 4,
+  "T": 3.536
+ },
+ {
+  "layout": "shortcut:8001",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1342155748636082,
+  "R": 0.5821700095753812,
+  "N": 6,
+  "T": 9.88
+ },
+ {
+  "layout": "shortcut:8001",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.8238217947132876,
+  "R": 0.491608654849742,
+  "N": 6,
+  "T": 5.372
+ },
+ {
+  "layout": "shortcut:8001",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8688665852892598,
+  "R": 0.491608654849742,
+  "N": 7,
+  "T": 8.184
+ },
+ {
+  "layout": "shortcut:8001",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.5995518072220998,
+  "R": 0.0,
+  "N": 4,
+  "T": 3.556
+ },
+ {
+  "layout": "shortcut:8001",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.6077581835676706,
+  "R": 0.0,
+  "N": 5,
+  "T": 8.512
+ },
+ {
+  "layout": "shortcut:8001",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8326597445925279,
+  "R": 3.723757819757984,
+  "N": 8,
+  "T": 14.1
+ },
+ {
+  "layout": "shortcut:8001",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8302790847237352,
+  "R": 3.723757819757984,
+  "N": 8,
+  "T": 13.88
+ },
+ {
+  "layout": "shortcut:8002",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4195301048383079,
+  "R": 0.005305560108599055,
+  "N": 4,
+  "T": 2.472
+ },
+ {
+  "layout": "shortcut:8002",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.1223446511518518,
+  "R": 0.00530970863041273,
+  "N": 6,
+  "T": 9.088
+ },
+ {
+  "layout": "shortcut:8002",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.5961298436104151,
+  "R": 3.3092876915989384,
+  "N": 8,
+  "T": 7.344
+ },
+ {
+  "layout": "shortcut:8002",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.6903075866103108,
+  "R": 3.3092876915989384,
+  "N": 9,
+  "T": 12.376
+ },
+ {
+  "layout": "shortcut:8002",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.6551874423195975,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.188
+ },
+ {
+  "layout": "shortcut:8002",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.6845167682723446,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 10.02
+ },
+ {
+  "layout": "shortcut:8002",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.74322427322445,
+  "R": 3.1468995965364375,
+  "N": 8,
+  "T": 11.904
+ },
+ {
+  "layout": "shortcut:8002",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7407870269472964,
+  "R": 3.1468995965364375,
+  "N": 8,
+  "T": 11.668
+ },
+ {
+  "layout": "shortcut:8002",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.9492978284660766,
+  "R": 0.1676950380117044,
+  "N": 6,
+  "T": 5.572
+ },
+ {
+  "layout": "shortcut:8002",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9418884711974918,
+  "R": 0.1676950380117044,
+  "N": 6,
+  "T": 8.216
+ },
+ {
+  "layout": "shortcut:8002",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8870585731651843,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.708
+ },
+ {
+  "layout": "shortcut:8002",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0974290692619804,
+  "R": 0.0,
+  "N": 6,
+  "T": 9.868
+ },
+ {
+  "layout": "shortcut:8003",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4551179654726677,
+  "R": 0.17998972885223782,
+  "N": 4,
+  "T": 2.96
+ },
+ {
+  "layout": "shortcut:8003",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.261717030194498,
+  "R": 0.17999671233194692,
+  "N": 6,
+  "T": 11.98
+ },
+ {
+  "layout": "shortcut:8003",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8273024670846122,
+  "R": 0.239720708774883,
+  "N": 5,
+  "T": 4.912
+ },
+ {
+  "layout": "shortcut:8003",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.7871110623972372,
+  "R": 0.239720708774883,
+  "N": 5,
+  "T": 7.116
+ },
+ {
+  "layout": "shortcut:8003",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8127658445955389,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.412
+ },
+ {
+  "layout": "shortcut:8003",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7478043447765317,
+  "R": 3.141592653587234,
+  "N": 8,
+  "T": 12.656
+ },
+ {
+  "layout": "shortcut:8003",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8888627061725592,
+  "R": 3.321584710266041,
+  "N": 8,
+  "T": 15.288
+ },
+ {
+  "layout": "shortcut:8003",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8872773301770032,
+  "R": 3.321584710266041,
+  "N": 8,
+  "T": 15.132
+ },
+ {
+  "layout": "shortcut:8003",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9938170776256521,
+  "R": 0.0,
+  "N": 7,
+  "T": 9.328
+ },
+ {
+  "layout": "shortcut:8004",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.3816310270344486,
+  "R": 0.5481079036277932,
+  "N": 4,
+  "T": 3.0
+ },
+ {
+  "layout": "shortcut:8004",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2484240195224283,
+  "R": 0.5481135412315901,
+  "N": 6,
+  "T": 10.612
+ },
+ {
+  "layout": "shortcut:8004",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.724602010844244,
+  "R": 3.90346156254849,
+  "N": 8,
+  "T": 8.384
+ },
+ {
+  "layout": "shortcut:8004",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8361714403930941,
+  "R": 3.9034615625484905,
+  "N": 9,
+  "T": 14.9
+ },
+ {
+  "layout": "shortcut:8004",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6010059887276961,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 6.972
+ },
+ {
+  "layout": "shortcut:8004",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7878454122414036,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 11.108
+ },
+ {
+  "layout": "shortcut:8004",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7990440646585404,
+  "R": 3.689702436416293,
+  "N": 8,
+  "T": 14.432
+ },
+ {
+  "layout": "shortcut:8004",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7992416284527323,
+  "R": 3.689702436416293,
+  "N": 8,
+  "T": 14.204
+ },
+ {
+  "layout": "shortcut:8004",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.0961435042716388,
+  "R": 0.7618689089612564,
+  "N": 6,
+  "T": 6.684
+ },
+ {
+  "layout": "shortcut:8004",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0864007047883055,
+  "R": 0.7618689089612564,
+  "N": 6,
+  "T": 9.708
+ },
+ {
+  "layout": "shortcut:8004",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.3057167248457855,
+  "R": 0.0,
+  "N": 4,
+  "T": 6.384
+ },
+ {
+  "layout": "shortcut:8004",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.5085995011605597,
+  "R": 0.0,
+  "N": 6,
+  "T": 12.608
+ },
+ {
+  "layout": "shortcut:8005",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.280134823702475,
+  "R": 0.36426198108509095,
+  "N": 4,
+  "T": 2.436
+ },
+ {
+  "layout": "shortcut:8005",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9724743245739265,
+  "R": 0.3642682580654857,
+  "N": 6,
+  "T": 8.616
+ },
+ {
+  "layout": "shortcut:8005",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8682406174862457,
+  "R": 0.1534535718128093,
+  "N": 6,
+  "T": 5.228
+ },
+ {
+  "layout": "shortcut:8005",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8540897394346589,
+  "R": 0.15345893026705956,
+  "N": 6,
+  "T": 7.616
+ },
+ {
+  "layout": "shortcut:8005",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6799425150078917,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.284
+ },
+ {
+  "layout": "shortcut:8005",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8633744454606466,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 11.612
+ },
+ {
+  "layout": "shortcut:8005",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.713200021921003,
+  "R": 3.5058567269991228,
+  "N": 8,
+  "T": 13.312
+ },
+ {
+  "layout": "shortcut:8005",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7109371477605214,
+  "R": 3.5058567269991228,
+  "N": 8,
+  "T": 13.072
+ },
+ {
+  "layout": "shortcut:8005",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.170387421632234,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.844
+ },
+ {
+  "layout": "shortcut:8005",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.3707826692806877,
+  "R": 0.0,
+  "N": 6,
+  "T": 11.692
+ },
+ {
+  "layout": "shortcut:8006",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.5141384521475685,
+  "R": 0.7431773125007454,
+  "N": 4,
+  "T": 3.688
+ },
+ {
+  "layout": "shortcut:8006",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.2307912118731945,
+  "R": 0.7431868298526856,
+  "N": 7,
+  "T": 10.808
+ },
+ {
+  "layout": "shortcut:8006",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.7623070236698543,
+  "R": 0.704894473773773,
+  "N": 6,
+  "T": 5.3
+ },
+ {
+  "layout": "shortcut:8006",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.7386425371455846,
+  "R": 0.7048998344652181,
+  "N": 6,
+  "T": 7.34
+ },
+ {
+  "layout": "shortcut:8006",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.7531968826984923,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.176
+ },
+ {
+  "layout": "shortcut:8006",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.7632816555426485,
+  "R": 0.0,
+  "N": 5,
+  "T": 9.808
+ },
+ {
+  "layout": "shortcut:8006",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8662349146132514,
+  "R": 3.884772345425964,
+  "N": 8,
+  "T": 15.1
+ },
+ {
+  "layout": "shortcut:8006",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8650033347106554,
+  "R": 3.884772345425964,
+  "N": 8,
+  "T": 14.912
+ },
+ {
+  "layout": "shortcut:8007",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.3705257703014393,
+  "R": 0.6853765921199793,
+  "N": 4,
+  "T": 3.068
+ },
+ {
+  "layout": "shortcut:8007",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0192933820956085,
+  "R": 0.6853829431620002,
+  "N": 6,
+  "T": 9.196
+ },
+ {
+  "layout": "shortcut:8007",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6496882584312856,
+  "R": 3.3060780536197534,
+  "N": 8,
+  "T": 7.552
+ },
+ {
+  "layout": "shortcut:8007",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.835060053630845,
+  "R": 0.16448540003251938,
+  "N": 6,
+  "T": 7.504
+ },
+ {
+  "layout": "shortcut:8007",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6753650033135284,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.268
+ },
+ {
+  "layout": "shortcut:8007",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8896775679402834,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 11.788
+ },
+ {
+  "layout": "shortcut:8007",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7747433913771983,
+  "R": 3.8269713627212196,
+  "N": 8,
+  "T": 12.976
+ },
+ {
+  "layout": "shortcut:8007",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.774348815712511,
+  "R": 3.8269713627212196,
+  "N": 8,
+  "T": 12.764
+ },
+ {
+  "layout": "shortcut:8007",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8354579739507576,
+  "R": 0.16448540003251938,
+  "N": 6,
+  "T": 5.116
+ },
+ {
+  "layout": "shortcut:8007",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.1984192642790026,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.952
+ },
+ {
+  "layout": "shortcut:8007",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.4118375676624866,
+  "R": 0.0,
+  "N": 6,
+  "T": 11.964
+ },
+ {
+  "layout": "shortcut:8008",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.40511539899181803,
+  "R": 0.6219311272066865,
+  "N": 4,
+  "T": 3.152
+ },
+ {
+  "layout": "shortcut:8008",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1667133349966952,
+  "R": 0.621940129678816,
+  "N": 7,
+  "T": 10.28
+ },
+ {
+  "layout": "shortcut:8008",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.5749489400039663,
+  "R": 3.673279898869258,
+  "N": 8,
+  "T": 7.592
+ },
+ {
+  "layout": "shortcut:8008",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7118071510541485,
+  "R": 3.673280911271301,
+  "N": 8,
+  "T": 13.064
+ },
+ {
+  "layout": "shortcut:8008",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.7957690705105207,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.344
+ },
+ {
+  "layout": "shortcut:8008",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.7859773476266623,
+  "R": 0.0,
+  "N": 5,
+  "T": 11.32
+ },
+ {
+  "layout": "shortcut:8008",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.6175814486731405,
+  "R": 3.7635260314119527,
+  "N": 8,
+  "T": 11.828
+ },
+ {
+  "layout": "shortcut:8008",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.6185053715145341,
+  "R": 3.7635260314119527,
+  "N": 8,
+  "T": 11.612
+ },
+ {
+  "layout": "shortcut:8008",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.9464703221490692,
+  "R": 0.5316872452820244,
+  "N": 6,
+  "T": 5.896
+ },
+ {
+  "layout": "shortcut:8008",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.9461556719686901,
+  "R": 0.5316902824881529,
+  "N": 6,
+  "T": 8.58
+ },
+ {
+  "layout": "shortcut:8009",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.45413987895480623,
+  "R": 0.45075934216148206,
+  "N": 4,
+  "T": 3.204
+ },
+ {
+  "layout": "shortcut:8009",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.3331227521613986,
+  "R": 0.45075934216148206,
+  "N": 6,
+  "T": 11.092
+ },
+ {
+  "layout": "shortcut:8009",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6527824699291345,
+  "R": 3.772977067877298,
+  "N": 8,
+  "T": 7.988
+ },
+ {
+  "layout": "shortcut:8009",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7780215539243642,
+  "R": 3.772979291897446,
+  "N": 8,
+  "T": 14.728
+ },
+ {
+  "layout": "shortcut:8009",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8153739811753875,
+  "R": 0.0,
+  "N": 3,
+  "T": 4.168
+ },
+ {
+  "layout": "shortcut:8009",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0195761436555169,
+  "R": 0.0,
+  "N": 5,
+  "T": 9.2
+ },
+ {
+  "layout": "shortcut:8009",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7068519804832935,
+  "R": 3.592351995748716,
+  "N": 8,
+  "T": 13.428
+ },
+ {
+  "layout": "shortcut:8009",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7066014962416028,
+  "R": 3.592351995748716,
+  "N": 8,
+  "T": 13.196
+ },
+ {
+  "layout": "shortcut:8009",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.1253546513027244,
+  "R": 0.6313844142900641,
+  "N": 6,
+  "T": 6.692
+ },
+ {
+  "layout": "shortcut:8009",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.1164973387016672,
+  "R": 0.6313910863505084,
+  "N": 6,
+  "T": 9.796
+ },
+ {
+  "layout": "shortcut:8010",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.46970347196249673,
+  "R": 0.6956132331851477,
+  "N": 4,
+  "T": 3.472
+ },
+ {
+  "layout": "shortcut:8010",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0213651607074121,
+  "R": 0.6956132331851477,
+  "N": 6,
+  "T": 9.216
+ },
+ {
+  "layout": "shortcut:8010",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.6561518746488763,
+  "R": 0.640672453970423,
+  "N": 5,
+  "T": 4.576
+ },
+ {
+  "layout": "shortcut:8010",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.6125125560722151,
+  "R": 0.6406766006720286,
+  "N": 5,
+  "T": 6.296
+ },
+ {
+  "layout": "shortcut:8010",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.6239356147686762,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.064
+ },
+ {
+  "layout": "shortcut:8010",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7241738402629117,
+  "R": 3.141592653587234,
+  "N": 8,
+  "T": 11.88
+ },
+ {
+  "layout": "shortcut:8010",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7948377304889783,
+  "R": 3.8372058867723817,
+  "N": 8,
+  "T": 14.508
+ },
+ {
+  "layout": "shortcut:8010",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.791949399694198,
+  "R": 3.8372058867723817,
+  "N": 8,
+  "T": 14.332
+ },
+ {
+  "layout": "shortcut:8010",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8602372162743342,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.6
+ },
+ {
+  "layout": "shortcut:8010",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.999797257244696,
+  "R": 0.0,
+  "N": 6,
+  "T": 10.588
+ },
+ {
+  "layout": "shortcut:8011",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.2800761973737401,
+  "R": 0.13818677205263014,
+  "N": 4,
+  "T": 2.204
+ },
+ {
+  "layout": "shortcut:8011",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.1471890714060877,
+  "R": 0.1381911319602597,
+  "N": 6,
+  "T": 9.548
+ },
+ {
+  "layout": "shortcut:8011",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6883357262084469,
+  "R": 3.60865027912791,
+  "N": 8,
+  "T": 7.992
+ },
+ {
+  "layout": "shortcut:8011",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8016228787345843,
+  "R": 3.60865027912791,
+  "N": 8,
+  "T": 14.104
+ },
+ {
+  "layout": "shortcut:8011",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.648219416612845,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.16
+ },
+ {
+  "layout": "shortcut:8011",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8273327526271913,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 11.372
+ },
+ {
+  "layout": "shortcut:8011",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.5714967248617775,
+  "R": 3.2797808789424074,
+  "N": 8,
+  "T": 11.568
+ },
+ {
+  "layout": "shortcut:8011",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.5721085223408995,
+  "R": 3.2797808789424074,
+  "N": 8,
+  "T": 11.348
+ },
+ {
+  "layout": "shortcut:8011",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.3248817058801932,
+  "R": 0.4670576255406762,
+  "N": 6,
+  "T": 7.356
+ },
+ {
+  "layout": "shortcut:8011",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.3216325976239494,
+  "R": 0.4670576255406762,
+  "N": 6,
+  "T": 11.032
+ },
+ {
+  "layout": "shortcut:8011",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.1757606617392191,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.864
+ },
+ {
+  "layout": "shortcut:8011",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.38582180419852,
+  "R": 0.0,
+  "N": 6,
+  "T": 11.788
+ },
+ {
+  "layout": "shortcut:8012",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.3175378595005188,
+  "R": 0.6816015460939799,
+  "N": 4,
+  "T": 2.852
+ },
+ {
+  "layout": "shortcut:8012",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0740058540766297,
+  "R": 0.6816078122404495,
+  "N": 7,
+  "T": 9.708
+ },
+ {
+  "layout": "shortcut:8012",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7409543039429775,
+  "R": 0.027606517427548792,
+  "N": 5,
+  "T": 4.244
+ },
+ {
+  "layout": "shortcut:8012",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.7394495999841435,
+  "R": 0.027606517427548792,
+  "N": 5,
+  "T": 6.476
+ },
+ {
+  "layout": "shortcut:8012",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7867312115158911,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.308
+ },
+ {
+  "layout": "shortcut:8012",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9991105775817636,
+  "R": 0.0,
+  "N": 6,
+  "T": 9.212
+ },
+ {
+  "layout": "shortcut:8012",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7571573264093236,
+  "R": 3.8231957662178306,
+  "N": 8,
+  "T": 12.844
+ },
+ {
+  "layout": "shortcut:8012",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7552120271598701,
+  "R": 3.8231957662178306,
+  "N": 8,
+  "T": 12.6
+ },
+ {
+  "layout": "shortcut:8013",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.3863218471299207,
+  "R": 0.6506340010585288,
+  "N": 4,
+  "T": 3.1
+ },
+ {
+  "layout": "shortcut:8013",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.1288320851717615,
+  "R": 0.6506340010585288,
+  "N": 6,
+  "T": 9.896
+ },
+ {
+  "layout": "shortcut:8013",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8364678477404469,
+  "R": 0.47976642449707774,
+  "N": 5,
+  "T": 5.156
+ },
+ {
+  "layout": "shortcut:8013",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8229287086974518,
+  "R": 0.47976642449707774,
+  "N": 5,
+  "T": 7.564
+ },
+ {
+  "layout": "shortcut:8013",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.5783610542044435,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 6.88
+ },
+ {
+  "layout": "shortcut:8013",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7723996146801552,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 11.004
+ },
+ {
+  "layout": "shortcut:8013",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8725517809400173,
+  "R": 3.792226654645763,
+  "N": 8,
+  "T": 15.264
+ },
+ {
+  "layout": "shortcut:8013",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8730943167370586,
+  "R": 3.792226654645763,
+  "N": 8,
+  "T": 15.052
+ },
+ {
+  "layout": "shortcut:8013",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.9264879180586229,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.868
+ },
+ {
+  "layout": "shortcut:8013",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.1259275152834503,
+  "R": 0.0,
+  "N": 6,
+  "T": 10.056
+ },
+ {
+  "layout": "shortcut:8014",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.404846358792457,
+  "R": 0.7392369339836353,
+  "N": 4,
+  "T": 3.252
+ },
+ {
+  "layout": "shortcut:8014",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.123778009924459,
+  "R": 0.7392369339836353,
+  "N": 6,
+  "T": 9.94
+ },
+ {
+  "layout": "shortcut:8014",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.4942870716232296,
+  "R": 3.4542954545361493,
+  "N": 8,
+  "T": 7.068
+ },
+ {
+  "layout": "shortcut:8014",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.5964001354945632,
+  "R": 3.4542954545361493,
+  "N": 9,
+  "T": 12.272
+ },
+ {
+  "layout": "shortcut:8014",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.5597041640302824,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 6.808
+ },
+ {
+  "layout": "shortcut:8014",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8082250399209945,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 11.244
+ },
+ {
+  "layout": "shortcut:8014",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8063961085331939,
+  "R": 3.8808295875708687,
+  "N": 8,
+  "T": 13.5
+ },
+ {
+  "layout": "shortcut:8014",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8079371770451981,
+  "R": 3.8808295875708687,
+  "N": 8,
+  "T": 13.324
+ },
+ {
+  "layout": "shortcut:8014",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.0948769639414915,
+  "R": 0.3127028009489153,
+  "N": 6,
+  "T": 6.304
+ },
+ {
+  "layout": "shortcut:8014",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0977810289697292,
+  "R": 0.3127028009489153,
+  "N": 6,
+  "T": 9.408
+ },
+ {
+  "layout": "shortcut:8014",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.236829722874003,
+  "R": 0.0,
+  "N": 4,
+  "T": 6.108
+ },
+ {
+  "layout": "shortcut:8014",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.451559561254501,
+  "R": 0.0,
+  "N": 6,
+  "T": 12.228
+ },
+ {
+  "layout": "shortcut:8015",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.540979708614707,
+  "R": 0.6529285836898541,
+  "N": 4,
+  "T": 3.724
+ },
+ {
+  "layout": "shortcut:8015",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.4741412288328573,
+  "R": 0.6529285836898541,
+  "N": 7,
+  "T": 12.848
+ },
+ {
+  "layout": "shortcut:8015",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6465201890505785,
+  "R": 3.220690802224367,
+  "N": 8,
+  "T": 7.416
+ },
+ {
+  "layout": "shortcut:8015",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7409924947204375,
+  "R": 3.2206919101334686,
+  "N": 8,
+  "T": 13.684
+ },
+ {
+  "layout": "shortcut:8015",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.7518900452165347,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.576
+ },
+ {
+  "layout": "shortcut:8015",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8980695936885759,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 11.844
+ },
+ {
+  "layout": "shortcut:8015",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 1.0307874512764215,
+  "R": 3.7945212372770882,
+  "N": 9,
+  "T": 17.044
+ },
+ {
+  "layout": "shortcut:8015",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 1.0357195138226665,
+  "R": 3.7945212372770882,
+  "N": 9,
+  "T": 16.736
+ },
+ {
+  "layout": "shortcut:8015",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.474141228832857,
+  "R": 0.6529285836898541,
+  "N": 6,
+  "T": 13.816
+ },
+ {
+  "layout": "shortcut:8015",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.0095618581008217,
+  "R": 0.07909814863713364,
+  "N": 6,
+  "T": 5.688
+ },
+ {
+  "layout": "shortcut:8015",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.9878438378726384,
+  "R": 0.07910147236443657,
+  "N": 6,
+  "T": 8.4
+ },
+ {
+  "layout": "shortcut:8015",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.1278160781667366,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.672
+ },
+ {
+  "layout": "shortcut:8015",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 1.135522529673888,
+  "R": 0.0,
+  "N": 5,
+  "T": 13.812
+ },
+ {
+  "layout": "shortcut:8016",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.3902074569835555,
+  "R": 0.5177290806279414,
+  "N": 4,
+  "T": 3.004
+ },
+ {
+  "layout": "shortcut:8016",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.156997269912065,
+  "R": 0.5177370889173437,
+  "N": 6,
+  "T": 9.972
+ },
+ {
+  "layout": "shortcut:8016",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.8311961601491563,
+  "R": 0.3576981396612287,
+  "N": 5,
+  "T": 5.036
+ },
+ {
+  "layout": "shortcut:8016",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8105560058877437,
+  "R": 0.35770385020926354,
+  "N": 5,
+  "T": 7.38
+ },
+ {
+  "layout": "shortcut:8016",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.7332699051480693,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.5
+ },
+ {
+  "layout": "shortcut:8016",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 1.0218133323275058,
+  "R": 0.0,
+  "N": 5,
+  "T": 12.66
+ },
+ {
+  "layout": "shortcut:8016",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7471118047886806,
+  "R": 3.659324403644976,
+  "N": 8,
+  "T": 14.152
+ },
+ {
+  "layout": "shortcut:8016",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7475885829201802,
+  "R": 3.659324403644976,
+  "N": 8,
+  "T": 13.936
+ },
+ {
+  "layout": "shortcut:8016",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.0152325381000145,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.22
+ },
+ {
+  "layout": "shortcut:8017",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.5167965950773259,
+  "R": 0.304167274738554,
+  "N": 4,
+  "T": 3.332
+ },
+ {
+  "layout": "shortcut:8017",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.2560378489119217,
+  "R": 0.304167274738554,
+  "N": 6,
+  "T": 10.456
+ },
+ {
+  "layout": "shortcut:8017",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.7259314944571827,
+  "R": 3.5041458141306165,
+  "N": 8,
+  "T": 8.056
+ },
+ {
+  "layout": "shortcut:8017",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.821477216712066,
+  "R": 3.50414843266788,
+  "N": 8,
+  "T": 14.388
+ },
+ {
+  "layout": "shortcut:8017",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.8820079693945555,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.688
+ },
+ {
+  "layout": "shortcut:8017",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8802883536508685,
+  "R": 0.0,
+  "N": 5,
+  "T": 11.588
+ },
+ {
+  "layout": "shortcut:8017",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7925745669230084,
+  "R": 3.4457599283257876,
+  "N": 8,
+  "T": 13.456
+ },
+ {
+  "layout": "shortcut:8017",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7900248168065254,
+  "R": 3.4457599283257876,
+  "N": 8,
+  "T": 13.22
+ },
+ {
+  "layout": "shortcut:8017",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.0377832754609513,
+  "R": 0.3625531605433827,
+  "N": 6,
+  "T": 6.116
+ },
+ {
+  "layout": "shortcut:8017",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 1.026017429828326,
+  "R": 0.36256101615517305,
+  "N": 6,
+  "T": 8.972
+ },
+ {
+  "layout": "shortcut:8018",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.3910783346187776,
+  "R": 0.26236718614023863,
+  "N": 4,
+  "T": 2.792
+ },
+ {
+  "layout": "shortcut:8018",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 0.9360895667536129,
+  "R": 0.26236718614023863,
+  "N": 6,
+  "T": 8.284
+ },
+ {
+  "layout": "shortcut:8018",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.7945958874164852,
+  "R": 0.2505385024044549,
+  "N": 5,
+  "T": 4.792
+ },
+ {
+  "layout": "shortcut:8018",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.7624043932387079,
+  "R": 0.2505407759915772,
+  "N": 5,
+  "T": 6.964
+ },
+ {
+  "layout": "shortcut:8018",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.5257625301514981,
+  "R": 0.0,
+  "N": 3,
+  "T": 3.012
+ },
+ {
+  "layout": "shortcut:8018",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.4759480892008255,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.456
+ },
+ {
+  "layout": "shortcut:8018",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7300727707606914,
+  "R": 3.4039598397274724,
+  "N": 9,
+  "T": 13.512
+ },
+ {
+  "layout": "shortcut:8018",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.722355717568382,
+  "R": 3.4039598397274724,
+  "N": 8,
+  "T": 13.296
+ },
+ {
+  "layout": "shortcut:8019",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.36477005517594474,
+  "R": 0.7044483731513224,
+  "N": 4,
+  "T": 3.06
+ },
+ {
+  "layout": "shortcut:8019",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.1600684563561285,
+  "R": 0.7044540128815808,
+  "N": 6,
+  "T": 10.148
+ },
+ {
+  "layout": "shortcut:8019",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.783122481847545,
+  "R": 3.8565727718438443,
+  "N": 8,
+  "T": 8.576
+ },
+ {
+  "layout": "shortcut:8019",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8772518210073577,
+  "R": 3.8565767084587694,
+  "N": 9,
+  "T": 14.96
+ },
+ {
+  "layout": "shortcut:8019",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7854302680719881,
+  "R": 0.0,
+  "N": 3,
+  "T": 4.052
+ },
+ {
+  "layout": "shortcut:8019",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9867412540018222,
+  "R": 0.0,
+  "N": 5,
+  "T": 8.98
+ },
+ {
+  "layout": "shortcut:8019",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7164652016192017,
+  "R": 3.846042906648642,
+  "N": 8,
+  "T": 13.408
+ },
+ {
+  "layout": "shortcut:8019",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7139670566830109,
+  "R": 3.846042906648642,
+  "N": 8,
+  "T": 13.156
+ },
+ {
+  "layout": "shortcut:8019",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.2166016270529603,
+  "R": 0.7149801182566105,
+  "N": 6,
+  "T": 7.128
+ },
+ {
+  "layout": "shortcut:8019",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2027937236789208,
+  "R": 0.7149860231789977,
+  "N": 6,
+  "T": 10.444
+ },
+ {
+  "layout": "shortcut:8020",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.3461787698876444,
+  "R": 0.6848907213691897,
+  "N": 4,
+  "T": 2.968
+ },
+ {
+  "layout": "shortcut:8020",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.0274147033219272,
+  "R": 0.6848940678661185,
+  "N": 6,
+  "T": 9.248
+ },
+ {
+  "layout": "shortcut:8020",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6247359042741342,
+  "R": 3.5674480950480034,
+  "N": 8,
+  "T": 7.7
+ },
+ {
+  "layout": "shortcut:8020",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8715771450316243,
+  "R": 0.4258554414607694,
+  "N": 6,
+  "T": 7.996
+ },
+ {
+  "layout": "shortcut:8020",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.6915388218438951,
+  "R": 0.0,
+  "N": 3,
+  "T": 3.672
+ },
+ {
+  "layout": "shortcut:8020",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.6827948424698839,
+  "R": 0.0,
+  "N": 4,
+  "T": 10.504
+ },
+ {
+  "layout": "shortcut:8020",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7875562040955395,
+  "R": 3.8264844904553996,
+  "N": 8,
+  "T": 13.164
+ },
+ {
+  "layout": "shortcut:8020",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7859670624819058,
+  "R": 3.8264844904553996,
+  "N": 8,
+  "T": 12.932
+ },
+ {
+  "layout": "shortcut:8020",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.8531389951421124,
+  "R": 0.4258554414607694,
+  "N": 6,
+  "T": 5.432
+ },
+ {
+  "layout": "shortcut:8021",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.5048326387517832,
+  "R": 0.27121024410607325,
+  "N": 4,
+  "T": 3.256
+ },
+ {
+  "layout": "shortcut:8021",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.3781435718891,
+  "R": 0.2712190969510258,
+  "N": 7,
+  "T": 11.392
+ },
+ {
+  "layout": "shortcut:8021",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.9568219434861537,
+  "R": 0.6875460709277265,
+  "N": 6,
+  "T": 6.068
+ },
+ {
+  "layout": "shortcut:8021",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9537951954086905,
+  "R": 0.6875482971432556,
+  "N": 6,
+  "T": 8.764
+ },
+ {
+  "layout": "shortcut:8021",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.5327311941145514,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 6.696
+ },
+ {
+  "layout": "shortcut:8021",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.6689129628049824,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 10.312
+ },
+ {
+  "layout": "shortcut:8021",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7439971288382218,
+  "R": 3.412805110904545,
+  "N": 8,
+  "T": 12.752
+ },
+ {
+  "layout": "shortcut:8021",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7426263184305965,
+  "R": 3.412805110904545,
+  "N": 8,
+  "T": 12.508
+ },
+ {
+  "layout": "shortcut:8021",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.061515129506569,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.408
+ },
+ {
+  "layout": "shortcut:8021",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2718142746537453,
+  "R": 0.0,
+  "N": 6,
+  "T": 11.032
+ },
+ {
+  "layout": "shortcut:8022",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4558061704022114,
+  "R": 0.26415057476464393,
+  "N": 4,
+  "T": 3.052
+ },
+ {
+  "layout": "shortcut:8022",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.262931686238849,
+  "R": 0.26415057476464393,
+  "N": 6,
+  "T": 10.464
+ },
+ {
+  "layout": "shortcut:8022",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6595252059404103,
+  "R": 3.8808630871061203,
+  "N": 8,
+  "T": 8.104
+ },
+ {
+  "layout": "shortcut:8022",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7531788596312993,
+  "R": 3.8808636801648477,
+  "N": 8,
+  "T": 14.088
+ },
+ {
+  "layout": "shortcut:8022",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.7356325469989023,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.508
+ },
+ {
+  "layout": "shortcut:8022",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8911729177154294,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 11.796
+ },
+ {
+  "layout": "shortcut:8022",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8495853760751418,
+  "R": 3.405743228351878,
+  "N": 8,
+  "T": 13.656
+ },
+ {
+  "layout": "shortcut:8022",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8496142246885076,
+  "R": 3.405743228351878,
+  "N": 8,
+  "T": 13.424
+ },
+ {
+  "layout": "shortcut:8022",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.2222876214891003,
+  "R": 0.7392704335188862,
+  "N": 6,
+  "T": 7.172
+ },
+ {
+  "layout": "shortcut:8022",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2159113184671386,
+  "R": 0.7392722126950686,
+  "N": 6,
+  "T": 10.552
+ },
+ {
+  "layout": "shortcut:8022",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.0163027780906755,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.228
+ },
+ {
+  "layout": "shortcut:8022",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2238748377414856,
+  "R": 0.0,
+  "N": 6,
+  "T": 10.712
+ },
+ {
+  "layout": "shortcut:8023",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4312562616972604,
+  "R": 0.34894904458524806,
+  "N": 4,
+  "T": 3.028
+ },
+ {
+  "layout": "shortcut:8023",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.1512436901671164,
+  "R": 0.34894904458524806,
+  "N": 7,
+  "T": 9.944
+ },
+ {
+  "layout": "shortcut:8023",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.860802368508506,
+  "R": 0.5376771063470605,
+  "N": 6,
+  "T": 5.56
+ },
+ {
+  "layout": "shortcut:8023",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9234672218673814,
+  "R": 0.5376839554368843,
+  "N": 7,
+  "T": 8.588
+ },
+ {
+  "layout": "shortcut:8023",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.6398765136927507,
+  "R": 0.0,
+  "N": 3,
+  "T": 3.464
+ },
+ {
+  "layout": "shortcut:8023",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8464490137674324,
+  "R": 0.0,
+  "N": 5,
+  "T": 8.044
+ },
+ {
+  "layout": "shortcut:8023",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.701656562851682,
+  "R": 3.490541698172482,
+  "N": 8,
+  "T": 12.58
+ },
+ {
+  "layout": "shortcut:8023",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7011675428246879,
+  "R": 3.490541698172482,
+  "N": 8,
+  "T": 12.364
+ },
+ {
+  "layout": "shortcut:8024",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.44141724866585297,
+  "R": 0.6598602635654375,
+  "N": 4,
+  "T": 3.328
+ },
+ {
+  "layout": "shortcut:8024",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.040602817728308,
+  "R": 0.6598602635654375,
+  "N": 6,
+  "T": 9.316
+ },
+ {
+  "layout": "shortcut:8024",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.647711424128631,
+  "R": 3.8156454270850952,
+  "N": 8,
+  "T": 8.0
+ },
+ {
+  "layout": "shortcut:8024",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7687687351957841,
+  "R": 3.8156481513499267,
+  "N": 9,
+  "T": 14.568
+ },
+ {
+  "layout": "shortcut:8024",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.6583390714192106,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.2
+ },
+ {
+  "layout": "shortcut:8024",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8714815307033758,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 11.668
+ },
+ {
+  "layout": "shortcut:8024",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.919928905485757,
+  "R": 3.8014529171526714,
+  "N": 8,
+  "T": 15.032
+ },
+ {
+  "layout": "shortcut:8024",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.9181772811512259,
+  "R": 3.8014529171526714,
+  "N": 8,
+  "T": 14.832
+ },
+ {
+  "layout": "shortcut:8024",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.9451613968603683,
+  "R": 0.6740527734978612,
+  "N": 6,
+  "T": 6.008
+ },
+ {
+  "layout": "shortcut:8024",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9407537870761729,
+  "R": 0.6740568598951092,
+  "N": 6,
+  "T": 8.66
+ },
+ {
+  "layout": "shortcut:8024",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.0173159575194086,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.228
+ },
+ {
+  "layout": "shortcut:8024",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2261664061874857,
+  "R": 0.0,
+  "N": 6,
+  "T": 10.728
+ },
+ {
+  "layout": "shortcut:8025",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4179186920494411,
+  "R": 0.1639263914434088,
+  "N": 4,
+  "T": 2.792
+ },
+ {
+  "layout": "shortcut:8025",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.225888943331767,
+  "R": 0.16393378848548962,
+  "N": 6,
+  "T": 10.112
+ },
+ {
+  "layout": "shortcut:8025",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.693995511245293,
+  "R": 3.8359923325703082,
+  "N": 8,
+  "T": 8.204
+ },
+ {
+  "layout": "shortcut:8025",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7848232391555368,
+  "R": 3.8359936509652295,
+  "N": 8,
+  "T": 14.884
+ },
+ {
+  "layout": "shortcut:8025",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.782311023558628,
+  "R": 0.0,
+  "N": 3,
+  "T": 4.036
+ },
+ {
+  "layout": "shortcut:8025",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.7792137495677177,
+  "R": 0.0,
+  "N": 4,
+  "T": 12.336
+ },
+ {
+  "layout": "shortcut:8025",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.6245333537670992,
+  "R": 3.305521510711336,
+  "N": 9,
+  "T": 12.684
+ },
+ {
+  "layout": "shortcut:8025",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.6232808392307796,
+  "R": 3.305521510711336,
+  "N": 8,
+  "T": 12.428
+ },
+ {
+  "layout": "shortcut:8025",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.2025208212351453,
+  "R": 0.6943996789830746,
+  "N": 6,
+  "T": 7.056
+ },
+ {
+  "layout": "shortcut:8025",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1927151039583996,
+  "R": 0.6944036341678372,
+  "N": 6,
+  "T": 10.36
+ },
+ {
+  "layout": "shortcut:8026",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.3279866341575284,
+  "R": 0.3384192542876019,
+  "N": 4,
+  "T": 2.608
+ },
+ {
+  "layout": "shortcut:8026",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.0625736476556737,
+  "R": 0.3384192542876019,
+  "N": 6,
+  "T": 9.196
+ },
+ {
+  "layout": "shortcut:8026",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.7863073288980453,
+  "R": 3.463880245183781,
+  "N": 8,
+  "T": 8.26
+ },
+ {
+  "layout": "shortcut:8026",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8866903871817805,
+  "R": 3.4638844543859753,
+  "N": 9,
+  "T": 14.972
+ },
+ {
+  "layout": "shortcut:8026",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.8943479271788863,
+  "R": 0.0,
+  "N": 3,
+  "T": 4.484
+ },
+ {
+  "layout": "shortcut:8026",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.8899220484086767,
+  "R": 0.0,
+  "N": 4,
+  "T": 12.464
+ },
+ {
+  "layout": "shortcut:8026",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7985489553351485,
+  "R": 3.480011907874836,
+  "N": 8,
+  "T": 13.892
+ },
+ {
+  "layout": "shortcut:8026",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7991334364921735,
+  "R": 3.480011907874836,
+  "N": 8,
+  "T": 13.692
+ },
+ {
+  "layout": "shortcut:8026",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.245910573752419,
+  "R": 0.322287591596547,
+  "N": 6,
+  "T": 6.92
+ },
+ {
+  "layout": "shortcut:8026",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 1.237764497902876,
+  "R": 0.32229390539983915,
+  "N": 6,
+  "T": 10.348
+ },
+ {
+  "layout": "shortcut:8027",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.3473626531529962,
+  "R": 0.29466330561774157,
+  "N": 4,
+  "T": 2.644
+ },
+ {
+  "layout": "shortcut:8027",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9760136733468461,
+  "R": 0.29466330561774157,
+  "N": 6,
+  "T": 8.58
+ },
+ {
+  "layout": "shortcut:8027",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.7930235315777333,
+  "R": 3.215139536129259,
+  "N": 8,
+  "T": 7.992
+ },
+ {
+  "layout": "shortcut:8027",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.9061602487539759,
+  "R": 3.215139536129259,
+  "N": 10,
+  "T": 13.844
+ },
+ {
+  "layout": "shortcut:8027",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8656654936691786,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.624
+ },
+ {
+  "layout": "shortcut:8027",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7799774976743491,
+  "R": 3.141592653587234,
+  "N": 8,
+  "T": 12.184
+ },
+ {
+  "layout": "shortcut:8027",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7243682327955077,
+  "R": 3.436255959204975,
+  "N": 8,
+  "T": 13.624
+ },
+ {
+  "layout": "shortcut:8027",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7175951448206382,
+  "R": 3.436255959204975,
+  "N": 8,
+  "T": 13.396
+ },
+ {
+  "layout": "shortcut:8027",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.1024403657137465,
+  "R": 0.07354688254202532,
+  "N": 6,
+  "T": 6.044
+ },
+ {
+  "layout": "shortcut:8027",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0704483647554985,
+  "R": 0.07354688254202532,
+  "N": 6,
+  "T": 8.936
+ },
+ {
+  "layout": "shortcut:8027",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0485280731409836,
+  "R": 0.0,
+  "N": 6,
+  "T": 9.544
+ },
+ {
+  "layout": "shortcut:8028",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.28192008009747516,
+  "R": 0.45854368004155727,
+  "N": 4,
+  "T": 2.524
+ },
+ {
+  "layout": "shortcut:8028",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9990188862224154,
+  "R": 0.4585460063414329,
+  "N": 6,
+  "T": 8.872
+ },
+ {
+  "layout": "shortcut:8028",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.9306902248904086,
+  "R": 0.24017054577011382,
+  "N": 5,
+  "T": 5.328
+ },
+ {
+  "layout": "shortcut:8028",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9106762267573378,
+  "R": 0.24017054577011382,
+  "N": 5,
+  "T": 7.94
+ },
+ {
+  "layout": "shortcut:8028",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6704828067038313,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.248
+ },
+ {
+  "layout": "shortcut:8028",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7361920934193263,
+  "R": 3.141592653587234,
+  "N": 8,
+  "T": 11.556
+ },
+ {
+  "layout": "shortcut:8028",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.6346108917020746,
+  "R": 3.600137109062083,
+  "N": 8,
+  "T": 12.692
+ },
+ {
+  "layout": "shortcut:8028",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.6318046455960664,
+  "R": 3.600137109062083,
+  "N": 8,
+  "T": 12.452
+ },
+ {
+  "layout": "shortcut:8028",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.0851035969941674,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.504
+ },
+ {
+  "layout": "shortcut:8028",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2813723642680448,
+  "R": 0.0,
+  "N": 6,
+  "T": 11.096
+ },
+ {
+  "layout": "shortcut:8029",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4734706340934255,
+  "R": 0.0120116627358966,
+  "N": 4,
+  "T": 2.716
+ },
+ {
+  "layout": "shortcut:8029",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.0524998504174226,
+  "R": 0.0120116627358966,
+  "N": 6,
+  "T": 8.656
+ },
+ {
+  "layout": "shortcut:8029",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.7380044403541589,
+  "R": 0.28880797931406826,
+  "N": 6,
+  "T": 4.856
+ },
+ {
+  "layout": "shortcut:8029",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.7107682690552071,
+  "R": 0.2888116958919005,
+  "N": 6,
+  "T": 6.808
+ },
+ {
+  "layout": "shortcut:8029",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.5216749938532848,
+  "R": 0.0,
+  "N": 3,
+  "T": 2.996
+ },
+ {
+  "layout": "shortcut:8029",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.47875198172218775,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.748
+ },
+ {
+  "layout": "shortcut:8029",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8250891810066762,
+  "R": 3.1536043163231304,
+  "N": 8,
+  "T": 13.604
+ },
+ {
+  "layout": "shortcut:8029",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8221293771173191,
+  "R": 3.1536043163231304,
+  "N": 8,
+  "T": 13.428
+ },
+ {
+  "layout": "shortcut:8030",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.24181682399709062,
+  "R": 0.14916629468484136,
+  "N": 4,
+  "T": 2.068
+ },
+ {
+  "layout": "shortcut:8030",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0284775567892863,
+  "R": 0.14917381869415255,
+  "N": 6,
+  "T": 8.772
+ },
+ {
+  "layout": "shortcut:8030",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6805213535069554,
+  "R": 3.195182850971686,
+  "N": 8,
+  "T": 7.504
+ },
+ {
+  "layout": "shortcut:8030",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8413615439115442,
+  "R": 0.053592218456581645,
+  "N": 6,
+  "T": 7.368
+ },
+ {
+  "layout": "shortcut:8030",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.7216874432625362,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.452
+ },
+ {
+  "layout": "shortcut:8030",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.9275954915325597,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 12.04
+ },
+ {
+  "layout": "shortcut:8030",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.728096333964576,
+  "R": 3.2907614562751792,
+  "N": 8,
+  "T": 13.272
+ },
+ {
+  "layout": "shortcut:8030",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7284490729934759,
+  "R": 3.2907614562751792,
+  "N": 8,
+  "T": 13.08
+ },
+ {
+  "layout": "shortcut:8030",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8473895013585692,
+  "R": 0.053590197384452254,
+  "N": 6,
+  "T": 4.984
+ },
+ {
+  "layout": "shortcut:8030",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.2026893292793346,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.972
+ },
+ {
+  "layout": "shortcut:8030",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.4102619337696696,
+  "R": 0.0,
+  "N": 6,
+  "T": 11.952
+ },
+ {
+  "layout": "shortcut:8031",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.48567377526857414,
+  "R": 0.17653895370838632,
+  "N": 4,
+  "T": 3.08
+ },
+ {
+  "layout": "shortcut:8031",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1637255698174516,
+  "R": 0.17654532234683687,
+  "N": 6,
+  "T": 9.712
+ },
+ {
+  "layout": "shortcut:8031",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.677001917376319,
+  "R": 3.7697870603068617,
+  "N": 8,
+  "T": 8.076
+ },
+ {
+  "layout": "shortcut:8031",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7803745959083976,
+  "R": 3.7697870603068617,
+  "N": 8,
+  "T": 14.368
+ },
+ {
+  "layout": "shortcut:8031",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.7084084900379476,
+  "R": 0.0,
+  "N": 4,
+  "T": 3.996
+ },
+ {
+  "layout": "shortcut:8031",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.7082192524833307,
+  "R": 0.0,
+  "N": 5,
+  "T": 9.316
+ },
+ {
+  "layout": "shortcut:8031",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7784877572223723,
+  "R": 3.318133730175104,
+  "N": 8,
+  "T": 13.22
+ },
+ {
+  "layout": "shortcut:8031",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7767022371406879,
+  "R": 3.318133730175104,
+  "N": 8,
+  "T": 13.024
+ },
+ {
+  "layout": "shortcut:8031",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.0190926973785697,
+  "R": 0.6281944067196278,
+  "N": 6,
+  "T": 6.264
+ },
+ {
+  "layout": "shortcut:8031",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 1.0053706230298307,
+  "R": 0.6281944067196278,
+  "N": 6,
+  "T": 9.052
+ },
+ {
+  "layout": "shortcut:8032",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.41952493040171923,
+  "R": 0.46112590405783155,
+  "N": 4,
+  "T": 3.08
+ },
+ {
+  "layout": "shortcut:8032",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.108186637870787,
+  "R": 0.46112590405783155,
+  "N": 5,
+  "T": 9.452
+ },
+ {
+  "layout": "shortcut:8032",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8139466185365571,
+  "R": 0.22576568968764552,
+  "N": 6,
+  "T": 5.096
+ },
+ {
+  "layout": "shortcut:8032",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.7988256837168887,
+  "R": 0.22576568968764552,
+  "N": 6,
+  "T": 7.328
+ },
+ {
+  "layout": "shortcut:8032",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.6368839312555917,
+  "R": 0.0,
+  "N": 3,
+  "T": 3.456
+ },
+ {
+  "layout": "shortcut:8032",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8391080593164538,
+  "R": 0.0,
+  "N": 5,
+  "T": 7.996
+ },
+ {
+  "layout": "shortcut:8032",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7991304165045314,
+  "R": 3.6027185576450655,
+  "N": 8,
+  "T": 13.416
+ },
+ {
+  "layout": "shortcut:8032",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7991291726903033,
+  "R": 3.6027185576450655,
+  "N": 8,
+  "T": 13.192
+ },
+ {
+  "layout": "shortcut:8033",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4939658420474685,
+  "R": 0.2506049543734084,
+  "N": 4,
+  "T": 3.192
+ },
+ {
+  "layout": "shortcut:8033",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.2198053080489755,
+  "R": 0.2506049543734084,
+  "N": 6,
+  "T": 10.164
+ },
+ {
+  "layout": "shortcut:8033",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.7067533388960126,
+  "R": 0.10572939070175781,
+  "N": 5,
+  "T": 4.264
+ },
+ {
+  "layout": "shortcut:8033",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.7010599751284192,
+  "R": 0.10572939070175781,
+  "N": 5,
+  "T": 6.376
+ },
+ {
+  "layout": "shortcut:8033",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6306784216260086,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.088
+ },
+ {
+  "layout": "shortcut:8033",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 0.9409694871241276,
+  "R": 0.0,
+  "N": 5,
+  "T": 12.144
+ },
+ {
+  "layout": "shortcut:8033",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7751946176775644,
+  "R": 3.392197607960642,
+  "N": 8,
+  "T": 12.816
+ },
+ {
+  "layout": "shortcut:8033",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7746318379609702,
+  "R": 3.392197607960642,
+  "N": 8,
+  "T": 12.58
+ },
+ {
+  "layout": "shortcut:8033",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.947304673501175,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.952
+ },
+ {
+  "layout": "shortcut:8034",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.35006287166257855,
+  "R": 0.09481032434565805,
+  "N": 4,
+  "T": 2.42
+ },
+ {
+  "layout": "shortcut:8034",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.2662197492284482,
+  "R": 0.09481032434565805,
+  "N": 6,
+  "T": 10.276
+ },
+ {
+  "layout": "shortcut:8034",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.7983467834756514,
+  "R": 3.70479617686107,
+  "N": 8,
+  "T": 8.512
+ },
+ {
+  "layout": "shortcut:8034",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.9035440283407828,
+  "R": 3.7047961768610707,
+  "N": 8,
+  "T": 16.192
+ },
+ {
+  "layout": "shortcut:8034",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.6659512557643954,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.232
+ },
+ {
+  "layout": "shortcut:8034",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7544853222417798,
+  "R": 3.141592653587234,
+  "N": 8,
+  "T": 12.732
+ },
+ {
+  "layout": "shortcut:8034",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.761993702677332,
+  "R": 3.236402977932892,
+  "N": 8,
+  "T": 14.112
+ },
+ {
+  "layout": "shortcut:8034",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7620831534630655,
+  "R": 3.236402977932892,
+  "N": 8,
+  "T": 13.884
+ },
+ {
+  "layout": "shortcut:8034",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.0147442958445658,
+  "R": 0.5632035232738365,
+  "N": 6,
+  "T": 6.196
+ },
+ {
+  "layout": "shortcut:8034",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 1.084823765111479,
+  "R": 0.5632035232738365,
+  "N": 6,
+  "T": 9.532
+ },
+ {
+  "layout": "shortcut:8034",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.2086204844775739,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.996
+ },
+ {
+  "layout": "shortcut:8034",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 1.3611115321555785,
+  "R": 0.0,
+  "N": 6,
+  "T": 16.616
+ },
+ {
+  "layout": "shortcut:8035",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.37739653435261133,
+  "R": 0.30387493697172163,
+  "N": 4,
+  "T": 2.772
+ },
+ {
+  "layout": "shortcut:8035",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2081798757804185,
+  "R": 0.3038801325859019,
+  "N": 6,
+  "T": 10.132
+ },
+ {
+  "layout": "shortcut:8035",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.0170989206352061,
+  "R": 0.26168018625050926,
+  "N": 6,
+  "T": 5.944
+ },
+ {
+  "layout": "shortcut:8035",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 1.0148807598338816,
+  "R": 0.26168018625050926,
+  "N": 6,
+  "T": 8.808
+ },
+ {
+  "layout": "shortcut:8035",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.4414597215612975,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 6.332
+ },
+ {
+  "layout": "shortcut:8035",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.6219199759862228,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 10.0
+ },
+ {
+  "layout": "shortcut:8035",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7534255417233927,
+  "R": 3.445471054301742,
+  "N": 9,
+  "T": 13.012
+ },
+ {
+  "layout": "shortcut:8035",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7513240468634702,
+  "R": 3.445471054301742,
+  "N": 9,
+  "T": 12.756
+ },
+ {
+  "layout": "shortcut:8035",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.0799169675581484,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.48
+ },
+ {
+  "layout": "shortcut:8035",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.2905907488409074,
+  "R": 0.0,
+  "N": 6,
+  "T": 11.156
+ },
+ {
+  "layout": "shortcut:8036",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.506662787195211,
+  "R": 0.2124335484436252,
+  "N": 4,
+  "T": 3.204
+ },
+ {
+  "layout": "shortcut:8036",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.3425710950749359,
+  "R": 0.2124335484436252,
+  "N": 7,
+  "T": 11.092
+ },
+ {
+  "layout": "shortcut:8036",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.8310849041220761,
+  "R": 0.19237802826312667,
+  "N": 6,
+  "T": 5.128
+ },
+ {
+  "layout": "shortcut:8036",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.8309780501538581,
+  "R": 0.19237802826312667,
+  "N": 6,
+  "T": 7.508
+ },
+ {
+  "layout": "shortcut:8036",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.7770788595165725,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.676
+ },
+ {
+  "layout": "shortcut:8036",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8568640103674136,
+  "R": 3.141592653587234,
+  "N": 8,
+  "T": 11.56
+ },
+ {
+  "layout": "shortcut:8036",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8104166966063051,
+  "R": 3.354026202030859,
+  "N": 9,
+  "T": 12.992
+ },
+ {
+  "layout": "shortcut:8036",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8089681047064277,
+  "R": 3.354026202030859,
+  "N": 9,
+  "T": 12.756
+ },
+ {
+  "layout": "shortcut:8036",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 1.0122934080686692,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.212
+ },
+ {
+  "layout": "shortcut:8036",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 1.225248154296968,
+  "R": 0.0,
+  "N": 6,
+  "T": 10.72
+ },
+ {
+  "layout": "shortcut:8037",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4886833634804236,
+  "R": 0.21204735628160767,
+  "N": 4,
+  "T": 3.132
+ },
+ {
+  "layout": "shortcut:8037",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:-y",
+  "L": 1.2570473674619944,
+  "R": 0.21205400493861104,
+  "N": 6,
+  "T": 10.372
+ },
+ {
+  "layout": "shortcut:8037",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched-90",
+  "L": 0.7213556019742721,
+  "R": 3.828272265084124,
+  "N": 8,
+  "T": 8.312
+ },
+ {
+  "layout": "shortcut:8037",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:-y",
+  "L": 0.9441543996809738,
+  "R": 0.686684902395437,
+  "N": 6,
+  "T": 8.7
+ },
+ {
+  "layout": "shortcut:8037",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.7038168020507372,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 7.384
+ },
+ {
+  "layout": "shortcut:8037",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.8826647141306194,
+  "R": 3.141592653587234,
+  "N": 9,
+  "T": 11.74
+ },
+ {
+  "layout": "shortcut:8037",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7307980042646628,
+  "R": 3.3536422260878425,
+  "N": 8,
+  "T": 13.836
+ },
+ {
+  "layout": "shortcut:8037",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7283807839706576,
+  "R": 3.3536422260878425,
+  "N": 8,
+  "T": 13.612
+ },
+ {
+  "layout": "shortcut:8037",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 0.9614536333757273,
+  "R": 0.6866796114968902,
+  "N": 6,
+  "T": 6.084
+ },
+ {
+  "layout": "shortcut:8037",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:-y",
+  "L": 1.1641685129544275,
+  "R": 0.0,
+  "N": 4,
+  "T": 5.816
+ },
+ {
+  "layout": "shortcut:8037",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:-y",
+  "L": 1.1674107515847363,
+  "R": 0.0,
+  "N": 5,
+  "T": 14.012
+ },
+ {
+  "layout": "shortcut:8038",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4909918412966803,
+  "R": 0.3762704383625858,
+  "N": 4,
+  "T": 3.292
+ },
+ {
+  "layout": "shortcut:8038",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.098404926465749,
+  "R": 0.3762704383625858,
+  "N": 7,
+  "T": 9.62
+ },
+ {
+  "layout": "shortcut:8038",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.7959250390528885,
+  "R": 3.424937544484813,
+  "N": 9,
+  "T": 8.456
+ },
+ {
+  "layout": "shortcut:8038",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.95083007839379,
+  "R": 0.2833527571865595,
+  "N": 6,
+  "T": 8.4
+ },
+ {
+  "layout": "shortcut:8038",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:through_slot:wall_0:0:pitched+90",
+  "L": 0.5652360431762853,
+  "R": 3.141592653587234,
+  "N": 7,
+  "T": 6.828
+ },
+ {
+  "layout": "shortcut:8038",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.6002079037983686,
+  "R": 3.141592653587234,
+  "N": 8,
+  "T": 10.46
+ },
+ {
+  "layout": "shortcut:8038",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.7650403324494046,
+  "R": 3.5178630919498195,
+  "N": 8,
+  "T": 13.448
+ },
+ {
+  "layout": "shortcut:8038",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.7635888510285432,
+  "R": 3.5178630919498195,
+  "N": 8,
+  "T": 13.268
+ },
+ {
+  "layout": "shortcut:8038",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.9694833527001004,
+  "R": 0.2833448908975792,
+  "N": 6,
+  "T": 5.78
+ },
+ {
+  "layout": "shortcut:8038",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7914620004468076,
+  "R": 0.0,
+  "N": 4,
+  "T": 4.324
+ },
+ {
+  "layout": "shortcut:8038",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.9661856319123564,
+  "R": 0.0,
+  "N": 6,
+  "T": 8.928
+ },
+ {
+  "layout": "shortcut:8039",
+  "kind": "transit",
+  "object_id": "cup_0",
+  "label": "transit:direct",
+  "L": 0.4922234134715914,
+  "R": 0.717765901367098,
+  "N": 4,
+  "T": 3.58
+ },
+ {
+  "layout": "shortcut:8039",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "around:wall_0:+y",
+  "L": 1.1412387646504707,
+  "R": 0.717765901367098,
+  "N": 6,
+  "T": 10.036
+ },
+ {
+  "layout": "shortcut:8039",
+  "kind": "transit",
+  "object_id": "block_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.7268310780343644,
+  "R": 0.005661786095198774,
+  "N": 6,
+  "T": 4.352
+ },
+ {
+  "layout": "shortcut:8039",
+  "kind": "transport",
+  "object_id": "block_0",
+  "label": "around:wall_0:+y",
+  "L": 0.6984327076815803,
+  "R": 0.005666502683465544,
+  "N": 6,
+  "T": 6.264
+ },
+ {
+  "layout": "shortcut:8039",
+  "kind": "transit",
+  "object_id": "marker_0",
+  "label": "transit:around:wall_0:+y",
+  "L": 0.6101274099390939,
+  "R": 0.0,
+  "N": 3,
+  "T": 3.348
+ },
+ {
+  "layout": "shortcut:8039",
+  "kind": "transport",
+  "object_id": "marker_0",
+  "label": "around:wall_0:+y",
+  "L": 0.7991027244475485,
+  "R": 0.0,
+  "N": 5,
+  "T": 7.728
+ },
+ {
+  "layout": "shortcut:8039",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched+90",
+  "L": 0.858297527455066,
+  "R": 3.8593585549543317,
+  "N": 8,
+  "T": 15.036
+ },
+ {
+  "layout": "shortcut:8039",
+  "kind": "transport",
+  "object_id": "cup_0",
+  "label": "through_slot:wall_0:0:pitched-90",
+  "L": 0.8533151549265637,
+  "R": 3.8593585549543317,
+  "N": 8,
+  "T": 14.84
+ }
+]

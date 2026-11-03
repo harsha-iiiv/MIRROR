@@ -1,0 +1,5868 @@
+{
+ "title": "Perception v2: post-hoc development analysis of video reconstruction (not a pre-registered evaluation)",
+ "status": "post-hoc development analysis",
+ "model_calls": 0,
+ "inputs": {
+  "dev": "recorded SAM 3.1 tracks of the first video registration (results/eval_video/attempt_1/tracks, seeds 70000-70011); that attempt failed and produced no verdict; used here for development",
+  "heldout": "recorded SAM 3.1 tracks of the second video registration (results/eval_video2/tracks, seeds 71000-71015, the 16 completed seeds); post-hoc: the registration's verdicts were already published, and these tracks were not used to choose any parameter",
+  "ground_truth": "simulator ground truth of the rendered inputs (metrics only)",
+  "interpreter": "offline rules (deterministic) on both the video-derived and the ground-truth trace; no Muse Spark calls",
+  "footage_flag": "the analysis reconstructs without declaring the footage rendered, so every new-code trace carries the calibration_assumed abstain item; other abstain codes are counted separately"
+ },
+ "code": {
+  "base": "1787aa6 (v2/base)",
+  "new": "a7b43b2 (perception changes, rehearsal fixes and analysis code frozen before the held-out run)"
+ },
+ "design_choices_fixed_on_dev": [
+  "event_timing=gripper_lowest with a 2.5 s look-back (one design, no sweep)",
+  "carry-tilt coverage threshold 0.8 for an upright statement (set a priori)"
+ ],
+ "variants": {
+  "new_dev": "new code, dev seeds, both cameras",
+  "base_dev": "base code, dev seeds, both cameras",
+  "new_video2": "new code, held-out seeds, both cameras",
+  "base_video2": "base code, held-out seeds, both cameras",
+  "new_video2_top": "new code, held-out seeds, top camera only",
+  "base_video2_top": "base code, held-out seeds, top camera only"
+ },
+ "runs": {
+  "base_video2": {
+   "rows": [
+    {
+     "seed": "demo_eval_71000_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 403,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9503722084367245,
+       "marker": 1.0
+      },
+      "found_rate_all": 0.9834574028122415,
+      "centroid_cm": {
+       "cup": {
+        "n": 403,
+        "median": 1.353260256590903,
+        "p90": 1.9184040865671814,
+        "max": 4.292477405096033
+       },
+       "block": {
+        "n": 383,
+        "median": 1.0387811784847816,
+        "p90": 1.2293230645097901,
+        "max": 4.756786567246035
+       },
+       "marker": {
+        "n": 403,
+        "median": 0.0619532700681151,
+        "p90": 1.8515581503862306,
+        "max": 4.232083259999092
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1189,
+       "median": 1.0909108296625547,
+       "p90": 1.7679144588930933,
+       "max": 4.756786567246035
+      },
+      "tilt_deg": {
+       "n": 18,
+       "median": 3.416,
+       "p90": 5.8690999999999995,
+       "max": 7.841
+      },
+      "n_visible": 1209
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 8,
+       "precision": 0.75,
+       "recall": 1.0,
+       "f1": 0.8571428571428571,
+       "abs_err_s": [
+        0.5239999999999938,
+        0.5240000000000009,
+        0.5839999999999961,
+        0.5880000000000001,
+        0.652000000000001,
+        0.7120000000000033
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.524
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.524
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.584
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.588
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.652
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.712
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 68,
+      "measured": 18,
+      "unsupported_upright": 50,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": true,
+      "missing": [],
+      "extra": [],
+      "required_corrections": 0
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup stayed within 8 degrees of upright for the whole time it was carried (mean 0.8).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.103 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.133 m from wall_0.",
+      "The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.094 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 28.6
+    },
+    {
+     "seed": "demo_eval_71001_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 449,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9955456570155902,
+       "block": 0.9688195991091314,
+       "marker": 0.8351893095768375
+      },
+      "found_rate_all": 0.933184855233853,
+      "centroid_cm": {
+       "cup": {
+        "n": 447,
+        "median": 2.3719321601901218,
+        "p90": 2.8830107542801984,
+        "max": 4.163299496591109
+       },
+       "block": {
+        "n": 435,
+        "median": 1.4349136221267478,
+        "p90": 2.0325930026219807,
+        "max": 4.493773669940016
+       },
+       "marker": {
+        "n": 375,
+        "median": 2.1459813282837423,
+        "p90": 2.2478615530349337,
+        "max": 4.957631023843963
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1257,
+       "median": 2.1312349853865786,
+       "p90": 2.4148616154914513,
+       "max": 4.957631023843963
+      },
+      "tilt_deg": {
+       "n": 67,
+       "median": 1.992,
+       "p90": 3.9164,
+       "max": 7.765
+      },
+      "n_visible": 1347
+     },
+     "events": {
+      "within_1s": {
+       "tp": 3,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 0.5,
+       "recall": 0.5,
+       "f1": 0.5,
+       "abs_err_s": [
+        0.54,
+        0.6360000000000028,
+        0.8840000000000003
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.54
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.636
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.884
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 1.084
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 81,
+      "measured": 31,
+      "unsupported_upright": 50,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 1
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup stayed within 8 degrees of upright for the whole time it was carried (mean 1).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.08 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.121 m from wall_0.",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "Objects were picked up in the order: cup, block."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 51.1
+    },
+    {
+     "seed": "demo_eval_71002_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 424,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9905660377358491,
+       "block": 0.11320754716981132,
+       "marker": 1.0
+      },
+      "found_rate_all": 0.7012578616352201,
+      "centroid_cm": {
+       "cup": {
+        "n": 420,
+        "median": 0.6912330085518767,
+        "p90": 2.8697779820984355,
+        "max": 4.823255215560521
+       },
+       "block": {
+        "n": 48,
+        "median": 2.159100645860326,
+        "p90": 4.415172691651421,
+        "max": 4.778070428951043
+       },
+       "marker": {
+        "n": 424,
+        "median": 1.9601990246004697,
+        "p90": 2.6311917947986214,
+        "max": 4.477598539050911
+       }
+      },
+      "centroid_cm_all": {
+       "n": 892,
+       "median": 1.9491795703761636,
+       "p90": 2.897169154235341,
+       "max": 4.823255215560521
+      },
+      "tilt_deg": null,
+      "n_visible": 1272
+     },
+     "events": {
+      "within_1s": {
+       "tp": 1,
+       "n_gt": 6,
+       "n_est": 16,
+       "precision": 0.0625,
+       "recall": 0.16666666666666666,
+       "f1": 0.09090909090909091,
+       "abs_err_s": [
+        0.784000000000006
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.784
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 76,
+      "measured": 0,
+      "unsupported_upright": 76,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "goal inside: block",
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 3
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block crossed wall_0 by going around +y.",
+      "The block crossed wall_0 by going around +y.",
+      "The block crossed wall_0 by going around +y.",
+      "The block crossed wall_0 by going around +y.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.179 m from wall_0.",
+      "The cup stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.119 m from wall_0.",
+      "The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.161 m from wall_0.",
+      "Objects were picked up in the order: block, cup, marker."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 10.2
+    },
+    {
+     "seed": "demo_eval_71003_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 442,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9547511312217195,
+       "marker": 0.920814479638009
+      },
+      "found_rate_all": 0.9585218702865762,
+      "centroid_cm": {
+       "cup": {
+        "n": 442,
+        "median": 0.274960209727824,
+        "p90": 1.698652537349869,
+        "max": 3.7563833284420283
+       },
+       "block": {
+        "n": 422,
+        "median": 0.42229966502163024,
+        "p90": 2.2009943509580703,
+        "max": 4.685799407876626
+       },
+       "marker": {
+        "n": 407,
+        "median": 0.2119757724532278,
+        "p90": 1.1321495505531203,
+        "max": 4.900722863926308
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1271,
+       "median": 0.2726667823953993,
+       "p90": 1.7814107883073165,
+       "max": 4.900722863926308
+      },
+      "tilt_deg": {
+       "n": 39,
+       "median": 0.103,
+       "p90": 1.9654,
+       "max": 1.972
+      },
+      "n_visible": 1326
+     },
+     "events": {
+      "within_1s": {
+       "tp": 4,
+       "n_gt": 6,
+       "n_est": 10,
+       "precision": 0.4,
+       "recall": 0.6666666666666666,
+       "f1": 0.5,
+       "abs_err_s": [
+        0.6120000000000001,
+        0.652000000000001,
+        0.6639999999999873,
+        0.9720000000000013
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.612
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.652
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.664
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.972
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 1.008
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 73,
+      "measured": 39,
+      "unsupported_upright": 34,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": true,
+      "missing": [],
+      "extra": [],
+      "required_corrections": 0
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup stayed within 2 degrees of upright for the whole time it was carried (mean 0.3).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around -y.",
+      "While carried, the cup's centre stayed at least 0.12 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around -y.",
+      "While carried, the block's centre stayed at least 0.123 m from wall_0.",
+      "The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around -y.",
+      "While carried, the marker's centre stayed at least 0.148 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 58.4
+    },
+    {
+     "seed": "demo_eval_71004_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 428,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9439252336448598,
+       "block": 0.9084507042253521,
+       "marker": 0.9345794392523364
+      },
+      "found_rate_all": 0.9290171606864275,
+      "centroid_cm": {
+       "cup": {
+        "n": 404,
+        "median": 0.39022175462250197,
+        "p90": 2.4710336796008496,
+        "max": 4.985202470096148
+       },
+       "block": {
+        "n": 387,
+        "median": 0.721940524780057,
+        "p90": 1.8732989262426032,
+        "max": 4.940506534668581
+       },
+       "marker": {
+        "n": 400,
+        "median": 1.4046586773825267,
+        "p90": 1.870431448455454,
+        "max": 4.260667926992605
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1191,
+       "median": 0.7289682425833821,
+       "p90": 2.1577772127356623,
+       "max": 4.985202470096148
+      },
+      "tilt_deg": null,
+      "n_visible": 1282
+     },
+     "events": {
+      "within_1s": {
+       "tp": 2,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 0.3333333333333333,
+       "recall": 0.3333333333333333,
+       "f1": 0.3333333333333333,
+       "abs_err_s": [
+        0.7799999999999976,
+        0.7800000000000011
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.78
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.78
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 1.16
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 78,
+      "measured": 0,
+      "unsupported_upright": 78,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": true,
+      "missing": [],
+      "extra": [],
+      "required_corrections": 0
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.059 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.157 m from wall_0.",
+      "The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.177 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 16.8
+    },
+    {
+     "seed": "demo_eval_71005_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 433,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9695550351288056,
+       "marker": 0.9445727482678984
+      },
+      "found_rate_all": 0.97138437741686,
+      "centroid_cm": {
+       "cup": {
+        "n": 433,
+        "median": 1.5392166445145896,
+        "p90": 1.8626348454127553,
+        "max": 4.572911951529435
+       },
+       "block": {
+        "n": 414,
+        "median": 0.771576633420322,
+        "p90": 1.1659819859725653,
+        "max": 4.8341119757294
+       },
+       "marker": {
+        "n": 409,
+        "median": 2.773111680235975,
+        "p90": 2.8546650017111848,
+        "max": 4.9346449197021895
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1256,
+       "median": 1.5428021365410962,
+       "p90": 2.78408799509685,
+       "max": 4.9346449197021895
+      },
+      "tilt_deg": {
+       "n": 62,
+       "median": 3.973,
+       "p90": 5.9919,
+       "max": 5.994
+      },
+      "n_visible": 1293
+     },
+     "events": {
+      "within_1s": {
+       "tp": 5,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 0.8333333333333334,
+       "recall": 0.8333333333333334,
+       "f1": 0.8333333333333334,
+       "abs_err_s": [
+        0.4280000000000008,
+        0.5319999999999965,
+        0.5640000000000001,
+        0.6760000000000019,
+        0.8960000000000008
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.428
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.532
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.564
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.676
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.896
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 67,
+      "measured": 27,
+      "unsupported_upright": 40,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": true,
+      "missing": [],
+      "extra": [],
+      "required_corrections": 0
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup stayed within 4 degrees of upright for the whole time it was carried (mean 1.2).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.099 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.055 m from wall_0.",
+      "The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.15 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 28.7
+    },
+    {
+     "seed": "demo_eval_71006_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 477,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9853249475890985,
+       "block": 0.9914893617021276,
+       "marker": 0.9811320754716981
+      },
+      "found_rate_all": 0.9859550561797753,
+      "centroid_cm": {
+       "cup": {
+        "n": 470,
+        "median": 0.4042758451088192,
+        "p90": 1.5915591247881151,
+        "max": 4.792558921028855
+       },
+       "block": {
+        "n": 466,
+        "median": 0.832688512372523,
+        "p90": 1.7446387130636445,
+        "max": 4.58004333335116
+       },
+       "marker": {
+        "n": 468,
+        "median": 1.5477734943755337,
+        "p90": 2.065149827516744,
+        "max": 4.9679618708691
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1404,
+       "median": 0.8411023416638548,
+       "p90": 1.8605178612786153,
+       "max": 4.9679618708691
+      },
+      "tilt_deg": {
+       "n": 56,
+       "median": 1.9915,
+       "p90": 3.991,
+       "max": 9.773
+      },
+      "n_visible": 1424
+     },
+     "events": {
+      "within_1s": {
+       "tp": 5,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 0.8333333333333334,
+       "recall": 0.8333333333333334,
+       "f1": 0.8333333333333334,
+       "abs_err_s": [
+        0.5640000000000001,
+        0.568000000000012,
+        0.5799999999999983,
+        0.804000000000002,
+        0.9879999999999995
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.564
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.568
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.58
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.804
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.988
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 1.064
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 84,
+      "measured": 21,
+      "unsupported_upright": 63,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": true,
+      "missing": [],
+      "extra": [],
+      "required_corrections": 0
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup stayed within 10 degrees of upright for the whole time it was carried (mean 0.4).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.097 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.035 m from wall_0.",
+      "The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.092 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 31.9
+    },
+    {
+     "seed": "demo_eval_71007_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 426,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9859154929577465,
+       "block": 0.9645390070921985,
+       "marker": 0.9788732394366197
+      },
+      "found_rate_all": 0.9764705882352941,
+      "centroid_cm": {
+       "cup": {
+        "n": 420,
+        "median": 0.39794755328335246,
+        "p90": 1.817252595902589,
+        "max": 4.621964822825404
+       },
+       "block": {
+        "n": 408,
+        "median": 0.17367461301625786,
+        "p90": 1.0534312549206888,
+        "max": 4.999553251741229
+       },
+       "marker": {
+        "n": 417,
+        "median": 0.24850542337370635,
+        "p90": 1.5843127438698876,
+        "max": 4.700800552157652
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1245,
+       "median": 0.2585480409118338,
+       "p90": 1.661798952813341,
+       "max": 4.999553251741229
+      },
+      "tilt_deg": {
+       "n": 52,
+       "median": 1.995,
+       "p90": 7.640599999999996,
+       "max": 15.445545454545455
+      },
+      "n_visible": 1275
+     },
+     "events": {
+      "within_1s": {
+       "tp": 5,
+       "n_gt": 6,
+       "n_est": 10,
+       "precision": 0.5,
+       "recall": 0.8333333333333334,
+       "f1": 0.625,
+       "abs_err_s": [
+        0.5,
+        0.5360000000000014,
+        0.5400000000000063,
+        0.7640000000000029,
+        0.9799999999999969
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.5
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.536
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.54
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.764
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.98
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 1.176
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 80,
+      "measured": 17,
+      "unsupported_upright": 63,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright transport: cup {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 1
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup was tilted up to 15.5 degrees while carried.",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.096 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.084 m from wall_0.",
+      "The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.092 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 29.3
+    },
+    {
+     "seed": "demo_eval_71008_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 460,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9891304347826086,
+       "marker": 0.8956521739130435
+      },
+      "found_rate_all": 0.9615942028985507,
+      "centroid_cm": {
+       "cup": {
+        "n": 460,
+        "median": 1.186531353330306,
+        "p90": 2.505928303278902,
+        "max": 4.48789940191762
+       },
+       "block": {
+        "n": 455,
+        "median": 1.1871109093659937,
+        "p90": 2.2503675107300007,
+        "max": 4.855865568025926
+       },
+       "marker": {
+        "n": 412,
+        "median": 3.4607801254717785,
+        "p90": 3.5379115124152127,
+        "max": 4.999468370971975
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1327,
+       "median": 1.2088941518345737,
+       "p90": 3.5039951477378257,
+       "max": 4.999468370971975
+      },
+      "tilt_deg": {
+       "n": 58,
+       "median": 3.9905,
+       "p90": 3.995,
+       "max": 3.996
+      },
+      "n_visible": 1380
+     },
+     "events": {
+      "within_1s": {
+       "tp": 4,
+       "n_gt": 6,
+       "n_est": 8,
+       "precision": 0.5,
+       "recall": 0.6666666666666666,
+       "f1": 0.5714285714285715,
+       "abs_err_s": [
+        0.45600000000000307,
+        0.652000000000001,
+        0.6680000000000001,
+        0.7800000000000011
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.456
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.652
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.668
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.78
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 1.004
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 1.024
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 82,
+      "measured": 27,
+      "unsupported_upright": 55,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": true,
+      "missing": [],
+      "extra": [],
+      "required_corrections": 0
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup stayed within 4 degrees of upright for the whole time it was carried (mean 0.1).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around -y.",
+      "While carried, the cup's centre stayed at least 0.101 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around -y.",
+      "While carried, the block's centre stayed at least 0.119 m from wall_0.",
+      "The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going through wall.",
+      "While carried, the marker's centre stayed at least 0.005 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 31.3
+    },
+    {
+     "seed": "demo_eval_71009_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 450,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9888888888888889,
+       "block": 0.9711111111111111,
+       "marker": 0.9933333333333333
+      },
+      "found_rate_all": 0.9844444444444445,
+      "centroid_cm": {
+       "cup": {
+        "n": 445,
+        "median": 0.8161554106651999,
+        "p90": 1.4561224865740292,
+        "max": 4.845765080608899
+       },
+       "block": {
+        "n": 437,
+        "median": 0.16857017729612597,
+        "p90": 1.3125836156683144,
+        "max": 3.338877914905567
+       },
+       "marker": {
+        "n": 447,
+        "median": 0.05474755683267768,
+        "p90": 1.8775036009059463,
+        "max": 4.462643987241537
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1329,
+       "median": 0.22007702447022875,
+       "p90": 1.543682916052053,
+       "max": 4.845765080608899
+      },
+      "tilt_deg": {
+       "n": 61,
+       "median": 3.875,
+       "p90": 3.995,
+       "max": 5.919
+      },
+      "n_visible": 1350
+     },
+     "events": {
+      "within_1s": {
+       "tp": 4,
+       "n_gt": 6,
+       "n_est": 8,
+       "precision": 0.5,
+       "recall": 0.6666666666666666,
+       "f1": 0.5714285714285715,
+       "abs_err_s": [
+        0.5319999999999965,
+        0.5720000000000001,
+        0.6799999999999926,
+        0.8919999999999995
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.532
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.572
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.68
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.892
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 1.24
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 82,
+      "measured": 25,
+      "unsupported_upright": 57,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "goal inside: block",
+       "goal inside: cup",
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 6
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup stayed within 6 degrees of upright for the whole time it was carried (mean 0.9).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.102 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.118 m from wall_0.",
+      "The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.1 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 54.5
+    },
+    {
+     "seed": "demo_eval_71010_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 423,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.0,
+       "block": 0.0,
+       "marker": 0.0
+      },
+      "found_rate_all": 0.0,
+      "centroid_cm": {},
+      "centroid_cm_all": null,
+      "tilt_deg": null,
+      "n_visible": 1269
+     },
+     "events": {
+      "within_1s": {
+       "tp": 0,
+       "n_gt": 6,
+       "n_est": 0,
+       "precision": 0.0,
+       "recall": 0.0,
+       "f1": 0.0,
+       "abs_err_s": []
+      },
+      "signed": []
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 76,
+      "measured": 0,
+      "unsupported_upright": 76,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "goal inside: cup",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 5
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The block ended upright (0 degrees of tilt).",
+      "The block ended inside tray_0.",
+      "The cup ended upright (0 degrees of tilt).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 123.9
+    },
+    {
+     "seed": "demo_eval_71011_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 417,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9328537170263789,
+       "marker": 1.0
+      },
+      "found_rate_all": 0.9776179056754596,
+      "centroid_cm": {
+       "cup": {
+        "n": 417,
+        "median": 1.4976848219858305,
+        "p90": 1.8921935830036456,
+        "max": 4.535022277027164
+       },
+       "block": {
+        "n": 389,
+        "median": 2.204319125982056,
+        "p90": 2.532273637752676,
+        "max": 4.322309239695202
+       },
+       "marker": {
+        "n": 417,
+        "median": 0.06785797358613027,
+        "p90": 2.0833370873040775,
+        "max": 4.8357262623268875
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1223,
+       "median": 1.500649639079077,
+       "p90": 2.4387284521404795,
+       "max": 4.8357262623268875
+      },
+      "tilt_deg": {
+       "n": 62,
+       "median": 5.83,
+       "p90": 7.9407000000000005,
+       "max": 7.996
+      },
+      "n_visible": 1251
+     },
+     "events": {
+      "within_1s": {
+       "tp": 5,
+       "n_gt": 6,
+       "n_est": 8,
+       "precision": 0.625,
+       "recall": 0.8333333333333334,
+       "f1": 0.7142857142857143,
+       "abs_err_s": [
+        0.4960000000000093,
+        0.6120000000000019,
+        0.6760000000000002,
+        0.8119999999999976,
+        0.8640000000000043
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.496
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.612
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.676
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.812
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.864
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 68,
+      "measured": 30,
+      "unsupported_upright": 38,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "goal inside: block",
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 3
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup stayed within 8 degrees of upright for the whole time it was carried (mean 2.3).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.112 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.129 m from wall_0.",
+      "The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.11 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 27.3
+    },
+    {
+     "seed": "demo_eval_71012_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 451,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9577777777777777,
+       "marker": 0.9977827050997783
+      },
+      "found_rate_all": 0.985207100591716,
+      "centroid_cm": {
+       "cup": {
+        "n": 451,
+        "median": 0.5393136921341612,
+        "p90": 1.9714141747466467,
+        "max": 4.385600255969476
+       },
+       "block": {
+        "n": 431,
+        "median": 0.24182323941922493,
+        "p90": 1.944482741987263,
+        "max": 3.959053052815869
+       },
+       "marker": {
+        "n": 450,
+        "median": 0.04827769007906442,
+        "p90": 1.8459589286078595,
+        "max": 3.931323595875363
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1332,
+       "median": 0.2598856742726849,
+       "p90": 1.9538318812032038,
+       "max": 4.385600255969476
+      },
+      "tilt_deg": {
+       "n": 13,
+       "median": 0.126,
+       "p90": 9.740400000000001,
+       "max": 9.75
+      },
+      "n_visible": 1352
+     },
+     "events": {
+      "within_1s": {
+       "tp": 5,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 0.8333333333333334,
+       "recall": 0.8333333333333334,
+       "f1": 0.8333333333333334,
+       "abs_err_s": [
+        0.5,
+        0.5360000000000014,
+        0.6120000000000001,
+        0.8599999999999994,
+        0.9519999999999982
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.5
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.536
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.612
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.86
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.952
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 78,
+      "measured": 13,
+      "unsupported_upright": 65,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": true,
+      "missing": [],
+      "extra": [],
+      "required_corrections": 0
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup stayed within 10 degrees of upright for the whole time it was carried (mean 0.5).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.111 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.008 m from wall_0.",
+      "The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.095 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 28.4
+    },
+    {
+     "seed": "demo_eval_71013_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 448,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9642857142857143,
+       "block": 0.8794642857142857,
+       "marker": 0.6808035714285714
+      },
+      "found_rate_all": 0.8415178571428571,
+      "centroid_cm": {
+       "cup": {
+        "n": 432,
+        "median": 0.990916302278712,
+        "p90": 2.915681470734922,
+        "max": 4.96832158457402
+       },
+       "block": {
+        "n": 394,
+        "median": 0.674979383864245,
+        "p90": 1.535989149678111,
+        "max": 4.844197236959553
+       },
+       "marker": {
+        "n": 305,
+        "median": 3.072369393535047,
+        "p90": 3.1746775509232914,
+        "max": 3.3978392345432096
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1131,
+       "median": 0.9910611066487082,
+       "p90": 3.1083934611499604,
+       "max": 4.96832158457402
+      },
+      "tilt_deg": null,
+      "n_visible": 1344
+     },
+     "events": {
+      "within_1s": {
+       "tp": 2,
+       "n_gt": 6,
+       "n_est": 4,
+       "precision": 0.5,
+       "recall": 0.3333333333333333,
+       "f1": 0.4,
+       "abs_err_s": [
+        0.8359999999999994,
+        0.9960000000000022
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.836
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.996
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 1.156
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 68,
+      "measured": 0,
+      "unsupported_upright": 68,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 1
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.159 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.214 m from wall_0.",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "Objects were picked up in the order: cup, block."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 22.8
+    },
+    {
+     "seed": "demo_eval_71014_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 422,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.990521327014218,
+       "block": 0.985781990521327,
+       "marker": 0.9928909952606635
+      },
+      "found_rate_all": 0.9897314375987362,
+      "centroid_cm": {
+       "cup": {
+        "n": 418,
+        "median": 0.17260168665497638,
+        "p90": 1.6275857012702442,
+        "max": 4.906436673277717
+       },
+       "block": {
+        "n": 416,
+        "median": 0.2762255239428048,
+        "p90": 1.7776702433839418,
+        "max": 4.891839288884483
+       },
+       "marker": {
+        "n": 419,
+        "median": 0.1820733685499641,
+        "p90": 1.6592029809606477,
+        "max": 4.917213717333943
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1253,
+       "median": 0.1828043385772176,
+       "p90": 1.678754049566753,
+       "max": 4.917213717333943
+      },
+      "tilt_deg": {
+       "n": 71,
+       "median": 1.99,
+       "p90": 3.995,
+       "max": 13.825
+      },
+      "n_visible": 1266
+     },
+     "events": {
+      "within_1s": {
+       "tp": 5,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 0.8333333333333334,
+       "recall": 0.8333333333333334,
+       "f1": 0.8333333333333334,
+       "abs_err_s": [
+        0.5439999999999969,
+        0.6439999999999984,
+        0.6920000000000002,
+        0.7080000000000002,
+        0.804000000000002
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.544
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.644
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.692
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.708
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.804
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 1.104
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 76,
+      "measured": 36,
+      "unsupported_upright": 40,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": true,
+      "missing": [],
+      "extra": [],
+      "required_corrections": 0
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup stayed within 14 degrees of upright for the whole time it was carried (mean 1).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.096 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.139 m from wall_0.",
+      "The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.105 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 54.2
+    },
+    {
+     "seed": "demo_eval_71015_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 440,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9886363636363636,
+       "block": 1.0,
+       "marker": 0.9840909090909091
+      },
+      "found_rate_all": 0.990909090909091,
+      "centroid_cm": {
+       "cup": {
+        "n": 435,
+        "median": 0.39515118819398204,
+        "p90": 3.898477459982874,
+        "max": 4.665516253175926
+       },
+       "block": {
+        "n": 440,
+        "median": 0.8433813986794473,
+        "p90": 1.8138295119584489,
+        "max": 3.7324463867831725
+       },
+       "marker": {
+        "n": 433,
+        "median": 0.2334345051057962,
+        "p90": 1.9487355286127317,
+        "max": 4.846932028774273
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1308,
+       "median": 0.3910413210284147,
+       "p90": 1.9962711906635995,
+       "max": 4.846932028774273
+      },
+      "tilt_deg": {
+       "n": 51,
+       "median": 1.995,
+       "p90": 3.994,
+       "max": 3.995
+      },
+      "n_visible": 1320
+     },
+     "events": {
+      "within_1s": {
+       "tp": 5,
+       "n_gt": 6,
+       "n_est": 8,
+       "precision": 0.625,
+       "recall": 0.8333333333333334,
+       "f1": 0.7142857142857143,
+       "abs_err_s": [
+        0.5360000000000014,
+        0.6200000000000045,
+        0.6360000000000001,
+        0.8359999999999985,
+        0.9320000000000022
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.536
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.62
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.636
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.836
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.932
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 1.056
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 76,
+      "measured": 20,
+      "unsupported_upright": 56,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": true,
+      "missing": [],
+      "extra": [],
+      "required_corrections": 0
+     },
+     "review": {
+      "abstain": [],
+      "review": []
+     },
+     "regularities": [
+      "The cup stayed within 4 degrees of upright for the whole time it was carried (mean 0.5).",
+      "The cup ended upright (0 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.053 m from wall_0.",
+      "The block stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The block ended upright (0 degrees of tilt).",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.12 m from wall_0.",
+      "The marker stayed within 0 degrees of upright for the whole time it was carried (mean 0).",
+      "The marker ended upright (0 degrees of tilt).",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.1 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": null,
+     "elapsed_s": 52.3
+    }
+   ],
+   "aggregate": {
+    "seeds": 16,
+    "completed": 16,
+    "found_rate_all": {
+     "n": 16,
+     "median": 0.974,
+     "mean": 0.886,
+     "p90_abs": 0.988
+    },
+    "events_f1_1s": {
+     "n": 16,
+     "median": 0.598,
+     "mean": 0.576,
+     "p90_abs": 0.833
+    },
+    "grasp_err_s": {
+     "n": 37,
+     "median": 0.588,
+     "mean": 0.625,
+     "p90_abs": 0.782
+    },
+    "release_err_s": {
+     "n": 35,
+     "median": 0.892,
+     "mean": 0.877,
+     "p90_abs": 1.135
+    },
+    "cup_carry_frames": 1213,
+    "cup_carry_tilt_measured": 304,
+    "unsupported_upright_frames": 909,
+    "upright_but_truly_tilted_frames": 0,
+    "truly_tilted_carry_frames": 0,
+    "spec_equal": 9,
+    "required_corrections_total": 20,
+    "seeds_with_abstain": 0,
+    "seeds_with_abstain_other_than_calibration_assumed": 0
+   }
+  },
+  "new_dev": {
+   "rows": [
+    {
+     "seed": "demo_eval_70000_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 413,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9661016949152542,
+       "block": 0.9535452322738386,
+       "marker": 0.7772397094430993
+      },
+      "found_rate_all": 0.8987854251012146,
+      "centroid_cm": {
+       "cup": {
+        "n": 399,
+        "median": 0.5946723352870749,
+        "p90": 1.7509982690804269,
+        "max": 4.904309291926807
+       },
+       "block": {
+        "n": 390,
+        "median": 0.9431048692634025,
+        "p90": 1.272975754247339,
+        "max": 4.77546020143335
+       },
+       "marker": {
+        "n": 321,
+        "median": 0.21980915001933482,
+        "p90": 2.9814407146233686,
+        "max": 4.429961237349116
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1110,
+       "median": 0.5908408438033855,
+       "p90": 2.5247425163029296,
+       "max": 4.904309291926807
+      },
+      "tilt_deg": {
+       "n": 51,
+       "median": 1.993,
+       "p90": 5.991,
+       "max": 7.991
+      },
+      "n_visible": 1235
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 12,
+       "precision": 0.5,
+       "recall": 1.0,
+       "f1": 0.6666666666666666,
+       "abs_err_s": [
+        0.027999999999998693,
+        0.09199999999999875,
+        0.12399999999999523,
+        0.1280000000000001,
+        0.13599999999999568,
+        0.2919999999999998
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": -0.028
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.092
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.124
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.128
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.136
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.292
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 62,
+      "measured": 24,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "goal inside: block",
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 7
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.056 m from wall_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.117 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.094 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 44.4
+    },
+    {
+     "seed": "demo_eval_70001_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 457,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9846827133479212,
+       "block": 0.9912472647702407,
+       "marker": 0.9102844638949672
+      },
+      "found_rate_all": 0.9620714806710431,
+      "centroid_cm": {
+       "cup": {
+        "n": 450,
+        "median": 0.35726088699934344,
+        "p90": 2.2420854018125236,
+        "max": 4.839721639930805
+       },
+       "block": {
+        "n": 453,
+        "median": 0.16409576392818212,
+        "p90": 1.7577768582019633,
+        "max": 4.890808205729883
+       },
+       "marker": {
+        "n": 416,
+        "median": 2.5249341140625736,
+        "p90": 3.548856027775491,
+        "max": 4.741789566848559
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1319,
+       "median": 0.395433810877193,
+       "p90": 2.5537150181143278,
+       "max": 4.890808205729883
+      },
+      "tilt_deg": {
+       "n": 59,
+       "median": 3.989,
+       "p90": 3.995,
+       "max": 5.965
+      },
+      "n_visible": 1371
+     },
+     "events": {
+      "within_1s": {
+       "tp": 5,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 0.8333333333333334,
+       "recall": 0.8333333333333334,
+       "f1": 0.8333333333333334,
+       "abs_err_s": [
+        0.0519999999999996,
+        0.05999999999999872,
+        0.19600000000000062,
+        0.28000000000000114,
+        0.3719999999999999
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.052
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.06
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.196
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.28
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.372
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 75,
+      "measured": 28,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 6
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.074 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.119 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.129 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 20.6
+    },
+    {
+     "seed": "demo_eval_70002_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 448,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.946067415730337,
+       "marker": 0.9933035714285714
+      },
+      "found_rate_all": 0.9798657718120806,
+      "centroid_cm": {
+       "cup": {
+        "n": 448,
+        "median": 0.6038951529864363,
+        "p90": 1.9360066509681826,
+        "max": 4.883097541224467
+       },
+       "block": {
+        "n": 421,
+        "median": 0.3176743130142844,
+        "p90": 2.278191288068327,
+        "max": 4.879720926815317
+       },
+       "marker": {
+        "n": 445,
+        "median": 0.1709850817487969,
+        "p90": 2.1416787042387195,
+        "max": 4.531627387252668
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1314,
+       "median": 0.48644522092860515,
+       "p90": 2.1153288598953663,
+       "max": 4.883097541224467
+      },
+      "tilt_deg": {
+       "n": 62,
+       "median": 0.098,
+       "p90": 3.996,
+       "max": 5.94
+      },
+      "n_visible": 1341
+     },
+     "events": {
+      "within_1s": {
+       "tp": 5,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 0.8333333333333334,
+       "recall": 0.8333333333333334,
+       "f1": 0.8333333333333334,
+       "abs_err_s": [
+        0.10000000000000053,
+        0.11999999999999034,
+        0.26000000000000156,
+        0.3919999999999959,
+        0.7000000000000028
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.1
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.12
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.26
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.392
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.7
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 77,
+      "measured": 34,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 6
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.103 m from wall_0.",
+      "The block ended inside tray_0.",
+      "While carried, the block's centre stayed at least 0.139 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.096 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 23.6
+    },
+    {
+     "seed": "demo_eval_70003_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 453,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9911699779249448,
+       "block": 1.0,
+       "marker": 0.82560706401766
+      },
+      "found_rate_all": 0.9389256806475349,
+      "centroid_cm": {
+       "cup": {
+        "n": 449,
+        "median": 1.4972773612027095,
+        "p90": 1.955095545322753,
+        "max": 4.150257930176007
+       },
+       "block": {
+        "n": 453,
+        "median": 0.4027364918401538,
+        "p90": 1.8631718366438226,
+        "max": 4.554545883569873
+       },
+       "marker": {
+        "n": 374,
+        "median": 2.445700041969742,
+        "p90": 2.5434638966140795,
+        "max": 4.757957305259892
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1276,
+       "median": 1.499107527502892,
+       "p90": 2.482215087210995,
+       "max": 4.757957305259892
+      },
+      "tilt_deg": {
+       "n": 36,
+       "median": 0.1105,
+       "p90": 3.996,
+       "max": 8.991
+      },
+      "n_visible": 1359
+     },
+     "events": {
+      "within_1s": {
+       "tp": 5,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 0.8333333333333334,
+       "recall": 0.8333333333333334,
+       "f1": 0.8333333333333334,
+       "abs_err_s": [
+        0.027999999999998693,
+        0.0680000000000005,
+        0.13599999999999568,
+        0.1560000000000059,
+        0.347999999999999
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.028
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.068
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.136
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.156
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.348
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 79,
+      "measured": 13,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 6
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around -y.",
+      "While carried, the cup's centre stayed at least 0.108 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around -y.",
+      "While carried, the block's centre stayed at least 0.132 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "While carried, the marker's centre stayed at least 0.262 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 58.2
+    },
+    {
+     "seed": "demo_eval_70004_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 407,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9361179361179361,
+       "block": 0.8793103448275862,
+       "marker": 0.9459459459459459
+      },
+      "found_rate_all": 0.9204918032786885,
+      "centroid_cm": {
+       "cup": {
+        "n": 381,
+        "median": 1.3982316902540832,
+        "p90": 2.9502852062358387,
+        "max": 4.909375362131145
+       },
+       "block": {
+        "n": 357,
+        "median": 0.5304519737143321,
+        "p90": 1.7785853831427583,
+        "max": 4.607532809453366
+       },
+       "marker": {
+        "n": 385,
+        "median": 0.9742850770884989,
+        "p90": 2.558593820375591,
+        "max": 4.637996876230695
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1123,
+       "median": 0.97685448823606,
+       "p90": 2.3045900060224667,
+       "max": 4.909375362131145
+      },
+      "tilt_deg": null,
+      "n_visible": 1220
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "abs_err_s": [
+        0.036000000000001364,
+        0.04800000000000182,
+        0.13199999999999967,
+        0.2119999999999962,
+        0.5640000000000001,
+        0.6239999999999952
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.036
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": -0.048
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.132
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.212
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.564
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.624
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 64,
+      "measured": 0,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 6
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "single_view",
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.166 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.236 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.118 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 13.8
+    },
+    {
+     "seed": "demo_eval_70005_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 470,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9872340425531915,
+       "block": 0.9722222222222222,
+       "marker": 0.9765957446808511
+      },
+      "found_rate_all": 0.9786931818181818,
+      "centroid_cm": {
+       "cup": {
+        "n": 464,
+        "median": 0.41338142045592885,
+        "p90": 1.9065337906046982,
+        "max": 4.809893990413095
+       },
+       "block": {
+        "n": 455,
+        "median": 0.16070813505414203,
+        "p90": 1.319128784476484,
+        "max": 4.432090640954069
+       },
+       "marker": {
+        "n": 459,
+        "median": 0.16570779058283458,
+        "p90": 0.5773964951672276,
+        "max": 4.314295686583292
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1378,
+       "median": 0.20644934977693324,
+       "p90": 1.410247858306852,
+       "max": 4.809893990413095
+      },
+      "tilt_deg": {
+       "n": 55,
+       "median": 1.992,
+       "p90": 3.9262,
+       "max": 3.995
+      },
+      "n_visible": 1408
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "abs_err_s": [
+        0.060000000000002274,
+        0.22400000000000375,
+        0.2839999999999998,
+        0.3960000000000008,
+        0.4720000000000084,
+        0.6199999999999974
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": -0.06
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": -0.224
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.284
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.396
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.472
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.62
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 84,
+      "measured": 22,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 5
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.107 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "The block crossed wall_0 by going through wall.",
+      "The block crossed wall_0 by going through wall.",
+      "While carried, the block's centre stayed at least 0.042 m from wall_0.",
+      "The marker ended upright. (inferred from its outline seen from above; tilts under about 15 degrees cannot be resolved)",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.105 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 24.8
+    },
+    {
+     "seed": "demo_eval_70006_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 422,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 1.0,
+       "marker": 0.9218009478672986
+      },
+      "found_rate_all": 0.9739336492890995,
+      "centroid_cm": {
+       "cup": {
+        "n": 422,
+        "median": 1.0465477070112685,
+        "p90": 1.4291723231939,
+        "max": 3.7443601316085013
+       },
+       "block": {
+        "n": 422,
+        "median": 0.39480301108385657,
+        "p90": 1.3786568410596225,
+        "max": 3.6651587625499684
+       },
+       "marker": {
+        "n": 389,
+        "median": 1.7201430862930331,
+        "p90": 2.749754406893516,
+        "max": 4.808272072125072
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1233,
+       "median": 1.0484842928028866,
+       "p90": 2.1125764450516056,
+       "max": 4.808272072125072
+      },
+      "tilt_deg": {
+       "n": 65,
+       "median": 0.173,
+       "p90": 1.995,
+       "max": 1.996
+      },
+      "n_visible": 1266
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 8,
+       "precision": 0.75,
+       "recall": 1.0,
+       "f1": 0.8571428571428571,
+       "abs_err_s": [
+        0.12400000000000233,
+        0.17600000000000193,
+        0.17999999999999972,
+        0.17999999999999972,
+        0.19199999999999307,
+        0.32399999999999807
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.124
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.176
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.18
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.18
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.192
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.324
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 76,
+      "measured": 32,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 6
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around -y.",
+      "While carried, the cup's centre stayed at least 0.095 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around -y.",
+      "While carried, the block's centre stayed at least 0.134 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going through wall.",
+      "While carried, the marker's centre stayed at least 0.031 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 57.3
+    },
+    {
+     "seed": "demo_eval_70007_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 465,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9763440860215054,
+       "marker": 0.8580645161290322
+      },
+      "found_rate_all": 0.9448028673835125,
+      "centroid_cm": {
+       "cup": {
+        "n": 465,
+        "median": 1.4909328901751835,
+        "p90": 2.1639858388303916,
+        "max": 4.068570280408576
+       },
+       "block": {
+        "n": 454,
+        "median": 0.5043742465563305,
+        "p90": 1.6228009752739314,
+        "max": 4.896460909365529
+       },
+       "marker": {
+        "n": 399,
+        "median": 0.1432842859005486,
+        "p90": 0.6664099963383542,
+        "max": 3.601853201787095
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1318,
+       "median": 0.5197180739970497,
+       "p90": 1.5511271567543417,
+       "max": 4.896460909365529
+      },
+      "tilt_deg": {
+       "n": 52,
+       "median": 2.991,
+       "p90": 3.995,
+       "max": 3.996
+      },
+      "n_visible": 1395
+     },
+     "events": {
+      "within_1s": {
+       "tp": 5,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 0.8333333333333334,
+       "recall": 0.8333333333333334,
+       "f1": 0.8333333333333334,
+       "abs_err_s": [
+        0.09199999999999875,
+        0.1479999999999997,
+        0.29599999999999227,
+        0.33999999999999986,
+        0.3480000000000061
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.092
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.148
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.296
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.34
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": -0.348
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 77,
+      "measured": 20,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "goal inside: marker",
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 7
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around -y.",
+      "While carried, the cup's centre stayed at least 0.117 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around -y.",
+      "While carried, the block's centre stayed at least 0.114 m from wall_0.",
+      "The marker crossed wall_0 by going through wall.",
+      "While carried, the marker's centre stayed at least 0.002 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 28.6
+    },
+    {
+     "seed": "demo_eval_70008_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 420,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9523809523809523,
+       "block": 0.9047619047619048,
+       "marker": 0.9619047619047619
+      },
+      "found_rate_all": 0.9396825396825397,
+      "centroid_cm": {
+       "cup": {
+        "n": 400,
+        "median": 0.9600690396231681,
+        "p90": 3.4419601928612065,
+        "max": 4.945596579774207
+       },
+       "block": {
+        "n": 380,
+        "median": 0.45051373493335134,
+        "p90": 2.598917787750245,
+        "max": 4.939748189595322
+       },
+       "marker": {
+        "n": 404,
+        "median": 1.9653091801493279,
+        "p90": 3.074275051487255,
+        "max": 4.971015496769474
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1184,
+       "median": 1.099868350647863,
+       "p90": 2.927778403950544,
+       "max": 4.971015496769474
+      },
+      "tilt_deg": null,
+      "n_visible": 1260
+     },
+     "events": {
+      "within_1s": {
+       "tp": 5,
+       "n_gt": 6,
+       "n_est": 8,
+       "precision": 0.625,
+       "recall": 0.8333333333333334,
+       "f1": 0.7142857142857143,
+       "abs_err_s": [
+        0.012000000000000455,
+        0.09599999999998943,
+        0.14400000000000546,
+        0.6760000000000002,
+        0.684000000000001
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.012
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.096
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": -0.144
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.676
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.684
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 1.036
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 77,
+      "measured": 0,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 6
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "single_view",
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.121 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.207 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "While carried, the marker's centre stayed at least 0.161 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 8.0
+    },
+    {
+     "seed": "demo_eval_70009_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 451,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9223946784922394,
+       "block": 0.8403547671840355,
+       "marker": 0.8203991130820399
+      },
+      "found_rate_all": 0.861049519586105,
+      "centroid_cm": {
+       "cup": {
+        "n": 416,
+        "median": 0.906692585573134,
+        "p90": 2.641175535629646,
+        "max": 4.521267990659802
+       },
+       "block": {
+        "n": 379,
+        "median": 0.4295147628041397,
+        "p90": 1.0560388017634297,
+        "max": 4.6936317244187515
+       },
+       "marker": {
+        "n": 370,
+        "median": 2.9072762357004907,
+        "p90": 3.063813497197149,
+        "max": 4.652711999655615
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1165,
+       "median": 0.9229127399805205,
+       "p90": 2.937402398038594,
+       "max": 4.6936317244187515
+      },
+      "tilt_deg": null,
+      "n_visible": 1353
+     },
+     "events": {
+      "within_1s": {
+       "tp": 3,
+       "n_gt": 6,
+       "n_est": 4,
+       "precision": 0.75,
+       "recall": 0.5,
+       "f1": 0.6,
+       "abs_err_s": [
+        0.17199999999999704,
+        0.20399999999999974,
+        0.33200000000000074
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.172
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.204
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.332
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 1.148
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 72,
+      "measured": 0,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 5
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "single_view",
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.139 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.206 m from wall_0.",
+      "The marker ended upright. (inferred from its outline seen from above; tilts under about 15 degrees cannot be resolved)",
+      "The marker ended inside tray_0.",
+      "Objects were picked up in the order: cup, block."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 8.3
+    },
+    {
+     "seed": "demo_eval_70010_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 475,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9768421052631578,
+       "marker": 0.8610526315789474
+      },
+      "found_rate_all": 0.9459649122807018,
+      "centroid_cm": {
+       "cup": {
+        "n": 475,
+        "median": 1.110223218778514,
+        "p90": 2.966925868658508,
+        "max": 4.737666918434825
+       },
+       "block": {
+        "n": 464,
+        "median": 0.47515150969980585,
+        "p90": 1.7870058831870723,
+        "max": 4.731808358315426
+       },
+       "marker": {
+        "n": 409,
+        "median": 0.7066034011145245,
+        "p90": 0.7480983247956672,
+        "max": 4.885921747150652
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1348,
+       "median": 0.7133758285685925,
+       "p90": 1.639228077714331,
+       "max": 4.885921747150652
+      },
+      "tilt_deg": {
+       "n": 54,
+       "median": 1.993,
+       "p90": 4.9233,
+       "max": 9.774
+      },
+      "n_visible": 1425
+     },
+     "events": {
+      "within_1s": {
+       "tp": 2,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 0.3333333333333333,
+       "recall": 0.3333333333333333,
+       "f1": 0.3333333333333333,
+       "abs_err_s": [
+        0.1639999999999997,
+        0.519999999999996
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.164
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.52
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 1.028
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 73,
+      "measured": 19,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 6
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around -y.",
+      "While carried, the cup's centre stayed at least 0.083 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going through wall.",
+      "While carried, the block's centre stayed at least 0.112 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going through wall.",
+      "While carried, the marker's centre stayed at least 0.037 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 47.7
+    },
+    {
+     "seed": "demo_eval_70011_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 430,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.986046511627907,
+       "marker": 0.8860465116279069
+      },
+      "found_rate_all": 0.9573643410852714,
+      "centroid_cm": {
+       "cup": {
+        "n": 430,
+        "median": 0.5101556085449264,
+        "p90": 1.978567440501813,
+        "max": 3.912744144275821
+       },
+       "block": {
+        "n": 424,
+        "median": 1.1127517996734815,
+        "p90": 1.528954840594575,
+        "max": 4.003717248594673
+       },
+       "marker": {
+        "n": 381,
+        "median": 4.158337474388056,
+        "p90": 4.283823987092092,
+        "max": 4.996507893198137
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1235,
+       "median": 1.1259865100237714,
+       "p90": 4.1737794988146995,
+       "max": 4.996507893198137
+      },
+      "tilt_deg": {
+       "n": 376,
+       "median": 6.991,
+       "p90": 29.992,
+       "max": 29.994
+      },
+      "n_visible": 1290
+     },
+     "events": {
+      "within_1s": {
+       "tp": 5,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 0.8333333333333334,
+       "recall": 0.8333333333333334,
+       "f1": 0.8333333333333334,
+       "abs_err_s": [
+        0.07600000000000051,
+        0.13200000000000056,
+        0.33200000000000074,
+        0.41199999999999903,
+        0.5760000000000076
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.076
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.132
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.332
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": -0.412
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.576
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 73,
+      "measured": 45,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 4
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended upright (12 degrees of tilt).",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around -y.",
+      "While carried, the cup's centre stayed at least 0.113 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around -y.",
+      "While carried, the block's centre stayed at least 0.15 m from wall_0.",
+      "The marker ended upright. (inferred from its outline seen from above; tilts under about 15 degrees cannot be resolved)",
+      "The marker ended inside tray_0.",
+      "While carried, the marker's centre stayed at least 0.154 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 75.5
+    }
+   ],
+   "aggregate": {
+    "seeds": 12,
+    "completed": 12,
+    "found_rate_all": {
+     "n": 12,
+     "median": 0.945,
+     "mean": 0.942,
+     "p90_abs": 0.978
+    },
+    "events_f1_1s": {
+     "n": 12,
+     "median": 0.833,
+     "mean": 0.778,
+     "p90_abs": 0.986
+    },
+    "grasp_err_s": {
+     "n": 32,
+     "median": 0.152,
+     "mean": 0.229,
+     "p90_abs": 0.671
+    },
+    "release_err_s": {
+     "n": 30,
+     "median": -0.03,
+     "mean": -0.025,
+     "p90_abs": 0.58
+    },
+    "cup_carry_frames": 889,
+    "cup_carry_tilt_measured": 237,
+    "unsupported_upright_frames": 0,
+    "upright_but_truly_tilted_frames": 0,
+    "truly_tilted_carry_frames": 0,
+    "spec_equal": 0,
+    "required_corrections_total": 70,
+    "seeds_with_abstain": 12,
+    "seeds_with_abstain_other_than_calibration_assumed": 0
+   }
+  },
+  "new_video2": {
+   "rows": [
+    {
+     "seed": "demo_eval_71000_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 403,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9503722084367245,
+       "marker": 1.0
+      },
+      "found_rate_all": 0.9834574028122415,
+      "centroid_cm": {
+       "cup": {
+        "n": 403,
+        "median": 1.353260268839776,
+        "p90": 1.9184040995535963,
+        "max": 4.292477395344611
+       },
+       "block": {
+        "n": 383,
+        "median": 1.0387811792161612,
+        "p90": 1.2293230735152412,
+        "max": 4.756786558505275
+       },
+       "marker": {
+        "n": 403,
+        "median": 0.06195327937712638,
+        "p90": 1.8515581630728095,
+        "max": 4.2320832837927265
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1189,
+       "median": 1.090910831006094,
+       "p90": 1.7679144730371572,
+       "max": 4.756786558505275
+      },
+      "tilt_deg": {
+       "n": 57,
+       "median": 1.995,
+       "p90": 3.996,
+       "max": 7.841
+      },
+      "n_visible": 1209
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 8,
+       "precision": 0.75,
+       "recall": 1.0,
+       "f1": 0.8571428571428571,
+       "abs_err_s": [
+        0.14800000000000324,
+        0.1839999999999975,
+        0.18799999999999972,
+        0.2759999999999998,
+        0.6880000000000024,
+        0.8760000000000048
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.148
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.184
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.188
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.276
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": -0.688
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": -0.876
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 68,
+      "measured": 23,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 6
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.103 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.133 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.094 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 28.1
+    },
+    {
+     "seed": "demo_eval_71001_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 449,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9955456570155902,
+       "block": 0.9688195991091314,
+       "marker": 0.8351893095768375
+      },
+      "found_rate_all": 0.933184855233853,
+      "centroid_cm": {
+       "cup": {
+        "n": 447,
+        "median": 2.371932162762886,
+        "p90": 2.8830107131635954,
+        "max": 4.163299555565347
+       },
+       "block": {
+        "n": 435,
+        "median": 1.434913621272475,
+        "p90": 2.032593009076007,
+        "max": 4.493773684797432
+       },
+       "marker": {
+        "n": 375,
+        "median": 2.145981351846065,
+        "p90": 2.2478615764695005,
+        "max": 4.957631058561746
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1257,
+       "median": 2.1312350088628125,
+       "p90": 2.414861618888442,
+       "max": 4.957631058561746
+      },
+      "tilt_deg": {
+       "n": 72,
+       "median": 1.991,
+       "p90": 3.9093999999999998,
+       "max": 7.765
+      },
+      "n_visible": 1347
+     },
+     "events": {
+      "within_1s": {
+       "tp": 4,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 0.6666666666666666,
+       "recall": 0.6666666666666666,
+       "f1": 0.6666666666666666,
+       "abs_err_s": [
+        0.036000000000001364,
+        0.11599999999999966,
+        0.14000000000000057,
+        0.2839999999999989
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.036
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.116
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.14
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.284
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 81,
+      "measured": 36,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 6
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.08 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.121 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "Objects were picked up in the order: cup, block."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 48.0
+    },
+    {
+     "seed": "demo_eval_71002_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 424,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9905660377358491,
+       "block": 0.11320754716981132,
+       "marker": 1.0
+      },
+      "found_rate_all": 0.7012578616352201,
+      "centroid_cm": {
+       "cup": {
+        "n": 420,
+        "median": 0.6912330052113573,
+        "p90": 2.869777981646091,
+        "max": 4.823255214846082
+       },
+       "block": {
+        "n": 48,
+        "median": 2.1591006459066477,
+        "p90": 4.415172689312577,
+        "max": 4.77807042659306
+       },
+       "marker": {
+        "n": 424,
+        "median": 1.9601990259061117,
+        "p90": 2.631191791720709,
+        "max": 4.477598537264885
+       }
+      },
+      "centroid_cm_all": {
+       "n": 892,
+       "median": 1.949179571678651,
+       "p90": 2.897169155933088,
+       "max": 4.823255214846082
+      },
+      "tilt_deg": null,
+      "n_visible": 1272
+     },
+     "events": {
+      "within_1s": {
+       "tp": 1,
+       "n_gt": 6,
+       "n_est": 16,
+       "precision": 0.0625,
+       "recall": 0.16666666666666666,
+       "f1": 0.09090909090909091,
+       "abs_err_s": [
+        0.784000000000006
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.784
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 76,
+      "measured": 0,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "goal inside: block",
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 7
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "single_view",
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The block crossed wall_0 by going around +y.",
+      "The block crossed wall_0 by going around +y.",
+      "The block crossed wall_0 by going around +y.",
+      "The block crossed wall_0 by going around +y.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.179 m from wall_0.",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.119 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.161 m from wall_0.",
+      "Objects were picked up in the order: block, cup, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 7.2
+    },
+    {
+     "seed": "demo_eval_71003_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 442,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9547511312217195,
+       "marker": 0.920814479638009
+      },
+      "found_rate_all": 0.9585218702865762,
+      "centroid_cm": {
+       "cup": {
+        "n": 442,
+        "median": 0.2749602354845606,
+        "p90": 1.6986524928631137,
+        "max": 3.7563832940979958
+       },
+       "block": {
+        "n": 422,
+        "median": 0.4222996948606319,
+        "p90": 2.200994285444893,
+        "max": 4.6857993584293585
+       },
+       "marker": {
+        "n": 407,
+        "median": 0.21197576912129912,
+        "p90": 1.1321495927693608,
+        "max": 4.9007228380289245
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1271,
+       "median": 0.27266681548681326,
+       "p90": 1.7814107380002497,
+       "max": 4.9007228380289245
+      },
+      "tilt_deg": {
+       "n": 80,
+       "median": 1.99,
+       "p90": 3.9702,
+       "max": 9.913
+      },
+      "n_visible": 1326
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 10,
+       "precision": 0.6,
+       "recall": 1.0,
+       "f1": 0.7499999999999999,
+       "abs_err_s": [
+        0.027999999999998693,
+        0.06399999999999295,
+        0.20800000000001262,
+        0.21199999999999974,
+        0.7480000000000011,
+        0.9960000000000022
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.028
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.064
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.208
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.212
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.748
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.996
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 73,
+      "measured": 48,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 6
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around -y.",
+      "While carried, the cup's centre stayed at least 0.12 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "The block crossed wall_0 by going around +y.",
+      "The block crossed wall_0 by going around -y.",
+      "While carried, the block's centre stayed at least 0.078 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around -y.",
+      "While carried, the marker's centre stayed at least 0.068 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 51.1
+    },
+    {
+     "seed": "demo_eval_71004_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 428,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.985981308411215,
+       "block": 0.9859154929577465,
+       "marker": 0.9953271028037384
+      },
+      "found_rate_all": 0.9890795631825273,
+      "centroid_cm": {
+       "cup": {
+        "n": 422,
+        "median": 0.3909296150476664,
+        "p90": 4.30180478340692,
+        "max": 4.882028230907877
+       },
+       "block": {
+        "n": 420,
+        "median": 0.18966291896174564,
+        "p90": 1.6485826357233966,
+        "max": 4.271412158500789
+       },
+       "marker": {
+        "n": 426,
+        "median": 0.0754433325113544,
+        "p90": 1.7844396348637477,
+        "max": 4.53284401916784
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1268,
+       "median": 0.2273620926041976,
+       "p90": 2.0763424499192205,
+       "max": 4.882028230907877
+      },
+      "tilt_deg": {
+       "n": 53,
+       "median": 1.996,
+       "p90": 5.9948,
+       "max": 7.995
+      },
+      "n_visible": 1282
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "abs_err_s": [
+        0.019999999999999574,
+        0.02400000000000091,
+        0.13200000000000056,
+        0.17999999999999972,
+        0.2920000000000016,
+        0.35999999999999943
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.02
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": -0.024
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.132
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.18
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.292
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.36
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 78,
+      "measured": 22,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 5
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.04 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.06 m from wall_0.",
+      "The marker ended upright. (inferred from its outline seen from above; tilts under about 15 degrees cannot be resolved)",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.102 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 40.9
+    },
+    {
+     "seed": "demo_eval_71005_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 433,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9695550351288056,
+       "marker": 0.9445727482678984
+      },
+      "found_rate_all": 0.97138437741686,
+      "centroid_cm": {
+       "cup": {
+        "n": 433,
+        "median": 1.5392165872502215,
+        "p90": 1.8626347861119756,
+        "max": 4.572911993377766
+       },
+       "block": {
+        "n": 414,
+        "median": 0.7715766146056071,
+        "p90": 1.1659819922544685,
+        "max": 4.834112000575037
+       },
+       "marker": {
+        "n": 409,
+        "median": 2.7731116633931814,
+        "p90": 2.854664955944617,
+        "max": 4.934644898495408
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1256,
+       "median": 1.5428020791691646,
+       "p90": 2.784087978365429,
+       "max": 4.934644898495408
+      },
+      "tilt_deg": {
+       "n": 63,
+       "median": 3.978,
+       "p90": 5.9918,
+       "max": 5.994
+      },
+      "n_visible": 1293
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "abs_err_s": [
+        0.027999999999998693,
+        0.1039999999999992,
+        0.1639999999999997,
+        0.2680000000000007,
+        0.27599999999999625,
+        0.5519999999999925
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.028
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": -0.104
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.164
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.268
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.276
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.552
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 67,
+      "measured": 28,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 6
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.099 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.055 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.15 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 19.8
+    },
+    {
+     "seed": "demo_eval_71006_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 477,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9853249475890985,
+       "block": 0.9914893617021276,
+       "marker": 0.9811320754716981
+      },
+      "found_rate_all": 0.9859550561797753,
+      "centroid_cm": {
+       "cup": {
+        "n": 470,
+        "median": 0.4042758922951647,
+        "p90": 1.591559171582377,
+        "max": 4.792558842029948
+       },
+       "block": {
+        "n": 466,
+        "median": 0.8326885139540045,
+        "p90": 1.7446386534529954,
+        "max": 4.580043318039187
+       },
+       "marker": {
+        "n": 468,
+        "median": 1.547773513973238,
+        "p90": 2.065149841983247,
+        "max": 4.967961799594922
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1404,
+       "median": 0.841102342560055,
+       "p90": 1.8605178561403852,
+       "max": 4.967961799594922
+      },
+      "tilt_deg": {
+       "n": 57,
+       "median": 1.991,
+       "p90": 3.991,
+       "max": 9.773
+      },
+      "n_visible": 1424
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "abs_err_s": [
+        0.1639999999999997,
+        0.16800000000000637,
+        0.17999999999999972,
+        0.3359999999999985,
+        0.3960000000000008,
+        0.588000000000001
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.164
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.168
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.18
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": -0.336
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.396
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.588
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 84,
+      "measured": 22,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 5
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.097 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.035 m from wall_0.",
+      "The marker ended upright. (inferred from its outline seen from above; tilts under about 15 degrees cannot be resolved)",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.092 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 21.5
+    },
+    {
+     "seed": "demo_eval_71007_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 426,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9859154929577465,
+       "block": 0.9645390070921985,
+       "marker": 0.9788732394366197
+      },
+      "found_rate_all": 0.9764705882352941,
+      "centroid_cm": {
+       "cup": {
+        "n": 420,
+        "median": 0.3979475436684784,
+        "p90": 1.8172525859111284,
+        "max": 4.621964830777462
+       },
+       "block": {
+        "n": 408,
+        "median": 0.17367460483474212,
+        "p90": 1.0534312541796236,
+        "max": 4.999553257573443
+       },
+       "marker": {
+        "n": 417,
+        "median": 0.24850542862869096,
+        "p90": 1.5843127351002027,
+        "max": 4.700800543982211
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1245,
+       "median": 0.25854804621088295,
+       "p90": 1.661798945150575,
+       "max": 4.999553257573443
+      },
+      "tilt_deg": {
+       "n": 63,
+       "median": 3.851,
+       "p90": 19.9918,
+       "max": 29.989
+      },
+      "n_visible": 1275
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 10,
+       "precision": 0.6,
+       "recall": 1.0,
+       "f1": 0.7499999999999999,
+       "abs_err_s": [
+        0.03599999999999781,
+        0.06399999999999295,
+        0.09999999999999964,
+        0.14000000000000057,
+        0.4200000000000017,
+        0.5759999999999934
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.036
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": -0.064
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.1
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.14
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.42
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.576
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 80,
+      "measured": 28,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 5
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup was tilted up to 30 degrees while carried. (side-view measurement on 35 of 80 carried frames; the rest was not observed)",
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.096 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.055 m from wall_0.",
+      "The marker ended upright. (inferred from its outline seen from above; tilts under about 15 degrees cannot be resolved)",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.092 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 20.5
+    },
+    {
+     "seed": "demo_eval_71008_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 460,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9891304347826086,
+       "marker": 0.8956521739130435
+      },
+      "found_rate_all": 0.9615942028985507,
+      "centroid_cm": {
+       "cup": {
+        "n": 460,
+        "median": 1.186531385844994,
+        "p90": 2.5059282539125993,
+        "max": 4.48789945999292
+       },
+       "block": {
+        "n": 455,
+        "median": 1.1871109229519334,
+        "p90": 2.250367505862382,
+        "max": 4.855865582253987
+       },
+       "marker": {
+        "n": 412,
+        "median": 3.460780139021275,
+        "p90": 3.537911525930293,
+        "max": 4.99946839898165
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1327,
+       "median": 1.2088941837463978,
+       "p90": 3.503995161257352,
+       "max": 4.99946839898165
+      },
+      "tilt_deg": {
+       "n": 59,
+       "median": 3.99,
+       "p90": 3.995,
+       "max": 3.996
+      },
+      "n_visible": 1380
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 8,
+       "precision": 0.75,
+       "recall": 1.0,
+       "f1": 0.8571428571428571,
+       "abs_err_s": [
+        0.20400000000000063,
+        0.21999999999999886,
+        0.22400000000000375,
+        0.2560000000000002,
+        0.2680000000000007,
+        0.347999999999999
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.204
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": -0.22
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.224
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.256
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.268
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.348
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 82,
+      "measured": 28,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 6
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around -y.",
+      "While carried, the cup's centre stayed at least 0.101 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around -y.",
+      "While carried, the block's centre stayed at least 0.119 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going through wall.",
+      "While carried, the marker's centre stayed at least 0.005 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 20.8
+    },
+    {
+     "seed": "demo_eval_71009_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 450,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9888888888888889,
+       "block": 0.9711111111111111,
+       "marker": 0.9933333333333333
+      },
+      "found_rate_all": 0.9844444444444445,
+      "centroid_cm": {
+       "cup": {
+        "n": 445,
+        "median": 0.8161554173185799,
+        "p90": 1.4561224692334531,
+        "max": 4.845765118177427
+       },
+       "block": {
+        "n": 437,
+        "median": 0.16857015106196183,
+        "p90": 1.3125836370757327,
+        "max": 3.3388779285762697
+       },
+       "marker": {
+        "n": 447,
+        "median": 0.05474753782880481,
+        "p90": 1.8775035780828762,
+        "max": 4.462643954522125
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1329,
+       "median": 0.2200769985875043,
+       "p90": 1.5436828954112496,
+       "max": 4.845765118177427
+      },
+      "tilt_deg": {
+       "n": 72,
+       "median": 2.8925,
+       "p90": 3.995,
+       "max": 5.919
+      },
+      "n_visible": 1350
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 8,
+       "precision": 0.75,
+       "recall": 1.0,
+       "f1": 0.8571428571428571,
+       "abs_err_s": [
+        0.10800000000000054,
+        0.1720000000000006,
+        0.23999999999999488,
+        0.2680000000000007,
+        0.28000000000000114,
+        0.33200000000000074
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.108
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.172
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.24
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": -0.268
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.28
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.332
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 82,
+      "measured": 36,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "goal inside: block",
+       "goal inside: cup",
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 7
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.102 m from wall_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.118 m from wall_0.",
+      "The marker ended upright. (inferred from its outline seen from above; tilts under about 15 degrees cannot be resolved)",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.1 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 54.1
+    },
+    {
+     "seed": "demo_eval_71010_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 423,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.0,
+       "block": 0.0,
+       "marker": 0.0
+      },
+      "found_rate_all": 0.0,
+      "centroid_cm": {},
+      "centroid_cm_all": null,
+      "tilt_deg": null,
+      "n_visible": 1269
+     },
+     "events": {
+      "within_1s": {
+       "tp": 0,
+       "n_gt": 6,
+       "n_est": 0,
+       "precision": 0.0,
+       "recall": 0.0,
+       "f1": 0.0,
+       "abs_err_s": []
+      },
+      "signed": []
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 76,
+      "measured": 6,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "goal inside: cup",
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 7
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed",
+       "calibration_invalid",
+       "scale_mismatch"
+      ],
+      "review": []
+     },
+     "regularities": [
+      "The block ended inside tray_0.",
+      "The marker ended inside tray_0."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 115.5
+    },
+    {
+     "seed": "demo_eval_71011_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 417,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9328537170263789,
+       "marker": 1.0
+      },
+      "found_rate_all": 0.9776179056754596,
+      "centroid_cm": {
+       "cup": {
+        "n": 417,
+        "median": 1.497684845802731,
+        "p90": 1.8921936001434934,
+        "max": 4.53502222211194
+       },
+       "block": {
+        "n": 389,
+        "median": 2.204319165424493,
+        "p90": 2.5322736775289707,
+        "max": 4.3223092306848105
+       },
+       "marker": {
+        "n": 417,
+        "median": 0.06785795336212458,
+        "p90": 2.0833370988694866,
+        "max": 4.835726241410581
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1223,
+       "median": 1.5006496696986382,
+       "p90": 2.438728491892311,
+       "max": 4.835726241410581
+      },
+      "tilt_deg": {
+       "n": 62,
+       "median": 5.83,
+       "p90": 7.9407000000000005,
+       "max": 7.996
+      },
+      "n_visible": 1251
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 8,
+       "precision": 0.75,
+       "recall": 1.0,
+       "f1": 0.8571428571428571,
+       "abs_err_s": [
+        0.012000000000000455,
+        0.06400000000000716,
+        0.09600000000000364,
+        0.2119999999999962,
+        0.2759999999999998,
+        0.347999999999999
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.012
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.064
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.096
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.212
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.276
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.348
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 68,
+      "measured": 30,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "goal inside: block",
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright final: marker {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 7
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.112 m from wall_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.129 m from wall_0.",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.11 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 19.1
+    },
+    {
+     "seed": "demo_eval_71012_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 451,
+     "tracking": {
+      "found_rate": {
+       "cup": 1.0,
+       "block": 0.9577777777777777,
+       "marker": 0.9977827050997783
+      },
+      "found_rate_all": 0.985207100591716,
+      "centroid_cm": {
+       "cup": {
+        "n": 451,
+        "median": 0.5393136635123142,
+        "p90": 1.9714141859577452,
+        "max": 4.38560024317948
+       },
+       "block": {
+        "n": 431,
+        "median": 0.2418232189901065,
+        "p90": 1.9444827516159697,
+        "max": 3.959053007584188
+       },
+       "marker": {
+        "n": 450,
+        "median": 0.04827767846158759,
+        "p90": 1.8459589322032302,
+        "max": 3.931323551378882
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1332,
+       "median": 0.25988565407815173,
+       "p90": 1.9538318919068627,
+       "max": 4.38560024317948
+      },
+      "tilt_deg": {
+       "n": 46,
+       "median": 1.995,
+       "p90": 3.995,
+       "max": 6.139846153846153
+      },
+      "n_visible": 1352
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "abs_err_s": [
+        0.011999999999999567,
+        0.06400000000000716,
+        0.24800000000000466,
+        0.43599999999999994,
+        0.5,
+        0.740000000000002
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.012
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": -0.064
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": -0.248
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.436
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": -0.5
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.74
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 78,
+      "measured": 18,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 5
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.111 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.008 m from wall_0.",
+      "The marker ended upright. (inferred from its outline seen from above; tilts under about 15 degrees cannot be resolved)",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.095 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 19.7
+    },
+    {
+     "seed": "demo_eval_71013_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 448,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9642857142857143,
+       "block": 0.8794642857142857,
+       "marker": 0.6808035714285714
+      },
+      "found_rate_all": 0.8415178571428571,
+      "centroid_cm": {
+       "cup": {
+        "n": 432,
+        "median": 0.9909163368577927,
+        "p90": 2.915681473070998,
+        "max": 4.96832156211052
+       },
+       "block": {
+        "n": 394,
+        "median": 0.6749793968132104,
+        "p90": 1.5359891529179748,
+        "max": 4.844197238275546
+       },
+       "marker": {
+        "n": 305,
+        "median": 3.0723694348159265,
+        "p90": 3.1746775918058625,
+        "max": 3.3978392756642584
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1131,
+       "median": 0.9910611411936758,
+       "p90": 3.1083935023205287,
+       "max": 4.96832156211052
+      },
+      "tilt_deg": null,
+      "n_visible": 1344
+     },
+     "events": {
+      "within_1s": {
+       "tp": 3,
+       "n_gt": 6,
+       "n_est": 4,
+       "precision": 0.75,
+       "recall": 0.5,
+       "f1": 0.6,
+       "abs_err_s": [
+        0.19599999999999795,
+        0.23599999999999977,
+        0.35600000000000165
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.196
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.236
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.356
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 68,
+      "measured": 0,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 5
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "single_view",
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.162 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.214 m from wall_0.",
+      "The marker ended upright. (inferred from its outline seen from above; tilts under about 15 degrees cannot be resolved)",
+      "The marker ended inside tray_0.",
+      "Objects were picked up in the order: cup, block."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 10.0
+    },
+    {
+     "seed": "demo_eval_71014_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 422,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.990521327014218,
+       "block": 0.985781990521327,
+       "marker": 0.9928909952606635
+      },
+      "found_rate_all": 0.9897314375987362,
+      "centroid_cm": {
+       "cup": {
+        "n": 418,
+        "median": 0.17260166575057068,
+        "p90": 1.627585720199566,
+        "max": 4.9064366355458455
+       },
+       "block": {
+        "n": 416,
+        "median": 0.2762255405546179,
+        "p90": 1.777670242413719,
+        "max": 4.8918392733861396
+       },
+       "marker": {
+        "n": 419,
+        "median": 0.18207335710704659,
+        "p90": 1.6592029917713407,
+        "max": 4.917213692146407
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1253,
+       "median": 0.1828043176575501,
+       "p90": 1.6787540742457723,
+       "max": 4.917213692146407
+      },
+      "tilt_deg": {
+       "n": 71,
+       "median": 1.99,
+       "p90": 3.995,
+       "max": 13.825
+      },
+      "n_visible": 1266
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 6,
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "abs_err_s": [
+        0.04399999999999693,
+        0.09199999999999875,
+        0.10800000000000054,
+        0.14400000000000546,
+        0.20400000000000063,
+        0.30400000000000205
+       ]
+      },
+      "signed": [
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": 0.044
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.092
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.108
+       },
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": 0.144
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": 0.204
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.304
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 76,
+      "measured": 36,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 5
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.096 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.139 m from wall_0.",
+      "The marker ended upright. (inferred from its outline seen from above; tilts under about 15 degrees cannot be resolved)",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.105 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 43.7
+    },
+    {
+     "seed": "demo_eval_71015_reference",
+     "cameras": [
+      "side",
+      "top"
+     ],
+     "frames": 440,
+     "tracking": {
+      "found_rate": {
+       "cup": 0.9886363636363636,
+       "block": 1.0,
+       "marker": 0.9840909090909091
+      },
+      "found_rate_all": 0.990909090909091,
+      "centroid_cm": {
+       "cup": {
+        "n": 435,
+        "median": 0.3951511826689302,
+        "p90": 3.8984774814737366,
+        "max": 4.66551625433143
+       },
+       "block": {
+        "n": 440,
+        "median": 0.8433813877501194,
+        "p90": 1.8138294995380655,
+        "max": 3.732446355454765
+       },
+       "marker": {
+        "n": 433,
+        "median": 0.23343451608806223,
+        "p90": 1.9487355398616732,
+        "max": 4.846932080693367
+       }
+      },
+      "centroid_cm_all": {
+       "n": 1308,
+       "median": 0.3910413151531518,
+       "p90": 1.9962711909976008,
+       "max": 4.846932080693367
+      },
+      "tilt_deg": {
+       "n": 52,
+       "median": 1.9940000000000002,
+       "p90": 3.994,
+       "max": 3.995
+      },
+      "n_visible": 1320
+     },
+     "events": {
+      "within_1s": {
+       "tp": 6,
+       "n_gt": 6,
+       "n_est": 8,
+       "precision": 0.75,
+       "recall": 1.0,
+       "f1": 0.8571428571428571,
+       "abs_err_s": [
+        0.06399999999999295,
+        0.21999999999999886,
+        0.23600000000000065,
+        0.36400000000000077,
+        0.45600000000000307,
+        0.6679999999999993
+       ]
+      },
+      "signed": [
+       {
+        "type": "grasp",
+        "object": "marker",
+        "err_s": -0.064
+       },
+       {
+        "type": "grasp",
+        "object": "block",
+        "err_s": 0.22
+       },
+       {
+        "type": "grasp",
+        "object": "cup",
+        "err_s": 0.236
+       },
+       {
+        "type": "release",
+        "object": "cup",
+        "err_s": -0.364
+       },
+       {
+        "type": "release",
+        "object": "marker",
+        "err_s": 0.456
+       },
+       {
+        "type": "release",
+        "object": "block",
+        "err_s": -0.668
+       }
+      ]
+     },
+     "cup_carry_tilt": {
+      "carry_frames": 76,
+      "measured": 21,
+      "unsupported_upright": 0,
+      "upright_but_truly_tilted": 0,
+      "truly_tilted_frames": 0
+     },
+     "spec_offline": {
+      "equal": false,
+      "missing": [
+       "upright final: block {\"max_tilt_deg\": 15.0}",
+       "upright final: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: block {\"max_tilt_deg\": 15.0}",
+       "upright transport: cup {\"max_tilt_deg\": 15.0}",
+       "upright transport: marker {\"max_tilt_deg\": 15.0}"
+      ],
+      "extra": [],
+      "required_corrections": 5
+     },
+     "review": {
+      "abstain": [
+       "calibration_assumed"
+      ],
+      "review": [
+       "tilt_unobserved"
+      ]
+     },
+     "regularities": [
+      "The cup ended inside tray_0.",
+      "The cup crossed wall_0 by going around +y.",
+      "While carried, the cup's centre stayed at least 0.053 m from wall_0.",
+      "The block ended inside tray_0.",
+      "The block crossed wall_0 by going around +y.",
+      "While carried, the block's centre stayed at least 0.12 m from wall_0.",
+      "The marker ended upright. (inferred from its outline seen from above; tilts under about 15 degrees cannot be resolved)",
+      "The marker ended inside tray_0.",
+      "The marker crossed wall_0 by going around +y.",
+      "While carried, the marker's centre stayed at least 0.1 m from wall_0.",
+      "Objects were picked up in the order: cup, block, marker."
+     ],
+     "evidence_kind": "unverified_video_reconstruction",
+     "elapsed_s": 43.1
+    }
+   ],
+   "aggregate": {
+    "seeds": 16,
+    "completed": 16,
+    "found_rate_all": {
+     "n": 16,
+     "median": 0.977,
+     "mean": 0.889,
+     "p90_abs": 0.989
+    },
+    "events_f1_1s": {
+     "n": 16,
+     "median": 0.857,
+     "mean": 0.759,
+     "p90_abs": 1.0
+    },
+    "grasp_err_s": {
+     "n": 41,
+     "median": 0.164,
+     "mean": 0.131,
+     "p90_abs": 0.5
+    },
+    "release_err_s": {
+     "n": 39,
+     "median": -0.036,
+     "mean": -0.063,
+     "p90_abs": 0.604
+    },
+    "cup_carry_frames": 1213,
+    "cup_carry_tilt_measured": 382,
+    "unsupported_upright_frames": 0,
+    "upright_but_truly_tilted_frames": 0,
+    "truly_tilted_carry_frames": 0,
+    "spec_equal": 0,
+    "required_corrections_total": 93,
+    "seeds_with_abstain": 16,
+    "seeds_with_abstain_other_than_calibration_assumed": 1
+   }
+  }
+ }
+}

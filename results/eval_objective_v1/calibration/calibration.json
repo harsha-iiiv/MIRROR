@@ -1,0 +1,515 @@
+{
+ "objective_of_record": {
+  "rotation_penalty_m_per_rad": 0.2445,
+  "source": "model A on transport segments: rotation_penalty = b / a",
+  "ci95_bootstrap_layouts": [
+   0.22471979879042972,
+   0.2691214493979557
+  ],
+  "transit_model_A_price_m_per_rad": 0.245
+ },
+ "dev_layouts": {
+  "seeds": {
+   "mixed": [
+    8000,
+    8001,
+    8002,
+    8003,
+    8004,
+    8005,
+    8006,
+    8007,
+    8008,
+    8009,
+    8010,
+    8011,
+    8012,
+    8013,
+    8014,
+    8015,
+    8016,
+    8017,
+    8018,
+    8019,
+    8020,
+    8021,
+    8022,
+    8023,
+    8024,
+    8025,
+    8026,
+    8027,
+    8028,
+    8029,
+    8030,
+    8031,
+    8032,
+    8033,
+    8034,
+    8035,
+    8036,
+    8037,
+    8038,
+    8039
+   ],
+   "shortcut": [
+    8000,
+    8001,
+    8002,
+    8003,
+    8004,
+    8005,
+    8006,
+    8007,
+    8008,
+    8009,
+    8010,
+    8011,
+    8012,
+    8013,
+    8014,
+    8015,
+    8016,
+    8017,
+    8018,
+    8019,
+    8020,
+    8021,
+    8022,
+    8023,
+    8024,
+    8025,
+    8026,
+    8027,
+    8028,
+    8029,
+    8030,
+    8031,
+    8032,
+    8033,
+    8034,
+    8035,
+    8036,
+    8037,
+    8038,
+    8039
+   ]
+  },
+  "split": "dev",
+  "count": 80
+ },
+ "executed_runs": 348,
+ "failed_runs": [],
+ "samples": {
+  "transport": 417,
+  "transit": 303
+ },
+ "fits": {
+  "transport": {
+   "A": {
+    "model": "A",
+    "n": 417,
+    "layouts": 80,
+    "coef": {
+     "c0_s": 2.29684413790491,
+     "a_s_per_m": 6.757614191588965,
+     "b_s_per_rad": 1.6520782679616435
+    },
+    "rotation_price_m_per_rad": 0.2444765594960932,
+    "rotation_price_ci95_bootstrap_layouts": [
+     0.22471979879042972,
+     0.2691214493979557
+    ],
+    "r2": 0.7590549804687861,
+    "rmse_s": 1.3233645322552579,
+    "max_abs_residual_s": 5.507375856371844,
+    "residual_quantiles_s": {
+     "0.05": -1.2737295599593712,
+     "0.25": -0.8941727423657575,
+     "0.5": -0.24076365385349163,
+     "0.75": 0.43136404296221453,
+     "0.95": 3.359886815076171
+    },
+    "loo_layout_rmse_s": 1.3330417936092072,
+    "loo_layout_max_abs_s": 5.622961385435422,
+    "largest_residuals": [
+     {
+      "layout": "mixed:8010",
+      "kind": "transport",
+      "object_id": "marker_0",
+      "label": "around:wall_0:-y",
+      "L": 1.432425665521336,
+      "R": 0.0,
+      "N": 6,
+      "T": 17.484,
+      "residual_s": 5.507375856371844
+     },
+     {
+      "layout": "mixed:8023",
+      "kind": "transport",
+      "object_id": "marker_0",
+      "label": "around:wall_0:-y",
+      "L": 0.7955043187248614,
+      "R": 0.0,
+      "N": 4,
+      "T": 13.06,
+      "residual_s": 5.387444588409656
+     },
+     {
+      "layout": "shortcut:8034",
+      "kind": "transport",
+      "object_id": "marker_0",
+      "label": "around:wall_0:-y",
+      "L": 1.3611115321555785,
+      "R": 0.0,
+      "N": 6,
+      "T": 16.616,
+      "residual_s": 5.121289256065154
+     },
+     {
+      "layout": "shortcut:8025",
+      "kind": "transport",
+      "object_id": "marker_0",
+      "label": "around:wall_0:-y",
+      "L": 0.7792137495677177,
+      "R": 0.0,
+      "N": 4,
+      "T": 12.336,
+      "residual_s": 4.773529969735031
+     },
+     {
+      "layout": "mixed:8020",
+      "kind": "transport",
+      "object_id": "marker_0",
+      "label": "around:wall_0:-y",
+      "L": 1.1719478207939764,
+      "R": 0.0,
+      "N": 5,
+      "T": 14.976,
+      "residual_s": 4.759584636495955
+     }
+    ]
+   },
+   "B": {
+    "model": "B",
+    "n": 417,
+    "layouts": 80,
+    "coef": {
+     "c0_s": 5.357920707706251,
+     "a_s_per_m": 7.900888133408501,
+     "b_s_per_rad": 2.327209187949343,
+     "c_s_per_segment": -0.7666673630319254
+    },
+    "rotation_price_m_per_rad": 0.2945503275902437,
+    "rotation_price_ci95_bootstrap_layouts": [
+     0.2688256789620995,
+     0.32509009155870144
+    ],
+    "r2": 0.7835876724117805,
+    "rmse_s": 1.2541847393387737,
+    "max_abs_residual_s": 5.408648527778004,
+    "residual_quantiles_s": {
+     "0.05": -1.466597629502965,
+     "0.25": -0.8857361971797246,
+     "0.5": -0.22521101557988832,
+     "0.75": 0.5213839372258704,
+     "0.95": 2.8140443166287286
+    },
+    "loo_layout_rmse_s": 1.2683556796000974,
+    "loo_layout_max_abs_s": 5.514187592309353,
+    "largest_residuals": [
+     {
+      "layout": "mixed:8010",
+      "kind": "transport",
+      "object_id": "marker_0",
+      "label": "around:wall_0:-y",
+      "L": 1.432425665521336,
+      "R": 0.0,
+      "N": 6,
+      "T": 17.484,
+      "residual_s": 5.408648527778004
+     },
+     {
+      "layout": "shortcut:8034",
+      "kind": "transport",
+      "object_id": "marker_0",
+      "label": "around:wall_0:-y",
+      "L": 1.3611115321555785,
+      "R": 0.0,
+      "N": 6,
+      "T": 16.616,
+      "residual_s": 5.104093517831828
+     },
+     {
+      "layout": "mixed:8023",
+      "kind": "transport",
+      "object_id": "marker_0",
+      "label": "around:wall_0:-y",
+      "L": 0.7955043187248614,
+      "R": 0.0,
+      "N": 4,
+      "T": 13.06,
+      "residual_s": 4.483558112532981
+     },
+     {
+      "layout": "mixed:8006",
+      "kind": "transport",
+      "object_id": "marker_0",
+      "label": "around:wall_0:-y",
+      "L": 0.8586541570297878,
+      "R": 0.0,
+      "N": 5,
+      "T": 12.516,
+      "residual_s": 4.207285667474846
+     },
+     {
+      "layout": "mixed:8020",
+      "kind": "transport",
+      "object_id": "marker_0",
+      "label": "around:wall_0:-y",
+      "L": 1.1719478207939764,
+      "R": 0.0,
+      "N": 5,
+      "T": 14.976,
+      "residual_s": 4.191987477168295
+     }
+    ]
+   }
+  },
+  "transit": {
+   "A": {
+    "model": "A",
+    "n": 303,
+    "layouts": 80,
+    "coef": {
+     "c0_s": 0.6704470771898806,
+     "a_s_per_m": 4.6313709506187015,
+     "b_s_per_rad": 1.134470245966436
+    },
+    "rotation_price_m_per_rad": 0.2449534399344287,
+    "rotation_price_ci95_bootstrap_layouts": [
+     0.24168075495212357,
+     0.24765373647458372
+    ],
+    "r2": 0.9917120187307509,
+    "rmse_s": 0.1622109949269789,
+    "max_abs_residual_s": 0.48666441794603976,
+    "residual_quantiles_s": {
+     "0.05": -0.2557756178414638,
+     "0.25": -0.09799732073407807,
+     "0.5": -0.022667199504733837,
+     "0.75": 0.08219263151943712,
+     "0.95": 0.32808612980045815
+    },
+    "loo_layout_rmse_s": 0.16290755834598303,
+    "loo_layout_max_abs_s": 0.48829199713738447,
+    "largest_residuals": [
+     {
+      "layout": "mixed:8038",
+      "kind": "transit",
+      "object_id": "block_0",
+      "label": "transit:around:wall_0:-y",
+      "L": 0.659896141012645,
+      "R": 0.11165095550375517,
+      "N": 6,
+      "T": 4.34,
+      "residual_s": 0.48666441794603976
+     },
+     {
+      "layout": "mixed:8030",
+      "kind": "transit",
+      "object_id": "block_0",
+      "label": "transit:around:wall_0:-y",
+      "L": 0.5887874398648292,
+      "R": 0.024613449285826865,
+      "N": 6,
+      "T": 3.88,
+      "residual_s": 0.45473665186561973
+     },
+     {
+      "layout": "shortcut:8029",
+      "kind": "transit",
+      "object_id": "block_0",
+      "label": "transit:around:wall_0:-y",
+      "L": 0.7380044403541589,
+      "R": 0.28880797931406826,
+      "N": 6,
+      "T": 4.856,
+      "residual_s": 0.43993653699675495
+     },
+     {
+      "layout": "mixed:8033",
+      "kind": "transit",
+      "object_id": "block_0",
+      "label": "transit:around:wall_0:+y",
+      "L": 0.568170822672585,
+      "R": 0.6931683493775898,
+      "N": 6,
+      "T": 4.516,
+      "residual_s": 0.4277642118806373
+     },
+     {
+      "layout": "mixed:8015",
+      "kind": "transit",
+      "object_id": "block_0",
+      "label": "transit:around:wall_0:-y",
+      "L": 0.7195902745598002,
+      "R": 0.07507401858616713,
+      "N": 6,
+      "T": 4.516,
+      "residual_s": 0.4276941885349874
+     }
+    ]
+   },
+   "B": {
+    "model": "B",
+    "n": 303,
+    "layouts": 80,
+    "coef": {
+     "c0_s": -0.018673686936216634,
+     "a_s_per_m": 4.254049142851011,
+     "b_s_per_rad": 0.8926524188712248,
+     "c_s_per_segment": 0.23073780565683588
+    },
+    "rotation_price_m_per_rad": 0.20983594427237393,
+    "rotation_price_ci95_bootstrap_layouts": [
+     0.2082269049581668,
+     0.21143539518816756
+    ],
+    "r2": 0.9992877792577947,
+    "rmse_s": 0.04755138998498888,
+    "max_abs_residual_s": 0.221715239643133,
+    "residual_quantiles_s": {
+     "0.05": -0.07150576647851019,
+     "0.25": -0.03069978342441848,
+     "0.5": 0.0008357880829255038,
+     "0.75": 0.029018761006559313,
+     "0.95": 0.07717063272891499
+    },
+    "loo_layout_rmse_s": 0.0480240796814184,
+    "loo_layout_max_abs_s": 0.22397021736881317,
+    "largest_residuals": [
+     {
+      "layout": "shortcut:8002",
+      "kind": "transit",
+      "object_id": "cup_0",
+      "label": "transit:direct",
+      "L": 0.4195301048383079,
+      "R": 0.005305560108599055,
+      "N": 4,
+      "T": 2.472,
+      "residual_s": -0.221715239643133
+     },
+     {
+      "layout": "shortcut:8029",
+      "kind": "transit",
+      "object_id": "cup_0",
+      "label": "transit:direct",
+      "L": 0.4734706340934255,
+      "R": 0.0120116627358966,
+      "N": 4,
+      "T": 2.716,
+      "residual_s": -0.21316712061725163
+     },
+     {
+      "layout": "mixed:8032",
+      "kind": "transit",
+      "object_id": "block_0",
+      "label": "transit:direct",
+      "L": 0.6340703745418987,
+      "R": 0.005300583406181268,
+      "N": 4,
+      "T": 3.476,
+      "residual_s": -0.13037564761726728
+     },
+     {
+      "layout": "mixed:8032",
+      "kind": "transit",
+      "object_id": "marker_0",
+      "label": "transit:around:wall_0:-y",
+      "L": 0.4500194915495822,
+      "R": 0.0,
+      "N": 3,
+      "T": 2.708,
+      "residual_s": 0.12005523767296067
+     },
+     {
+      "layout": "mixed:8016",
+      "kind": "transit",
+      "object_id": "marker_0",
+      "label": "transit:around:wall_0:-y",
+      "L": 0.44848676433607576,
+      "R": 0.0,
+      "N": 3,
+      "T": 2.7,
+      "residual_s": 0.11857553456180225
+     }
+    ]
+   }
+  }
+ },
+ "decision_check": {
+  "by_lambda": {
+   "0.05": {
+    "agree": 9,
+    "cases": 60,
+    "picks_tilted": 51,
+    "total_regret_s": 184.504,
+    "max_regret_s": 5.768
+   },
+   "0.10": {
+    "agree": 30,
+    "cases": 60,
+    "picks_tilted": 30,
+    "total_regret_s": 85.02,
+    "max_regret_s": 4.196
+   },
+   "0.15": {
+    "agree": 50,
+    "cases": 60,
+    "picks_tilted": 10,
+    "total_regret_s": 20.028,
+    "max_regret_s": 3.836
+   },
+   "0.20": {
+    "agree": 59,
+    "cases": 60,
+    "picks_tilted": 1,
+    "total_regret_s": 1.116,
+    "max_regret_s": 1.116
+   },
+   "0.3": {
+    "agree": 60,
+    "cases": 60,
+    "picks_tilted": 0,
+    "total_regret_s": 0.0,
+    "max_regret_s": 0.0
+   },
+   "0.40": {
+    "agree": 60,
+    "cases": 60,
+    "picks_tilted": 0,
+    "total_regret_s": 0.0,
+    "max_regret_s": 0.0
+   },
+   "1.0": {
+    "agree": 60,
+    "cases": 60,
+    "picks_tilted": 0,
+    "total_regret_s": 0.0,
+    "max_regret_s": 0.0
+   },
+   "0.2445": {
+    "agree": 60,
+    "cases": 60,
+    "picks_tilted": 0,
+    "total_regret_s": 0.0,
+    "max_regret_s": 0.0
+   }
+  },
+  "fastest_is_tilted": 0,
+  "note": "regret = whole-kit execution time of the picked cup route minus the fastest executed one"
+ },
+ "controller": "mirror.sim.SimEnv seed 0, standard executor (trapezoidal per-segment timing)",
+ "wall_s": 1022.5
+}

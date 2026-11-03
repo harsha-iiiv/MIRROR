@@ -14,6 +14,17 @@ model's description of what happened.
 
 > *"I corrected it once, and the correction changed what it did somewhere else."*
 
+> **HEADLINE: owner decision pending.** The tagline and quote above were written
+> before the planner-objective check
+> ([objective_v1](results/eval_objective_v1/attempt_1/report.md)), which found that
+> with a time-calibrated planner the correction changes no plan on layouts where an
+> upright route exists. Two factual candidate framings for the owner to choose from:
+>
+> * (a) *Checkable, scoped corrections: rules are checked from execution evidence,
+>   old runs are re-judged, refusals come with proofs.*
+> * (b) *Correction transfer measured under a deliberately tilt-tolerant planner
+>   objective.*
+
 ## Scope at a glance
 
 * **Simulation only.** MuJoCo physics; no physical robot, no sim-to-real claim.
@@ -39,6 +50,13 @@ model's description of what happened.
   compiled correction carries through planning and physics to new layouts. They
   are not 90 new demonstrations interpreted, and not 90 independent
   language-understanding trials. See [Scope of each result](docs/EVALUATION.md#scope-of-each-result).
+* **The gains depend on the planner's objective.** Both evaluations planned with
+  a rotation price of 0.05 m/rad, which makes slow tilted slot routes look cheap.
+  With the price calibrated to execution time (0.2445 m/rad), the original
+  specification never tilts the cup on 120 new layouts and plans exactly what the
+  corrected one plans. The rule's remaining measurable effect is on layouts where
+  only a tilted route exists: it turns a spill into a proven refusal. See
+  [Planner objective](#planner-objective-objective_v1).
 
 Full list: [docs/CLAIMS.md](docs/CLAIMS.md).
 
@@ -66,6 +84,14 @@ responses of a development model. Both pairs enforce the same rules. Every
 layout is new, but each evaluation interprets the demonstration and compiles the
 correction only once: these numbers measure transfer of one correction to new
 layouts, not how often new corrections are understood.
+
+**Read this table with the planner objective in mind.** Both evaluations planned
+at a rotation price of 0.05 m/rad, under which the uncorrected specification often
+takes a slow tilted route through the slot. The table measures the correction
+against that objective, which is also slower than a time-calibrated one; it is not
+the effect of the correction alone. Under a time-calibrated objective the gain on
+these layout families is zero ([next section](#planner-objective-objective_v1)).
+The numbers below are kept as registered.
 
 | | First: fresh (60) | First: shortcut (30) | Muse Spark: fresh (60) | Muse Spark: shortcut (30) |
 |---|---|---|---|---|
@@ -98,21 +124,58 @@ How to read these numbers (audit of 2 November 2026; details in
   give the same layout results. The table shows the effect of the corrected
   rule. Language understanding is measured separately (prepared, not run:
   [protocol v3, language track](docs/protocols/v3_language.md)).
-* **The size of the original specification's failure rate depends on the
-  planner's objective.** Route cost charges 0.05 m per radian of gripper
-  rotation, so the tilted slot route is often cheapest when nothing forbids
-  it. An audit's plan-only sweep over the 90 frozen layouts found tilted cup
-  routes on 54 at 0.05, 32 at 0.10, 2 at 0.20 and none at 0.40 or 1.0 (planned,
-  not executed). The shortest route is not the fastest: in 110 of the 113 pairs
-  where the specifications differed, the corrected upright run finished sooner
-  in simulation (median 3.6 s; from the stored reports). A cautious planner
-  that never tilts would not spill at all. **PENDING (track `baseline`):** an
-  executed rotation-cost sweep, a time-calibrated objective and a never-tilt
-  baseline, as a new registration.
-* **Reproduced at the outcome level.** An isolated, network-blocked replay at
-  the audited commit reproduced all 95 Muse-registration scene hashes, statuses
-  and violation-free outcomes; one bead-loss count differed (6 vs 2). That is
-  reproduction of outcomes, not bit-exact determinism.
+* **Reproduced at the outcome level, not bit-exact.** Network-blocked replays
+  ([results/reanalysis_v1/replay](results/reanalysis_v1/replay/README.md))
+  reproduce the first evaluation in all 95 layouts, outcomes and bead counts, and
+  the Muse Spark evaluation in all 95 layouts and outcomes on Linux x86_64, with
+  one bead count different (shortcut seed 60002, original specification: 6 stored,
+  2 replayed). On Apple arm64
+  ([replay_cross_platform](results/reanalysis_v1/replay_cross_platform/README.md))
+  all 95 outcomes agree, 0 of 95 layout hashes are byte-identical (the layouts
+  agree to about 1e-16) and bead counts in spilling runs differ by up to 2. This
+  replaces the run notes' statement that the simulator is deterministic
+  (`results/eval_muse/RUN_NOTES.md`, kept unchanged): the same code and runtime
+  reproduce every verdict, not every bead count or byte.
+* **Every registration has an immutable manifest** in
+  [results/manifests_v1](results/manifests_v1/README.md) (freeze and result
+  commits, frozen code hash recomputed from the freeze commit's tree, model ids,
+  prompt hashes, scene and outcome digests). Commit times are the committer's
+  clock, not an external timestamp.
+
+### Planner objective (objective_v1)
+
+A third registration ([report](results/eval_objective_v1/attempt_1/report.md),
+[protocol](docs/protocols/objective_v1.md)), frozen before any of its layouts
+existed, executed the same specification pair on 120 new layouts (80 primary,
+40 shortcut) and 10 blocked layouts with the rotation price swept and with a
+never-tilt baseline, all with the same controller and physics. The price of
+record, 0.2445 m/rad, was calibrated to execution time on development layouts
+only ([calibration](results/eval_objective_v1/calibration/calibration.json)).
+
+| Rotation price (m/rad) | Original spec: cup tilted, primary | Violation-free, primary | Cup tilted, shortcut | Violation-free, shortcut |
+|---|---|---|---|---|
+| 0.05 (earlier evaluations) | 31 | 49 / 80 | 40 | 0 / 40 |
+| 0.10 | 19 | 61 / 80 | 27 | 13 / 40 |
+| 0.20 | 2 | 78 / 80 | 5 | 35 / 40 |
+| **0.2445 (calibrated)**, 0.40, 1.0 | **0** | **80 / 80** | **0** | **40 / 40** |
+| Corrected spec, at 0.2445 and at 0.05 | 0 | 80 / 80 | 0 | 40 / 40 |
+
+* At the calibrated price the original and corrected plans are identical on all
+  120 layouts; the retained benefit of the correction is **0.000** in both strata.
+* At 0.05 the earlier result replicates on these new layouts (49/80 → 80/80,
+  0/40 → 40/40; exact McNemar p = 9.3 × 10⁻¹⁰ and 1.8 × 10⁻¹²), so the earlier
+  gains come from the objective, not from the layouts.
+* The 0.05 objective is also slower: at the calibrated price the original
+  specification finishes 3.2 s (primary) and 6.5 s (shortcut) sooner on average.
+* A never-tilt baseline matches the corrected plan on 119 of 120 layouts (one run
+  2.0 s slower).
+* **What the rule still does:** on the 10 blocked layouts, where the slot is the
+  only way through, the original specification completes 10/10 while spilling 38
+  beads; the corrected specification and the never-tilt baseline refuse all 10,
+  each with a proven infeasibility record.
+
+Limits: one controller, simulated timing, a price that values time only (not
+spill risk), one specification pair, 10 blocked layouts.
 
 No planning failures, execution failures, timeouts or obstacle contacts in
 either condition of either evaluation. On five layouts per evaluation where the
@@ -129,8 +192,8 @@ run: motion comes from the planner and the physics, verdicts from the checker.
 |---|---|---|---|
 | **Muse Spark** (`muse-spark-1.3`) | Proposes the task specification from the demonstration, compiles corrections into scoped rule changes, asks clarifying questions. In the video path it also locates the objects on the first frame so SAM can track them, and it is the video observer (kept over Muse Wonder by a rule stated before the test). | Strict JSON-schema output, and text, image and video input in one model. | [Second evaluation](results/eval_muse/report.md): its one specification pair on new layouts, 33/60 → 60/60 and 3/30 → 30/30; the pair had to equal the offline-rule pair (a deterministic regression check), so this does not show Muse Spark caused the improvement. [Correction benchmark](results/corrections_benchmark_summary.md): 44/44 and 27/28, a post-hoc model swap on cases already seen during development, not a blind test or a fresh external holdout |
 | **Muse Voice Transcribe** (`muse-voice-transcribe-1.0`) | Turns a spoken correction into text for the same correction compiler. | Push-to-talk transcription; median latency 1.0 s in the spoken-correction benchmark. | [Spoken corrections](results/eval_voice/report.md): 3.0% word error rate on clean speech; corrections right from audio 141/144 vs 142/144 from text |
-| **SAM 3.1** (`sam-3.1`) | Tracks the cup, block, marker and gripper through a demonstration video and segments the table, tray and wall, so the demonstration can be rebuilt from video. | Video segmentation with object identities kept across frames. | [Video benchmark](results/eval_video2/report.md), 16 of 20 seeds. Met as registered: median position error 0.72 cm, counted only for estimates within 5 cm of the truth (so it is conditional on detection, not overall accuracy), and cup tilt error 2.0°, which is not informative because the cup never tilted more than 0.3° in any clip (an estimate of always zero would score better). **Not met:** objects found 0.886 (target 0.95), grasp/release within 1 s 0.635 (target 0.9), median timing error 0.65 s (target 0.3 s), same specification as from the true trace on 8 of 16 seeds (target 18 of 20). One seed tracked nothing. Also [robustness](results/eval_robustness/report.md). |
-| **Muse Image** (`muse-image-1.0`) | Edits frames (lighting, background, distractors, material) to test whether segmentation holds up when the scene looks different. | Instruction-based edits of a frame whose true masks are still known from the simulator. | [Robustness](results/eval_robustness/report.md): on objects whose position the edit kept, median IoU change about 0 and centroid error under 2 px; that median includes objects no phrase was chosen for (0 before, 0 after), and the found-rate check failed in both conditions. **PENDING (track `reanalysis`):** prompted and evaluated object counts, detection-conditional and unconditional scores |
+| **SAM 3.1** (`sam-3.1`) | Tracks the cup, block, marker and gripper through a demonstration video and segments the table, tray and wall, so the demonstration can be rebuilt from video. | Video segmentation with object identities kept across frames. | [Video benchmark](results/eval_video2/report.md), 16 of 20 seeds. Met as registered, but both measures are conditional ([re-analysis](results/reanalysis_v1/video/report.md)): median position error 0.72 cm counts only estimates within 5 cm of the truth; over every visible object-frame, 88.8% are within 5 cm, the median of all estimates is 0.99 cm, the 90th percentile 6.4 cm, and 26 cm while an object is carried. Seed 71010 failed as a whole (wrong camera calibration from the tracked table). A colour-threshold baseline scores a lower gated median (0.54 cm) with only 60% of its estimates within 5 cm. Cup tilt error 2.0° cannot measure tilt: true tilt stays at or below 0.29° in every clip, and a constant-zero estimate scores 0.01°. **Not met:** objects found 0.886 (target 0.95), grasp/release within 1 s 0.635 (target 0.9), median timing error 0.65 s (target 0.3 s), same specification as from the true trace on 8 of 16 seeds (target 18 of 20). One seed tracked nothing. Also [robustness](results/eval_robustness/report.md). |
+| **Muse Image** (`muse-image-1.0`) | Edits frames (lighting, background, distractors, material) to test whether segmentation holds up when the scene looks different. | Instruction-based edits of a frame whose true masks are still known from the simulator. | [Robustness](results/eval_robustness/report.md): the registered near-zero median IoU change included 90 of 218 rows for objects that were never prompted (0 before, 0 after). On prompted objects only the median change is −0.039; counting a detection only at IoU ≥ 0.5, 0.445 (condition A) and 0.372 (B) of objects are found; the carried cup was never correctly segmented on any frame. Both found-rate checks failed ([re-analysis](results/reanalysis_v1/robustness/report.json)) |
 | **Muse Wonder** (`muse-wonder-1.0`) | Tested as the video observer (objects, grasp and release events, care cues) against Muse Spark on the same clips. Not used: the pre-stated rule kept Muse Spark. | The alternative video model, to be used only if it beat Spark by a margin stated before the test. | [Video benchmark](results/eval_video2/report.md), 16 clips: event F1 0.062 vs Spark 0.115, relevant objects right 14 vs 16, $3.86 vs $0.76, median latency 79 s vs 42 s |
 
 Every model call is recorded, so the story and the published results replay
@@ -155,7 +218,10 @@ mirror studio            # opens the interactive studio at http://127.0.0.1:8000
 python -m pytest -q -m "not slow"  # fast test suite
 ```
 
-Details, headless rendering, CI and release checks: [docs/INSTALL.md](docs/INSTALL.md).
+Linux (x86_64) and macOS on Apple silicon are supported; on macOS skip the
+`apt-get` line and leave `MUJOCO_GL` unset (MIRROR uses `cgl` there). Results
+reproduce across platforms at the outcome level, not bit-exactly. Details,
+headless rendering, CI and release checks: [docs/INSTALL.md](docs/INSTALL.md).
 
 ### Model configuration
 
@@ -262,7 +328,8 @@ proof) when it cannot execute any plan. Details and limitations:
 | `mirror/studio`, `web/` | Studio backend and browser frontend |
 | `mirror/pipeline.py` | `Session`: the end-to-end flow used by the CLI and the studio |
 | `data/` | Reference demonstration and recorded model responses |
-| `results/` | Evaluation reports |
+| `results/` | Evaluation reports, including `eval_objective_v1` (planner objective), `reanalysis_v1` (unconditional re-analyses, chronology, replays) and `manifests_v1` (immutable evidence manifests) |
+| `mirror/capture`, `docs/CAMERA_CAPTURE.md` | Real-phone capture path (tested on synthetic renders only; no real footage processed) |
 | `mirror/evaluate/protocol_v3`, `docs/protocols/` | Fresh authoring evaluation protocol and harness (prepared, not run) |
 | `study/` | Impact study kit and a 3-5 person usability pilot (both prepared, not run; fixtures are synthetic) |
 

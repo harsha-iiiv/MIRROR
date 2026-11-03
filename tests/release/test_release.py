@@ -42,7 +42,8 @@ def test_scope_statements_present_in_published_docs():
         assert "deterministic regression check" in doc
     assert "outcome-level reproduction" in claims.lower() or "reproduction of outcomes" in readme
     assert "## Audit findings and narrowed claims" in ev
-    assert ev.count("PENDING") >= 4                       # pending items stay visibly marked
+    for doc in (readme, claims, ev):
+        assert "PENDING" not in doc                        # every audit placeholder has been resolved
 
 
 def test_historical_rollouts_and_manifests_still_parse():

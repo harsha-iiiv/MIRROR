@@ -253,3 +253,45 @@ def test_manual_form_produces_spec_ops(tmp_path):
     assert add["target_id"] == "c_keep_clearance_transport_all"     # the studio's id convention
     assert o["edit"] == {"action": "set_rule", "type": "keep_clearance", "object": "all", "phase": "transport", "status": "confirmed", "min_m": 0.03}
     assert o["editOrd"] == {"action": "add_ordering", "before": "marker", "after": "cup"}
+
+
+CAPTURE = r"""
+import * as K from '@JS@/capture_state.js';
+const s = DATA.session;
+const st0 = K.reviewState(s);
+const key = K.itemKey(s.review[0]);
+const st1 = K.reviewState(s, { [key]: 'set to 4.10 s by the person' });
+console.log(JSON.stringify({
+  pcOk: K.printCheck('50', '30'), pcBar: K.printCheck('47', '28.2'), pcSq: K.printCheck('50.4', '33'), pcMissing: K.printCheck('', ''),
+  badge: K.evidenceBadge(s), real: K.evidenceBadge({ evidence_kind: 'camera_video_reconstruction' }), unver: K.evidenceBadge({ evidence_kind: 'unverified_camera_video' }),
+  blocking0: st0.blocking.length, ready1: st1.ready, title: st0.items[0].title,
+  cov: K.coverage(['measured', 'measured', 'inferred', 'weird']),
+  fid: K.fidelityStatement(s.mappings[0]),
+  ev: K.eventText(s.events[0]), sync: K.syncText(s), single: K.syncText({ mode: 'single_view' }).ok,
+  refused: K.syncText({ mode: 'two_view', sync: { ok: false, reasons: ['only one sync event in the side clip'] } }),
+  rows: K.calibrationRows(s).length, prov: K.modelProvenance(s),
+  payload: K.reviewPayload(s, { [key]: 'x' }, { [s.events[1].id]: 4.1 }),
+}));
+"""
+
+
+def test_capture_review_helpers(tmp_path):
+    session = json.loads((Path(__file__).parent / "fixtures" / "capture_synthetic_session.json").read_text())
+    o = run_js(tmp_path, CAPTURE, {"session": session})
+    assert o["pcOk"] == [] and o["pcBar"][0]["message"] == "Reprint at 100% before continuing."
+    assert o["pcSq"] == [{"field": "square", "message": "These two measurements disagree; measure again."}]
+    assert {p["field"] for p in o["pcMissing"]} == {"bar", "square"}
+    assert o["badge"]["text"] == "SYNTHETIC test render - not real footage"
+    assert o["real"]["text"] == "Real phone footage (calibrated, reviewed)" and o["unver"]["text"] == "Phone footage - not yet verified"
+    assert o["blocking0"] == 1 and o["ready1"] is True and o["title"] == "When was it picked up / put down?"
+    assert o["cov"]["measured"] == 0.5 and o["cov"]["unobserved"] == 0.25 and o["cov"]["n"] == 4
+    assert o["fid"].endswith("Proxy fidelity is not measured physical accuracy.") and "Not modelled: handle." in o["fid"]
+    assert o["ev"] == "mug picked up between 1.60 s and 2.10 s"
+    assert o["sync"]["ok"] is True and "offset 0.408 s" in o["sync"]["text"] and o["single"] is None
+    assert o["refused"]["ok"] is False and "only one sync event" in o["refused"]["text"]
+    assert o["rows"] == 34 and o["prov"].startswith("No model calls")
+    p = o["payload"]
+    assert p["correspondence"][0] == {"track_id": "mug", "proxy": "cup", "label": "red mug (SYNTHETIC render)", "dimensions_m": None,
+                                      "dimensions_source": None, "unsupported_features": ["handle"], "assumed": {}}
+    assert p["events"][1] == {"track_id": "mug", "type": "place", "t_start": 4.1, "t_end": 4.1, "status": "edited"}
+    assert p["events"][0]["type"] == "grasp"
