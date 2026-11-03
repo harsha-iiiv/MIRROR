@@ -12,6 +12,18 @@ Two parts:
 
 Nothing secret reaches the browser: the model key lives only in `/etc/mirror/mirror.env`.
 
+## Before deploying (checks)
+
+1. **Client addresses.** Verify whether the tunnel adds `X-Forwarded-For`: from two different networks,
+   call `GET /api/health` and compare `admission.tracked`, or log the header once. If it does, set
+   `MIRROR_TRUST_PROXY=1`. If it does not, leave it at 0: every visitor then arrives from 127.0.0.1,
+   per-address limits are off for them, and only the global limits apply.
+2. **Session state.** Set `MIRROR_STUDIO_STATE` (for example `/var/lib/mirror/state`, owned by the
+   service account) so sessions, their tokens and shared challenge records survive a restart.
+   Without it a restart ends every visitor session and shared records are lost.
+3. **Study recording** stays off unless `MIRROR_TRIAL_STORE` is set, and only for sessions a facilitator
+   starts with consent.
+
 ## 1. Live server
 
 Assumes a fresh Debian 13 machine with 4 cores and 7 GB of memory, and a tunnel that

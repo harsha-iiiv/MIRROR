@@ -12,6 +12,7 @@ from __future__ import annotations
 import importlib
 import json
 import os
+import re
 import shutil
 import threading
 import time
@@ -329,6 +330,30 @@ SIM_JOB_KINDS = {"run", "clarify", "evaluate", "video", "challenge", "challenge_
 UPLOAD_VIEWS = ("top", "side", "calibration", "single")
 
 TOUR_DIR = REPO_ROOT / "data" / "challenge_tour"
+
+
+def study_retention() -> dict:
+    """What a consented study session keeps, for the consent panel (from this server's settings)."""
+    store = bool(os.environ.get("MIRROR_TRIAL_STORE"))
+    days = float(os.environ.get("MIRROR_STUDY_AUDIO_RETENTION_DAYS") or 0)
+    return {
+        "recording_available": store,
+        "event_log": bool(os.environ.get("MIRROR_STUDY_LOG")),
+        "contexts": ["dev_smoke", "usability_pilot"],
+        "retention": {
+            "trial_records": ("kept on this server until the study team exports and deletes them" if store
+                              else "not kept: this server does not record trials"),
+            "correction_text": "kept only if you agree to text recording; otherwise only its length",
+            "audio": (f"kept only if you agree to audio recording, then deleted after {days:g} days" if store and days > 0
+                      else "never stored: speech is transcribed and the recording discarded"),
+            "audio_retention_days": days if store and days > 0 else 0,
+            "never_kept": ["names", "IP addresses", "browser details", "API keys"],
+            "identifier": "an anonymous participant id (P01-P99) given by the facilitator",
+        },
+        "consent_fields": {"recorded": "record this session's attempts (required for study mode)",
+                           "text": "keep the words you type or say", "audio": "keep the audio of spoken corrections",
+                           "quote": "allow anonymous quotes of your comments"},
+    }
 
 
 def _has_outcome_api() -> bool:
@@ -1688,6 +1713,7 @@ class StudioService:
         from .challenge import options
         out = options(audio=bool(self.capabilities().get("voice")))
         out["tour"] = tour_summary()
+        out["study"] = study_retention()
         return out
 
     def challenge_create(self, family: str, seed: Optional[int] = None, preset: Optional[str] = None,
@@ -1738,10 +1764,36 @@ class StudioService:
         return self.submit("challenge", {"family": family, "seed": seed, "preset": preset, "edits": len(edits or [])}, work)
 
     def challenge_correction(self, cid: str, text: Optional[str] = None, transcript_id: Optional[str] = None,
-                             focus_kind: Optional[str] = None) -> Job:
-        """Compile a correction for review; nothing is committed."""
+                             focus_kind: Optional[str] = None, answer: Optional[str] = None) -> Job:
+        """Compile a correction for review; nothing is committed.
+
+        ``answer`` replies to the open clarifying question of this challenge: for a "which object?"
+        question the original sentence is re-interpreted with the chosen object as the selected one;
+        otherwise the answer itself is interpreted, with the object the question was about selected."""
         from .challenge import spec_scope
         ch = self._challenge_current(cid)
+        answer = (answer or "").strip() or None
+        itext = None
+        if answer is not None:
+            prev = ch.proposal or {}
+            if not prev.get("question"):
+                raise RuntimeError("there is no open question to answer")
+            if len(answer) > 300:
+                raise ValueError("an answer is at most 300 characters")
+            kinds = sorted({o.kind for o in ch.scene.objects})
+            low, orig = answer.lower(), prev["text"]
+            ans_kind = next((k for k in kinds if re.search(rf"\b{k}s?\b", low)), None)
+            orig_kind = next((k for k in kinds if re.search(rf"\b{k}s?\b", orig.lower())), None)
+            which_object = prev.get("reason_code") in ("unknown_object", "absent_object", "ambiguous_referent") or \
+                bool(ans_kind and re.fullmatch(r"(the |a |an )?\w+\.?", low))
+            if which_object:
+                if ans_kind is None:
+                    raise ValueError(f"name one of the objects in this scene: {', '.join(kinds)}")
+                itext, focus_kind = orig, ans_kind
+            else:
+                itext = answer
+                focus_kind = focus_kind or ans_kind or prev.get("focus_kind") or orig_kind
+            text, transcript_id = orig, None
         tr = None
         if transcript_id is not None:
             tr = self.transcripts.get(transcript_id)
@@ -1754,6 +1806,9 @@ class StudioService:
         if len(text) > 600:
             raise ValueError("a correction is one or two sentences (600 characters at most)")
         how = "typed" if tr is None else ("spoken" if text == tr["text"] else "spoken_edited")
+        if answer is not None:
+            how = (ch.proposal or {}).get("input") or "typed"
+        itext = itext or text
         if focus_kind is not None and focus_kind not in {o.kind for o in ch.scene.objects}:
             raise ValueError(f"focus_kind {focus_kind!r} is not an object kind in this scene")
 
@@ -1763,7 +1818,11 @@ class StudioService:
                 self._guard(job)
                 base = self.session.spec
                 tid = None
-                if self.study is not None:
+                if self.study is not None and answer is not None and self.study.trial_for(ch.id):
+                    tid = self.study.trial_for(ch.id)
+                    self.study.update(tid, clarification={"answered": True, "answer_chars": len(answer)})
+                    self.study.event("clarification_answered", chars=len(answer))
+                elif self.study is not None:
                     tid = self.study.start_attempt(
                         versions=self._versions(), scene=self._study_scene(ch),
                         lineage=self._study_lineage(self._spec_vid(base.version)),
@@ -1772,7 +1831,9 @@ class StudioService:
                     if tr is not None:
                         self.study.keep_audio(tid, self._runtime_dir() / f"{transcript_id}.wav")
                 t0, mark = time.time(), self._llm_mark()
-                prop = {"text": text, "input": how, "transcript_id": transcript_id, "changed": False,
+                prop = {"text": text, "answer": answer, "interpreted_text": itext, "focus_kind": focus_kind,
+                        "answered_question": (ch.proposal or {}).get("question") if answer else None,
+                        "input": how, "transcript_id": transcript_id, "changed": False,
                         "base_spec_version_id": self._spec_vid(base.version), "ops": [], "diff": None, "scope": None,
                         "question": None, "options": [], "rejected": None}
                 try:
@@ -1782,7 +1843,7 @@ class StudioService:
                         from ..interpret.outcome import interpret as _interp
                         ctx = {"scene": ch.scene, "focus_kind": focus_kind}
                         (oc, oc_new), fb = self._with_fallback(
-                            lambda: _interp(list(self.session.specs), text, self.session._client(), ctx,
+                            lambda: _interp(list(self.session.specs), itext, self.session._client(), ctx,
                                             os.environ.get("MIRROR_PROMPT_REVISION")), job)
                         prop.update(outcome=oc.outcome, reason_code=oc.reason_code, message=oc.message,
                                     interpretation=oc.interpretation, supported_changes=oc.supported_changes,
@@ -1800,7 +1861,7 @@ class StudioService:
                         else:
                             new, record = base, None
                     else:
-                        (new, record), fb = self._with_fallback(lambda: self.session.preview_correction(text), job)
+                        (new, record), fb = self._with_fallback(lambda: self.session.preview_correction(itext), job)
                 except Exception as exc:  # noqa: BLE001 - typed outcomes from the interpreter
                     name = type(exc).__name__
                     if name == "NeedsClarification":
@@ -1846,6 +1907,61 @@ class StudioService:
             return prop
         return self.submit("challenge_correction", {"challenge_id": cid, "input": how}, work)
 
+    def challenge_manual(self, cid: str, edits: list, note: str = "") -> dict:
+        """A manual structured edit (no model) as a Challenge proposal: it goes through the same
+        review, re-check of the old behaviour and execution as a correction."""
+        from .challenge import spec_scope
+        from .manual import ManualEditError, apply_manual
+        ch = self._challenge_current(cid)
+        with self.lock:
+            base = self.session.spec
+            tid = None
+            if self.study is not None:
+                tid = self.study.start_attempt(versions=self._versions(), scene=self._study_scene(ch),
+                                               lineage=self._study_lineage(self._spec_vid(base.version)),
+                                               input_={"kind": "manual_form", "edits": len(edits or [])},
+                                               text=None, spec_before=base, challenge_id=ch.id)["trial_id"]
+            try:
+                new, record, errors = apply_manual(base, edits, note, fixture=self.mode == "fixture")
+            except ManualEditError as exc:
+                new, record, errors = None, None, [str(exc)]
+            sp = {"kind": "manual", "label": "Manual edit (no model)", "model": None, "interpreter": "manual-form",
+                  "request_status": "ok" if new is not None and not errors else "error", "latency_s": None,
+                  "latency_source": None, "cost_usd": None, "fallback_reason": None}
+            prop = {"text": note[:300] or "manual specification edit", "input": "manual_form", "outcome": "apply",
+                    "edits": edits, "changed": False, "base_spec_version_id": self._spec_vid(base.version), "ops": [],
+                    "diff": None, "scope": None, "question": None, "options": [], "rejected": None,
+                    "validation": {"passed": not errors and new is not None, "errors": errors},
+                    "provenance": None, "step_provenance": sp, "fallback_reason": None, "model": "manual-form"}
+            if self.study is not None:
+                self.study.event("manual_edit_saved", valid=bool(new is not None and not errors), errors=len(errors))
+            if new is None or errors:
+                prop.update(outcome="error", rejected="; ".join(errors))
+                ch.pending_spec, ch.pending_base_version = None, None
+                ch.proposal, ch.state = prop, "scene_ready"
+                if tid:
+                    self.study.update(tid, proposal={"outcome": "error", "ops": [], "scope": None, "question": None,
+                                                     "rejected": prop["rejected"], "validation": prop["validation"],
+                                                     "provenance": None, "step_provenance": sp, "fallback_reason": None,
+                                                     "latency_s": None, "cost_usd": None})
+                    self.study.finish(tid, failure_reason="invalid manual edit")
+                self._changed()
+                prop["trial_id"] = tid
+                return prop
+            diff, scope = spec_scope(base, new, ch.scene)
+            prop.update(changed=True, diff=diff, scope=scope, ops=[o.model_dump(mode="json") for o in record.diff],
+                        proposed_version=new.version)
+            ch.pending_spec, ch.pending_base_version = new, base.version
+            ch.proposal, ch.state = prop, "proposed"
+            if tid:
+                self.study.update(tid, proposal={"outcome": "apply", "ops": prop["ops"], "scope": scope, "question": None,
+                                                 "rejected": None, "validation": prop["validation"], "provenance": None,
+                                                 "step_provenance": sp, "fallback_reason": None, "latency_s": None,
+                                                 "cost_usd": None})
+            self._changed()
+            prop["trial_id"] = tid
+            return prop
+
     def _study_proposal(self, tid: str, prop: dict, new_spec) -> None:
         # trial outcome vocabulary: apply | asks | rejects | error (revert counts as apply)
         errors = []
@@ -1865,8 +1981,8 @@ class StudioService:
             self.study.event("clarification_shown", question_chars=len(prop["question"]))
         self.study.event("interpretation_returned", outcome=outcome, provenance=prop.get("provenance"),
                          fallback_reason=prop.get("fallback_reason"), latency_s=sp.get("latency_s"))
-        if outcome != "apply":
-            self.study.finish(tid)
+        if outcome == "rejects":
+            self.study.finish(tid)        # an open question keeps the attempt open for the answer
 
     def challenge_review(self, cid: str, accept: bool, note: str = "") -> dict:
         with self.lock:
