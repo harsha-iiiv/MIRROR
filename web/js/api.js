@@ -223,6 +223,13 @@ export async function postBinary(path, blob, type) {
   return r.json();
 }
 
+// A file shipped with the site under data/ (static) or served next to the page (live).
+export async function getDataFile(rel) {
+  const r = await fetch(base + rel, { cache: 'no-cache' });
+  if (!r.ok) { try { r.body?.cancel(); } catch (_) { /* nothing */ } throw new Error(`${rel}: ${r.status}`); }
+  return r.json();
+}
+
 export async function getJSONApi(path) { return (await request(path)).json(); }
 
 // Playable URL of a demonstration video: a file in the recorded site, or the session's file on the server.

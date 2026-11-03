@@ -9,6 +9,7 @@ import { PANELS, STEPS, stepState, correctionVersion, StoryBar, AboutPanel } fro
 import { VideoPane, ModelsPanel } from './media.js';
 import { OverviewPanel } from './overview.js';
 import { ChallengePanel } from './challenge.js';
+import { CapturePanel } from './capture.js';
 import { recordIdFromUrl } from './challenge_state.js';
 import { correctionStory } from './story.js';
 import { demoSource, videoMediaKind, demoEvidence, tiltStatusAt } from './provenance.js';
@@ -118,6 +119,7 @@ function App() {
     const asked = new URLSearchParams(location.search).get('step');
     if (recordIdFromUrl(location.search)) { setStep('challenge'); return; }
     if (asked === 'test') { setStep('challenge'); return; }
+    if (asked === 'capture' || new URLSearchParams(location.search).has('capture')) { setStep('capture'); return; }
     if (asked && (asked === 'overview' || asked === 'challenge' || STEPS.some((s) => s.key === asked))) { setStep(asked); return; }
     if (correctionStory(snap)) { setStep('overview'); return; }
     if (api.isStatic) { setStep('watch'); return; }
@@ -170,7 +172,7 @@ function App() {
   const cur = step || 'watch';
   if (api.isStatic && snap) api.prefetch(prefetchFor(snap, cur), (id) => rolloutCacheKey(snap, id));
   const sstate = stepState(snap);
-  const display = (cur === 'challenge' && stageOverride) || chooseDisplay(snap, cur, pick, tool);
+  const display = (cur === 'challenge' && stageOverride) || chooseDisplay(snap, cur === 'capture' ? 'watch' : cur, pick, tool);
   const ctx = {
     snap, step: cur, setStep: (s) => { setStep(s); setPick(null); setTool(null); if (s !== 'challenge') setStageOverride(null); }, pick, setPick, busy: busyLive, action,
     tool, setTool, viewer: viewerRef, display, isStatic: api.isStatic, error, setError, story, toggleStory,
@@ -178,7 +180,7 @@ function App() {
     openChallenge: () => { setStep('challenge'); setPick(null); setTool(null); },
     challengeLive: !api.isStatic,
   };
-  const Panel = cur === 'overview' ? OverviewPanel : cur === 'challenge' ? ChallengePanel : PANELS[cur];
+  const Panel = cur === 'overview' ? OverviewPanel : cur === 'challenge' ? ChallengePanel : cur === 'capture' ? CapturePanel : PANELS[cur];
   const hasStory = !!correctionStory(snap);
 
   return html`
@@ -194,6 +196,8 @@ function App() {
               title=${s.title} aria-label=${`Step ${i + 1}: ${s.short}`}><span class="ix" aria-hidden="true">${i + 1}</span><span class="lbl">${s.short}</span></button>`)}
           <button aria-current=${cur === 'challenge' ? 'step' : null} class="challenge" onClick=${() => ctx.openChallenge()}
             title=${api.isStatic ? 'A recorded test, step by step' : 'Change a layout and correct a rule yourself'} aria-label="Test MIRROR"><span class="ix" aria-hidden="true">⚑</span><span class="lbl">Test MIRROR</span></button>
+          <button aria-current=${cur === 'capture' ? 'step' : null} class="capture" onClick=${() => ctx.setStep('capture')}
+            title="Record the task with real phones (tested on synthetic renders only)" aria-label="Phone capture"><span class="ix" aria-hidden="true">◎</span><span class="lbl">Phone capture</span></button>
         </nav>
         <div class="top-right">
           <${LiveSwitch} status=${liveStatus} />
@@ -210,11 +214,11 @@ function App() {
         ? `The simulator packages are not available (${snap.missing_packages.slice(0, 3).join(', ')}${snap.missing_packages.length > 3 ? ', …' : ''}), so`
         : 'The studio was started on fixtures, so'} motion here is key-framed for interface development. It is not evidence.` : ''}
         ${!noteHidden ? html`<${LiveNote} status=${liveStatus} onClose=${() => setNoteHidden(true)} />` : ''}</div>
-      ${story && cur !== 'overview' && cur !== 'challenge' ? html`<${StoryBar} ctx=${ctx} />` : ''}
+      ${story && !['overview', 'challenge', 'capture'].includes(cur) ? html`<${StoryBar} ctx=${ctx} />` : ''}
       ${about ? html`<${AboutPanel} ctx=${ctx} onClose=${() => setAbout(false)} />` : ''}
       ${models ? html`<${ModelsPanel} ctx=${ctx} onClose=${() => setModels(false)} />` : ''}
-      <main class="main">
-        <${Stage} ctx=${ctx} viewerRef=${viewerRef} opts=${opts} setOpts=${setOpts} />
+      <main class=${'main' + (cur === 'capture' ? ' solo' : '')}>
+        ${cur === 'capture' ? '' : html`<${Stage} ctx=${ctx} viewerRef=${viewerRef} opts=${opts} setOpts=${setOpts} />`}
         <aside class="panel" aria-label="Step details">
           ${error ? html`<div class="sec"><div class="err" role="alert">${error}</div></div>` : ''}
           <${Panel} ctx=${ctx} />
@@ -349,7 +353,7 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
     });
     viewerRef.current = v;
     window.__mirrorViewer = v;
-    return () => v.dispose();
+    return () => { v.dispose(); if (viewerRef.current === v) viewerRef.current = null; if (window.__mirrorViewer === v) window.__mirrorViewer = null; };
   }, []);
 
   const editRef = useRef(null);
