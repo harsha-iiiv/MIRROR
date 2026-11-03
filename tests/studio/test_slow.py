@@ -131,8 +131,17 @@ def test_live_switch_connects_and_falls_back(tmp_path):
             pg.wait_for_url("**live=1**", timeout=20_000)
             pg.locator(".live-switch.live").wait_for(timeout=30_000)
             pg.get_by_text("The demonstration").first.wait_for(timeout=30_000)
-            pg.locator(".story .btn.primary").click()               # interpret on the server
-            pg.get_by_text("What MIRROR thinks matters").wait_for(timeout=30_000)
+            # interpret on the server: wait for the live session's own button, not the recording's "Next"
+            btn = pg.get_by_role("button", name="Interpret the demonstration")
+            btn.wait_for(timeout=30_000)
+            pg.wait_for_function("() => [...document.querySelectorAll('.story .btn.primary')].some("
+                                 "(b) => b.textContent.includes('Interpret the demonstration') && !b.disabled)",
+                                 timeout=30_000)
+            btn.click()
+            try:
+                pg.get_by_text("What MIRROR thinks matters").wait_for(timeout=60_000)
+            except Exception:
+                raise AssertionError("no interpretation shown; page said: " + pg.locator("body").inner_text()[:1500])
             api.terminate()
             api.wait(timeout=10)
             pg.reload()
