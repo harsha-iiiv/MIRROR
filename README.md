@@ -1,29 +1,42 @@
 # MIRROR
 
-**Teach a simulated robot what you mean, then test its understanding.**
+**Corrections you can check.**
 
 MIRROR is a robot task-authoring and testing studio built on MuJoCo. You
-demonstrate a task, inspect what the system thinks matters, change the world,
-correct one misunderstanding in plain language, and then test whether that
-correction changes what the robot does in layouts it has never seen.
+demonstrate a task, inspect what the system thinks matters, and correct a
+misunderstanding in plain language. A correction becomes a scoped rule change
+(one rule, on named objects, in a named phase) that you can check three ways:
+
+1. **Old runs are re-judged from execution evidence.** Every earlier rollout is
+   re-checked against the new rule from the simulator's step log. A rule the
+   evidence cannot settle is reported as "not verified", never as a pass.
+2. **The corrected rule is planned and run on new layouts.** The same planner,
+   physics and independent checker run it on layouts it was not written for.
+3. **When no compliant route exists, MIRROR refuses with a proof.** It does not
+   break the rule to finish the task.
+
+The evidence for the third check holds at every planner setting we tested: on 10
+blocked layouts where the only way through tilts the cup
+([objective_v1](results/eval_objective_v1/attempt_1/report.md)), the original
+specification completes all 10 runs and spills 38 beads at each of the six
+rotation prices tried, while the corrected specification, at both prices it was
+run at, plans nothing and returns a proven infeasibility record on all 10.
+
+What a correction does to behaviour on new layouts depends on the planner. With
+the rotation price calibrated to execution time (0.2445 m/rad), the cup rule
+changes nothing on 120 new layouts that have an upright route: the uncorrected
+specification already plans upright routes there. The earlier 60/60 results
+(from 27/60 and 33/60) measure the correction against a price of 0.05 m/rad,
+under which slow tilted routes look cheap.
+
+> **PENDING:** results for ordering and clearance corrections at the calibrated
+> price (0.2445 m/rad) on development layouts. No result is stated until they
+> arrive.
 
 It is not a video-to-animation generator. Every motion you see is produced by
 position-controlled actuators and contact physics, and every verdict comes
 from an independent checker that reads the simulator's step log, never from a
 model's description of what happened.
-
-> *"I corrected it once, and the correction changed what it did somewhere else."*
-
-> **HEADLINE: owner decision pending.** The tagline and quote above were written
-> before the planner-objective check
-> ([objective_v1](results/eval_objective_v1/attempt_1/report.md)), which found that
-> with a time-calibrated planner the correction changes no plan on layouts where an
-> upright route exists. Two factual candidate framings for the owner to choose from:
->
-> * (a) *Checkable, scoped corrections: rules are checked from execution evidence,
->   old runs are re-judged, refusals come with proofs.*
-> * (b) *Correction transfer measured under a deliberately tilt-tolerant planner
->   objective.*
 
 ## Scope at a glance
 
