@@ -87,7 +87,8 @@
   "H4": "two_view: localisation within 2 cm on >= 0.85 of ALL visible object-frames; missing, outlier and identity counts reported, no threshold",
   "H5": "two_view: Muse Spark modal signature from video equals the modal signature from ground truth on >= 18 of 24 demos; report model variability separately",
   "H6": "top_only: no proposal from video asserts an upright transport rule as shown by the demonstration (a proposal may ask about it)",
-  "reporting": "every check reported met / not met; no threshold changes after freezing; conditional numbers never reported without coverage"
+  "reporting": "every check reported met / not met; no threshold changes after freezing; conditional numbers never reported without coverage",
+  "axis_note": "only the in-image component of tilt is observable from one side camera: tilt in the plane containing the side camera's optical axis is weakly observable. H1 is evaluated on all tilted frames and ALSO reported per axis (roll / pitch); rehearsal: 60 deg pitch within 5 deg on 72% of tilted frames, 35 deg roll 0% (abstained or not resolved)"
  },
  "budget": {
   "model_calls": {
@@ -116,6 +117,7 @@
   "dev seeds 9101 (35 deg roll) and 9102 (60 deg pitch), 2 s hold, oracle masks, 5 fps: constant-zero tilt was within 5 deg on 0.85/0.81 of ALL carry frames because the tilt lasted a minority of the carry -> hold lengthened to 4 s and H1 moved to truly tilted frames",
   "9101: the side camera was dropped (mirrored table-corner assignment) -> fixed (1e77ea9); 9102: false scale_mismatch abstain from a tray-extent bug -> fixed (1e77ea9)",
   "mirror tilt where answered: median error 1.9 deg, max 60 vs true 59.8 (9102); 0 false-upright frames in both demos and both conditions; coverage of carry frames low (0.37) - reported, not tuned",
-  "classical colour tracker misses 46-60% of visible object-frames on these renders; pca_axis tilt median error 13-16 deg; static positions within 2 cm on 0.47"
+  "classical colour tracker misses 46-60% of visible object-frames on these renders; pca_axis tilt median error 13-16 deg; static positions within 2 cm on 0.47",
+  "occlusion rule changed to 'visibility' on dev evidence (dev SAM tracks 70001/70003/70007/70010 and rehearsal 9101/9102): coverage equal or higher (+0 to +5 points), no extra false-upright frames, no spurious tilt; see status log D5"
  ]
 }

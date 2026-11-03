@@ -823,7 +823,7 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
              tilt_every: int = 1, bead_label: str = "beads", calib_override: Optional[dict] = None,
              intrinsics_source: str = "assumed_rendered_model", table_half=None,
              event_timing: str = "gripper_lowest", tilt_min_visible: float = 0.8,
-             actor: str = "robot_gripper") -> Estimates:
+             actor: str = "robot_gripper", tilt_occlusion: str = "visibility") -> Estimates:
     """``calib_override``: camera -> Calib from a calibration board (real footage);
     the table outline and the kit table size are then not used. Otherwise each
     camera is calibrated from the table outline with ``table_half`` (default:
@@ -840,6 +840,11 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
     them inferred carry intervals, never observed robot contact."""
     if actor not in ACTORS:
         raise ValueError(f"actor must be one of {ACTORS}")
+    # tilt_occlusion: "visibility" (default) fits the side-view silhouette whenever at least
+    # 80% of it is unoccluded (occluded pixels are excluded from the fit); "touching" also
+    # skips every frame where the cup touches another mask (the earlier, stricter rule).
+    if tilt_occlusion not in ("touching", "visibility"):
+        raise ValueError("tilt_occlusion must be 'touching' or 'visibility'")
     if actor != "robot_gripper":
         gripper_label = "\x00no-robot-gripper"      # never a track label: every gripper step is skipped
     cams = list(tracks.masks)
@@ -1048,7 +1053,7 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
                         # partly hidden behind another thing (not the gripper holding it): unreliable
                         if other != gripper_label and (ring & om).sum() > 10:
                             touching = True
-                if not touching:
+                if not touching or tilt_occlusion == "visibility":
                     tilt[lab][i] = tilt_by_silhouette(sil & ~occ, occ, calib[side], X, -yaw,
                                                      min_visible=tilt_min_visible)
     # Gripper seen only from above: depth along the top camera's ray from its
