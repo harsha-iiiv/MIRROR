@@ -44,6 +44,14 @@ Start point: main at 1787aa6 (audited commit 7be0be7 plus the static-export head
 | F-A3 | Video benchmark: unconditional errors, constant-zero baseline on existing outputs; new tilted benchmark | reanalysis now; new benchmark awaiting budget | in progress |
 | F-A4 | Robustness denominators corrected in a derived summary | derived summary | in progress |
 | F-A5 | Holdout chronology investigated; manifests with hashes | investigation note + manifests | in progress |
+| M2-1 | Correctness gates re-verified with regression tests before any new demonstration is used as evidence (ordering, unknown tilt, lineage, mobile, uploads, F-A1/F-A3) | gate test list run on integration | in progress |
+| M2-2 | Guided "Test MIRROR" flow with per-step provenance (fresh / recorded / offline fallback / new simulation / recorded playback, model id, status, latency, fallback reason) | screenshots + API tests | in progress |
+| M2-3 | Understanding matrix: paraphrase, scope, phase, ordering, clearance, multi-turn, vague, absent object vs alias, unsupported, infeasible (certificate vs no route) | tests + docs/RULES.md | in progress |
+| M2-4 | Consented anonymous trial recording and JSON/CSV/summary export; dev, usability and benchmark stores separate | tests on synthetic trials | in progress |
+| M2-5 | 3–5 person usability pilot kit | prepared, not run (needs participants and approval) | in progress |
+| M2-6 | Calibrated real-phone path: printable target, calibration quality gates, simultaneous-view sync or single-view mode, object mapping, object-centric hand events | tests on synthetic renders; real footage pending | in progress |
+| M2-7 | Real-footage validation with labels and thresholds fixed before scoring | awaiting footage | blocked on owner footage |
+| M2-8 | Story capture: real person, scoped interpretation, old-run rejection, new execution, transfer, clarification, labelled phone demo | needs a real person | blocked on owner recording |
 | G | Social cut and judging video from verified behaviour | rendered files reviewed at phone size | waiting |
 | H | Lock, CI, clean install, artifact scan | logs | in progress |
 
