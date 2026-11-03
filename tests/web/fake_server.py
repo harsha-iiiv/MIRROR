@@ -341,26 +341,43 @@ def make_handler(studio: FakeStudio):
             if len(parts) == 3 and parts[0] == "capture" and parts[1] in studio.captures:
                 cap, act = studio.captures[parts[1]], parts[2]
                 if act == "clips":
-                    need = ["top", "side", "calibration"] if cap["mode"] == "two_view" else ["single", "calibration"]
+                    need = ["take_top", "take_side", "lens_top", "lens_side"] if cap["mode"] == "two_view" else ["take_top", "lens_top"]
                     if sorted(body.get("clips") or {}) != sorted(need):
                         return self._json(422, {"error": "invalid_capture", "detail": f"needs clips {need}"})
                     s = body.get("sync")
-                    if cap["mode"] == "two_view":
+                    if s:
                         cap["sync"] = {**s, "offset_s": round(s["side_t"] - s["top_t"], 3), "status": "declared"}
                     cap["clips"], cap["state"] = body["clips"], "clips_ready"
                     return self._json(200, cap)
-                if act in ("calibrate", "track", "propose") and not studio.capture_hooks and act != "propose":
+                if act in ("calibrate", "track") and not studio.capture_hooks:
                     return self._json(409, {"error": "conflict", "detail": f"phone {act} is not available on this server"})
                 if act == "calibrate":
-                    cap["calibration"], cap["state"] = {"ok": True, "errors": []}, "calibrated"
+                    cams = ["top", "side"] if cap["mode"] == "two_view" else ["top"]
+                    cap["calibration"] = {"ok": True, "errors": [], "cameras": {c: {"lens_accepted": True, "pose_accepted": True, "rms_px": 0.3,
+                                                                                    "n_views": 18, "pose_rms_px": 0.4, "ok": True} for c in cams}}
+                    cap["state"] = "calibrated"
+                    cap["clips"] = {r: {"id": v, "frames": 120} for r, v in cap["clips"].items()}
                     return self._json(200, studio.job("capture_calibrate", {}))
+                if act == "inputs":
+                    cap.setdefault("inputs", {}).update(body)
+                    cap["missing"] = [] if cap["inputs"].get("prompts") else ["a box around each object in each camera (prompts)"]
+                    return self._json(200, cap)
+                if act == "prompts":
+                    cap.setdefault("inputs", {})["prompts"] = body.get("prompts")
+                    cap["missing"] = []
+                    return self._json(200, cap)
                 if act == "track":
-                    cap["state"], cap["session"] = "tracked", studio.capture_session
+                    cap["state"], cap["session"], cap["gate_open"], cap["stale"] = "tracked", studio.capture_session, False, False
                     return self._json(200, studio.job("capture_track", {}))
                 if act == "review":
                     studio.capture_reviews.append(body)
-                    cap["review"], cap["state"] = body, "reviewed"
-                    return self._json(200, cap)
+                    # Settle what the person confirmed (synthetic fake: no re-run).
+                    sess = json.loads(json.dumps(cap["session"]))
+                    done = {c.get("target") for c in body.get("corrections") or []}
+                    sess["review"] = [r for r in sess["review"] if not (r.get("event") in done)]
+                    cap["session"], cap["state"] = sess, "reviewed"
+                    cap["gate_open"] = not any(r["severity"] == "abstain" for r in sess["review"])
+                    return self._json(200, {"capture": cap, "recorded": len(done), "job": studio.job("capture_run", {})})
                 if act == "propose":
                     cap["state"] = "proposed"
                     return self._json(200, studio.job("capture_propose", {}))

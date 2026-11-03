@@ -295,3 +295,31 @@ def test_capture_review_helpers(tmp_path):
                                       "dimensions_source": None, "unsupported_features": ["handle"], "assumed": {}}
     assert p["events"][1] == {"track_id": "mug", "type": "place", "t_start": 4.1, "t_end": 4.1, "status": "edited"}
     assert p["events"][0]["type"] == "grasp"
+
+
+PAYLOADS = r"""
+import { objectsPayload, trayPayload } from '@JS@/capture_state.js';
+const row = (o) => ({ track_label: 'mug', real_identity: 'red mug', proxy: 'cup', dims: { height: '9.5', width: '', depth: '' }, dimSrc: 'measured_ruler', unsupported: 'handle, logo', contents: 'dry rice', confirmed: false, ...o });
+const tray = row({ track_label: 'tray', real_identity: 'tray', proxy: 'tray', dims: { height: '', width: '', depth: '' }, unsupported: '', contents: '' });
+console.log(JSON.stringify({
+  ok: objectsPayload([row(), tray]),
+  noTray: objectsPayload([row()]).error, dup: objectsPayload([row(), { ...tray, track_label: 'mug' }]).error,
+  noId: objectsPayload([row({ real_identity: ' ' }), tray]).error, big: objectsPayload([row({ dims: { height: '90', width: '', depth: '' } }), tray]).error,
+  twoTrays: objectsPayload([row(), tray, { ...tray, track_label: 'tray2' }]).error,
+  t0: trayPayload({ cx: '', cy: '', w: '', d: '' }), t1: trayPayload({ cx: '32.5', cy: '-6.5', w: '24', d: '18' }),
+  tPart: trayPayload({ cx: '1', cy: '', w: '', d: '' }).error, tSmall: trayPayload({ cx: '1', cy: '1', w: '2', d: '18' }).error,
+}));
+"""
+
+
+def test_capture_form_payloads(tmp_path):
+    o = run_js(tmp_path, PAYLOADS)
+    mug, tr = o["ok"]["objects"]
+    assert o["ok"]["error"] is None
+    assert mug == {"track_label": "mug", "real_identity": "red mug", "proxy": "cup", "real_dims": {"height": {"value_m": 0.095, "source": "measured_ruler"}},
+                   "unsupported_features": ["handle", "logo"], "confirmed_by_person": False, "real_contents": "dry rice"}
+    assert tr["proxy"] == "tray" and tr["real_dims"] == {} and "real_contents" not in tr
+    assert "destination" in o["noTray"] and "differ" in o["dup"] and "really is" in o["noId"] and "60 cm" in o["big"] and "one tray" in o["twoTrays"]
+    assert o["t0"] == {"tray": None, "error": None}
+    assert o["t1"]["tray"] == {"center_xy": [0.325, -0.065], "inner_half": [0.12, 0.09], "yaw_deg": 0, "source": "person_supplied"}
+    assert o["tPart"] and o["tSmall"]
