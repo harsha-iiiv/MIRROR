@@ -1544,7 +1544,7 @@ def evidence_from_estimates(tracks: Tracks, est: Estimates, ids: dict, *, kind: 
         srcs = {c.get("intrinsics_source") for c in est.calibration if c.get("valid", True)}
         if est.scene_checks.get("calibration_mask") and all(v == "calibration board" for v in
                                                            est.scene_checks["calibration_mask"].values()) \
-                and srcs <= {"checkerboard", "user_supplied"}:
+                and srcs <= {"checkerboard", "charuco_board", "user_supplied"}:
             kind = "camera_video_reconstruction"
         elif srcs == {"rendered_camera_model"}:
             kind = "rendered_video_reconstruction"
