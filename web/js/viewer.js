@@ -70,6 +70,8 @@ export class Viewer {
     this.controls.minDistance = 0.35;
     this.controls.maxDistance = 4;
     this.controls.addEventListener('change', () => (this.dirty = true));
+    this.controls.addEventListener('start', () => (this._userMoved = true));
+    this._followPos = new THREE.Vector3();
     this.setView('3d');
 
     this.hemi = new THREE.HemisphereLight(0xffffff, 0x8a8a8a, 1.1);
@@ -117,6 +119,7 @@ export class Viewer {
         this._applyTime();
         this.onTick(this.t, this.playing);
       }
+      if (this.view === 'follow') this._follow(dt);
       if (this.controls.update() || this.dirty) {
         this._sizeBeads();
         this.renderer.render(this.scene, this.camera);
@@ -137,12 +140,21 @@ export class Viewer {
 
   resize() {
     const w = this.el.clientWidth || 1, h = this.el.clientHeight || 1;
+    const aspect0 = this.camera.aspect;
     this.renderer.setSize(w, h, false);
     this.labels.setSize(w, h);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     for (const m of this._lineMats || []) m.resolution.set(w, h);
+    // Re-frame for a new shape (phone rotation, chat pane) unless the visitor moved the camera.
+    if (!this._userMoved && Math.abs(aspect0 - this.camera.aspect) > 0.05) this.setView(this.view);
     this.dirty = true;
+  }
+
+  // Portrait panes see less of the table at the same distance; back the camera off.
+  _frameScale() {
+    const a = this.camera.aspect || 1.6;
+    return a >= 1.3 ? 1 : Math.min(2.1, Math.pow(1.3 / a, 0.85));
   }
 
   applyTheme() {
@@ -158,10 +170,41 @@ export class Viewer {
 
   setView(kind) {
     this.view = kind;
-    if (kind === 'top') { this.camera.position.set(0.02, -0.04, 1.55); this.controls.target.set(0.02, 0, 0); }
-    else if (kind === 'side') { this.camera.position.set(0.0, -1.35, 0.42); this.controls.target.set(0.0, 0, 0.12); }
-    else { this.camera.position.set(-0.42, -1.12, 1.02); this.controls.target.set(0.02, 0.02, 0.04); }
+    const k = this._frameScale();
+    const put = (target, offset) => {
+      this.controls.target.set(...target);
+      this.camera.position.set(target[0] + offset[0] * k, target[1] + offset[1] * k, target[2] + offset[2] * k);
+    };
+    if (kind === 'top') put([0.02, 0, 0], [0, -0.04, 1.55]);
+    else if (kind === 'side') put([0.0, 0, 0.12], [0, -1.35, 0.30]);
+    else if (kind === 'follow') {
+      // Close behind-and-above view that keeps the carried container in frame.
+      const p = this._followTarget() || new THREE.Vector3(0.02, 0.02, 0.04);
+      this._followPos.copy(p);
+      put([p.x, p.y, p.z], [-0.30, -0.74, 0.58]);
+    } else put([0.02, 0.02, 0.04], [-0.44, -1.14, 0.98]);
     this.controls.update();
+    this.dirty = true;
+  }
+
+  // The followed body: the traced container during playback.
+  _followTarget() {
+    const g = this.traceObject && this.bodies.get(this.traceObject);
+    if (!g || !g.visible || !this.payload) return null;
+    return new THREE.Vector3(g.position.x, g.position.y, Math.max(0.03, g.position.z));
+  }
+
+  // Move target and camera together so orbit and zoom chosen by the visitor are kept.
+  _follow(dt) {
+    const p = this._followTarget();
+    if (!p) return;
+    const a = 1 - Math.exp(-dt * 6);
+    const before = this._followPos.clone();
+    this._followPos.lerp(p, a);
+    const d = this._followPos.clone().sub(before);
+    if (d.lengthSq() < 1e-12) return;
+    this.controls.target.add(d);
+    this.camera.position.add(d);
     this.dirty = true;
   }
 
@@ -191,8 +234,8 @@ export class Viewer {
           mat = this.tableMat;
         } else if (isBead(b.name)) {
           // Beads are a few millimetres across; draw them bright and never smaller than a few pixels.
-          this.beadMat = this.beadMat || new THREE.MeshStandardMaterial({ color: '#ff2bd6', emissive: '#ff2bd6',
-            emissiveIntensity: 0.75, roughness: 0.4 });
+          this.beadMat = this.beadMat || new THREE.MeshStandardMaterial({ color: '#ff2bd6', emissive: '#c2009f',
+            emissiveIntensity: 0.9, roughness: 0.35 });
           mat = this.beadMat;
         } else {
           const [r, gg, bb, a0] = g.rgba;
@@ -253,7 +296,7 @@ export class Viewer {
   // Scale each bead sphere about its own centre so it spans at least MIN_PX on screen.
   // Positions are untouched; the legend says beads are drawn enlarged.
   _sizeBeads() {
-    const MIN_PX = 6;
+    const MIN_PX = this.el.clientWidth < 560 ? 9 : 7;
     const h = this.renderer.domElement.clientHeight || 1;
     const k = h / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
     const wp = new THREE.Vector3();
@@ -380,6 +423,7 @@ export class Viewer {
     this._buildTraces();
     if (!keepTime) this.t = 0;
     this._applyTime();
+    if (this.view === 'follow') this.setView('follow');
     this.dirty = true;
   }
 
