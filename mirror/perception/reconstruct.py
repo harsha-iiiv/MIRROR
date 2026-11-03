@@ -29,6 +29,7 @@ Steps
 """
 from __future__ import annotations
 
+import json
 import math
 from dataclasses import dataclass, field
 from typing import Optional
@@ -84,6 +85,7 @@ class Tracks:
     notes: list = field(default_factory=list)
     extra: dict = field(default_factory=dict)
     static: set = field(default_factory=set)     # labels segmented once (frame 0) and held
+    loaded_from: Optional[str] = None            # saved tracks file these masks were read from
 
     def get(self, cam, label, i):
         d = self.masks.get(cam, {}).get(label, {})
@@ -1410,6 +1412,53 @@ def _carry_mask(est: Estimates, lab: str) -> np.ndarray:
     return m
 
 
+def models_from_tracks(tracks: Tracks) -> list[dict]:
+    """Model calls behind the masks (ModelArtifact-shaped), from the tracker's notes.
+    Masks read back from a saved tracks file are a recording, whatever the
+    original calls were."""
+    if "ground-truth" in (tracks.source or "") or "oracle" in (tracks.source or ""):
+        return [dict(role="segmentation", model="simulator segmentation", origin="oracle_ground_truth",
+                     note="ground-truth masks: development and upper bound only")]
+    info = None
+    for n_ in tracks.notes or []:
+        try:
+            d = json.loads(n_) if isinstance(n_, str) else n_
+        except ValueError:
+            continue
+        if isinstance(d, dict) and ("sam" in d or "grounding" in d):
+            info = d
+            break
+    if info is None:
+        return [dict(role="segmentation", model=tracks.source or "unknown", origin="unknown")]
+    saved = getattr(tracks, "loaded_from", None)
+    out = []
+
+    def origin(cas):
+        if saved:
+            return "recorded_replay"
+        return "recorded_replay" if cas else "fresh_model_call"
+    g_calls = [c for g in (info.get("grounding") or {}).values() for c in (g.get("calls") or [])]
+    main = {c.get("model") for c in g_calls if c.get("model")}
+    for r_ in info.get("reseed") or []:
+        if r_.get("grounding"):
+            g = dict(r_["grounding"])
+            g.setdefault("model", next(iter(main)) if len(main) == 1 else "unknown grounding model")
+            g_calls.append(g)
+    for model in sorted({c.get("model", "?") for c in g_calls}):
+        cs = [c for c in g_calls if c.get("model", "?") == model]
+        cas = all(c.get("cassette") for c in cs)
+        out.append(dict(role="grounding", model=model, origin=origin(cas), calls=len(cs),
+                        note=("read from saved tracks; " if saved else "") + ("all calls replayed" if cas else
+                                                                               "made live when tracked")))
+    sams = list((info.get("sam") or {}).values()) + [r_.get("sam") for r_ in (info.get("reseed") or []) if r_.get("sam")]
+    if sams:
+        cas = all(x.get("cassette") for x in sams)
+        out.append(dict(role="segmentation", model="sam-3.1", origin=origin(cas), calls=len(sams),
+                        note=("read from saved tracks; " if saved else "") + ("all calls replayed" if cas else
+                                                                               "made live when tracked")))
+    return out
+
+
 def evidence_from_estimates(tracks: Tracks, est: Estimates, ids: dict, *, kind: Optional[str] = None,
                             media: Optional[dict] = None, models: Optional[list] = None):
     """Per-frame observability and provenance for the trace built from ``est``.
@@ -1516,7 +1565,8 @@ def evidence_from_estimates(tracks: Tracks, est: Estimates, ids: dict, *, kind: 
             "inferred": "not observed: closed while an object is carried, open otherwise"}),
         events_basis=("grasp and release inferred from object motion between resting places; release timing "
                       "refined from the gripper's top-view outline"),
-        models=[ModelArtifact(**m) for m in (models or [])], review=review,
+        models=[ModelArtifact(**m) for m in (models if models is not None else models_from_tracks(tracks))],
+        review=review,
         notes=[f"tracks: {tracks.source}"] + [x for x in (tracks.notes or []) if not x.startswith("{")])
     return ev, positions, quats
 

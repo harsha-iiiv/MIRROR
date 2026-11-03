@@ -91,3 +91,14 @@ def test_previous_event_timing_reproduces_the_frozen_benchmark_row():
     fe = frame_errors(gt_frames(gt), est_frames(est, est.scene_checks["kinds"], gt_fps=dv.fps))
     assert fe["found_rate_all"] == pytest.approx(row["tracking"]["found_rate_all"])
     assert fe["centroid_cm_all"]["median"] == pytest.approx(row["tracking"]["centroid_cm_all"]["median"])
+
+
+def test_model_outputs_read_from_saved_tracks_are_recordings():
+    from mirror.perception.reconstruct import Tracks, models_from_tracks
+    _, _, tr = _load(["top"])
+    m = models_from_tracks(tr)
+    assert {x["role"] for x in m} == {"grounding", "segmentation"}
+    assert all(x["origin"] == "recorded_replay" for x in m)
+    assert any(x["model"] == "sam-3.1" for x in m)
+    oracle = Tracks(fps=5.0, n_frames=1, size={}, masks={}, source="ground-truth masks (oracle)")
+    assert models_from_tracks(oracle)[0]["origin"] == "oracle_ground_truth"
