@@ -24,6 +24,9 @@ meta = ["meta-sam-parser>=0.1.0"]
 # Calibration board detection for real camera footage (mirror.perception.calibration.detect_board);
 # the calibration maths itself needs only numpy/scipy
 camera = ["opencv-python-headless==4.10.0.84"]
+# Phone capture (mirror.capture): ChArUco/ArUco detection and calibration (cv2.aruco ships in the
+# main opencv package since 4.7, so the contrib build is not needed); Pillow writes the PNG target
+capture = ["opencv-python-headless==4.10.0.84", "pillow>=10"]
 
 [project.scripts]
 mirror = "mirror.cli:main"

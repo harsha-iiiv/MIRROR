@@ -1,79 +1,177 @@
-# Filming a demonstration with real cameras
+# Filming a demonstration with phones
 
-MIRROR can reconstruct a demonstration from real camera footage of the
-supported kit (cup with beads, block, marker, tray, optional wall). It does
-not assume anything about your cameras, your table or your objects: you
-calibrate the cameras, measure where the calibration board sits, and confirm
-which tracked object is which. Until all of that is done, the footage is
-refused rather than guessed.
+This is how to record the supported kitting task with one or two phones so
+MIRROR can rebuild it with calibrated cameras. It is written for the person
+holding the phones. Nothing here assumes the simulator's cameras, table or kit:
+the cameras are calibrated from a printed target, and every real object is
+mapped to a simulation proxy by you.
 
-Status: the workflow is implemented and tested on synthetic data only
-(projected board corners, drawn board images, and simulator segmentation
-masks standing in for tracked footage). No real footage has been recorded
-or reconstructed yet.
+What it is good for: a person moving a mug, a small box and a pen into a tray
+around a standing book, filmed from above and from the side. What it is not:
+arbitrary activities, measured physics, or a robot. A person's hand is not a
+robot gripper; MIRROR infers when each object was picked up and put down from
+the object's own motion and says so.
 
 ## What you need
 
-- The kit objects. Their sizes must match the kit catalogue within 15%
-  (cup 6 x 6 x 10 cm, block 4 cm cube, marker 2.4 cm diameter x 12 cm, tray
-  25.6 x 19.6 cm outside, 3 cm walls). Other objects are not supported.
-- One camera looking down at the table (`top`, required) and optionally one
-  at a shallow angle from the side (`side`). Without the side camera the cup's
-  tilt cannot be measured, and MIRROR says so instead of assuming it stayed
-  upright.
-- Fixed exposure and focus if the camera allows it; no zoom changes.
-- A printed checkerboard on a flat, rigid card. Default pattern 10 x 7
-  squares (9 x 6 inner corners). Print at 100% and measure one square with a
-  ruler; enter that value, not the nominal one.
+| Item | Notes |
+|---|---|
+| Mug with dry rice or plastic beads | Not hot drinks. The simulator replaces the contents with simulated beads; real spills are not measured. |
+| Small box | Roughly 4 to 6 cm, a solid colour. |
+| Pen or marker | A solid colour that differs from the mug and box. |
+| Tray | Shallow, about 25 x 20 cm, walls a few cm high. |
+| Book standing upright | The obstacle. Make sure it is stable. |
+| Two phones (one is enough for single-view mode) | Any recent phone; a stand or tripod for each. |
+| Printed calibration target | `assets/calibration/mirror_charuco_v1_A4.pdf` or `_Letter.pdf`, page 1 (board) and page 2 (sync card, optional object tags). |
+| A ruler | For the print check and the object sizes. |
+| Stiff card and glue | The board must be flat. |
 
-## 1. Intrinsics (once per camera and zoom setting)
+Plain, matte, differently coloured objects track best. Avoid a table the same
+colour as any object.
 
-Film or photograph the board held at 12 or more different positions and
-angles, filling the corners of the image as well as the centre. Each view
-must show the whole board. MIRROR detects the inner corners (needs the
-`camera` extra: `pip install 'mirror[camera]'`, or click the four outermost
-inner corners when detection fails) and solves the intrinsics with two radial
-distortion terms.
+## 1. Print and check the target (once)
 
-Accepted only when: at least 6 views, reprojection error under 1 px, and the
-views together cover at least a quarter of the image. If the lens distortion
-is not negligible, the videos are undistorted with these intrinsics before
-tracking.
+1. Print page 1 at **100% / Actual size** (never "Fit to page"). Print page 2
+   for the sync card and, optionally, the object tags.
+2. Measure the **50 mm scale bar** with a ruler. If it is off by more than 1 mm,
+   fix the printer setting and reprint.
+3. Measure **one board square** (nominal 30.0 mm). Write down both numbers; they
+   go into `capture.json` (`print_check`). MIRROR uses the square you measured
+   for metric scale and rejects the calibration if the two numbers disagree.
+4. Glue the board onto stiff card. A curled board gives a wrong calibration.
 
-If you know the camera maker's intrinsics for this exact mode, you may enter
-them instead; they are recorded as `user_supplied`.
+The board is a 5 x 7 ChArUco board (30 mm squares, 21 mm ArUco markers,
+dictionary 5x5_100, ids 0 to 16). The sync card is marker 90; tags are 95 to 97.
+The PDF geometry is checked by the test suite against OpenCV's layout.
 
-## 2. Camera poses (every time a camera moves)
+## 2. Set up the phones
 
-Lay the board flat on the table where the demonstration will happen, film a
-few seconds with every camera without moving anything, then remove it.
-Accepted only when the board's reprojection error is under 1.5 px.
+- **Top phone**: 60 to 75 cm above the table, looking down at the work area but
+  tilted 25 to 35 degrees from straight down (a phone exactly face-down cannot
+  have its zoom checked and places the camera centre poorly).
+- **Side phone**: 50 to 70 cm from the work area, 30 to 40 degrees above the
+  table, seeing the whole carry path including the tray.
+- Both: 1080p or 4K, 30 or 60 fps, **1x lens, do not zoom or switch lenses**,
+  turn off stabilisation modes that crop (for example "action" or "cinematic"),
+  lock exposure and focus if the camera app allows it (tap and hold).
+- Do not touch or move a phone between its calibration and the end of the take.
 
-Measure where the board's first inner corner is in the robot workspace (the
-centre of the table area the robot can reach, x to the right as seen from the
-operator, y away from the operator) and the angle of the board's x axis.
-Enter these values; the table plane is the board plane. The table's size is
-never assumed.
+## 3. Lens calibration (once per phone, lens and resolution)
 
-## 3. Recording the demonstration
+Film 20 to 40 seconds per phone, in the same mode you will use for the take:
+hold the board in front of the phone and move it slowly through many positions,
+**tilted** at 20 to 50 degrees in different directions, near the corners and
+edges of the picture as well as the centre, close and far. Keep the whole
+board sharp; avoid motion blur.
 
-- Start with every object resting and visible to the top camera.
-- Move one object at a time; set it down fully before the next one.
-- Keep your hand from covering the object more than necessary; the cup's tilt
-  is measured only while the side camera sees it.
-- End with every object resting for at least two seconds.
+MIRROR accepts the lens calibration only when (thresholds fixed in advance,
+`mirror/capture/calibrate.py`):
 
-## 4. Correspondence review
+| Check | Limit |
+|---|---|
+| views with at least 8 board corners | at least 10 |
+| reprojection error | at most 1.0 px |
+| image coverage (5 x 4 grid cells with corners) | at least 60% |
+| views tilted at least 20 degrees | at least 3 |
+| focal length uncertainty (1 sigma) | at most 1% |
+| principal point offset from centre | at most 10% of the image |
 
-Tracking proposes labels; you confirm them. For every track, choose cup,
-block, marker, tray, wall or ignore. Tracks you do not confirm are not used.
-Every confirmation is stored with the trace as a manual correction.
+Redo it after: changing resolution, frame rate mode, lens or zoom, or phone.
 
-## What you get back
+## 4. Record a take
 
-A demonstration trace whose evidence says, frame by frame, which positions and
-tilts were measured, inferred, interpolated or not observed, and which review
-items remain. Values that were not observed are placeholders for display and
-never count as evidence: for example, if the cup is hidden from the side
-camera while carried, MIRROR does not report that it stayed upright and asks
-instead.
+1. Place the objects at their start positions. Measure where each one stands
+   with the ruler relative to the board's printed top-left corner if you are
+   recording an evaluation clip (see `docs/REAL_FOOTAGE.md`).
+2. Start recording on **both** phones.
+3. Lay the board **flat on the table** in the middle of the work area, film it
+   for 3 seconds without moving, then take it away. This measures where each
+   phone is relative to the table and fixes the table plane and scale.
+4. **Sync event**: hold the sync card where both phones see it, then turn it
+   face down quickly. (Alternative: switch the room light off and on.)
+5. Do the task: pick up one object at a time, carry it, put it down fully before
+   the next. Keep your hand from covering an object more than you need to.
+6. **Second sync event**: show the sync card again and turn it face down. One
+   event can always be paired with anything; two events with the same spacing
+   in both clips show the clips are the same performance.
+7. Optional: lay the board flat again at the end for 3 seconds (detects a phone
+   that moved during the take).
+8. Stop both recordings. Copy the **original** files (AirDrop/USB, "original
+   quality"); messaging apps re-encode and drop timestamps.
+
+MIRROR never triangulates two clips unless they share at least two matching
+sync events; otherwise it falls back to single-view positions and says so.
+
+### Recalibrate when
+
+- a phone moved, was bumped, or its stand was adjusted (also detected from the
+  image border and from the board if you show it again at the end);
+- the zoom, lens or resolution changed (detected from metadata when the phone
+  writes it, and from an oblique board view; a face-down view cannot detect a
+  zoom change, so do not touch the zoom);
+- the board was not seen at the start of the take.
+
+## 5. Optional: measure the mug's tilt with a tag
+
+From the outlines alone, a round mug's tilt is not observable: MIRROR reports
+it as **unobserved** and asks instead of assuming it stayed upright. To measure
+tilt, tape tag 95 flat on the side of the mug that faces the side phone,
+upright (the printed arrow towards the mug's opening), and add
+`"tags": {"95": "mug"}` to `capture.json`. Tilt is then measured (full tilt
+relative to how the mug stood at the start) whenever the tag is visible at
+less than 60 degrees from face-on. A curved mug surface bends a 20 mm tag
+slightly; this is a known limitation.
+
+## 6. One phone only
+
+Film from the top position only. Positions are measured while an object rests
+on the table (its height is known from the ruler); while it is lifted, its
+height is assumed and the position carries the resulting parallax
+uncertainty; tilt is not observed unless a tag is seen. MIRROR labels the
+result single-view and reduced.
+
+## 7. Process the clips (no model calls)
+
+```
+python -m mirror.capture.ingest init  my_take        # writes my_take/capture.json
+# copy the clips into my_take/ and fill in capture.json: clip names, print_check,
+# what each object is and its measured size, which proxy stands in for it
+python -m mirror.capture.ingest frames my_take       # images of the first frame with a pixel grid
+# add one box per object and camera to "prompts": {"camera", "label", "frame", "box": [x, y, w, h]}
+python -m mirror.capture.ingest run    my_take       # writes session.json and review.md
+```
+
+`review.md` lists what MIRROR measured, inferred and could not observe, and
+every item you must resolve before it proposes a task specification:
+
+- confirm what each tracked object is and which proxy stands in for it
+  (`objects[].confirmed_by_person`);
+- confirm a track that was lost and found again is the same object
+  (`identity_confirmations`);
+- check pick-up and put-down moments it could only bracket (for example while
+  your hand hid the object) and correct them (`corrections`).
+
+Each confirmation and correction is stored with the capture, with the time you
+spent, so the effort can be reported.
+
+Run `python -m mirror.capture.ingest demo DIR` to see the whole flow on a
+**synthetic** rendered take (labelled as such everywhere; not real footage).
+
+## What the result means
+
+- Positions and tilts carry a status per frame: **measured**, **inferred**
+  (computed with an assumption the footage cannot check, such as the height of
+  a lifted object in single view or a partly hidden object), **interpolated**
+  (filled across a short gap) or **unobserved** (no value; never a default).
+- Pick-up and put-down are **inferred from object motion** with a time
+  bracket. They are never robot contact events.
+- The simulator uses **proxies**: catalogue cup, block, marker, tray and wall
+  geometry, simulated beads and assumed mass and friction. A mug handle, the
+  real contents and the real mass are not modelled. Proxy fidelity is not
+  measured physical accuracy.
+- Bead or rice retention in MIRROR is simulated. Real spills are not measured
+  unless you measure them separately.
+
+Validation of this path on real footage is described in `docs/REAL_FOOTAGE.md`.
+Its status is **awaiting footage**: everything above is tested on synthetic
+renders only.
