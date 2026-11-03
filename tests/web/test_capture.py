@@ -101,17 +101,14 @@ def test_upload_without_processing_hooks_says_so(fixture_data, browser):
         page.get_by_label("One square measured (mm)").fill("30")
         page.get_by_role("tab", name="Upload & review").click()
         clip = {"name": "clip.mp4", "mimeType": "video/mp4", "buffer": b"\x00" * 64}    # placeholder bytes; the fake server does not decode
-        for label in ("Top take", "Side take", "Lens calibration clip"):
-            page.get_by_label(label).set_input_files(clip)
-        page.get_by_label("First sync in top clip (s)").fill("1.0")
-        page.get_by_label("First sync in side clip (s)").fill("1.4")
+        for label in ("Top take", "Side take", "Top lens clip", "Side lens clip"):
+            page.get_by_label(label, exact=True).set_input_files(clip)
         upload.click()
         page.wait_for_selector("text=clips_ready", timeout=15_000)
-        assert "offset 0.4 s (declared)" in page.locator(".panel").text_content()
         page.wait_for_selector("text=Processing is not available on this server yet")
         assert page.get_by_role("button", name="Calibrate").is_disabled()
         cap = next(iter(srv.studio.captures.values()))
-        assert cap["print_check"]["measured_bar_mm"] == 50 and sorted(cap["clips"]) == ["calibration", "side", "top"]
+        assert cap["print_check"]["measured_bar_mm"] == 50 and sorted(cap["clips"]) == ["lens_side", "lens_top", "take_side", "take_top"]
         assert not errors, errors
         ctx.close()
 
@@ -134,18 +131,40 @@ def test_upload_review_and_propose_with_hooks(fixture_data, browser):
         page.wait_for_selector("text=clips_ready", timeout=15_000)
         page.get_by_role("button", name="Calibrate").click()
         page.wait_for_selector("text=Calibration accepted.", timeout=15_000)
+        # objects: incomplete form is refused in place
+        page.get_by_label("Object 1 real identity").fill("white mug")
+        assert page.get_by_role("button", name="Save objects").is_disabled()
+        page.get_by_label("Object 2 real identity").fill("tray")
+        page.get_by_label("Object 1 height in centimetres").fill("9.5")
+        page.get_by_role("button", name="Save objects").click()
+        page.wait_for_selector("text=2 objects saved.", timeout=10_000)
+        cap = next(iter(srv.studio.captures.values()))
+        mug = cap["inputs"]["objects"][0]
+        assert mug["real_dims"]["height"] == {"value_m": 0.095, "source": "measured_ruler"} and mug["proxy"] == "cup"
+        assert cap["inputs"]["objects"][1]["proxy"] == "tray"
+        assert page.get_by_role("button", name="Track").is_disabled()        # boxes still missing
+        page.route("**/frame/**", lambda r: r.fulfill(path=str(Path(__file__).parent / "fixtures" / "frame_synthetic.png")))
+        page.get_by_label("top frame index").fill("1")      # re-requests the (stubbed) frame
+        page.wait_for_function("() => { const i = document.querySelector(\".cap-frame img\"); return i && i.naturalWidth > 0; }", timeout=10_000)
+        r = page.locator(".cap-frame img").bounding_box()
+        page.mouse.move(r["x"] + 20, r["y"] + 20); page.mouse.down(); page.mouse.move(r["x"] + 120, r["y"] + 90, steps=5); page.mouse.up()
+        page.get_by_role("button", name="Save boxes").click()
+        page.wait_for_selector("text=1 boxes saved.", timeout=10_000)
+        pr = cap["inputs"]["prompts"][0]
+        assert pr["camera"] == "top" and pr["label"] == "mug" and pr["frame"] == 1 and pr["box"][2] > 4 and pr["box"][3] > 4
         page.get_by_role("button", name="Track").click()
         page.wait_for_selector(".cap-review", timeout=15_000)
         assert "Phone footage - not yet verified" in page.locator(".cap-review").text_content()
         propose = page.get_by_role("button", name="Propose rules from this capture")
         assert propose.is_disabled()
-        page.get_by_role("button", name="Set time").nth(1).click()
-        page.get_by_role("button", name="Save review").click()
-        page.wait_for_function("() => document.body.textContent.includes('reviewed')", timeout=10_000)
+        page.get_by_role("button", name="Confirm the bracket").nth(1).click()
+        page.get_by_role("button", name="Save review (1)").click()
+        page.wait_for_selector("text=Ready: nothing blocks a proposal.", timeout=10_000)
         rv = srv.studio.capture_reviews[-1]
-        assert rv["correspondence"][0]["proxy"] == "cup" and rv["events"][1]["status"] == "edited"
+        assert rv["corrections"][0]["field"] == "confirm" and rv["corrections"][0]["target"] == "mug:place:0"
+        assert 0 <= rv["corrections"][0]["seconds_spent"] <= 3600
         assert not propose.is_disabled()
         propose.click()
-        page.wait_for_selector("text=proposed", timeout=15_000)
+        page.wait_for_selector("text=Proposed.", timeout=15_000)
         assert not errors, errors
         ctx.close()
