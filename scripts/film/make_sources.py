@@ -19,6 +19,10 @@ pair):
     own step log (no re-simulation);
   * development transfer layouts (mixed 6200-6202, shortcut 6300-6302): both
     specifications at 0.2445 m/rad;
+  * a second sentence, "Pack the marker before the cup.", compiled by the
+    offline rule interpreter on top of the corrected specification; both
+    versions run at 0.2445 m/rad on the development transfer layouts, and each
+    earlier run is re-judged under the new version from its step log;
   * the reference shortcut scene at 0.05 m/rad (planner set to treat tilting
     as nearly free) and at 0.2445 m/rad, for a labelled comparison.
 
@@ -53,6 +57,7 @@ from mirror.scenes import reference_scene, sample_layout  # noqa: E402
 CALIBRATED = 0.2445          # results/eval_objective_v1 calibration (development layouts only)
 NEAR_FREE = 0.05             # planner default before v2
 BLOCKED = [6400, 6401, 6402]
+SECOND_SENTENCE = "Pack the marker before the cup."
 TRANSFER = [("mixed", 6200), ("mixed", 6201), ("mixed", 6202),
             ("shortcut", 6300), ("shortcut", 6301), ("shortcut", 6302)]
 
@@ -108,7 +113,7 @@ def main(argv=None):
     if out.exists() and any(out.iterdir()):
         raise SystemExit(f"{out} is not empty; choose a new --out")
     out.mkdir(parents=True, exist_ok=True)
-    groups = set(a.only.split(",")) if a.only else {"blocked", "transfer", "shortcut"}
+    groups = set(a.only.split(",")) if a.only else {"blocked", "transfer", "shortcut", "second"}
     original, corrected, prov = evaluation_specs(source="replay", cassette_dir=ROOT / "data" / "cassettes_muse",
                                                  model="muse-spark-1.3")
     summary = dict(script="scripts/film/make_sources.py", argv=sys.argv[1:], commit=_git("rev-parse", "HEAD"),
@@ -155,6 +160,26 @@ def main(argv=None):
             r_o, _, _ = run(out, f"{tag}__original__p{CALIBRATED}", sc, original, CALIBRATED, 60.0)
             summary["runs"] += [r_c, r_o]
             save()
+    if "second" in groups:
+        from mirror.interpret.correct import apply_correction
+        from mirror.interpret.llm import LLMClient
+        v4, record = apply_correction([original, corrected], SECOND_SENTENCE, client=LLMClient(mode="offline"))
+        summary["second"] = dict(text=SECOND_SENTENCE, interpreter="offline rule interpreter (no model call)",
+                                 record_kind=record.kind, version=v4.version, diff=spec_diff(corrected, v4),
+                                 spec=v4.model_dump(mode="json"), layouts=[])
+        for fam, s in TRANSFER:
+            sc = sample_layout(s, "dev", fam)
+            tag = f"dev_{fam}_{s}"
+            r_old, log_old, _ = run(out, f"{tag}__corrected__p{CALIBRATED}__second_old", sc, corrected, CALIBRATED,
+                                    60.0, save=(s == 6200))
+            r_new, _, _ = run(out, f"{tag}__second__p{CALIBRATED}", sc, v4, CALIBRATED, 60.0, save=(s == 6200))
+            rc = check(log_old, v4, sc, condition="earlier run re-judged under the second sentence") if log_old else None
+            summary["runs"] += [r_old, r_new]
+            summary["second"]["layouts"].append(dict(
+                family=fam, seed=s, old=r_old["name"], new=r_new["name"], old_order=r_old["object_order"],
+                new_order=r_new["object_order"], new_status=r_new["status"], new_beads=r_new["beads"],
+                old_rejudged=None if rc is None else dict(status=rc.status, rules=rule_rows(rc))))
+        save()
     if "shortcut" in groups:
         sc = reference_scene("shortcut")
         for spec, nm in ((original, "original"), (corrected, "corrected")):
