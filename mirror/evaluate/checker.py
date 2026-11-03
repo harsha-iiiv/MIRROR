@@ -5,6 +5,12 @@ and the scene. It never reads planner explanations or model output. Every
 condition is evaluated at every logged physics step with explicit
 tolerances, and the places where simulator ground truth is used are listed in
 the report.
+
+Since checker 2 (contract 1.2) the report also carries one RuleResult per
+goal, constraint and ordering rule. Ordering rules are monitored from the
+evidence (mirror.evaluate.evidence), never from the plan's declared order. A
+confirmed rule the evidence cannot settle is ``unknown`` and makes an
+otherwise complete rollout ``unverified``, never ``success``.
 """
 from __future__ import annotations
 
@@ -14,15 +20,16 @@ from typing import Iterable, Optional
 
 import numpy as np
 
-from mirror.contracts import (Constraint, ObjectOutcome, PlanResult, RolloutReport,
-                              SceneState, Status, TaskSpec, ViolationInterval)
+from mirror.contracts import (Constraint, ObjectOutcome, OrderingConstraint, PlanResult,
+                              RolloutReport, RuleResult, SceneState, Status, TaskSpec,
+                              ViolationInterval)
 from mirror.geometry import DEFAULT_UPRIGHT_TOL_DEG
 from mirror.statelog import StateLog, tilt_deg
 
 from . import geom
 from .grounding import destination_tray, select
 
-CHECKER_ID = "mirror.evaluate.check/1"
+CHECKER_ID = "mirror.evaluate.check/2"
 SETTLE_WINDOW_S = 0.3
 # Short gaps in the per-step held label (finger contact flickering while an
 # object is carried) are bridged so a tilt during the gap is still checked.
@@ -38,7 +45,11 @@ GROUND_TRUTH_USE = [
 ]
 
 STATUS_ORDER = ["planning_failed", "execution_failed", "timeout",
-                "constraint_violated", "task_incomplete", "success"]
+                "constraint_violated", "task_incomplete", "unverified", "success"]
+
+ORDERING_GROUND_TRUTH_USE = (
+    "ordering events: grasp start from the held label or lift-off, placement completion from object "
+    "position and speed after the last release (never the plan's declared order or phase labels)")
 
 
 @dataclass
@@ -50,6 +61,8 @@ class _Ctx:
     speed: np.ndarray           # (N, K) linear speed, m/s
     window: np.ndarray          # (N,) bool, final settle window
     notes: list[str] = field(default_factory=list)
+    missing: dict = field(default_factory=dict)   # rule id -> object ids absent from the log
+    _events: dict = field(default_factory=dict)
 
 
 def _intervals(mask: np.ndarray) -> list[tuple[int, int]]:
@@ -151,6 +164,7 @@ def _resolve(ctx: _Ctx, c: Constraint) -> list[str]:
     present = [i for i in ids if i in ctx.log.object_ids]
     missing = [i for i in ids if i not in ctx.log.object_ids]
     if missing:
+        ctx.missing.setdefault(c.id, []).extend(m for m in missing if m not in ctx.missing.get(c.id, []))
         ctx.notes.append(f"{c.id}: objects {missing} are not in the step log")
     if not ids:
         ctx.notes.append(f"{c.id}: selector matched no object in scene {ctx.scene.scene_id}")
@@ -265,6 +279,152 @@ def evaluate_rules(ctx: _Ctx, rules: Iterable[Constraint]) -> tuple[list[Violati
     return violations, contacts
 
 
+# ------------------------------------------------------------ ordering ---
+
+def _events(ctx: _Ctx, oid: str):
+    from .evidence import object_events
+    if oid not in ctx._events:
+        tray, _ = destination_tray("destination", ctx.scene)
+        tol = float(ctx.spec.tolerances.get("settle_speed_mps", 0.01))
+        ctx._events[oid] = object_events(ctx.log, ctx.scene, oid, tray, settle_speed=tol)
+    return ctx._events[oid]
+
+
+def _event_text(event: str) -> str:
+    return {"grasp_start": "was grasped", "placement_complete": "was placed"}[event]
+
+
+def monitor_ordering(ctx: _Ctx, oc: OrderingConstraint) -> tuple[str, str, dict, list[ViolationInterval]]:
+    """Judge one ordering rule from the evidence.
+
+    Every object matched by ``before`` must reach ``before_event`` strictly
+    before any object matched by ``after`` reaches ``after_event``; every pair
+    (a, b) with a != b is checked. Per pair:
+      after event never happened                         -> holds (vacuously)
+      after event happened, before event never happened  -> violated
+      both happened, separated by more than the margin   -> holds or violated
+      within the margin (a tie at the evidence resolution) -> unknown
+      either object missing, or an event unresolved       -> unknown
+    Returns (verdict, detail, evidence, violation intervals)."""
+    from .evidence import evidence_source, resolution_s
+    before = select(oc.before, ctx.spec, ctx.scene)
+    after = select(oc.after, ctx.spec, ctx.scene)
+    res = resolution_s(ctx.log)
+    margin = 2.0 * res
+    evidence = {"source": evidence_source(ctx.log), "resolution_s": round(res, 6), "margin_s": round(margin, 6),
+                "before_event": oc.before_event, "after_event": oc.after_event,
+                "before_objects": before, "after_objects": after, "pairs": [], "events": {}}
+    if not before or not after:
+        side = "before" if not before else "after"
+        return "not_applicable", f"the {side} selector matches no object in scene {ctx.scene.scene_id}", evidence, []
+    pairs = [(a, b) for a in before for b in after if a != b]
+    if not pairs:
+        return "not_applicable", "before and after select the same single object", evidence, []
+    for oid in dict.fromkeys(before + after):
+        evidence["events"][oid] = _events(ctx, oid).summary()
+    verdicts, violations, unknown_why, vacuous = [], [], [], 0
+    for a, b in pairs:
+        sa, ta = _events(ctx, a).time(oc.before_event)
+        sb, tb = _events(ctx, b).time(oc.after_event)
+        pair = {"before": a, "after": b, "before_state": sa, "before_t": ta, "after_state": sb, "after_t": tb}
+        if "missing" in (sa, sb):
+            v, why = "unknown", f"{a if sa == 'missing' else b} is not in the evidence"
+        elif sb == "unresolved" or (sa == "unresolved" and sb != "absent"):
+            who = b if sb == "unresolved" else a
+            v, why = "unknown", f"the {('after' if who == b else 'before')} event of {who} could not be resolved"
+        elif sb == "absent":
+            v, why = "satisfied", f"{b} never {_event_text(oc.after_event).split(' ', 1)[1]}"
+            vacuous += 1
+        elif sa == "absent":
+            v, why = "violated", f"{b} {_event_text(oc.after_event)} at {tb:.2f} s but {a} never {_event_text(oc.before_event).split(' ', 1)[1]}"
+            violations.append(ViolationInterval(constraint_id=oc.id, object_id=b, t_start=float(tb),
+                                                t_end=float(ctx.log.t[-1]), peak=float(ctx.log.t[-1] - tb),
+                                                detail=f"order: {why}"))
+        elif ta < tb - margin:
+            v, why = "satisfied", f"{a} {_event_text(oc.before_event)} at {ta:.2f} s, {b} {_event_text(oc.after_event)} at {tb:.2f} s"
+        elif ta > tb + margin:
+            v, why = "violated", f"{b} {_event_text(oc.after_event)} at {tb:.2f} s, before {a} {_event_text(oc.before_event)} at {ta:.2f} s"
+            violations.append(ViolationInterval(constraint_id=oc.id, object_id=b, t_start=float(tb),
+                                                t_end=float(ta), peak=float(ta - tb), detail=f"order: {why}"))
+        else:
+            v, why = "unknown", (f"{a} {_event_text(oc.before_event)} at {ta:.3f} s and {b} "
+                                 f"{_event_text(oc.after_event)} at {tb:.3f} s are within the "
+                                 f"{margin:.3f} s timing margin")
+        pair.update(verdict=v, why=why)
+        evidence["pairs"].append(pair)
+        verdicts.append(v)
+        if v == "unknown":
+            unknown_why.append(why)
+    if "violated" in verdicts:
+        return "violated", "; ".join(p["why"] for p in evidence["pairs"] if p["verdict"] == "violated"), evidence, violations
+    if "unknown" in verdicts:
+        return "unknown", "; ".join(unknown_why), evidence, []
+    detail = "; ".join(p["why"] for p in evidence["pairs"])
+    if vacuous == len(pairs):
+        detail = "holds vacuously: " + detail
+    return "satisfied", detail, evidence, []
+
+
+def _ordering_text(oc: OrderingConstraint) -> str:
+    sel = lambda s: s.kind or s.role or ",".join(s.ids or []) or "any"
+    return f"{sel(oc.before)} {oc.before_event} before {sel(oc.after)} {oc.after_event}"
+
+
+# -------------------------------------------------------- rule results ---
+
+def _constraint_result(ctx: _Ctx, c: Constraint, violations: list[ViolationInterval],
+                       enforced: bool) -> RuleResult:
+    from .evidence import contacts_logged, evidence_source
+    ids = select(c.applies_to, ctx.spec, ctx.scene)
+    mine = [v for v in violations if v.constraint_id == c.id]
+    missing = [i for i in ids if i not in ctx.log.object_ids]
+    ev = {"source": evidence_source(ctx.log), "phase": c.phase, "params": dict(c.params)}
+    base = dict(rule_id=c.id, kind="constraint", type=c.type, status=c.status, enforced=enforced, objects=ids,
+                evidence=ev)
+    if c.status == Status.rejected and not enforced:
+        return RuleResult(verdict="not_evaluated", detail="rejected by the user; recorded, not checked", **base)
+    if mine:
+        return RuleResult(verdict="violated", detail="; ".join(dict.fromkeys(
+            f"{v.object_id}: {v.detail}" for v in mine)), **base)
+    if not ids:
+        return RuleResult(verdict="not_applicable", detail=f"no object in scene {ctx.scene.scene_id} matches", **base)
+    if missing:
+        return RuleResult(verdict="unknown", detail=f"objects {missing} are not in the evidence", **base)
+    if c.type == "forbidden_contact" and not contacts_logged(ctx.log):
+        return RuleResult(verdict="unknown", detail="contacts are not recorded in this evidence", **base)
+    if c.type == "upright" and c.phase == "transport":
+        carried = [i for i in ids if _transport_mask(ctx.log, ctx.log.index(i)).any()]
+        if not carried:
+            return RuleResult(verdict="satisfied", detail="holds vacuously: the object was never carried", **base)
+    if ev["source"] != "dense_state_log":
+        ev["note"] = "checked at the playback frames only; an excursion between frames would be missed"
+    return RuleResult(verdict="satisfied", **base)
+
+
+def _goal_results(ctx: _Ctx, by_id: dict[str, ObjectOutcome]) -> list[RuleResult]:
+    out = []
+    for g in ctx.spec.goals:
+        ids = select(g.object, ctx.spec, ctx.scene)
+        base = dict(rule_id=g.id, kind="goal", type=g.type, status=g.status,
+                    enforced=g.status != Status.rejected, objects=ids)
+        if g.status == Status.rejected:
+            out.append(RuleResult(verdict="not_evaluated", detail="rejected by the user; not required", **base))
+            continue
+        if not ids:
+            out.append(RuleResult(verdict="violated", detail="no object matches; completion cannot be established",
+                                  **base))
+            continue
+        missing = [i for i in ids if i not in by_id]
+        if missing:
+            out.append(RuleResult(verdict="unknown", detail=f"objects {missing} are not in the evidence", **base))
+            continue
+        bad = [i for i in ids if not (by_id[i].in_target and by_id[i].released and by_id[i].settled)]
+        out.append(RuleResult(verdict="violated" if bad else "satisfied",
+                              detail=(f"not packed: {bad}" if bad else "inside the tray, released and settled"),
+                              **base))
+    return out
+
+
 # ------------------------------------------------------------ outcomes ---
 
 def _outcome(ctx: _Ctx, oid: str, tray) -> ObjectOutcome:
@@ -340,7 +500,8 @@ def check(log: StateLog, spec: TaskSpec, scene: SceneState, *,
           plan: Optional[PlanResult] = None,
           extra_rules: Optional[list[Constraint]] = None,
           include_unenforced: bool = False,
-          rollout_id: Optional[str] = None) -> RolloutReport:
+          rollout_id: Optional[str] = None,
+          extra_ordering: Optional[list[OrderingConstraint]] = None) -> RolloutReport:
     """Check a rollout's step log against ``spec`` in ``scene``.
 
     Only ``spec.enforced_constraints()`` can make the status
@@ -350,11 +511,46 @@ def check(log: StateLog, spec: TaskSpec, scene: SceneState, *,
     ``include_unenforced``, the spec's own proposed or rejected constraints are
     checked as well and reported in ``RolloutReport.advisory_violations``; they
     never change the status.
+
+    Ordering rules: confirmed orderings are monitored from the evidence and
+    gate the status like constraints; proposed orderings and ``extra_ordering``
+    (e.g. a newer version's) are monitored and reported in ``rule_results``
+    (their violations also in ``advisory_violations``) without affecting the
+    status; rejected ones are recorded as not evaluated. A confirmed
+    constraint or ordering whose verdict is ``unknown`` turns an otherwise
+    successful rollout into ``unverified``.
     """
+    from .evidence import evidence_source
     ctx = _context(log, spec, scene)
     exec_status = execution_status or log.meta.get("status") or "completed"
     enforced = spec.enforced_constraints()
     violations, contacts = evaluate_rules(ctx, enforced)
+    rule_results: list[RuleResult] = []
+    order_adv: list[ViolationInterval] = []
+    for oc in spec.ordering:
+        if oc.status == Status.rejected:
+            rule_results.append(RuleResult(rule_id=oc.id, kind="ordering", type="ordering", status=oc.status,
+                                           enforced=False, verdict="not_evaluated",
+                                           detail=f"rejected by the user ({_ordering_text(oc)}); recorded, not checked"))
+            continue
+        verdict, detail, ev, vio = monitor_ordering(ctx, oc)
+        confirmed = oc.status == Status.confirmed
+        if confirmed:
+            violations += vio
+        else:
+            order_adv += vio
+        rule_results.append(RuleResult(rule_id=oc.id, kind="ordering", type="ordering", status=oc.status,
+                                       enforced=confirmed, verdict=verdict, detail=detail, evidence=ev,
+                                       objects=list(dict.fromkeys(ev["before_objects"] + ev["after_objects"]))))
+    own_ids = {o.id for o in spec.ordering}
+    for oc in extra_ordering or []:
+        if oc.id in own_ids:
+            continue
+        verdict, detail, ev, vio = monitor_ordering(ctx, oc)
+        order_adv += vio
+        rule_results.append(RuleResult(rule_id=oc.id, kind="ordering", type="ordering", status=oc.status,
+                                       enforced=False, verdict=verdict, detail=detail, evidence=ev,
+                                       objects=list(dict.fromkeys(ev["before_objects"] + ev["after_objects"]))))
 
     req, trays, all_bound = _required_objects(ctx)
     order = req + [o for o in log.object_ids if o not in req]
@@ -364,6 +560,15 @@ def check(log: StateLog, spec: TaskSpec, scene: SceneState, *,
     completion = all_bound and bool(req) and all(
         by_id[i].in_target and by_id[i].released and by_id[i].settled for i in req)
 
+    proposed = [c for c in spec.constraints if c.status == Status.proposed]
+    proposed_v, _ = evaluate_rules(_context(log, spec, scene), proposed) if proposed else ([], [])
+    c_results = []
+    for c in spec.constraints:
+        is_enf = c.status == Status.confirmed
+        c_results.append(_constraint_result(ctx, c, violations if is_enf else proposed_v, is_enf))
+    rule_results = _goal_results(ctx, by_id) + c_results + rule_results
+    unknown_enforced = [r for r in rule_results if r.enforced and r.verdict == "unknown" and r.kind != "goal"]
+
     if exec_status == "execution_failed":
         status = "execution_failed"
     elif exec_status == "timeout":
@@ -372,6 +577,8 @@ def check(log: StateLog, spec: TaskSpec, scene: SceneState, *,
         status = "constraint_violated"
     elif not completion:
         status = "task_incomplete"
+    elif unknown_enforced:
+        status = "unverified"
     else:
         status = "success"
 
@@ -391,9 +598,11 @@ def check(log: StateLog, spec: TaskSpec, scene: SceneState, *,
             notes.append(f"{i} incomplete: {', '.join(miss)}")
     if execution_reason:
         notes.append(f"executor: {execution_reason}")
+    for r in unknown_enforced:
+        notes.append(f"{r.rule_id} could not be verified: {r.detail}")
 
     adv = advisory_violations(log, spec, scene, extra_rules=extra_rules,
-                              include_unenforced=include_unenforced, _ctx=ctx)
+                              include_unenforced=include_unenforced, _ctx=ctx) + order_adv
     if adv:
         notes.append(f"{len(adv)} advisory violation(s) of rules not enforced in v{spec.version}; "
                      f"see advisory_violations")
@@ -409,8 +618,9 @@ def check(log: StateLog, spec: TaskSpec, scene: SceneState, *,
         forbidden_contacts=contacts,
         completion=completion, planning_time_s=plan.planning_time_s if plan else 0.0,
         execution_time_s=float(log.t[-1] - log.t[0]) if log.n else 0.0,
-        physics_steps=log.n, checker=CHECKER_ID, ground_truth_use=list(GROUND_TRUTH_USE),
-        notes=notes)
+        physics_steps=log.n, checker=CHECKER_ID,
+        ground_truth_use=list(GROUND_TRUTH_USE) + ([ORDERING_GROUND_TRUTH_USE] if spec.ordering or extra_ordering else []),
+        notes=notes, rule_results=rule_results, evidence_source=evidence_source(log))
 
 
 def chosen_routes(plan: PlanResult) -> list[str]:
