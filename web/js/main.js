@@ -56,6 +56,7 @@ const Icon = {
 function useStudio() {
   const [snap, setSnap] = useState(null);
   const [error, setError] = useState(null);
+  const [loadError, setLoadError] = useState(null);
   const [jobs, setJobs] = useState({});
   const timer = useRef(null);
   // Only the newest state request is applied: a slow response that arrives after a newer one
@@ -66,8 +67,8 @@ function useStudio() {
       const s = await getState();
       if (s === DROPPED) return;
       api.setGeneration(generationId(s));
-      setSnap(s); setError(null);
-    } catch (e) { setError(String(e.message || e)); }
+      setSnap(s); setLoadError(null);
+    } catch (e) { setLoadError(String(e.message || e)); }
   }, []);
   useEffect(() => {
     let conn = null, gone = false;
@@ -83,7 +84,9 @@ function useStudio() {
     const offStale = api.onStaleGeneration(() => { setJobs({}); refresh(); });
     return () => { gone = true; off(); offStale(); conn && conn.close(); };
   }, [refresh]);
-  return { snap, error, jobs, setJobs, refresh, setError };
+  // A failed state load is shown until a load succeeds; an action's error (for example a stale refusal)
+  // stays until the next action, so the refresh that a refusal triggers cannot wipe its explanation.
+  return { snap, error: error || loadError, jobs, setJobs, refresh, setError };
 }
 
 function App() {
@@ -129,6 +132,9 @@ function App() {
   const action = useCallback(async (key, fn) => {
     try {
       setError(null);
+      // Busy from the click, not from the server's reply: controls that depend on this action
+      // (for example everything that needs the demonstration being loaded) stay disabled meanwhile.
+      setBusy((b) => ({ ...b, [key]: { status: 'starting', progress: 0, message: 'Starting' } }));
       const res = await fn();
       if (res && res.id && res.status) {           // a background job
         setBusy((b) => ({ ...b, [key]: res }));
@@ -138,6 +144,7 @@ function App() {
         return done.result;
       }
       await refresh();
+      setBusy((b) => { const n = { ...b }; delete n[key]; return n; });
       return res;
     } catch (e) {
       setBusy((b) => { const n = { ...b }; delete n[key]; return n; });
@@ -179,6 +186,8 @@ function App() {
     setStageOverride, setEditHandler: (fn) => { editHandler.current = fn; }, editHandler,
     openChallenge: () => { setStep('challenge'); setPick(null); setTool(null); },
     challengeLive: !api.isStatic, refresh,
+    // The live session has no demonstration yet, or the page is loading one: nothing that needs it may run.
+    demoSettling: !api.isStatic && !!snap && (!!busy.demo || (!snap.demo && !autoloaded.current)),
   };
   const Panel = cur === 'overview' ? OverviewPanel : cur === 'challenge' ? ChallengePanel : cur === 'capture' ? CapturePanel : PANELS[cur];
   const hasStory = !!correctionStory(snap);

@@ -56,6 +56,11 @@ class FakeStudio:
         self.capture_reviews: list[dict] = []
         self.uploads = 0
         self.study_events: list[dict] = []
+        self.has_demo = True                # False: the session starts empty, as a fresh live session does
+        self.interpreted = True             # False: no specification until POST /api/interpret
+        self.demo_load_delay = 0.6
+        self.interpret_calls = 0
+        self.refused: list[str] = []        # paths refused as stale (409)
         self.lock = threading.Lock()
         rs = {r["id"]: r for r in self.base["rollouts"]}
         tags = lambda t: next(r for r in self.base["rollouts"] if t in r["tags"])  # noqa: E731
@@ -69,6 +74,13 @@ class FakeStudio:
         s.pop("static", None)
         s.pop("export_id", None)
         s["mode"] = "fixture"
+        if not self.has_demo:
+            s.update(demo=None, specs=[], rollouts=[], video_demo=None, evaluation=None, models=[])
+            s["generation"] = {"id": self.generation, "reason": "session_started", "demo": None}
+            s["capabilities"] = {**(s.get("capabilities") or {}), "voice": False, "video": False}
+            return s
+        if not self.interpreted:
+            s.update(specs=[], rollouts=[], evaluation=None, models=[])
         s["generation"] = {"id": self.generation, "reason": "demo_loaded",
                            "demo": {"demo_id": s["demo"]["demo_id"], "content_sha256": _h("demo", self.generation),
                                     "playback_id": f"demo.{self.generation}.{_h('demo', self.generation)[:8]}"}}
@@ -247,6 +259,7 @@ def make_handler(studio: FakeStudio):
         def _gen_ok(self):
             g = self.headers.get("X-Mirror-Generation")
             if g and g != studio.generation:
+                studio.refused.append(urllib.parse.urlparse(self.path).path)
                 self._json(409, {"error": "stale_generation", "detail": "generation changed", "current_generation": studio.generation})
                 return False
             return True
@@ -386,6 +399,16 @@ def make_handler(studio: FakeStudio):
                     return self._json(404, {"error": "not_found", "detail": "study mode is off"})
                 studio.study_events.append({"path": p, **body})
                 return self._json(200, {"ok": True})
+            if p == "demo/load":
+                def finish():
+                    time.sleep(studio.demo_load_delay)
+                    studio.has_demo, studio.generation = True, "g18f3aa03" + "0003"
+                threading.Thread(target=finish, daemon=True).start()
+                return self._json(200, studio.job("demo", {}, delay=studio.demo_load_delay + 0.1))
+            if p == "interpret":
+                studio.interpret_calls += 1
+                studio.interpreted = True
+                return self._json(200, studio.job("interpret", {}))
             if p == "_test/bump_generation":
                 studio.generation = "g18f3aa02" + "0002"
                 return self._json(200, {"generation": studio.generation})
