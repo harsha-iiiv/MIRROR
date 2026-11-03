@@ -5,6 +5,8 @@ import htm from 'htm';
 import * as api from './api.js';
 import { fmtT } from './util.js';
 
+import { provenanceTone } from './provenance.js';
+import { useDialog } from './a11y.js';
 const html = htm.bind(h);
 
 export const OBJ_COLORS = { cup: '#3d63ff', block: '#e07b39', marker: '#16a394', tray: '#8a8a93', wall: '#6b6b74' };
@@ -59,7 +61,7 @@ function drawOverlay(canvas, video, track, t) {
 }
 
 // Picture-in-picture video with the tracked masks, following the 3D playback clock.
-export function VideoPane({ vd, t }) {
+export function VideoPane({ vd, t, kind = '' }) {
   const views = Object.keys(vd.views || {});
   const [view, setView] = useState(views[0] || 'top');
   const [masks, setMasks] = useState(true);
@@ -95,7 +97,7 @@ export function VideoPane({ vd, t }) {
       ${err ? html`<div class="vpip-err">${err}</div>` : ''}
     </div>
     <figcaption>
-      <span class="vpip-title">${vd.fixture ? 'Fixture video' : 'Video'} · ${view} view</span>
+      <span class="vpip-title">${vd.fixture ? 'Fixture video' : kind === 'rendered_simulation' ? 'Rendered simulator video' : kind === 'camera' ? 'Camera video' : 'Video'} · ${view} view</span>
       ${views.length > 1 ? views.map((k) => html`<button class="iconbtn" aria-pressed=${k === view} onClick=${() => setView(k)}>${k}</button>`) : ''}
       <button class="iconbtn" aria-pressed=${masks} onClick=${() => setMasks(!masks)}>Masks</button>
       <button class="iconbtn" aria-pressed=${big} onClick=${() => setBig(!big)} aria-label=${big ? 'Smaller video' : 'Larger video'}>${big ? '−' : '+'}</button>
@@ -294,24 +296,23 @@ export function MicButton({ ctx, onTranscript, disabled }) {
 // ------------------------------------------------------------- models
 
 const SRC_TEXT = { live: 'live call', recorded: 'recorded response', fixture: 'fixture (no model)', 'offline rules': 'offline rules (no model)',
-  'offline rules (fallback)': 'offline rules (model unavailable)', unknown: 'unknown' };
+  'offline rules (fallback)': 'offline rules (model unavailable)', unknown: 'unknown',
+  fresh_model_call: 'fresh model call', offline_interpreter: 'offline interpreter (no model)', replayed_cassette: 'replayed response' };
 
 export function ModelsPanel({ ctx, onClose }) {
   const { snap } = ctx;
   const [budgets, setBudgets] = useState(null);
   useEffect(() => {
     if (!ctx.isStatic) api.getJSONApi('models').then((m) => setBudgets(m.budgets)).catch(() => {});
-    const k = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', k);
-    return () => window.removeEventListener('keydown', k);
   }, [snap.revision]);
+  const dref = useDialog(onClose);
   const rows = snap.models || [];
-  return html`<div class="about models" role="dialog" aria-label="Models used in this session">
+  return html`<div class="about models" role="dialog" aria-modal="false" aria-label="Models used in this session" ref=${dref} tabindex="-1">
     <div class="about-h"><b>Models in this session</b><button class="iconbtn" onClick=${onClose} aria-label="Close">✕</button></div>
     ${rows.length ? html`<table class="mtab"><thead><tr><th>Artifact</th><th>Model</th><th class="num">Latency</th><th>Source</th></tr></thead>
       <tbody>${rows.map((r) => html`<tr title=${r.role}><td><div>${r.artifact}</div><div class="faint">${r.role}</div></td>
         <td class="num">${r.model}</td><td class="num">${r.latency_s ? r.latency_s.toFixed(r.latency_s < 10 ? 2 : 1) + ' s' : '–'}${r.tokens ? html`<div class="faint">${r.tokens.toLocaleString()} tok</div>` : ''}</td>
-        <td><span class=${'src ' + String(r.source).split(' ')[0]}>${SRC_TEXT[r.source] || r.source}</span></td></tr>`)}</tbody></table>`
+        <td><span class=${'src ' + provenanceTone(String(r.provenance || r.source).split(' ')[0])}>${SRC_TEXT[r.provenance || r.source] || r.provenance || r.source}</span></td></tr>`)}</tbody></table>`
       : html`<p class="muted">Nothing produced by a model yet.</p>`}
     <p class="faint" style="font-size:11px;margin-top:8px">Latency of a live call is measured around the step; for a recorded response it is the latency measured when it was recorded. Recorded responses replay exactly what the model returned${ctx.isStatic ? '; this page makes no model calls' : ''}. No model moves the robot or grades a run.</p>
     ${budgets ? html`<h3>Budgets on this server</h3><ul class="plain" style="font-size:12px">${Object.entries(budgets).filter(([, b]) => b).map(([k, b]) => {

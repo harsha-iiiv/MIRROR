@@ -5,7 +5,13 @@ import htm from 'htm';
 import * as api from './api.js';
 import { VideoDemoCard, VideoObservations, MicButton } from './media.js';
 import { MiniMap } from './minimap.js';
-import { fmtT, fmtNum, statusLabel, constraintText, selectorText, provText, sceneLabel, latest, cupOutcome, cap, isAux, isBlockedScene } from './util.js';
+import { fmtT, fmtNum, statusLabel, constraintText, selectorText, provText, sceneLabel, latest, cupOutcome, cap, isAux, isBlockedScene, humanRoute } from './util.js';
+export { humanRoute };
+import { rolloutCacheKey } from './identity.js';
+import { useDialog } from './a11y.js';
+import { PlanOutcome, RuleResults } from './bits.js';
+export { RuleResults };
+import { demoSource, videoMediaKind, reviewItems } from './provenance.js';
 
 const html = htm.bind(h);
 const TOL = 15;
@@ -81,6 +87,19 @@ function Head({ n, kicker, title, lede }) {
   return html`<div><p class="kicker">${n} · ${kicker}</p><h2>${title}</h2>${lede ? html`<p class="lede">${lede}</p>` : ''}</div>`;
 }
 
+// Perception review items: `abstain` blocks a proposal, `review` sits next to it.
+export function ReviewNotice({ snap }) {
+  const items = reviewItems(snap);
+  if (!items.length) return null;
+  const abstain = items.filter((r) => r.severity === 'abstain');
+  const rest = items.filter((r) => r.severity !== 'abstain');
+  return html`<div>
+    ${abstain.length ? html`<div class="callout bad" role="alert" style="margin:8px 0"><b>Needs your review before MIRROR proposes rules.</b>
+      <ul class="plain">${abstain.map((r) => html`<li>${r.message}${r.object_id ? html` <span class="faint">(${r.object_id})</span>` : ''}</li>`)}</ul></div>` : ''}
+    ${rest.length ? html`<ul class="plain muted" style="font-size:12px">${rest.map((r) => html`<li>${r.message}</li>`)}</ul>` : ''}
+  </div>`;
+}
+
 function StaticNote({ ctx }) {
   return ctx.isStatic ? html`<p class="faint" style="font-size:12px">Recorded session: actions replay what was recorded in the live studio.</p>` : '';
 }
@@ -109,6 +128,8 @@ export function ReportView({ r, compact = false }) {
       <b>${v.constraint_id}</b> violated by ${v.object_id}: peak ${fmtNum(v.peak)}${v.constraint_id.includes('clear') ? ' m' : '°'},
       ${fmtT(v.t_start)}–${fmtT(v.t_end)}${v.detail ? html`<div class="muted">${v.detail}</div>` : ''}</div>`)}
     ${(rep.forbidden_contacts || []).length ? html`<div class="callout bad" style="margin-top:8px">${rep.forbidden_contacts.length} forbidden contact event(s).</div>` : ''}
+    ${rep.status === 'unverified' ? html`<div class="callout" style="margin-top:8px"><b>Not verified.</b> Every rule the checker could decide held, but at least one enforced rule could not be settled from the evidence, so this is not counted as success.</div>` : ''}
+    <${RuleResults} rr=${rep.rule_results} />
     ${!compact && plan ? html`<${RoutesView} plan=${plan} />` : ''}
     ${!compact ? html`<dl class="kv" style="margin-top:10px">
       <dt>Routes</dt><dd>${routesText(r) || '–'}</dd>
@@ -119,37 +140,6 @@ export function ReportView({ r, compact = false }) {
       ${(rep.notes || []).length ? html`<dt>Notes</dt><dd>${rep.notes.join('; ')}</dd>` : ''}
     </dl>` : ''}
   </div>`;
-}
-
-// Plain-language route names; the raw planner id stays available as a tooltip.
-const OBJ_PREFIX = /^((?:cup|block|marker)_\d+):\s*/;
-export function humanRoute(raw, short = false) {
-  if (!raw) return '';
-  let s = String(raw).trim();
-  const m0 = s.match(/^route=([^;]+)/);
-  if (m0) s = m0[1];
-  let obj = '';
-  const mo = s.match(OBJ_PREFIX);
-  if (mo) { obj = mo[1].replace(/_\d+$/, ''); s = s.slice(mo[0].length); }
-  let transit = false;
-  if (s.startsWith('transit:')) { transit = true; s = s.slice(8); }
-  const p = s.split(':');
-  const last = p[p.length - 1];
-  const mm = last.match(/^(pitched|rolled|tilted)([+-]?\d+(?:\.\d+)?)$/);
-  const paths = short
-    ? { direct: 'straight', around: 'around', through_slot: 'slot', over: 'over', rrt: 'search', detour: 'detour' }
-    : { direct: 'straight across', around: 'around the wall', through_slot: 'through the slot', over: 'over the wall',
-        rrt: 'free-space search', detour: 'detour' };
-  const path = paths[p[0]] || s;
-  let mode = '';
-  if (mm) {
-    const a = Math.round(Math.abs(parseFloat(mm[2])));
-    mode = a >= 80 ? (short ? 'on side' : `on its side (${a}°)`) : (short ? `${a}°` : `tilted ${a}°`);
-  } else if (last === 'upright' || p[0] === 'around' || p[0] === 'direct' || p[0] === 'over') {
-    mode = 'upright';
-  }
-  const txt = path + (mode && !transit ? ', ' + mode : '');
-  return (obj ? obj + ': ' : '') + (transit ? (short ? 'empty, ' : 'empty gripper, ') + path : txt);
 }
 
 export function Route({ raw, short = false }) {
@@ -182,16 +172,10 @@ function routesText(r) {
 
 function NoPlan({ rep, plan }) {
   const inf = plan?.infeasibility;
-  const proven = !!(inf && (inf.proven === true || inf.certificate));
   const reason = rep.plan_reason || plan?.reason || '';
-  const head = reason.split(/\s\[|;\s/)[0];
-  return html`<div class="callout" style="margin-bottom:8px">
-    <b>${proven ? 'No valid plan exists (proven).' : 'The planner found no valid plan.'}</b>
-    ${inf?.statement ? html`<div style="margin-top:4px">${inf.statement}</div>` : html`<div style="margin-top:4px">${head}</div>`}
-    ${!proven ? html`<div class="muted" style="margin-top:4px">This is not a proof that the layout is impossible.</div>` : ''}
-    ${inf?.assumptions?.length ? html`<div class="muted" style="margin-top:6px">Assumes: ${inf.assumptions.join('; ')}.</div>` : ''}
-    ${inf?.not_covered?.length ? html`<div class="muted" style="margin-top:2px">Not covered: ${inf.not_covered.join('; ')}.</div>` : ''}
-    <div class="muted" style="margin-top:6px">The robot did not move: nothing was executed rather than breaking the rule.</div>
+  return html`<div style="margin-bottom:8px">
+    <${PlanOutcome} plan=${plan ? { status: plan.status || 'no_plan', reason, infeasibility: inf } : null} report=${rep} outcome=${rep.planning_outcome || plan?.outcome || null} />
+    <div class="muted" style="margin:6px 0 0">The robot did not move: nothing was executed rather than breaking the rule.</div>
     <details style="margin-top:6px"><summary class="muted" style="cursor:pointer">Planner detail</summary>
       <div style="margin-top:4px;font-size:12px">${reason}</div>
       ${inf ? html`<pre class="num" style="white-space:pre-wrap;font-size:11px;margin:6px 0 0">${JSON.stringify(inf.quantities || inf, null, 1)}</pre>` : ''}
@@ -294,7 +278,7 @@ function TeleopCard({ ctx, onDone }) {
     ${err ? html`<div class="err">${err}</div>` : ''}
     <div class="row" style="margin-top:10px">
       <button class="btn primary" onClick=${async () => { ctx.viewer.current?.endLive(); await ctx.action('teleop', () => api.post('teleop/finish')); onDone(); }}>Use as the demonstration</button>
-      <button class="btn ghost" onClick=${async () => { ctx.viewer.current?.endLive(); await api.post('teleop/cancel'); onDone(); const pl = await api.getRollout('demo'); ctx.viewer.current?.loadRollout(pl, { sceneState: ctx.snap.demo?.scene }); }}>Cancel</button>
+      <button class="btn ghost" onClick=${async () => { ctx.viewer.current?.endLive(); await api.post('teleop/cancel'); onDone(); const pl = await api.getRollout('demo', rolloutCacheKey(ctx.snap, 'demo')); ctx.viewer.current?.loadRollout(pl, { sceneState: ctx.snap.demo?.scene }); }}>Cancel</button>
     </div></div>`;
 }
 
@@ -305,15 +289,15 @@ function WatchPanel({ ctx }) {
   const [teleop, setTeleop] = useState(false);
   const d = snap.demo;
   const vd = snap.video_demo && snap.demo && snap.video_demo.trace_source === snap.demo.source ? snap.video_demo : null;
-  const sources = { teleop_scripted: 'Scripted teleoperation in simulation', teleop_keyboard: 'Keyboard teleoperation in simulation',
-    replay: 'Replayed trace', video_grounded: 'Video, reconstructed onto simulator objects' };
+
   return html`
     <div class="sec">
       <${Head} n="1" kicker="Watch me" title="The demonstration"
-        lede=${vd ? 'A demonstration video: the objects are tracked in the pixels, reconstructed on the table, and replayed in 3D beside the video.'
+        lede=${vd ? (videoMediaKind(snap) === 'rendered_simulation' ? 'A demonstration video rendered from the simulator: the objects are tracked in its pixels, reconstructed on the table, and replayed in 3D beside the video.' : 'A demonstration video: the objects are tracked in its pixels, reconstructed on the table, and replayed in 3D beside the video.')
           : 'An operator packs the cup, the block and the marker into the tray, carrying everything around the wall.'} />
       ${d ? html`
-        <dl class="kv"><dt>Input</dt><dd>${sources[d.source] || d.source}</dd>
+        <${ReviewNotice} snap=${snap} />
+        <dl class="kv"><dt>Input</dt><dd>${demoSource(snap).short}</dd>
           <dt>Duration</dt><dd class="num">${fmtT(d.duration)}</dd>
           <dt>Layout</dt><dd>${sceneLabel(d.scene_id)}</dd></dl>
         ${vd ? html`<p class="faint" style="font-size:12px;margin-top:8px">The 3D replay is reconstructed from the video${vd.views.side ? ' (top view for positions, side view for tilt)' : ' (top view)'}: object poses come from the tracked masks, not from the simulator.${vd.fixture ? ' Fixture data.' : ''}</p>
@@ -386,6 +370,7 @@ function InterpretPanel({ ctx }) {
   return html`
     <div class="sec">
       <${Head} n="2" kicker="Interpret" title="What MIRROR thinks matters" lede=${spec.summary} />
+      <${ReviewNotice} snap=${snap} />
       <div class="row">
         ${snap.specs.length > 1 ? html`<div class="seg" role="group" aria-label="Specification version">${snap.specs.map((sp) => html`
           <button class="c" aria-pressed=${sp.version === spec.version} onClick=${() => setVer(sp.version)}>v${sp.version}</button>`)}</div>`
@@ -854,7 +839,7 @@ function EvidencePanel({ ctx }) {
               <div class="m"><${Chip} status=${rep?.status}>${statusLabel(rep)}<//>
                 ${cup ? html`<span class="num muted">${fmtNum(cup.max_transport_tilt_deg, 0)}° · ${cup.beads_in_container}/${cup.beads_total}</span>` : ''}
                 ${broke ? html`<span class="bad-t">breaks v${vb}</span>` : ''}
-                ${cell?.trial?.feasibility === 'proven_infeasible' ? html`<span class="ok-t">proven impossible</span>` : ''}
+                ${cell?.trial?.feasibility === 'proven_infeasible' ? html`<span class="ok-t" title="under the stated assumptions">proven infeasible</span>` : ''}
                 ${carriedRoutes(rep).length ? html`<span class="ev-route" title=${carriedRoutes(rep).join('\n')}>${[...new Set(carriedRoutes(rep).map((x) => humanRoute(x, true)))].join(' · ')}</span>` : ''}
 </div>
             </button>`;
@@ -912,9 +897,10 @@ function LedgerNote({ raw }) {
 function BlockedProofs({ raw }) {
   const strat = raw.strata?.blocked;
   const proven = strat ? strat.trials.filter((t) => t.b.feasibility === 'proven_infeasible').length : null;
-  return html`<p class="kicker">Blocked layouts: stop, with proof</p>
-    ${strat ? html`<p><span class="num">${proven}/${strat.trials.length}</span> blocked layouts: the corrected specification found no plan,
-      and an independent argument proves no motion can keep the cup upright there. The original specification still plans (it may tilt).</p>` : ''}
+  return html`<p class="kicker">Blocked layouts: it stops instead of breaking the rule</p>
+    ${strat ? html`<p><span class="num">${proven}/${strat.trials.length}</span> blocked layouts were proven infeasible under these stated assumptions:
+      the corrected specification found no plan, and an independent argument shows no motion of the modelled gripper can keep the cup upright there. The original specification still plans (it may tilt).</p>
+      <p class="faint">A statement about the simulated task model under its assumptions, not a guarantee about physical safety.</p>` : ''}
     ${raw.blocked_reference.map((b) => html`<div class=${'callout' + (b.failure_class === 'proven_infeasible' ? ' ok' : '')} style="margin-top:6px">
       <b>${b.scene_id} · ${b.condition}:</b> ${statusLabel({ status: b.status, plan_status: b.status === 'planning_failed' ? 'no_plan' : '' })}
       ${b.independent?.verdict === 'proven_infeasible' ? html`<div style="margin-top:4px">${b.independent.detail?.argument || ''}</div>
@@ -1008,7 +994,7 @@ function StoryResult({ raw }) {
     if (role === 'blocked') {
       const n = (rep.trials || []).length;
       const k = (rep.trials || []).filter((t) => t.b?.feasibility === 'proven_infeasible').length;
-      if (n) parts.push(html`<span>blocked layouts: <b class="num">${k}/${n}</b> stopped with proof</span>`);
+      if (n) parts.push(html`<span>blocked layouts: <b class="num">${k}/${n}</b> proven infeasible under stated assumptions</span>`);
       continue;
     }
     const m = rep.metrics || {};
@@ -1026,7 +1012,7 @@ export function StoryBar({ ctx }) {
   const order = STEPS.map((x) => x.key);
   const ix = order.indexOf(ctx.step);
   const st = ctx.step === 'watch' && ctx.snap.video_demo && ctx.snap.demo?.source === 'video_grounded'
-    ? { title: 'Watch me', text: 'A demonstration video: SAM 3.1 tracks the objects, the trace is reconstructed on the table, and Muse Spark describes what it sees.' }
+    ? { title: 'Watch me', text: (videoMediaKind(ctx.snap) === 'rendered_simulation' ? 'A demonstration video rendered from the simulator' : 'A demonstration video') + ': SAM 3.1 tracks the objects, the trace is reconstructed on the table, and Muse Spark describes what it sees.' }
     : STORY[ctx.step];
   const act = storyAction(ctx);
   const busy = act?.busy && ctx.busy[act.busy];
@@ -1052,20 +1038,15 @@ export function AboutPanel({ ctx, onClose }) {
   const interp = spec?.interpreter || 'not yet interpreted';
   const isOffline = /offline|rules/.test(interp);
   const ev = snap.evaluation;
-  const sources = { teleop_scripted: 'a scripted teleoperation of the simulated gripper', teleop_keyboard: 'keyboard teleoperation of the simulated gripper',
-    replay: 'a replayed trace', video_grounded: 'human video grounded to simulator objects' };
-  useEffect(() => {
-    const k = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', k);
-    return () => window.removeEventListener('keydown', k);
-  }, []);
-  return html`<div class="about" role="dialog" aria-label="What you are looking at">
+
+  const dref = useDialog(onClose);
+  return html`<div class="about" role="dialog" aria-modal="false" aria-label="What you are looking at" ref=${dref} tabindex="-1">
     <div class="about-h"><b>What you are looking at</b><button class="iconbtn" onClick=${onClose} aria-label="Close">✕</button></div>
     <ul>
       <li><b>Simulation only.</b> Everything runs in MuJoCo. Nothing here was executed on a physical robot or shows simulation-to-reality transfer.</li>
       <li><b>The robot is a free-flying gripper.</b> Six position-controlled axes and two fingers; no arm is modelled. Objects move only through actuators and contact physics.</li>
       <li><b>Privileged state.</b> Planning and checking read simulator state (poses, contacts, bead positions). It is not visual perception.</li>
-      <li><b>The demonstration</b> is ${sources[snap.demo?.source] || 'a recorded trace'}, not a video of a person.</li>
+      <li><b>The demonstration.</b> ${demoSource(snap).long}</li>
       <li><b>The specification</b> was produced by <span class="num">${interp}</span>${isOffline ? ', the rule-based interpreter that needs no model' : ''}${spec?.history?.find((h) => h.model)?.model ? `; corrections compiled by ${spec.history.find((h) => h.model).model}` : ''}. ${snap.llm_mode === 'replay' ? ' Model responses are replayed from recordings made with that model; nothing calls a model while you browse.' : ''}${(snap.fallbacks || []).length ? ` These steps used the offline interpreter instead: ${snap.fallbacks.map((f) => f.step).join(', ')}.` : ''}${snap.llm?.mode === 'live' ? ` Live model requests (${snap.llm.model}) are limited to ${snap.llm.calls_per_session} per visitor and ${snap.llm.calls_per_hour} per hour for the server${snap.llm.calls_remaining_session != null ? `; ${snap.llm.calls_remaining_session} left in this session` : ''}. Past that, or if the model fails, the offline interpreter is used and the step says so.` : ''} Model output is validated against a schema before planning and never judges success.</li>
       <li><b>Success is measured</b> by an independent checker from the physics log at every step: placement, tilt per phase, bead retention, contacts.</li>
       <li><b>Evidence:</b> ${ev ? ({ final: 'the pre-registered evaluation, loaded unchanged from the evaluation output.',
