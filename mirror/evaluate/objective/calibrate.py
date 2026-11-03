@@ -222,3 +222,26 @@ def run(out_dir: Path, workers: int = 1) -> dict:
     (out_dir / "decision_cases.json").write_text(json.dumps(dec["cases"], indent=1))
     (out_dir / "calibration.json").write_text(json.dumps(res, indent=1))
     return res
+
+
+def posthoc(samples: list[dict]) -> dict:
+    """POST HOC diagnostics, added after the calibration output was seen; they
+    do not change the objective of record. Model A's largest residuals were
+    the marker's routes (slow, long place descents), so: (1) model A with one
+    intercept per object (candidates compete only within an object), and
+    (2) model A on the cup's transports alone."""
+    tr = [r for r in samples if r["kind"] == "transport"]
+    objs = sorted({r["object_id"] for r in tr})
+    X = np.column_stack([[float(r["object_id"] == o) for r in tr] for o in objs]
+                        + [[r["L"] for r in tr], [r["R"] for r in tr]])
+    y = np.array([r["T"] for r in tr])
+    beta = _ols(X, y)
+    res = y - X @ beta
+    a, b = beta[len(objs)], beta[len(objs) + 1]
+    fe = dict(intercepts_s={o: float(v) for o, v in zip(objs, beta[:len(objs)])}, a_s_per_m=float(a),
+              b_s_per_rad=float(b), rotation_price_m_per_rad=float(b / a),
+              r2=1 - float((res ** 2).sum()) / float(((y - y.mean()) ** 2).sum()),
+              rmse_s=float(np.sqrt((res ** 2).mean())), max_abs_residual_s=float(np.abs(res).max()))
+    cup = fit([r for r in tr if r["object_id"] == CUP], "A")
+    cup.pop("largest_residuals", None)
+    return dict(label="post hoc; not the objective of record", object_fixed_effects=fe, cup_only_model_A=cup)

@@ -26,7 +26,9 @@ def main(argv=None) -> int:
     sub.add_parser("repro")
     c = sub.add_parser("calibrate")
     c.add_argument("--workers", type=int, default=1)
-    sub.add_parser("freeze")
+    fz = sub.add_parser("freeze")
+    fz.add_argument("--audit-root", action="append", default=[],
+                    help="extra folders searched for ledgers/outputs naming this registration's seeds")
     r = sub.add_parser("run")
     r.add_argument("--workers", type=int, default=1)
     r.add_argument("--attempt", required=True, help="attempt label, e.g. attempt_1")
@@ -45,7 +47,7 @@ def main(argv=None) -> int:
         print(json.dumps(res["objective_of_record"], indent=1))
     elif args.cmd == "freeze":
         from mirror.evaluate.objective import design
-        m = design.freeze(OUT / "freeze.json")
+        m = design.freeze(OUT / "freeze.json", extra_audit_roots=args.audit_root)
         print(json.dumps({k: m[k] for k in ("created_at", "code_sha256", "calibrated_rotation_penalty")}, indent=1))
     elif args.cmd == "run":
         from mirror.evaluate.objective import run as runner
