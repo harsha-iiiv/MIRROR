@@ -38,6 +38,7 @@ REGISTERED = dict(report="results/eval_objective_v1/attempt_1/report.md", layout
                   new_layouts=120, quote_blocked="spills 38 beads per condition",
                   quote_never="0/80 primary and 0/40 shortcut")
 STUDIO_URL = "mirror-robot-studio.netlify.app"
+REPO_URL = "github.com/harsha-iiiv/MIRROR"
 
 SIDE_CAM = dict(lookat="slot", distance=0.64, azimuth=-90.0, elevation=-14.0)   # along the wall plane
 
@@ -124,7 +125,7 @@ def check_registered():
 class Vertical:
     """1080x1920. Text only between y 290 and 1240 (phone safe zone)."""
     W, H = 1080, 1920
-    SIM = (0, 590, 1080, 1080)        # x, y, w, h
+    SIM = (0, 680, 1080, 1000)        # x, y, w, h
     HEAD_Y, SUB_Y = 300, 500
     kind = "vertical"
 
@@ -270,17 +271,21 @@ def social_shots(ctx):
     recs = []
     hook_src = "ref_blocked__original__p0.2445"
     t_spill = spill_time(ctx.src(hook_src))
+    W = 960
+
+    def T(d, y, text, size, weight="medium", fill=INK, a=1.0, x=60):
+        return text_block(d, (x, y), text, font(weight, size), fill=A(fill, a), max_w=W - (x - 60))
 
     # S1 hook --------------------------------------------------------------
     def d1(d, info):
         L.chips(d, [SIM_LABEL + " · replay 0.75×", "reference blocked layout · rules as first understood"])
-        L.head(d, "It finished the job.")
+        T(d, 300, "It finished the job.", 76, "bold")
         a = fade(info.i, int(round((t_spill - 6.0) / 0.75 * FPS)) - 3)
         if a:
-            text_block(d, (60, 390), "It also spilled half the beads.", font("bold", 72), fill=A(RED, a), max_w=960)
-        bt, col = beads_text(info)
+            T(d, 395, "It also spilled half the beads.", 76, "bold", RED, a)
+        bt, col_ = beads_text(info)
         if bt:
-            text_block(d, (60, 520), bt, font("medium", 40), fill=col)
+            T(d, 596, bt, 46, fill=col_)
     shot = SimShot(ctx.src(hook_src), t_start=6.0, duration=4.5, speed=0.75,
                    move=Move(dict(SIDE_CAM, elevation=-12.0), dict(SIDE_CAM, elevation=-17.0), 0.0, 4.5))
     recs.append(run_sim(ctx, L, cut, "s1_hook", shot, d1, dict(src=src_rec(ctx, hook_src, t=[6.0, 9.375], speed=0.75))))
@@ -290,20 +295,21 @@ def social_shots(ctx):
     sentence = prov["correction_text"]
 
     def d2(d, i, t):
-        text_block(d, (60, 300), "ONE SENTENCE", font("medium", 30), fill=MUTED)
-        text_block(d, (60, 350), "“" + sentence + "”", font("medium", 54), fill=INK, max_w=960, line_gap=1.2)
+        T(d, 300, "ONE SENTENCE", 36, fill=MUTED)
+        y = T(d, 350, "“" + sentence + "”", 64)
         a = fade(i, int(1.6 * FPS))
         if a:
-            text_block(d, (60, 680), "BECOMES ONE SCOPED RULE", font("medium", 30), fill=A(MUTED, a))
-            d.rounded_rectangle((60, 730, 1020, 900), radius=18, outline=A(INK, a), width=3)
-            text_block(d, (90, 752), "cup · while carried", font("bold", 50), fill=A(INK, a))
-            text_block(d, (90, 820), "stay within 15° of upright", font("medium", 42), fill=A(INK, a))
+            y = T(d, y + 40, "BECOMES ONE SCOPED RULE", 36, fill=MUTED, a=a)
+            d.rounded_rectangle((60, y + 10, 1020, y + 200), radius=20, outline=A(INK, a), width=4)
+            T(d, y + 34, "cup · while carried", 58, "bold", a=a, x=96)
+            T(d, y + 110, "stay within 15° of upright", 50, a=a, x=96)
+            y += 230
         a2 = fade(i, int(2.8 * FPS))
         if a2:
-            text_block(d, (60, 930), "Block and marker: unchanged.", font("medium", 42), fill=A(MUTED, a2))
-            text_block(d, (60, 1030), "Typed. Compiled by Muse Spark (recorded response, replayed); "
-                       "the offline rules produce the same change.", font("regular", 36), fill=A(MUTED, a2), max_w=960)
-    recs.append(run_card(ctx, L, cut, "s2_correction", 5.5, d2,
+            y2 = T(d, y, "Block and marker: unchanged.", 50, a=a2)
+            T(d, y2 + 16, "Typed. Compiled by Muse Spark (recorded response, replayed); the offline rules "
+                          "make the same change.", 38, "regular", MUTED, a2)
+    recs.append(run_card(ctx, L, cut, "s2_correction", 6.0, d2,
                          dict(src=dict(source="summary.json spec_provenance + spec_diff", correction=sentence,
                                        model=prov.get("requested_model"), from_cassette=True,
                                        diff=[x["id"] for x in ctx.summary["spec_diff"]]))))
@@ -311,88 +317,93 @@ def social_shots(ctx):
     # S3 check 1: re-judge ------------------------------------------------
     rc = ctx.rechecks["ref_blocked"]
     up = next(r for r in rc["rules"] if r["rule_id"] == "c_upright_transport_cup")
-    secs = re.search(r"for ([0-9.]+) s", up["detail"]).group(1)
+    secs = float(re.search(r"for ([0-9.]+) s", up["detail"]).group(1))
 
     def d3(d, info):
-        L.chips(d, [SIM_LABEL + " · same run as before", "re-judged under the corrected rule"])
-        L.head(d, "Check 1. The old run, re-judged.", size=64)
+        L.chips(d, [SIM_LABEL + " · the same run", "re-judged under the corrected rule"])
+        T(d, 300, "Check 1. The old run, re-judged.", 66, "bold")
         a = fade(info.i, int(3.6 * FPS))
         if a:
-            text_block(d, (60, 455), "Upright while carried: VIOLATED", font("bold", 46), fill=A(RED, a))
-            text_block(d, (60, 515), f"tilted past 15° for {float(secs):.1f} s, read from the recorded physics log",
-                       font("regular", 36), fill=A(MUTED, a), max_w=960)
-    shot = SimShot(ctx.src(hook_src), t_start=5.6, duration=6.0, speed=1.0, freeze_at=9.2,
-                   move=Move(dict(SIDE_CAM)))
+            T(d, 470, "Upright while carried: VIOLATED", 50, "bold", RED, a)
+            T(d, 540, f"Tilted past 15° for {secs:.1f} s. Read from the recorded physics log; nothing re-ran.",
+              40, "regular", INK, a)
+    shot = SimShot(ctx.src(hook_src), t_start=5.6, duration=6.0, speed=1.0, freeze_at=9.2, move=Move(dict(SIDE_CAM)))
     recs.append(run_sim(ctx, L, cut, "s3_rejudge", shot, d3,
                         dict(src=src_rec(ctx, hook_src, t=[5.6, 9.2], speed=1.0, freeze=9.2,
                                          recheck=dict(status=rc["status"], rule=up["rule_id"], detail=up["detail"])))))
 
-    # S4 check 2: new layouts --------------------------------------------
-    seeds = [("mixed", 6200), ("shortcut", 6300)]
-    names = [f"dev_{f}_{s}__corrected__p{CAL}" for f, s in seeds]
-    tiles = [(0, 590, 1080, 538), (0, 1132, 1080, 538)]
-    ov = dict(lookat=(0.0, -0.02, 0.06), distance=1.05, azimuth=-58.0, elevation=-34.0)
-    shots = [SimShot(ctx.src(n), t_start=0.0, duration=6.5, speed=6.0, move=Move(dict(ov)), trail_objects=["cup_0"])
-             for n in names]
+    # S4 check 2: a second sentence on a new layout -----------------------
+    sec = ctx.summary["second"]
+    lays = sec["layouts"]
+    n = len(lays)
+    viol = sum(l["old_rejudged"]["status"] == "constraint_violated" for l in lays)
+    ok = sum(l["new_status"] == "success" and l["new_order"].index("marker_0") < l["new_order"].index("cup_0")
+             for l in lays)
+    old_n, new_n = f"dev_mixed_6200__corrected__p{CAL}__second_old", f"dev_mixed_6200__second__p{CAL}"
+    tiles = [(0, 680, 1080, 498), (0, 1182, 1080, 498)]
+    ov = dict(lookat=(0.02, -0.02, 0.06), distance=1.02, azimuth=-58.0, elevation=-36.0)
+    shots = [SimShot(ctx.src(nm), t_start=0.0, duration=7.5, speed=6.0, move=Move(dict(ov))) for nm in (old_n, new_n)]
 
     def d4(d, infos):
-        L.head(d, "Check 2. New layouts, same rule.", size=64)
-        text_block(d, (60, 455), "Planned and run on new development layouts:", font("medium", 38), fill=INK, max_w=960)
-        text_block(d, (60, 505), "cup upright, all 8 beads kept.", font("medium", 38), fill=GREEN, max_w=960)
-        for (f, s), t, inf in zip(seeds, tiles, infos):
-            chip(d, (t[0] + 20, t[1] + 16), f"dev layout {s}", font("medium", 32))
-            if inf.beads:
-                k, n = inf.beads
-                chip(d, (t[0] + 820, t[1] + 16), f"beads {k}/{n}", font("medium", 32), bg=RED if k < n else CHIP)
-        chip(d, (20, 650), SIM_LABEL + " · 6× speed", font("medium", 30))
-    recs.append(run_grid(ctx, L, cut, "s4_new_layouts", shots, tiles, d4,
-                         dict(src=[src_rec(ctx, n, t=[0, 39], speed=6.0) for n in names]), 6.5))
+        T(d, 300, "Check 2. A second sentence.", 66, "bold")
+        T(d, 395, "“" + sec["text"] + "”", 50)
+        T(d, 470, f"The earlier run, re-judged: violated. New plan puts the marker first: {ok}/{n} new layouts.",
+          40, "regular")
+        for inf, (_, ty, _, _), lab in zip(infos, tiles, ("before", "after")):
+            chip(d, (20, ty + 16), f"{lab}: {phase_words(inf.phase)}", font("medium", 34), bg=RED if lab == "before" else CHIP)
+        chip(d, (20, 680 + 80), SIM_LABEL + " · dev layout 6200 · 6× speed", font("medium", 30))
+    recs.append(run_grid(ctx, L, cut, "s4_second_sentence", shots, tiles, d4,
+                         dict(src=[src_rec(ctx, old_n, t=[0, 45], speed=6.0, spec="v3 (after the first correction)"),
+                                   src_rec(ctx, new_n, t=[0, 45], speed=6.0, spec=f"v{sec['version']} (offline rule interpreter)"),
+                                   dict(source="summary.json second", text=sec["text"], old_rejudged_violated=viol,
+                                        new_marker_first_success=ok, n=n,
+                                        seeds=[l["seed"] for l in lays])]), 7.5))
 
     # S5 check 3: blocked refusal ----------------------------------------
     bsrc = "dev_blocked_6400__original__p0.2445"
     bref = ctx.run("dev_blocked_6400__corrected__p0.2445")
     need, slot = certificate_numbers(bref["planning_outcome"]["detail"])
     lost = 8 - ctx.run(bsrc)["beads"][0][1]
+    ts5 = spill_time(ctx.src(bsrc))
 
     def d5(d, info):
         L.chips(d, [SIM_LABEL, "development blocked layout 6400 · the slot is the only way through"])
-        L.head(d, "Check 3. No upright route?", size=64)
-        if info.t_out < 3.0:
-            text_block(d, (60, 455), f"Rules as first understood: completes, loses {lost} of 8 beads.",
-                       font("medium", 38), fill=RED, max_w=960)
+        T(d, 300, "Check 3. No upright route?", 66, "bold")
         a = fade(info.i, int(3.0 * FPS))
+        if info.t_out < 3.0:
+            T(d, 400, f"Rules as first understood: it completes and loses {lost} of 8 beads.", 42, fill=RED)
+        else:
+            T(d, 400, "Corrected rule: it plans nothing.", 42, a=a)
         if a:
-            d.rectangle((0, 590, 1080, 1250), fill=(22, 22, 26, int(205 * a)))
-            text_block(d, (60, 455), "Corrected rule: it plans nothing.", font("medium", 38), fill=A(INK, a), max_w=960)
-            text_block(d, (60, 660), "Refused, with a proof", font("bold", 64), fill=A((255, 255, 255), a), max_w=960)
-            text_block(d, (60, 760), "Proven infeasible under these stated assumptions:", font("medium", 36),
-                       fill=A((235, 235, 235), a), max_w=960)
-            text_block(d, (60, 830), f"an upright cup in the gripper needs {need * 100:.1f} cm of height; "
-                       f"the only opening is {slot * 100:.1f} cm.", font("regular", 36), fill=A((235, 235, 235), a),
-                       max_w=960)
-            text_block(d, (60, 1000), "A statement about the simulated task model, not a physical-safety guarantee.",
-                       font("regular", 32), fill=A((190, 190, 196), a), max_w=960)
-    ts5 = spill_time(ctx.src(bsrc))
-    shot = SimShot(ctx.src(bsrc), t_start=ts5 - 1.5, duration=6.5, speed=0.9, freeze_at=ts5 + 1.2,
-                   move=Move(dict(SIDE_CAM)))
+            d.rectangle((0, 680, 1080, 1250), fill=(22, 22, 26, int(215 * a)))
+            wt = (255, 255, 255)
+            text_block(d, (60, 720), "Refused, with a proof", font("bold", 66), fill=A(wt, a), max_w=W)
+            y = text_block(d, (60, 815), "Proven infeasible under these stated assumptions:", font("medium", 42),
+                           fill=A((235, 235, 235), a), max_w=W)
+            y = text_block(d, (60, y + 10), f"an upright cup in the gripper needs {need * 100:.1f} cm of height; "
+                           f"the only opening is {slot * 100:.1f} cm.", font("regular", 42),
+                           fill=A((235, 235, 235), a), max_w=W)
+            text_block(d, (60, y + 20), "About the simulated task model, not a physical-safety guarantee.",
+                       font("regular", 36), fill=A((200, 200, 206), a), max_w=W)
+    shot = SimShot(ctx.src(bsrc), t_start=ts5 - 1.5, duration=6.5, speed=0.9, freeze_at=ts5 + 1.2, move=Move(dict(SIDE_CAM)))
     recs.append(run_sim(ctx, L, cut, "s5_refusal", shot, d5,
-                        dict(src=[src_rec(ctx, bsrc, t=[round(ts5 - 1.5, 2), round(ts5 + 1.2, 2)], speed=0.9, first_bead_lost=ts5),
+                        dict(src=[src_rec(ctx, bsrc, t=[round(ts5 - 1.5, 2), round(ts5 + 1.2, 2)], speed=0.9,
+                                          first_bead_lost=ts5),
                                   dict(source="summary.json run dev_blocked_6400__corrected__p0.2445",
                                        planning_outcome=bref["planning_outcome"]["kind"],
                                        headline=bref["planning_outcome"]["headline"])])))
 
     # S6 end ---------------------------------------------------------------
     def d6(d, i, t):
-        text_block(d, (60, 420), "Correct the rule,", font("bold", 88), fill=INK, max_w=960)
-        text_block(d, (60, 525), "not every route.", font("bold", 88), fill=INK, max_w=960)
+        T(d, 420, "Correct the rule,", 92, "bold")
+        T(d, 525, "not every route.", 92, "bold")
         a = fade(i, int(0.8 * FPS))
         if a:
-            text_block(d, (60, 700), "MIRROR · task authoring for a simulated robot", font("medium", 40),
-                       fill=A(INK, a), max_w=960)
-            text_block(d, (60, 770), STUDIO_URL, font("medium", 40), fill=A(RED, a), max_w=960)
-            text_block(d, (60, 900), "MuJoCo simulation. Reference scenes and development layouts only.",
-                       font("regular", 30), fill=A(MUTED, a), max_w=960)
-    recs.append(run_card(ctx, L, cut, "s6_end", 4.0, d6, dict(src=dict(source="end card", url=STUDIO_URL))))
+            T(d, 720, "MIRROR · task authoring for a simulated robot", 44, a=a)
+            T(d, 800, STUDIO_URL, 46, fill=RED, a=a)
+            T(d, 865, REPO_URL, 46, a=a)
+            T(d, 990, "MuJoCo simulation. Reference scenes and development layouts only.", 36, "regular", MUTED, a)
+    recs.append(run_card(ctx, L, cut, "s6_end", 4.5, d6, dict(src=dict(source="end card", url=STUDIO_URL, repo=REPO_URL))))
     return recs
 
 
@@ -766,7 +777,7 @@ def judging_shots(ctx):
         text_block(d, (600, 450), "not every route.", font("bold", 96), fill=INK)
         a = fade(i, int(0.8 * FPS))
         text_block(d, (600, 640), "MIRROR · " + STUDIO_URL, font("medium", 40), fill=A(RED, a))
-        text_block(d, (600, 700), "Source and evidence: github.com/harsha-iiiv/MIRROR", font("medium", 34), fill=A(INK, a))
+        text_block(d, (600, 700), "Source and evidence: " + REPO_URL, font("medium", 34), fill=A(INK, a))
         text_block(d, (600, 790), "MuJoCo simulation. Reference scenes and development layouts only. "
                    "Captions only; no narration.", font("regular", 26), fill=A(MUTED, a), max_w=1250)
     recs.append(run_card(ctx, L, cut, "j13_end", 6.0, j13, dict(src=dict(source="end card", url=STUDIO_URL))))

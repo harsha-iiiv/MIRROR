@@ -135,7 +135,7 @@ def main(argv=None):
     tl = json.loads((root / f"timeline_{cut}.json").read_text())
     rows = [json.loads(l) for l in (root / f"camlog_{cut}.jsonl").read_text().splitlines() if l.strip()]
     mp4 = root / tl["file"]
-    sim_box = (0, 590, 1080, 1080) if cut == "social" else (520, 0, 1400, 1080)
+    sim_box = (0, 680, 1080, 1000) if cut == "social" else (520, 0, 1400, 1080)
     cam = camera_report(rows)
     pix = pixel_report(mp4, tl, sim_box)
     flags = []
