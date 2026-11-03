@@ -95,3 +95,20 @@ def test_identity_error_is_separate_from_outlier():
     rec["ground_truth"]["marker_0"] = dict(rec["ground_truth"]["block_0"], kind="marker", x=[0.5, 0.2])
     rows = [r for r in rv.frame_table(rec, "sam")]
     assert [rv._classify(r) for r in rows] == ["hit", "identity"]
+
+
+def test_crossplatform_self_comparison_is_exact():
+    from mirror.evaluate.reanalysis import crossplatform
+    rep = json.loads((ROOT / "results/eval_muse/report.json").read_text())
+    p = crossplatform._per_trial_from_stored(rep)
+    c = crossplatform.compare(p, p)
+    assert c["trials_compared"] == 95 and c["detail_equal"] == 95 and c["max_abs_bead_difference"] == 0
+
+
+def test_scene_numeric_compare_reports_largest_difference():
+    from mirror.evaluate.reanalysis import scenes
+    a = {"s:1": dict(scene_sha256="x", scene={"pose": {"pos": [0.1, 0.2]}})}
+    b = {"s:1": dict(scene_sha256="y", scene={"pose": {"pos": [0.1, 0.2 + 1e-9]}})}   # synthetic layouts
+    r = scenes.compare(a, b)
+    assert r["hash_equal"] == 0 and r["structure_differs"] == 0
+    assert r["max_abs_numeric_difference"] == pytest.approx(1e-9) and r["at"].endswith("pos[1]")
