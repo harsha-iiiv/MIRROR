@@ -6,6 +6,7 @@ import * as api from './api.js';
 import { fmtT } from './util.js';
 
 import { provenanceTone } from './provenance.js';
+import { useDialog } from './a11y.js';
 const html = htm.bind(h);
 
 export const OBJ_COLORS = { cup: '#3d63ff', block: '#e07b39', marker: '#16a394', tray: '#8a8a93', wall: '#6b6b74' };
@@ -303,12 +304,10 @@ export function ModelsPanel({ ctx, onClose }) {
   const [budgets, setBudgets] = useState(null);
   useEffect(() => {
     if (!ctx.isStatic) api.getJSONApi('models').then((m) => setBudgets(m.budgets)).catch(() => {});
-    const k = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', k);
-    return () => window.removeEventListener('keydown', k);
   }, [snap.revision]);
+  const dref = useDialog(onClose);
   const rows = snap.models || [];
-  return html`<div class="about models" role="dialog" aria-label="Models used in this session">
+  return html`<div class="about models" role="dialog" aria-modal="false" aria-label="Models used in this session" ref=${dref} tabindex="-1">
     <div class="about-h"><b>Models in this session</b><button class="iconbtn" onClick=${onClose} aria-label="Close">✕</button></div>
     ${rows.length ? html`<table class="mtab"><thead><tr><th>Artifact</th><th>Model</th><th class="num">Latency</th><th>Source</th></tr></thead>
       <tbody>${rows.map((r) => html`<tr title=${r.role}><td><div>${r.artifact}</div><div class="faint">${r.role}</div></td>
