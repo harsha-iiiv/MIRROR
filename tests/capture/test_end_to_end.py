@@ -171,3 +171,37 @@ def test_ingest_cli_demo_end_to_end(tmp_path, ffmpeg):
     row = json.loads((tmp_path / "demo" / "score_synthetic.json").read_text())
     assert row["synthetic"] and row["split"] == "synthetic_rehearsal"
     assert (tmp_path / "demo" / "review.md").read_text().startswith("# Capture review (SYNTHETIC demo)")
+
+
+def test_camera_bumped_during_take_is_rejected(tmp_path_factory, intrinsics):
+    """The top phone rotates 1.5 degrees at 3 s (a bump): the take must not be used."""
+    plan = S.TakePlan()
+    d, truth = _take(tmp_path_factory, "bumped", plan, bump={"top": (3.0, (1.5, 0.0, 0.0))})
+    s = _session(d, truth, plan, intrinsics)
+    ok, blocking = s.gate()
+    assert not ok and any(b.code == "camera_moved" and b.camera == "top" for b in blocking)
+
+
+def test_manual_keyframe_baseline(upright, intrinsics):
+    """Manual baseline: clicked centres every 0.5 s (here: exact projections, SYNTHETIC)."""
+    d, truth, plan, _ = upright
+    from mirror.capture import media as M
+    from mirror.capture.geometry import project
+    kf = {}
+    for c in ("top", "side"):
+        m = M.probe(d / f"synthetic_{c}.mp4")
+        cam = truth["cameras"][c]
+        off = truth["start_offsets"][c]
+        kf[c] = {"mug": {}}
+        for k, t in enumerate(m.pts_s):
+            if abs((t + off) * 2 - round((t + off) * 2)) < 0.03:
+                uv = project(cam["K"], cam["dist"], cam["R"], cam["t"], plan.mug_pose(t + off)[0][None])[0]
+                kf[c]["mug"][k] = (float(uv[0]), float(uv[1]))
+    p0, _ = plan.mug_pose(0.0)
+    s = SE.build_session(take={c: str(d / f"synthetic_{c}.mp4") for c in ("top", "side")}, intrinsics=intrinsics,
+                         print_check=PC, prompts=[], mappings=[MUG], synthetic=True, tracker="manual", manual_keyframes=kf)
+    assert "tracker: manual" in s.notes
+    tr = s.reconstruction.objects["mug"]
+    assert {"interpolated"} & set(tr.pos_status)
+    row = V.score_clip(s, I.synthetic_labels(truth, plan))
+    assert row["keyframe_position"]["unconditional_cm"]["median"] < 1.5

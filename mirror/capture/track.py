@@ -83,9 +83,11 @@ class TrackSet(_M):
 
 
 def _hist(hsv, box):
-    """Discriminative hue-saturation histogram: colours common inside the
-    central part of the box and rare in the ring around it (so the table or
-    background a hand-drawn box includes does not light up)."""
+    """Discriminative histogram: colours common inside the central part of the
+    box and rare in the ring around it (so the table or background a hand-drawn
+    box includes does not light up). Coloured objects use hue-saturation;
+    white, grey or black objects (few saturated pixels) use saturation-value.
+    Returns (histogram, channels, ranges)."""
     import cv2
     H, W = hsv.shape[:2]
     x, y, w, h = (float(v) for v in box)
@@ -93,19 +95,24 @@ def _hist(hsv, box):
     ix1, iy1 = int(round(x + 0.8 * w)), int(round(y + 0.8 * h))
     ox0, oy0 = max(0, int(round(x - 0.5 * w))), max(0, int(round(y - 0.5 * h)))
     ox1, oy1 = min(W, int(round(x + 1.5 * w))), min(H, int(round(y + 1.5 * h)))
-    valid = cv2.inRange(hsv, (0, 40, 30), (180, 255, 255))
     inner = np.zeros((H, W), np.uint8)
     inner[iy0:iy1, ix0:ix1] = 255
     ring = np.zeros((H, W), np.uint8)
     ring[oy0:oy1, ox0:ox1] = 255
     bx0, by0, bx1, by1 = int(round(x)), int(round(y)), int(round(x + w)), int(round(y + h))
     ring[by0:by1, bx0:bx1] = 0
-    fg = cv2.calcHist([hsv], [0, 1], cv2.bitwise_and(inner, valid), [30, 16], [0, 180, 0, 256])
-    bg = cv2.calcHist([hsv], [0, 1], cv2.bitwise_and(ring, valid), [30, 16], [0, 180, 0, 256])
+    sat = cv2.inRange(hsv, (0, 40, 30), (180, 255, 255))
+    frac = float((cv2.bitwise_and(inner, sat) > 0).sum()) / max(1, int((inner > 0).sum()))
+    if frac >= 0.3:
+        ch, bins, rng, valid = [0, 1], [30, 16], [0, 180, 0, 256], sat
+    else:
+        ch, bins, rng, valid = [1, 2], [16, 16], [0, 256, 0, 256], None
+    fg = cv2.calcHist([hsv], ch, inner if valid is None else cv2.bitwise_and(inner, valid), bins, rng)
+    bg = cv2.calcHist([hsv], ch, ring if valid is None else cv2.bitwise_and(ring, valid), bins, rng)
     fg /= max(fg.sum(), 1.0)
     bg /= max(bg.sum(), 1.0)
     ratio = np.where(fg > 0.01, fg / (fg + bg + 1e-6), 0.0).astype(np.float32)
-    return (255.0 * ratio / max(ratio.max(), 1e-6)).astype(np.float32)
+    return (255.0 * ratio / max(ratio.max(), 1e-6)).astype(np.float32), ch, rng
 
 
 def _axis(bp, win):
@@ -140,13 +147,13 @@ def classical_track(meta: ClipMeta, prompts: Sequence[Prompt], *, camera: str, s
                 out[p.label].append(Obs2D(frame=i, t=t, status="lost"))
                 continue
             if p.label not in state:
-                hist = _hist(hsv, p.box)
-                bp = cv2.calcBackProject([hsv], [0, 1], hist, [0, 180, 0, 256], 1)
+                hist, ch, rng = _hist(hsv, p.box)
+                bp = cv2.calcBackProject([hsv], ch, hist, rng, 1)
                 x, y, w, h = (int(round(v)) for v in p.box)
                 ref = float(bp[y:y + h, x:x + w].sum()) + 1e-6
-                state[p.label] = {"hist": hist, "win": (x, y, w, h), "ref": ref, "area": w * h, "lost": False}
+                state[p.label] = {"hist": hist, "ch": ch, "rng": rng, "win": (x, y, w, h), "ref": ref, "area": w * h, "lost": False}
             s = state[p.label]
-            bp = cv2.calcBackProject([hsv], [0, 1], s["hist"], [0, 180, 0, 256], 1)
+            bp = cv2.calcBackProject([hsv], s["ch"], s["hist"], s["rng"], 1)
             status = "tracked"
             if s["lost"]:
                 # search the whole frame for a blob of similar size

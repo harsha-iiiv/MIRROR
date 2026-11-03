@@ -376,7 +376,7 @@ def default_cameras(width=960, height=540) -> dict:
 
 def render_take(out_dir, plan: TakePlan, *, cams: Optional[dict] = None, fps=None, start_offsets=None,
                 spec: TargetSpec = DEFAULT_TARGET, gain: float = 1.0, other_plan: Optional[TakePlan] = None,
-                jitter: Optional[dict] = None) -> dict:
+                jitter: Optional[dict] = None, bump: Optional[dict] = None) -> dict:
     """Render a synthetic take. ``start_offsets[c]`` is the world time at which
     camera c started recording (its clip time 0). ``other_plan`` renders the
     side camera from a DIFFERENT performance (for the separate-takes test)."""
@@ -399,9 +399,17 @@ def render_take(out_dir, plan: TakePlan, *, cams: Optional[dict] = None, fps=Non
             g = gain
             if p.light_dip and p.light_dip[0] <= tw < p.light_dip[1]:
                 g *= 0.35
-            frames.append(render(cam, prims, tw, background=bg, gain=g, seed=k + 17 * len(name)))
+            c_now, bg_now = cam, bg
+            if bump and name in bump and tw >= bump[name][0]:
+                if "_bumped" not in locals() or _bumped[0] is not name:
+                    Rb = rodrigues(np.radians(bump[name][1]))
+                    cb = SynthCamera(cam.name, cam.width, cam.height, cam.K, cam.dist, Rb @ cam.R, Rb @ cam.t)
+                    _bumped = (name, cb, table_background(cb))
+                c_now, bg_now = _bumped[1], _bumped[2]
+            frames.append(render(c_now, prims, tw, background=bg_now, gain=g, seed=k + 17 * len(name)))
         files[name] = str(write_video(frames, out / f"synthetic_{name}.mp4", fps=fps[name], jitter=jitter.get(name, 0.0)))
     truth = {"synthetic": True, "note": SYNTHETIC_NOTE, "start_offsets": start_offsets, "fps": fps, "jitter": jitter,
+             "bump": bump,
              "plan": {k: (list(v) if isinstance(v, tuple) else v) for k, v in plan.__dict__.items()},
              "cameras": {n: {"K": c.K.tolist(), "dist": c.dist.tolist(), "R": c.R.tolist(), "t": c.t.tolist(),
                              "size": [c.width, c.height]} for n, c in cams.items()},
