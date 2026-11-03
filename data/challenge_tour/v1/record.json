@@ -1,0 +1,1420 @@
+{
+ "challenge_id": "ch8b9b689f5d",
+ "correction": {
+  "diff": {
+   "added": [],
+   "changed": [
+    {
+     "after": {
+      "status": "confirmed"
+     },
+     "before": {
+      "status": "proposed"
+     },
+     "id": "c_upright_transport_cup",
+     "kind": "constraint"
+    },
+    {
+     "after": {
+      "status": "confirmed"
+     },
+     "before": {
+      "status": "proposed"
+     },
+     "id": "c_upright_final_cup",
+     "kind": "constraint"
+    }
+   ],
+   "removed": []
+  },
+  "fallback_reason": null,
+  "input": "typed",
+  "model": "offline-rules",
+  "ops": [
+   {
+    "op": "set_status",
+    "rationale": "User: \"this container must remain upright throughout transport\"",
+    "target_id": "c_upright_transport_cup",
+    "value": {
+     "status": "confirmed"
+    }
+   },
+   {
+    "op": "set_status",
+    "rationale": "User: \"and also at the destination\"",
+    "target_id": "c_upright_final_cup",
+    "value": {
+     "status": "confirmed"
+    }
+   },
+   {
+    "op": "resolve_uncertainty",
+    "rationale": "answered by this change",
+    "target_id": "u_upright_transport_cup",
+    "value": {
+     "resolution": "settled by the user: This container must remain upright throughout transport, not just at the destination."
+    }
+   },
+   {
+    "op": "resolve_uncertainty",
+    "rationale": "answered by this change",
+    "target_id": "u_upright_final_cup",
+    "value": {
+     "resolution": "settled by the user: This container must remain upright throughout transport, not just at the destination."
+    }
+   }
+  ],
+  "provenance": "offline_interpreter",
+  "scope": {
+   "items": [
+    "c_upright_final_cup",
+    "c_upright_transport_cup"
+   ],
+   "kinds": [
+    "constraint"
+   ],
+   "objects": [
+    "cup_0"
+   ],
+   "phases": [
+    "final",
+    "transport"
+   ],
+   "unaffected_objects": [
+    "block_0",
+    "marker_0"
+   ]
+  },
+  "text": "This container must remain upright throughout transport, not just at the destination."
+ },
+ "created_at": 1793667527.704,
+ "format": "mirror-challenge-record/1",
+ "generation": {
+  "calibration": null,
+  "demo": {
+   "content_sha256": "ac9f6249c8a2d018639190da71478a5b0e81389de824e43676e96621c13a6ee2",
+   "demo_id": "demo_ref_demo_reference",
+   "source": "teleop_scripted"
+  },
+  "id": "g1a19eea2ff16435",
+  "source_media": []
+ },
+ "label": "Recorded tour: these runs were executed once when the tour was recorded, with the offline rule-based interpreter. Watching it makes no model call and no simulation.",
+ "preparation": [
+  {
+   "demo_id": "demo_ref_demo_reference",
+   "provenance": "recorded",
+   "step": "demonstration loaded"
+  },
+  {
+   "fallback_reason": null,
+   "provenance": "offline_interpreter",
+   "spec_version_id": "g1a19eea2ff16435.v1",
+   "step": "demonstration interpreted"
+  }
+ ],
+ "provenance": {
+  "interpreter": "offline_interpreter",
+  "recorded": true,
+  "recorded_wall_s": 67.5,
+  "recorded_with": {
+   "code_version": "2bb3a40",
+   "command": "scripts/record_challenge_tour.py --out data/challenge_tour/v1 --transfer-seeds 4243 4244 4245",
+   "interpreter": "offline rule-based interpreter (no model call)",
+   "simulation": "MuJoCo, executed when the tour was recorded"
+  },
+  "server_version": "0.1.0",
+  "simulation": "mujoco"
+ },
+ "rechecks": [
+  {
+   "beads": [
+    {
+     "beads_in_container": 5,
+     "beads_total": 8,
+     "object_id": "cup_0"
+    }
+   ],
+   "content_sha256": "cf8ba1ea5ba195d22dd353d76468aec04b70197ce79d39feb5d894aedf65e9c4",
+   "is_before": true,
+   "label": "r001",
+   "plan_reason": "",
+   "plan_status": "",
+   "rollout_id": "g1a19eea2ff16435.v1.s4242.r001.cf8ba1ea",
+   "route_labels": [],
+   "scene_id": "dev_shortcut_4242",
+   "spec_version_id": "g1a19eea2ff16435.v2",
+   "status": "constraint_violated",
+   "violations": [
+    {
+     "constraint_id": "c_upright_transport_cup",
+     "detail": "tilt > 15 deg during transport for 4.152 s (1038 steps)",
+     "object_id": "cup_0",
+     "peak": 89.6463887140304,
+     "t_end": 11.907999999999088,
+     "t_start": 7.759999999999545
+    }
+   ],
+   "was": "success"
+  }
+ ],
+ "rollouts": {
+  "after": {
+   "beads": [
+    {
+     "beads_in_container": 8,
+     "beads_total": 8,
+     "object_id": "cup_0"
+    }
+   ],
+   "content_sha256": "6db71d6f01940ae6584550886912212ebb767342a30a0860ad15a2f2acefc5ec",
+   "label": "r002",
+   "plan_reason": "",
+   "plan_status": "ok",
+   "rollout_id": "g1a19eea2ff16435.v2.s4242.r002.6db71d6f",
+   "route_labels": [
+    "cup_0:around:wall_0:-y",
+    "block_0:around:wall_0:-y",
+    "marker_0:around:wall_0:-y"
+   ],
+   "scene_id": "dev_shortcut_4242",
+   "spec_version_id": "g1a19eea2ff16435.v2",
+   "status": "success",
+   "violations": []
+  },
+  "before": {
+   "beads": [
+    {
+     "beads_in_container": 5,
+     "beads_total": 8,
+     "object_id": "cup_0"
+    }
+   ],
+   "content_sha256": "cf8ba1ea5ba195d22dd353d76468aec04b70197ce79d39feb5d894aedf65e9c4",
+   "label": "r001",
+   "plan_reason": "",
+   "plan_status": "ok",
+   "rollout_id": "g1a19eea2ff16435.v1.s4242.r001.cf8ba1ea",
+   "route_labels": [
+    "cup_0:through_slot:wall_0:0:pitched-90",
+    "block_0:around:wall_0:-y",
+    "marker_0:around:wall_0:-y"
+   ],
+   "scene_id": "dev_shortcut_4242",
+   "spec_version_id": "g1a19eea2ff16435.v1",
+   "status": "success",
+   "violations": []
+  }
+ },
+ "scene": {
+  "base_scene_id": "dev_shortcut_4242",
+  "base_scene_sha256": "5952888f0b2ab5e4a17d0a70cad8f5a3fe1a6a32703b969d4e8bc76d2094ca0d",
+  "content_sha256": "5952888f0b2ab5e4a17d0a70cad8f5a3fe1a6a32703b969d4e8bc76d2094ca0d",
+  "edits": [],
+  "family": "shortcut",
+  "preset": null,
+  "scene": {
+   "family": "kit_packing",
+   "gripper_start": {
+    "pos": [
+     -0.15,
+     0.0,
+     0.3
+    ],
+    "quat": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "notes": "Sampled layout (shortcut family): wall open at its -y end (0.21 m), slot at y +0.10..+0.30 (cup-to-tray line crosses the wall at y +0.18), 1 extra box. (accepted after 2 draws)",
+   "objects": [
+    {
+     "bead_radius": 0.0075,
+     "beads": 8,
+     "id": "cup_0",
+     "kind": "cup",
+     "mass": 0.08,
+     "pose": {
+      "pos": [
+       -0.3129710069357995,
+       0.16132095730145402,
+       0.05
+      ],
+      "quat": [
+       0.983622769760432,
+       0.0,
+       0.0,
+       -0.18023941524765416
+      ]
+     },
+     "rgba": [
+      0.93,
+      0.93,
+      0.9,
+      1.0
+     ],
+     "size": {
+      "outer_half": [
+       0.03,
+       0.03,
+       0.05
+      ],
+      "wall": 0.004
+     }
+    },
+    {
+     "bead_radius": 0.0075,
+     "beads": 0,
+     "id": "block_0",
+     "kind": "block",
+     "mass": 0.05,
+     "pose": {
+      "pos": [
+       -0.2695070940510905,
+       -0.1458649995275362,
+       0.02
+      ],
+      "quat": [
+       0.9609471823222505,
+       0.0,
+       0.0,
+       0.27673184274117674
+      ]
+     },
+     "rgba": [
+      0.2,
+      0.45,
+      0.85,
+      1.0
+     ],
+     "size": {
+      "half": [
+       0.02,
+       0.02,
+       0.02
+      ]
+     }
+    },
+    {
+     "bead_radius": 0.0075,
+     "beads": 0,
+     "id": "marker_0",
+     "kind": "marker",
+     "mass": 0.03,
+     "pose": {
+      "pos": [
+       -0.2310437214916254,
+       -0.2978194147427792,
+       0.06
+      ],
+      "quat": [
+       1.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     "rgba": [
+      0.9,
+      0.35,
+      0.2,
+      1.0
+     ],
+     "size": {
+      "half_length": 0.06,
+      "radius": 0.012
+     }
+    }
+   ],
+   "obstacles": [
+    {
+     "half": null,
+     "height": 0.5,
+     "id": "wall_0",
+     "kind": "wall",
+     "length": 0.6891816187386854,
+     "pose": {
+      "pos": [
+       0.005698011992135224,
+       0.15540919063065728,
+       0.0
+      ],
+      "quat": [
+       1.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     "slots": [
+      {
+       "y_max": 0.14323789865691838,
+       "y_min": -0.056762101343081656,
+       "z_max": 0.19,
+       "z_min": 0.09
+      }
+     ],
+     "thickness": 0.02
+    },
+    {
+     "half": [
+      0.046720754647325,
+      0.04014519966292487,
+      0.04129910842828692
+     ],
+     "height": null,
+     "id": "box_0",
+     "kind": "box",
+     "length": null,
+     "pose": {
+      "pos": [
+       0.29404174417695916,
+       -0.2749404713612569,
+       0.04129910842828692
+      ],
+      "quat": [
+       0.9967120091196884,
+       0.0,
+       0.0,
+       -0.08102574206136061
+      ]
+     },
+     "slots": [],
+     "thickness": null
+    }
+   ],
+   "scene_id": "dev_shortcut_4242",
+   "seed": 4242,
+   "split": "dev",
+   "trays": [
+    {
+     "id": "tray_0",
+     "inner_half": [
+      0.12,
+      0.09
+     ],
+     "pose": {
+      "pos": [
+       0.27704656973622255,
+       0.1945474249341127,
+       0.006
+      ],
+      "quat": [
+       1.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     "wall_height": 0.03,
+     "wall_thickness": 0.008
+    }
+   ],
+   "workspace": {
+    "x_range": [
+     -0.45,
+     0.45
+    ],
+    "y_range": [
+     -0.4,
+     0.4
+    ],
+    "z_range": [
+     0.005,
+     0.45
+    ]
+   }
+  },
+  "scene_id": "dev_shortcut_4242",
+  "seed": 4242,
+  "split": "dev"
+ },
+ "spec_versions": {
+  "base": {
+   "content_sha256": "5fc807ea3aa324c28c3d5fa752d80b05f32c0c3e0747631cb802382da58057a1",
+   "spec": {
+    "bindings": [
+     {
+      "count": 1,
+      "kind": "cup",
+      "required": true,
+      "role": "container"
+     },
+     {
+      "count": 1,
+      "kind": "block",
+      "required": true,
+      "role": "block"
+     },
+     {
+      "count": 1,
+      "kind": "marker",
+      "required": true,
+      "role": "marker"
+     }
+    ],
+    "constraints": [
+     {
+      "applies_to": {
+       "ids": null,
+       "kind": "cup",
+       "role": null
+      },
+      "description": "Keep the cup within 15 degrees of upright while carried.",
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      },
+      "phase": "transport",
+      "provenance": {
+       "evidence": "Shown: The cup stayed within 0.2 degrees of upright for the whole time it was carried (mean 0.1). Assumed: Scene knowledge, not demonstration evidence: the scene description lists loose beads in the cup, so its orientation may matter while it moves.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "type": "upright"
+     },
+     {
+      "applies_to": {
+       "ids": null,
+       "kind": "cup",
+       "role": null
+      },
+      "description": "Keep the cup within 15 degrees of upright once placed.",
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      },
+      "phase": "final",
+      "provenance": {
+       "evidence": "Shown: The cup ended upright (0 degrees of tilt). Assumed: Objects are normally packed standing the way they started.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "type": "upright"
+     },
+     {
+      "applies_to": {
+       "ids": null,
+       "kind": "block",
+       "role": null
+      },
+      "description": "Keep the block within 15 degrees of upright while carried.",
+      "id": "c_upright_transport_block",
+      "params": {
+       "max_tilt_deg": 15.0
+      },
+      "phase": "transport",
+      "provenance": {
+       "evidence": "Shown: The block stayed within 0.2 degrees of upright for the whole time it was carried (mean 0). Assumed: Carrying the block upright may simply have been convenient.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "type": "upright"
+     },
+     {
+      "applies_to": {
+       "ids": null,
+       "kind": "block",
+       "role": null
+      },
+      "description": "Keep the block within 15 degrees of upright once placed.",
+      "id": "c_upright_final_block",
+      "params": {
+       "max_tilt_deg": 15.0
+      },
+      "phase": "final",
+      "provenance": {
+       "evidence": "Shown: The block ended upright (0 degrees of tilt). Assumed: Objects are normally packed standing the way they started.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "type": "upright"
+     },
+     {
+      "applies_to": {
+       "ids": null,
+       "kind": "marker",
+       "role": null
+      },
+      "description": "Keep the marker within 15 degrees of upright while carried.",
+      "id": "c_upright_transport_marker",
+      "params": {
+       "max_tilt_deg": 15.0
+      },
+      "phase": "transport",
+      "provenance": {
+       "evidence": "Shown: The marker stayed within 0.2 degrees of upright for the whole time it was carried (mean 0.1). Assumed: Carrying the marker upright may simply have been convenient.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "type": "upright"
+     },
+     {
+      "applies_to": {
+       "ids": null,
+       "kind": "marker",
+       "role": null
+      },
+      "description": "Keep the marker within 15 degrees of upright once placed.",
+      "id": "c_upright_final_marker",
+      "params": {
+       "max_tilt_deg": 15.0
+      },
+      "phase": "final",
+      "provenance": {
+       "evidence": "Shown: The marker ended upright (0.1 degrees of tilt). Assumed: Objects are normally packed standing the way they started.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "type": "upright"
+     }
+    ],
+    "demo_id": "demo_ref_demo_reference",
+    "goals": [
+     {
+      "id": "g_inside_cup",
+      "object": {
+       "ids": null,
+       "kind": "cup",
+       "role": null
+      },
+      "provenance": {
+       "evidence": "The cup ended inside the tray.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "target": "destination",
+      "type": "inside"
+     },
+     {
+      "id": "g_inside_block",
+      "object": {
+       "ids": null,
+       "kind": "block",
+       "role": null
+      },
+      "provenance": {
+       "evidence": "The block ended inside the tray.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "target": "destination",
+      "type": "inside"
+     },
+     {
+      "id": "g_inside_marker",
+      "object": {
+       "ids": null,
+       "kind": "marker",
+       "role": null
+      },
+      "provenance": {
+       "evidence": "The marker ended inside the tray.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "target": "destination",
+      "type": "inside"
+     }
+    ],
+    "history": [],
+    "interpreter": "offline-rules",
+    "ordering": [
+     {
+      "after": {
+       "ids": null,
+       "kind": "block",
+       "role": null
+      },
+      "before": {
+       "ids": null,
+       "kind": "cup",
+       "role": null
+      },
+      "id": "o_cup_before_block",
+      "provenance": {
+       "evidence": "The cup was packed before the block.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed"
+     },
+     {
+      "after": {
+       "ids": null,
+       "kind": "marker",
+       "role": null
+      },
+      "before": {
+       "ids": null,
+       "kind": "block",
+       "role": null
+      },
+      "id": "o_block_before_marker",
+      "provenance": {
+       "evidence": "The block was packed before the marker.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed"
+     }
+    ],
+    "parent_version": null,
+    "spec_id": "spec_demo_ref_demo_reference",
+    "summary": "Pack the cup, block and marker into the tray.",
+    "task_family": "kit_packing",
+    "tolerances": {
+     "inside_margin_m": 0.0,
+     "settle_speed_mps": 0.01
+    },
+    "uncertainties": [
+     {
+      "id": "u_upright_transport_cup",
+      "options": [
+       "Required (interpreter's lean)",
+       "Incidental"
+      ],
+      "question": "The cup stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed? (The lean towards 'required' comes from the scene description, which lists loose beads in the cup; the demonstration itself does not show that it matters.)",
+      "related_constraint": "c_upright_transport_cup",
+      "resolution": null,
+      "status": "open"
+     },
+     {
+      "id": "u_upright_final_cup",
+      "options": [
+       "Required (interpreter's lean)",
+       "Incidental"
+      ],
+      "question": "Must the cup end upright in the tray?",
+      "related_constraint": "c_upright_final_cup",
+      "resolution": null,
+      "status": "open"
+     },
+     {
+      "id": "u_upright_transport_block",
+      "options": [
+       "Required",
+       "Incidental"
+      ],
+      "question": "The block stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed?",
+      "related_constraint": "c_upright_transport_block",
+      "resolution": null,
+      "status": "open"
+     },
+     {
+      "id": "u_upright_final_block",
+      "options": [
+       "Required (interpreter's lean)",
+       "Incidental"
+      ],
+      "question": "Must the block end upright in the tray?",
+      "related_constraint": "c_upright_final_block",
+      "resolution": null,
+      "status": "open"
+     },
+     {
+      "id": "u_upright_transport_marker",
+      "options": [
+       "Required",
+       "Incidental"
+      ],
+      "question": "The marker stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed?",
+      "related_constraint": "c_upright_transport_marker",
+      "resolution": null,
+      "status": "open"
+     },
+     {
+      "id": "u_upright_final_marker",
+      "options": [
+       "Required (interpreter's lean)",
+       "Incidental"
+      ],
+      "question": "Must the marker end upright in the tray?",
+      "related_constraint": "c_upright_final_marker",
+      "resolution": null,
+      "status": "open"
+     },
+     {
+      "id": "u_cup_before_block",
+      "options": [
+       "Required",
+       "Incidental"
+      ],
+      "question": "The cup was packed before the block. Is that order required?",
+      "related_constraint": "o_cup_before_block",
+      "resolution": null,
+      "status": "open"
+     },
+     {
+      "id": "u_block_before_marker",
+      "options": [
+       "Required",
+       "Incidental"
+      ],
+      "question": "The block was packed before the marker. Is that order required?",
+      "related_constraint": "o_block_before_marker",
+      "resolution": null,
+      "status": "open"
+     }
+    ],
+    "version": 1
+   },
+   "version_id": "g1a19eea2ff16435.v1"
+  },
+  "revised": {
+   "content_sha256": "5adfc05e8ab5afaf1f8dee83dba6af32ed6cfa9dd616eb50aa54924d2a612ac3",
+   "spec": {
+    "bindings": [
+     {
+      "count": 1,
+      "kind": "cup",
+      "required": true,
+      "role": "container"
+     },
+     {
+      "count": 1,
+      "kind": "block",
+      "required": true,
+      "role": "block"
+     },
+     {
+      "count": 1,
+      "kind": "marker",
+      "required": true,
+      "role": "marker"
+     }
+    ],
+    "constraints": [
+     {
+      "applies_to": {
+       "ids": null,
+       "kind": "cup",
+       "role": null
+      },
+      "description": "Keep the cup within 15 degrees of upright while carried.",
+      "id": "c_upright_transport_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      },
+      "phase": "transport",
+      "provenance": {
+       "evidence": "Shown: The cup stayed within 0.2 degrees of upright for the whole time it was carried (mean 0.1). Assumed: Scene knowledge, not demonstration evidence: the scene description lists loose beads in the cup, so its orientation may matter while it moves.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "confirmed",
+      "type": "upright"
+     },
+     {
+      "applies_to": {
+       "ids": null,
+       "kind": "cup",
+       "role": null
+      },
+      "description": "Keep the cup within 15 degrees of upright once placed.",
+      "id": "c_upright_final_cup",
+      "params": {
+       "max_tilt_deg": 15.0
+      },
+      "phase": "final",
+      "provenance": {
+       "evidence": "Shown: The cup ended upright (0 degrees of tilt). Assumed: Objects are normally packed standing the way they started.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "confirmed",
+      "type": "upright"
+     },
+     {
+      "applies_to": {
+       "ids": null,
+       "kind": "block",
+       "role": null
+      },
+      "description": "Keep the block within 15 degrees of upright while carried.",
+      "id": "c_upright_transport_block",
+      "params": {
+       "max_tilt_deg": 15.0
+      },
+      "phase": "transport",
+      "provenance": {
+       "evidence": "Shown: The block stayed within 0.2 degrees of upright for the whole time it was carried (mean 0). Assumed: Carrying the block upright may simply have been convenient.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "type": "upright"
+     },
+     {
+      "applies_to": {
+       "ids": null,
+       "kind": "block",
+       "role": null
+      },
+      "description": "Keep the block within 15 degrees of upright once placed.",
+      "id": "c_upright_final_block",
+      "params": {
+       "max_tilt_deg": 15.0
+      },
+      "phase": "final",
+      "provenance": {
+       "evidence": "Shown: The block ended upright (0 degrees of tilt). Assumed: Objects are normally packed standing the way they started.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "type": "upright"
+     },
+     {
+      "applies_to": {
+       "ids": null,
+       "kind": "marker",
+       "role": null
+      },
+      "description": "Keep the marker within 15 degrees of upright while carried.",
+      "id": "c_upright_transport_marker",
+      "params": {
+       "max_tilt_deg": 15.0
+      },
+      "phase": "transport",
+      "provenance": {
+       "evidence": "Shown: The marker stayed within 0.2 degrees of upright for the whole time it was carried (mean 0.1). Assumed: Carrying the marker upright may simply have been convenient.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "type": "upright"
+     },
+     {
+      "applies_to": {
+       "ids": null,
+       "kind": "marker",
+       "role": null
+      },
+      "description": "Keep the marker within 15 degrees of upright once placed.",
+      "id": "c_upright_final_marker",
+      "params": {
+       "max_tilt_deg": 15.0
+      },
+      "phase": "final",
+      "provenance": {
+       "evidence": "Shown: The marker ended upright (0.1 degrees of tilt). Assumed: Objects are normally packed standing the way they started.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "type": "upright"
+     }
+    ],
+    "demo_id": "demo_ref_demo_reference",
+    "goals": [
+     {
+      "id": "g_inside_cup",
+      "object": {
+       "ids": null,
+       "kind": "cup",
+       "role": null
+      },
+      "provenance": {
+       "evidence": "The cup ended inside the tray.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "target": "destination",
+      "type": "inside"
+     },
+     {
+      "id": "g_inside_block",
+      "object": {
+       "ids": null,
+       "kind": "block",
+       "role": null
+      },
+      "provenance": {
+       "evidence": "The block ended inside the tray.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "target": "destination",
+      "type": "inside"
+     },
+     {
+      "id": "g_inside_marker",
+      "object": {
+       "ids": null,
+       "kind": "marker",
+       "role": null
+      },
+      "provenance": {
+       "evidence": "The marker ended inside the tray.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed",
+      "target": "destination",
+      "type": "inside"
+     }
+    ],
+    "history": [
+     {
+      "diff": [
+       {
+        "op": "set_status",
+        "rationale": "User: \"this container must remain upright throughout transport\"",
+        "target_id": "c_upright_transport_cup",
+        "value": {
+         "status": "confirmed"
+        }
+       },
+       {
+        "op": "set_status",
+        "rationale": "User: \"and also at the destination\"",
+        "target_id": "c_upright_final_cup",
+        "value": {
+         "status": "confirmed"
+        }
+       },
+       {
+        "op": "resolve_uncertainty",
+        "rationale": "answered by this change",
+        "target_id": "u_upright_transport_cup",
+        "value": {
+         "resolution": "settled by the user: This container must remain upright throughout transport, not just at the destination."
+        }
+       },
+       {
+        "op": "resolve_uncertainty",
+        "rationale": "answered by this change",
+        "target_id": "u_upright_final_cup",
+        "value": {
+         "resolution": "settled by the user: This container must remain upright throughout transport, not just at the destination."
+        }
+       }
+      ],
+      "kind": "correction",
+      "model": "offline-rules",
+      "text": "This container must remain upright throughout transport, not just at the destination.",
+      "version": 2
+     }
+    ],
+    "interpreter": "offline-rules",
+    "ordering": [
+     {
+      "after": {
+       "ids": null,
+       "kind": "block",
+       "role": null
+      },
+      "before": {
+       "ids": null,
+       "kind": "cup",
+       "role": null
+      },
+      "id": "o_cup_before_block",
+      "provenance": {
+       "evidence": "The cup was packed before the block.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed"
+     },
+     {
+      "after": {
+       "ids": null,
+       "kind": "marker",
+       "role": null
+      },
+      "before": {
+       "ids": null,
+       "kind": "block",
+       "role": null
+      },
+      "id": "o_block_before_marker",
+      "provenance": {
+       "evidence": "The block was packed before the marker.",
+       "model": null,
+       "source": "demo_inference",
+       "version_introduced": 1
+      },
+      "status": "proposed"
+     }
+    ],
+    "parent_version": 1,
+    "spec_id": "spec_demo_ref_demo_reference",
+    "summary": "Pack the cup, block and marker into the tray.",
+    "task_family": "kit_packing",
+    "tolerances": {
+     "inside_margin_m": 0.0,
+     "settle_speed_mps": 0.01
+    },
+    "uncertainties": [
+     {
+      "id": "u_upright_transport_cup",
+      "options": [
+       "Required (interpreter's lean)",
+       "Incidental"
+      ],
+      "question": "The cup stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed? (The lean towards 'required' comes from the scene description, which lists loose beads in the cup; the demonstration itself does not show that it matters.)",
+      "related_constraint": "c_upright_transport_cup",
+      "resolution": "settled by the user: This container must remain upright throughout transport, not just at the destination.",
+      "status": "resolved"
+     },
+     {
+      "id": "u_upright_final_cup",
+      "options": [
+       "Required (interpreter's lean)",
+       "Incidental"
+      ],
+      "question": "Must the cup end upright in the tray?",
+      "related_constraint": "c_upright_final_cup",
+      "resolution": "settled by the user: This container must remain upright throughout transport, not just at the destination.",
+      "status": "resolved"
+     },
+     {
+      "id": "u_upright_transport_block",
+      "options": [
+       "Required",
+       "Incidental"
+      ],
+      "question": "The block stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed?",
+      "related_constraint": "c_upright_transport_block",
+      "resolution": null,
+      "status": "open"
+     },
+     {
+      "id": "u_upright_final_block",
+      "options": [
+       "Required (interpreter's lean)",
+       "Incidental"
+      ],
+      "question": "Must the block end upright in the tray?",
+      "related_constraint": "c_upright_final_block",
+      "resolution": null,
+      "status": "open"
+     },
+     {
+      "id": "u_upright_transport_marker",
+      "options": [
+       "Required",
+       "Incidental"
+      ],
+      "question": "The marker stayed upright the whole time it was carried. Must it stay upright during transport, or only once it is placed?",
+      "related_constraint": "c_upright_transport_marker",
+      "resolution": null,
+      "status": "open"
+     },
+     {
+      "id": "u_upright_final_marker",
+      "options": [
+       "Required (interpreter's lean)",
+       "Incidental"
+      ],
+      "question": "Must the marker end upright in the tray?",
+      "related_constraint": "c_upright_final_marker",
+      "resolution": null,
+      "status": "open"
+     },
+     {
+      "id": "u_cup_before_block",
+      "options": [
+       "Required",
+       "Incidental"
+      ],
+      "question": "The cup was packed before the block. Is that order required?",
+      "related_constraint": "o_cup_before_block",
+      "resolution": null,
+      "status": "open"
+     },
+     {
+      "id": "u_block_before_marker",
+      "options": [
+       "Required",
+       "Incidental"
+      ],
+      "question": "The block was packed before the marker. Is that order required?",
+      "related_constraint": "o_block_before_marker",
+      "resolution": null,
+      "status": "open"
+     }
+    ],
+    "version": 2
+   },
+   "version_id": "g1a19eea2ff16435.v2"
+  }
+ },
+ "transcript": null,
+ "transfer": [
+  {
+   "base": {
+    "beads": [
+     {
+      "beads_in_container": 4,
+      "beads_total": 8,
+      "object_id": "cup_0"
+     }
+    ],
+    "content_sha256": "e082e4f0b4d67b02a043335ea29d266423f9b79b17b1d8feac1506d153f8e2f5",
+    "label": "r003",
+    "plan_reason": "",
+    "plan_status": "ok",
+    "rollout_id": "g1a19eea2ff16435.v1.s4243.r003.e082e4f0",
+    "route_labels": [
+     "cup_0:through_slot:wall_0:0:pitched-90",
+     "block_0:around:wall_0:-y",
+     "marker_0:through_slot:wall_0:0:pitched-90"
+    ],
+    "scene_id": "dev_shortcut_4243",
+    "spec_version_id": "g1a19eea2ff16435.v1",
+    "status": "success",
+    "violations": []
+   },
+   "base_under_revised": {
+    "beads": [
+     {
+      "beads_in_container": 4,
+      "beads_total": 8,
+      "object_id": "cup_0"
+     }
+    ],
+    "content_sha256": "e082e4f0b4d67b02a043335ea29d266423f9b79b17b1d8feac1506d153f8e2f5",
+    "label": "r003",
+    "plan_reason": "",
+    "plan_status": "",
+    "rollout_id": "g1a19eea2ff16435.v1.s4243.r003.e082e4f0",
+    "route_labels": [],
+    "scene_id": "dev_shortcut_4243",
+    "spec_version_id": "g1a19eea2ff16435.v2",
+    "status": "constraint_violated",
+    "violations": [
+     {
+      "constraint_id": "c_upright_transport_cup",
+      "detail": "tilt > 15 deg during transport for 4.144 s (1036 steps)",
+      "object_id": "cup_0",
+      "peak": 89.53617484662192,
+      "t_end": 10.98799999999919,
+      "t_start": 6.847999999999645
+     }
+    ]
+   },
+   "revised": {
+    "beads": [
+     {
+      "beads_in_container": 8,
+      "beads_total": 8,
+      "object_id": "cup_0"
+     }
+    ],
+    "content_sha256": "7e5f86d1342c3ce8c4d8255d805d7e2e6d1dfcb4cbb45e8bd8c3737313e5a18d",
+    "label": "r004",
+    "plan_reason": "",
+    "plan_status": "ok",
+    "rollout_id": "g1a19eea2ff16435.v2.s4243.r004.7e5f86d1",
+    "route_labels": [
+     "cup_0:around:wall_0:-y",
+     "block_0:around:wall_0:-y",
+     "marker_0:through_slot:wall_0:0:pitched-90"
+    ],
+    "scene_id": "dev_shortcut_4243",
+    "spec_version_id": "g1a19eea2ff16435.v2",
+    "status": "success",
+    "violations": []
+   },
+   "scene_id": "dev_shortcut_4243",
+   "scene_sha256": "b3d115cddeaea155cacf631eeac8f4283f199b67809a329918949a4beaf01edf",
+   "seed": 4243
+  },
+  {
+   "base": {
+    "beads": [
+     {
+      "beads_in_container": 3,
+      "beads_total": 8,
+      "object_id": "cup_0"
+     }
+    ],
+    "content_sha256": "63734889950dd55c10979c4a88aaae0621ce778210e0cc1af4d7657a0cf46117",
+    "label": "r005",
+    "plan_reason": "",
+    "plan_status": "ok",
+    "rollout_id": "g1a19eea2ff16435.v1.s4244.r005.63734889",
+    "route_labels": [
+     "cup_0:through_slot:wall_0:0:pitched-90",
+     "block_0:around:wall_0:+y",
+     "marker_0:through_slot:wall_0:0:pitched-90"
+    ],
+    "scene_id": "dev_shortcut_4244",
+    "spec_version_id": "g1a19eea2ff16435.v1",
+    "status": "success",
+    "violations": []
+   },
+   "base_under_revised": {
+    "beads": [
+     {
+      "beads_in_container": 3,
+      "beads_total": 8,
+      "object_id": "cup_0"
+     }
+    ],
+    "content_sha256": "63734889950dd55c10979c4a88aaae0621ce778210e0cc1af4d7657a0cf46117",
+    "label": "r005",
+    "plan_reason": "",
+    "plan_status": "",
+    "rollout_id": "g1a19eea2ff16435.v1.s4244.r005.63734889",
+    "route_labels": [],
+    "scene_id": "dev_shortcut_4244",
+    "spec_version_id": "g1a19eea2ff16435.v2",
+    "status": "constraint_violated",
+    "violations": [
+     {
+      "constraint_id": "c_upright_transport_cup",
+      "detail": "tilt > 15 deg during transport for 4.152 s (1038 steps)",
+      "object_id": "cup_0",
+      "peak": 89.69355537745567,
+      "t_end": 10.951999999999193,
+      "t_start": 6.803999999999649
+     }
+    ]
+   },
+   "revised": {
+    "beads": [
+     {
+      "beads_in_container": 8,
+      "beads_total": 8,
+      "object_id": "cup_0"
+     }
+    ],
+    "content_sha256": "caa666ccd07863b35644c4765a182cc927bd23b0e75b14f19a1d578a6a2fb797",
+    "label": "r006",
+    "plan_reason": "",
+    "plan_status": "ok",
+    "rollout_id": "g1a19eea2ff16435.v2.s4244.r006.caa666cc",
+    "route_labels": [
+     "cup_0:around:wall_0:+y",
+     "block_0:around:wall_0:+y",
+     "marker_0:through_slot:wall_0:0:pitched-90"
+    ],
+    "scene_id": "dev_shortcut_4244",
+    "spec_version_id": "g1a19eea2ff16435.v2",
+    "status": "success",
+    "violations": []
+   },
+   "scene_id": "dev_shortcut_4244",
+   "scene_sha256": "64a36a13c3a80fe633cbba9ab8604d6b3f2fbdd28828f4251adc7094d6caa9e6",
+   "seed": 4244
+  },
+  {
+   "base": {
+    "beads": [
+     {
+      "beads_in_container": 5,
+      "beads_total": 8,
+      "object_id": "cup_0"
+     }
+    ],
+    "content_sha256": "6227c948168c324bbd96b4b83af12e51085acd84a98db2fb324a7157f9a13a54",
+    "label": "r007",
+    "plan_reason": "",
+    "plan_status": "ok",
+    "rollout_id": "g1a19eea2ff16435.v1.s4245.r007.6227c948",
+    "route_labels": [
+     "cup_0:through_slot:wall_0:0:pitched+90",
+     "block_0:around:wall_0:-y",
+     "marker_0:through_slot:wall_0:0:pitched+90"
+    ],
+    "scene_id": "dev_shortcut_4245",
+    "spec_version_id": "g1a19eea2ff16435.v1",
+    "status": "success",
+    "violations": []
+   },
+   "base_under_revised": {
+    "beads": [
+     {
+      "beads_in_container": 5,
+      "beads_total": 8,
+      "object_id": "cup_0"
+     }
+    ],
+    "content_sha256": "6227c948168c324bbd96b4b83af12e51085acd84a98db2fb324a7157f9a13a54",
+    "label": "r007",
+    "plan_reason": "",
+    "plan_status": "",
+    "rollout_id": "g1a19eea2ff16435.v1.s4245.r007.6227c948",
+    "route_labels": [],
+    "scene_id": "dev_shortcut_4245",
+    "spec_version_id": "g1a19eea2ff16435.v2",
+    "status": "constraint_violated",
+    "violations": [
+     {
+      "constraint_id": "c_upright_transport_cup",
+      "detail": "tilt > 15 deg during transport for 4.152 s (1038 steps)",
+      "object_id": "cup_0",
+      "peak": 89.6683092281895,
+      "t_end": 11.651999999999116,
+      "t_start": 7.503999999999572
+     }
+    ]
+   },
+   "revised": {
+    "beads": [
+     {
+      "beads_in_container": 8,
+      "beads_total": 8,
+      "object_id": "cup_0"
+     }
+    ],
+    "content_sha256": "e3f7a95b18a777232100549f50c50756e0f70a30875320695d56f3a1fb86e86b",
+    "label": "r008",
+    "plan_reason": "",
+    "plan_status": "ok",
+    "rollout_id": "g1a19eea2ff16435.v2.s4245.r008.e3f7a95b",
+    "route_labels": [
+     "cup_0:around:wall_0:-y",
+     "block_0:around:wall_0:-y",
+     "marker_0:through_slot:wall_0:0:pitched+90"
+    ],
+    "scene_id": "dev_shortcut_4245",
+    "spec_version_id": "g1a19eea2ff16435.v2",
+    "status": "success",
+    "violations": []
+   },
+   "scene_id": "dev_shortcut_4245",
+   "scene_sha256": "ac1f7de0ee69a1c68ea777f555ccd5cb3a2333bc701709b82c5ff35594bd1d09",
+   "seed": 4245
+  }
+ ],
+ "record_id": "df8a0d67104a6025"
+}
