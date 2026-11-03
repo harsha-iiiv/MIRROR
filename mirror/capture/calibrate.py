@@ -333,7 +333,7 @@ def table_pose(det: Detection, intr: Intrinsics, spec: TargetSpec, print_check: 
     checks = [
         Check(name="pose_lift_error_mm", value=round(lift_err, 2), threshold=T["pose_max_lift_error_mm"],
               passed=lift_err <= T["pose_max_lift_error_mm"],
-              note=f"camera centre spread {csig:.0f} mm; tilt the phone 10-20 degrees from straight down or move it closer if this fails"),
+              note=f"camera centre spread {csig:.0f} mm; tilt the phone 25-35 degrees from straight down or move it closer if this fails"),
         Check(name="pose_corners", value=det.n, threshold=T["pose_min_corners"], passed=det.n >= T["pose_min_corners"]),
         Check(name="pose_rms_px", value=round(rms, 4), threshold=T["pose_max_rms_px"], passed=rms <= T["pose_max_rms_px"]),
         Check(name="pose_view_angle_deg", value=round(view_angle, 2), threshold=T["pose_max_view_angle_deg"],
