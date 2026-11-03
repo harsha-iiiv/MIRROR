@@ -1,0 +1,1053 @@
+{
+ "status": "POST-HOC DEVELOPMENT ANALYSIS. Registered video2 results unchanged. No model calls.",
+ "code": "4cd949f (perception a7b43b2 + offline proposer that asks about unobserved tilt, semantics 8a0627a)",
+ "interpreter": "offline rules (deterministic) on the video-derived and the ground-truth trace",
+ "scripted_answers": "each clarifying question is answered from the ground-truth offline specification: 'required' if it has the same rule type, phase and object, otherwise 'incidental'. No person answered; this measures what correct answers would recover, not how people answer.",
+ "definitions": {
+  "equal_without_answers": "items the proposal asserts from evidence (question-only items unanswered, so not enforced) equal the ground-truth proposal",
+  "questions": "question-only items: the evidence did not show the property (offline proposer lean 'unclear', no supporting regularity)",
+  "equal_after_scripted_answers": "equal after every question is answered from the ground truth"
+ },
+ "sets": {
+  "video2": {
+   "label": "held-out: recorded video2 tracks 71000-71015 (post-hoc)",
+   "aggregate": {
+    "seeds": 16,
+    "completed": 16,
+    "old_base_spec_equal": "9/16",
+    "v2_spec_equal": "0/16",
+    "equal_without_answers": "0/16",
+    "equal_without_answers_and_no_questions": "0/16",
+    "questions_total": 73,
+    "seeds_with_questions": 16,
+    "equal_after_scripted_answers": "9/16",
+    "residual_causes": {
+     "no carry interval detected": 4,
+     "object not shown ending in the tray": 5,
+     "false tilt measurement while carried": 1
+    }
+   },
+   "rows": [
+    {
+     "seed": 71000,
+     "questions": 6,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 20.6,
+     "residual_causes": []
+    },
+    {
+     "seed": 71001,
+     "questions": 5,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": false,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_after_answers": [],
+     "elapsed_s": 42.6,
+     "residual_causes": [
+      "marker: no carry interval detected (grasp/release missed), so no transport question was asked"
+     ]
+    },
+    {
+     "seed": 71002,
+     "questions": 4,
+     "question_items": [
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": false,
+     "missing_without_answers": [
+      "goal inside: block",
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [
+      "goal inside: block",
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_after_answers": [],
+     "elapsed_s": 7.8,
+     "residual_causes": [
+      "block: not shown ending in the tray by the video, so it is left out of the task with its rules"
+     ]
+    },
+    {
+     "seed": 71003,
+     "questions": 6,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 51.8,
+     "residual_causes": []
+    },
+    {
+     "seed": 71004,
+     "questions": 5,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 38.5,
+     "residual_causes": []
+    },
+    {
+     "seed": 71005,
+     "questions": 6,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 19.1,
+     "residual_causes": []
+    },
+    {
+     "seed": 71006,
+     "questions": 5,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 20.7,
+     "residual_causes": []
+    },
+    {
+     "seed": 71007,
+     "questions": 4,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright final: cup",
+      "upright transport: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": false,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [
+      "upright transport: cup {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_after_answers": [],
+     "elapsed_s": 20.7,
+     "residual_causes": [
+      "cup: tilt measured at 30 deg while carried (truth about 0): false tilt measurement"
+     ]
+    },
+    {
+     "seed": 71008,
+     "questions": 6,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 21.2,
+     "residual_causes": []
+    },
+    {
+     "seed": 71009,
+     "questions": 1,
+     "question_items": [
+      "upright transport: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": false,
+     "missing_without_answers": [
+      "goal inside: block",
+      "goal inside: cup",
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [
+      "goal inside: block",
+      "goal inside: cup",
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_after_answers": [],
+     "elapsed_s": 43.0,
+     "residual_causes": [
+      "block: not shown ending in the tray by the video, so it is left out of the task with its rules",
+      "cup: not shown ending in the tray by the video, so it is left out of the task with its rules"
+     ]
+    },
+    {
+     "seed": 71010,
+     "questions": 2,
+     "question_items": [
+      "upright final: block",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright final: block": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": false,
+     "missing_without_answers": [
+      "goal inside: cup",
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [
+      "goal inside: cup",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_after_answers": [],
+     "elapsed_s": 129.8,
+     "residual_causes": [
+      "block: no carry interval detected (grasp/release missed), so no transport question was asked",
+      "cup: not shown ending in the tray by the video, so it is left out of the task with its rules",
+      "marker: no carry interval detected (grasp/release missed), so no transport question was asked"
+     ]
+    },
+    {
+     "seed": 71011,
+     "questions": 4,
+     "question_items": [
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": false,
+     "missing_without_answers": [
+      "goal inside: block",
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [
+      "goal inside: block",
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_after_answers": [],
+     "elapsed_s": 22.1,
+     "residual_causes": [
+      "block: not shown ending in the tray by the video, so it is left out of the task with its rules"
+     ]
+    },
+    {
+     "seed": 71012,
+     "questions": 5,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 18.2,
+     "residual_causes": []
+    },
+    {
+     "seed": 71013,
+     "questions": 4,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": false,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_after_answers": [],
+     "elapsed_s": 9.1,
+     "residual_causes": [
+      "marker: no carry interval detected (grasp/release missed), so no transport question was asked"
+     ]
+    },
+    {
+     "seed": 71014,
+     "questions": 5,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 39.8,
+     "residual_causes": []
+    },
+    {
+     "seed": 71015,
+     "questions": 5,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 41.0,
+     "residual_causes": []
+    }
+   ]
+  },
+  "dev": {
+   "label": "development: attempt-1 tracks 70000-70011",
+   "aggregate": {
+    "seeds": 12,
+    "completed": 12,
+    "old_base_spec_equal": "n/a",
+    "v2_spec_equal": "0/12",
+    "equal_without_answers": "0/12",
+    "equal_without_answers_and_no_questions": "0/12",
+    "questions_total": 63,
+    "seeds_with_questions": 12,
+    "equal_after_scripted_answers": "9/12",
+    "residual_causes": {
+     "object not shown ending in the tray": 2,
+     "no carry interval detected": 1
+    }
+   },
+   "rows": [
+    {
+     "seed": 70000,
+     "questions": 4,
+     "question_items": [
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": false,
+     "missing_without_answers": [
+      "goal inside: block",
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [
+      "goal inside: block",
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_after_answers": [],
+     "elapsed_s": 38.8,
+     "residual_causes": [
+      "block: not shown ending in the tray by the video, so it is left out of the task with its rules"
+     ]
+    },
+    {
+     "seed": 70001,
+     "questions": 6,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 2.0,
+     "residual_causes": []
+    },
+    {
+     "seed": 70002,
+     "questions": 6,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 19.5,
+     "residual_causes": []
+    },
+    {
+     "seed": 70003,
+     "questions": 6,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 45.9,
+     "residual_causes": []
+    },
+    {
+     "seed": 70004,
+     "questions": 6,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 8.1,
+     "residual_causes": []
+    },
+    {
+     "seed": 70005,
+     "questions": 5,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 19.6,
+     "residual_causes": []
+    },
+    {
+     "seed": 70006,
+     "questions": 6,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 44.0,
+     "residual_causes": []
+    },
+    {
+     "seed": 70007,
+     "questions": 4,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": false,
+     "missing_without_answers": [
+      "goal inside: marker",
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [
+      "goal inside: marker",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_after_answers": [],
+     "elapsed_s": 20.5,
+     "residual_causes": [
+      "marker: not shown ending in the tray by the video, so it is left out of the task with its rules"
+     ]
+    },
+    {
+     "seed": 70008,
+     "questions": 6,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 8.2,
+     "residual_causes": []
+    },
+    {
+     "seed": 70009,
+     "questions": 4,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": false,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_after_answers": [],
+     "elapsed_s": 7.7,
+     "residual_causes": [
+      "marker: no carry interval detected (grasp/release missed), so no transport question was asked"
+     ]
+    },
+    {
+     "seed": 70010,
+     "questions": 6,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright final: cup",
+      "upright transport: marker",
+      "upright final: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright final: cup": "required",
+      "upright transport: marker": "required",
+      "upright final: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright final: cup {\"max_tilt_deg\": 15.0}",
+      "upright final: marker {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 50.0,
+     "residual_causes": []
+    },
+    {
+     "seed": 70011,
+     "questions": 4,
+     "question_items": [
+      "upright transport: block",
+      "upright final: block",
+      "upright transport: cup",
+      "upright transport: marker"
+     ],
+     "scripted_answers": {
+      "upright transport: block": "required",
+      "upright final: block": "required",
+      "upright transport: cup": "required",
+      "upright transport: marker": "required"
+     },
+     "equal_without_answers": false,
+     "equal_without_answers_and_no_questions": false,
+     "equal_after_scripted_answers": true,
+     "missing_without_answers": [
+      "upright final: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: block {\"max_tilt_deg\": 15.0}",
+      "upright transport: cup {\"max_tilt_deg\": 15.0}",
+      "upright transport: marker {\"max_tilt_deg\": 15.0}"
+     ],
+     "extra_without_answers": [],
+     "missing_after_answers": [],
+     "extra_after_answers": [],
+     "elapsed_s": 74.9,
+     "residual_causes": []
+    }
+   ]
+  }
+ }
+}
