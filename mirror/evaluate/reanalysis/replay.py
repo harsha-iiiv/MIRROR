@@ -51,12 +51,21 @@ def detail_view(rep: dict) -> dict:
     return d
 
 
+def numeric_view(rep: dict) -> dict:
+    """Continuous quantities (not hashed): per object tilts, plus executed time and physics steps."""
+    return dict(execution_time_s=rep.get("execution_time_s"), physics_steps=rep.get("physics_steps"),
+                objects={o["object_id"]: dict(final_tilt_deg=o.get("final_tilt_deg"),
+                                              max_transport_tilt_deg=o.get("max_transport_tilt_deg"))
+                         for o in rep.get("outcomes", [])})
+
+
 def trial_digests(trial: dict) -> dict:
     out = dict(seed=trial["seed"], scene_id=trial["scene_id"], scene_sha256=trial["scene_sha256"])
     for side in ("a", "b"):
         r = trial[side]["report"]
         out[side] = dict(condition=trial[side]["condition"], outcome_sha256=_h(outcome_view(r)),
-                         detail_sha256=_h(detail_view(r)), outcome=outcome_view(r), detail=detail_view(r))
+                         detail_sha256=_h(detail_view(r)), outcome=outcome_view(r), detail=detail_view(r),
+                         numeric=numeric_view(r))
     return out
 
 
@@ -139,6 +148,8 @@ def replay(reg_dir: Path, repo: Path, workers: int = 2, strata=None) -> dict:
                     differences={x: {k: (s[x]["detail"].get(k), r[x]["detail"].get(k))
                                      for k in r[x]["detail"] if r[x]["detail"].get(k) != s[x]["detail"].get(k)}
                                  for x in ("a", "b")}))
+        res["per_trial"] = {r["seed"]: {x: dict(detail=r[x]["detail"], numeric=r[x]["numeric"]) for x in ("a", "b")}
+                            for r in rows}
         comp[name] = res
     import platform
     try:
@@ -173,7 +184,7 @@ def main(argv=None) -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(rep, indent=1, sort_keys=True, default=str) + "\n")
     print(json.dumps({k: v for k, v in rep.items() if k != "strata"}, default=str))
-    print(json.dumps({k: {kk: vv for kk, vv in v.items() if kk != "mismatches"} for k, v in rep["strata"].items()}))
+    print(json.dumps({k: {kk: vv for kk, vv in v.items() if kk not in ("mismatches", "per_trial")} for k, v in rep["strata"].items()}))
     return 0
 
 
