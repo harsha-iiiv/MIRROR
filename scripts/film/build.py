@@ -140,7 +140,7 @@ class Vertical:
     def chips(self, d, items):
         y = self.SIM[1] + 16
         for t in items:
-            _, y2 = chip(d, (24, y), t, font("medium", 28))
+            _, y2 = chip(d, (24, y), t, font("medium", 32))
             y = y2 + 10
 
 
@@ -302,7 +302,7 @@ def social_shots(ctx):
         if a2:
             text_block(d, (60, 930), "Block and marker: unchanged.", font("medium", 42), fill=A(MUTED, a2))
             text_block(d, (60, 1030), "Typed. Compiled by Muse Spark (recorded response, replayed); "
-                       "the offline rules produce the same change.", font("regular", 32), fill=A(MUTED, a2), max_w=960)
+                       "the offline rules produce the same change.", font("regular", 36), fill=A(MUTED, a2), max_w=960)
     recs.append(run_card(ctx, L, cut, "s2_correction", 5.5, d2,
                          dict(src=dict(source="summary.json spec_provenance + spec_diff", correction=sentence,
                                        model=prov.get("requested_model"), from_cassette=True,
@@ -319,8 +319,8 @@ def social_shots(ctx):
         a = fade(info.i, int(3.6 * FPS))
         if a:
             text_block(d, (60, 455), "Upright while carried: VIOLATED", font("bold", 46), fill=A(RED, a))
-            text_block(d, (60, 515), f"tilted past 15° for {float(secs):.1f} s · read from the recorded physics log",
-                       font("regular", 32), fill=A(MUTED, a), max_w=960)
+            text_block(d, (60, 515), f"tilted past 15° for {float(secs):.1f} s, read from the recorded physics log",
+                       font("regular", 36), fill=A(MUTED, a), max_w=960)
     shot = SimShot(ctx.src(hook_src), t_start=5.6, duration=6.0, speed=1.0, freeze_at=9.2,
                    move=Move(dict(SIDE_CAM)))
     recs.append(run_sim(ctx, L, cut, "s3_rejudge", shot, d3,
@@ -328,20 +328,23 @@ def social_shots(ctx):
                                          recheck=dict(status=rc["status"], rule=up["rule_id"], detail=up["detail"])))))
 
     # S4 check 2: new layouts --------------------------------------------
-    seeds = [("mixed", 6200), ("mixed", 6201), ("shortcut", 6300), ("shortcut", 6301)]
+    seeds = [("mixed", 6200), ("shortcut", 6300)]
     names = [f"dev_{f}_{s}__corrected__p{CAL}" for f, s in seeds]
-    tiles = [(0, 590, 540, 540), (540, 590, 540, 540), (0, 1130, 540, 540), (540, 1130, 540, 540)]
-    ov = dict(lookat=(0.0, -0.02, 0.06), distance=1.30, azimuth=-58.0, elevation=-38.0)
+    tiles = [(0, 590, 1080, 538), (0, 1132, 1080, 538)]
+    ov = dict(lookat=(0.0, -0.02, 0.06), distance=1.05, azimuth=-58.0, elevation=-34.0)
     shots = [SimShot(ctx.src(n), t_start=0.0, duration=6.5, speed=6.0, move=Move(dict(ov)), trail_objects=["cup_0"])
              for n in names]
 
     def d4(d, infos):
         L.head(d, "Check 2. New layouts, same rule.", size=64)
-        text_block(d, (60, 455), "Planned and run on 4 development layouts:", font("medium", 38), fill=INK, max_w=960)
+        text_block(d, (60, 455), "Planned and run on new development layouts:", font("medium", 38), fill=INK, max_w=960)
         text_block(d, (60, 505), "cup upright, all 8 beads kept.", font("medium", 38), fill=GREEN, max_w=960)
         for (f, s), t, inf in zip(seeds, tiles, infos):
-            chip(d, (t[0] + 14, t[1] + 14), f"dev layout {s}", font("medium", 24))
-        chip(d, (24, 1190), SIM_LABEL + " · 6× speed", font("medium", 24))
+            chip(d, (t[0] + 20, t[1] + 16), f"dev layout {s}", font("medium", 32))
+            if inf.beads:
+                k, n = inf.beads
+                chip(d, (t[0] + 820, t[1] + 16), f"beads {k}/{n}", font("medium", 32), bg=RED if k < n else CHIP)
+        chip(d, (20, 1180), SIM_LABEL + " · 6× speed", font("medium", 30))
     recs.append(run_grid(ctx, L, cut, "s4_new_layouts", shots, tiles, d4,
                          dict(src=[src_rec(ctx, n, t=[0, 39], speed=6.0) for n in names]), 6.5))
 
@@ -368,7 +371,7 @@ def social_shots(ctx):
                        f"the only opening is {slot * 100:.1f} cm.", font("regular", 36), fill=A((235, 235, 235), a),
                        max_w=960)
             text_block(d, (60, 1000), "A statement about the simulated task model, not a physical-safety guarantee.",
-                       font("regular", 28), fill=A((190, 190, 196), a), max_w=960)
+                       font("regular", 32), fill=A((190, 190, 196), a), max_w=960)
     ts5 = spill_time(ctx.src(bsrc))
     shot = SimShot(ctx.src(bsrc), t_start=ts5 - 1.5, duration=6.5, speed=0.9, freeze_at=ts5 + 1.2,
                    move=Move(dict(SIDE_CAM)))
