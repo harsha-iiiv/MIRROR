@@ -149,7 +149,8 @@ class FakeStudio:
                 "diff": {"added": [], "changed": [], "removed": []}, "question": None, "options": [], "rejected": None,
                 "provenance": "offline_interpreter", "fallback_reason": "model unavailable (synthetic)",
                 "step_provenance": _sp("offline_fallback", interpreter="offline-rules", latency_s=0.004,
-                                       fallback_reason="model unavailable (synthetic)")}
+                                       fallback_reason="model unavailable (synthetic)"),
+                "trial_id": f"t-{cid}-{len(self.jobs)}", "focus_kind": body.get("focus_kind")}
         if "fly" in t:
             prop.update(rejected="Flying is not a supported rule (fixture).", outcome="refuse", reason_code="not_supported",
                         supported_changes=["keep an object upright", "keep a distance from obstacles"])
@@ -302,9 +303,14 @@ def make_handler(studio: FakeStudio):
                     return self._json(*studio.correction(cid, body))
                 if act == "manual":
                     ch = studio.challenges[cid]
-                    prop = {"text": None, "input": "manual_form", "changed": bool(body.get("ops")), "ops": body.get("ops", []),
-                            "scope": {"objects": ["cup_0"], "phases": [body.get("form", {}).get("phase")], "items": [o.get("target_id") for o in body.get("ops", [])]},
-                            "diff": {"added": [], "changed": [o.get("target_id") for o in body.get("ops", [])], "removed": []},
+                    edits = body.get("edits") or []
+                    if not edits or edits[0].get("action") not in ("set_rule", "add_ordering", "set_status"):
+                        return self._json(409, {"error": "invalid_edit", "detail": "bad manual edit"})
+                    e = edits[0]
+                    rid = f"c_{e.get('type')}_{e.get('phase')}_{e.get('object')}"
+                    prop = {"text": None, "input": "manual_form", "changed": True, "ops": [{"op": "modify_constraint", "target_id": rid}],
+                            "scope": {"objects": ["cup_0"], "phases": [e.get("phase")], "items": [rid]},
+                            "diff": {"added": [], "changed": [], "removed": []}, "trial_id": "t-manual-1",
                             "outcome": "apply", "reason_code": "manual", "provenance": "manual",
                             "step_provenance": _sp("manual_edit", interpreter="manual form")}
                     ch["proposal"], ch["state"] = prop, "proposed"
@@ -315,7 +321,7 @@ def make_handler(studio: FakeStudio):
                     return self._json(*studio.execute(cid))
                 if act == "publish":
                     return self._json(*studio.publish(cid))
-            if p in ("study/consent", "study/event"):
+            if p in ("study/start", "study/comprehension", "study/clarification"):
                 if not studio.study_enabled:
                     return self._json(404, {"error": "not_found", "detail": "study mode is off"})
                 studio.study_events.append({"path": p, **body})

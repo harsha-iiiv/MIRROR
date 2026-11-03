@@ -11,7 +11,7 @@ import { MicButton } from './media.js';
 import { fmtNum, fmtT, statusLabel, constraintText } from './util.js';
 import { demoSource } from './provenance.js';
 import { interpretationOutcome } from './outcomes.js';
-import { ProvChip, PlanOutcome } from './bits.js';
+import { ProvChip, PlanOutcome, RuleResults } from './bits.js';
 import * as C from './challenge_state.js';
 import { ManualEditor } from './manual.js';
 
@@ -39,6 +39,7 @@ function RunResult({ label, st, recordedView = false, expectFresh = false }) {
     <${Violations} list=${st.violations} />
     ${blocked ? html`<div style="margin-top:6px"><${PlanOutcome} report=${st} plan=${st.plan || null} outcome=${st.planning_outcome || st.outcome || null} compact=${true} /></div>` : ''}
     <div class="step-prov"><${ProvChip} sp=${st.step_provenance} legacy=${st.provenance} recordedView=${recordedView} expectFresh=${expectFresh} /></div>
+    <${RuleResults} rr=${st.rule_results} />
   </div>`;
 }
 
@@ -80,7 +81,8 @@ function RuleLanguage({ options }) {
   const rules = C.supportedRules(options);
   return html`<details class="ov-details ch-rules"><summary>What you can say</summary>
     <p class="muted">Corrections are compiled into a small rule language. These rule kinds are supported by the interpreter, planner and checker:</p>
-    <ul class="plain">${rules.map((r) => html`<li>${C.ruleKindText(r)}${(r.phases || []).length ? html` <span class="faint">(${r.phases.join(', ')})</span>` : ''}${r.example ? html`<div class="faint">e.g. “${r.example}”</div>` : ''}</li>`)}</ul>
+    ${(options?.correction?.supported_changes || []).length ? html`<ul class="plain">${options.correction.supported_changes.map((x) => html`<li>${x}</li>`)}</ul>`
+      : html`<ul class="plain">${rules.map((r) => html`<li>${C.ruleKindText(r)}${(r.phases || []).length ? html` <span class="faint">(${r.phases.join(', ')})</span>` : ''}${r.example ? html`<div class="faint">e.g. “${r.example}”</div>` : ''}</li>`)}</ul>`}
     <p class="faint">${options?.correction?.note || 'Anything else is answered with a question or refused; nothing changes until you accept a proposal.'}</p>
   </details>`;
 }
@@ -102,7 +104,11 @@ function useStudy() {
   const q = new URLSearchParams(location.search);
   const participant = q.get('study');
   const valid = participant && /^(P\d\d|DEV)$/.test(participant);
-  return valid ? { participant, task: q.get('task') || null, condition: q.get('condition') || 'mirror' } : null;
+  const origin = q.get('origin');
+  return valid ? { participant, task: q.get('task') || null, condition: q.get('condition') === 'manual' ? 'manual' : 'mirror',
+    context: participant === 'DEV' ? 'dev_smoke' : 'usability_pilot',
+    task_origin: ['prepared', 'developer_written', 'independently_authored'].includes(origin) ? origin : 'prepared',
+    task_packet_sha256: q.get('packet') || null } : null;
 }
 
 function Consent({ study, options, consent, setConsent }) {
@@ -115,7 +121,8 @@ function Consent({ study, options, consent, setConsent }) {
     const c = { recorded: yes && rec, text: yes && rec && text, audio: yes && rec && audio };
     if (!c.recorded) { setConsent({ ...c, note: '' }); return; }
     try {
-      await api.post('study/consent', { participant: study.participant, task: study.task, condition: study.condition, consent: c });
+      await api.post('study/start', { participant: study.participant, context: study.context, task: study.task, task_origin: study.task_origin,
+        condition: study.condition, consent: { ...c, quote: false }, task_packet_sha256: study.task_packet_sha256 });
       setConsent({ ...c, note: '' });
     } catch (e) {
       setMsg(e.status === 404 ? 'This server does not record trials, so nothing will be stored.' : `Consent could not be saved: ${e.message || e}. Nothing will be recorded.`);
@@ -134,11 +141,19 @@ function Consent({ study, options, consent, setConsent }) {
   </div>`;
 }
 
-function Comprehension({ truth }) {
+function Comprehension({ trialId }) {
   const [ans, setAns] = useState(null);
-  const send = (a) => { setAns(a); api.post('study/event', { event: 'comprehension', answer: a, truth }).catch(() => {}); };
+  const send = (a) => { setAns(a); api.post('study/comprehension', { trial_id: trialId || null, answer: a }).catch(() => {}); };
   return html`<div class="callout" style="margin-top:8px"><b>Quick question:</b> was the result you just saw computed now, or recorded earlier?
     <div class="row" style="margin-top:6px">${['fresh', 'recorded', 'unsure'].map((a) => html`<button class="btn small" aria-pressed=${ans === a} onClick=${() => send(a)}>${{ fresh: 'Computed now', recorded: 'Recorded', unsure: 'Not sure' }[a]}</button>`)}</div></div>`;
+}
+
+// After a clarifying question was answered: was it useful? (study mode only)
+function Usefulness({ trialId, done }) {
+  const send = (n) => { api.post('study/clarification', { trial_id: trialId === 'pending' ? null : trialId, answered: true, useful: n }).catch(() => {}); done(); };
+  return html`<div class="callout" style="margin-bottom:8px">Was MIRROR's question useful? <div class="row" style="margin-top:6px">
+    ${[1, 2, 3, 4, 5].map((n) => html`<button class="btn small" onClick=${() => send(n)} aria-label=${`${n} of 5`}>${n}</button>`)}
+    <span class="faint">1 not at all · 5 very</span></div></div>`;
 }
 
 // ----------------------------------------------------------------- builder (live)
@@ -163,6 +178,9 @@ function ChallengeBuilder({ ctx }) {
   const [showing, setShowing] = useState('before');
   const [copied, setCopied] = useState(false);
   const [history, setHistory] = useState([]);     // finished challenges: layout and results
+  const [focus, setFocus] = useState('');          // object the correction is about (optional)
+  const [lastTrial, setLastTrial] = useState(null);
+  const [askedTrial, setAskedTrial] = useState(null);   // a clarifying question's attempt, for the usefulness rating
   const run = useRef(0);                         // the newest challenge; older replies are ignored
   useEffect(() => {
     api.getJSONApi('challenge/options').then((o) => {
@@ -227,9 +245,13 @@ function ChallengeBuilder({ ctx }) {
     setProposal(null);
     const body = spoken && spoken.text === text ? { transcript_id: spoken.id } : { text: text.trim() };
     if (answer) body.answer = answer;
+    if (focus) body.focus_kind = focus;
     const res = await ctx.action('challengeCorrect', () => api.post(`challenge/${encodeURIComponent(cid)}/correction`, body));
     if (mine !== run.current || !res) return;
-    setProposal(res.proposal || res);
+    const prop = res.proposal || res;
+    if (prop.trial_id) setLastTrial(prop.trial_id);
+    if (interpretationOutcome(prop)?.kind === 'clarify') setAskedTrial(prop.trial_id || 'pending');
+    setProposal(prop);
   };
   const decide = async (accept) => {
     const mine = run.current;
@@ -254,12 +276,14 @@ function ChallengeBuilder({ ctx }) {
   const copy = async () => {
     try { await navigator.clipboard.writeText(share.url); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch (_) { setCopied(false); }
   };
-  const submitManual = async (ops, form) => {
+  const submitManual = async (edits, ops) => {
     const mine = run.current;
     setProposal(null);
-    const res = await ctx.action('challengeCorrect', () => api.post(`challenge/${encodeURIComponent(cid)}/manual`, { ops, form }));
+    const res = await ctx.action('challengeCorrect', () => api.post(`challenge/${encodeURIComponent(cid)}/manual`, { edits, note: '' }));
     if (mine !== run.current || !res) return;
-    setProposal(res.proposal || res);
+    const prop = res.proposal || res;
+    if (prop.trial_id) setLastTrial(prop.trial_id);
+    setProposal(prop);
   };
   const manual = study?.condition === 'manual';
   const pickOption = (o) => { setSpoken(null); if (o.answer != null) submit(o.answer); else setText(o.text); };
@@ -335,6 +359,8 @@ function ChallengeBuilder({ ctx }) {
       <div class="row" style="margin-top:8px">
         ${options.correction?.audio && ctx.snap.capabilities?.voice && micAllowed ? html`<${MicButton} ctx=${ctx} disabled=${!!busy('challengeCorrect')} onTranscript=${(tr) => { setSpoken(tr); setText(tr.text); }} />` : ''}
         ${options.correction?.audio && study && consent?.recorded && !consent?.audio ? html`<span class="faint">Speaking is off: you did not agree to keep audio.</span>` : ''}
+        <label class="focus-sel">About<select value=${focus} onChange=${(e) => setFocus(e.target.value)} aria-label="Which object the correction is about (optional)">
+          <option value="">any object</option><option value="cup">the cup</option><option value="block">the block</option><option value="marker">the marker</option></select></label>
         <span class="spacer"></span>
         <button class="btn primary" disabled=${!text.trim() || !!busy('challengeCorrect') || !!ch.after} onClick=${() => submit()}>Interpret my correction</button>
       </div>
@@ -344,6 +370,7 @@ function ChallengeBuilder({ ctx }) {
     ${proposal ? html`<div class="sec">
       <p class="ov-k">5 · Review what MIRROR understood</p>
       <${Clarify} proposal=${proposal} onPick=${pickOption} />
+      ${study && consent?.recorded && askedTrial && interpretationOutcome(proposal)?.kind !== 'clarify' ? html`<${Usefulness} trialId=${askedTrial} done=${() => setAskedTrial(null)} />` : ''}
       ${C.proposalAcceptable(proposal) ? html`<${ScopeBlock} proposal=${proposal} />
         ${!review ? html`<div class="row" style="margin-top:8px"><button class="btn ghost" onClick=${() => decide(false)}>Discard</button><span class="spacer"></span>
           <button class="btn primary" disabled=${!!busy('challengeReview')} onClick=${() => decide(true)}>Accept and re-check</button></div>` : ''}` : ''}
@@ -362,7 +389,7 @@ function ChallengeBuilder({ ctx }) {
         <div class="seg ov-seg" role="group" aria-label="Which run the stage shows">
           <button aria-pressed=${showing === 'before'} onClick=${() => setShowing('before')}>Before</button>
           <button aria-pressed=${showing === 'after'} onClick=${() => setShowing('after')}>After</button></div>
-        ${study && consent?.recorded ? html`<${Comprehension} truth=${ch.after.step_provenance?.kind || ch.after.provenance || 'unknown'} />` : ''}`
+        ${study && consent?.recorded ? html`<${Comprehension} trialId=${lastTrial} />` : ''}`
         : html`<button class="btn primary" disabled=${!!busy('challengeRun')} onClick=${execute}>Plan and run in MuJoCo</button>`}
       <${JobNote} k="challengeRun" />
     </div>` : ''}

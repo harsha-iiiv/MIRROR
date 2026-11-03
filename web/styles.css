@@ -506,3 +506,5 @@ ul.plain { padding-left: 18px; margin: 4px 0; font-size: 13px; }
 .rr .v.violated { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 45%, transparent); }
 .rr .v.unknown { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
 .manual { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s3); }
+.focus-sel { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--muted); }
+.focus-sel select { border: 1px solid var(--line-strong); background: var(--surface); border-radius: var(--r-pill); padding: 3px 8px; min-height: 30px; }

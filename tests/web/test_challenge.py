@@ -256,9 +256,10 @@ def test_study_consent_and_comprehension_event(fixture_data, browser):
         page.get_by_role("button", name="Recorded", exact=True).click()
         page.wait_for_timeout(500)
         ev = srv.studio.study_events
-        assert ev[0]["path"] == "study/consent" and ev[0]["consent"] == {"recorded": True, "text": False, "audio": False}
-        assert ev[0]["participant"] == "P01" and ev[0]["task"] == "C1"
-        assert ev[-1]["event"] == "comprehension" and ev[-1]["answer"] == "recorded" and ev[-1]["truth"] == "fixture"
+        assert ev[0]["path"] == "study/start" and ev[0]["consent"] == {"recorded": True, "text": False, "audio": False, "quote": False}
+        assert ev[0]["participant"] == "P01" and ev[0]["task"] == "C1" and ev[0]["context"] == "usability_pilot"
+        assert ev[0]["condition"] == "mirror" and ev[0]["task_origin"] == "prepared"
+        assert ev[-1]["path"] == "study/comprehension" and ev[-1]["answer"] == "recorded" and ev[-1]["trial_id"].startswith("t-")
         assert not errors, errors
         ctx.close()
 

@@ -221,7 +221,7 @@ def test_outcome_wording_never_claims_more_than_the_evidence(tmp_path):
 
 
 MANUAL = r"""
-import { manualOps } from '@JS@/manual_ops.js';
+import { manualOps, manualEdit } from '@JS@/manual_ops.js';
 const spec = DATA.spec;
 console.log(JSON.stringify({
   confirm: manualOps(spec, { type: 'upright', who: 'cup', phase: 'transport', max_tilt_deg: 15, status: 'confirmed' }),
@@ -231,6 +231,8 @@ console.log(JSON.stringify({
   order: manualOps(spec, { type: 'ordering', before: 'marker', after: 'cup', status: 'confirmed' }),
   same: manualOps(spec, { type: 'ordering', before: 'cup', after: 'cup' }),
   noop: manualOps(spec, { type: 'upright', who: 'cup', phase: 'final', max_tilt_deg: 15, status: 'confirmed' }),
+  edit: manualEdit({ type: 'keep_clearance', who: 'all', phase: 'transport', min_m: '0.03', status: 'confirmed' }),
+  editOrd: manualEdit({ type: 'ordering', before: 'marker', after: 'cup' }),
 }));
 """
 
@@ -248,3 +250,6 @@ def test_manual_form_produces_spec_ops(tmp_path):
     assert o["bad"]["ops"] == [] and o["bad"]["error"]
     assert o["order"]["ops"][0]["op"] == "add_ordering" and o["order"]["ops"][0]["value"]["before"]["kind"] == "marker"
     assert o["same"]["error"] and o["noop"]["error"] == "The specification already says this."
+    assert add["target_id"] == "c_keep_clearance_transport_all"     # the studio's id convention
+    assert o["edit"] == {"action": "set_rule", "type": "keep_clearance", "object": "all", "phase": "transport", "status": "confirmed", "min_m": 0.03}
+    assert o["editOrd"] == {"action": "add_ordering", "before": "marker", "after": "cup"}

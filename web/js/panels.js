@@ -9,7 +9,8 @@ import { fmtT, fmtNum, statusLabel, constraintText, selectorText, provText, scen
 export { humanRoute };
 import { rolloutCacheKey } from './identity.js';
 import { useDialog } from './a11y.js';
-import { PlanOutcome } from './bits.js';
+import { PlanOutcome, RuleResults } from './bits.js';
+export { RuleResults };
 import { demoSource, videoMediaKind, reviewItems } from './provenance.js';
 
 const html = htm.bind(h);
@@ -104,16 +105,6 @@ function StaticNote({ ctx }) {
 }
 
 function Chip({ status, children }) { return html`<span class=${'chip ' + (status || '')}>${children || status}</span>`; }
-
-const VERDICT = { satisfied: 'held', violated: 'broken', unknown: 'unknown', not_applicable: 'not applicable', not_evaluated: 'not checked' };
-// Per-rule verdicts from the independent checker (enforced rules first).
-export function RuleResults({ rr }) {
-  if (!rr || !rr.length) return null;
-  const rows = [...rr].sort((a, b) => (b.enforced - a.enforced));
-  return html`<details class="ov-details"><summary>Per-rule verdicts (${rows.filter((x) => x.enforced).length} enforced)</summary>
-    <ul class="rr">${rows.map((x) => html`<li><span class=${'v ' + x.verdict}>${VERDICT[x.verdict] || x.verdict}</span>
-      <span class="num">${x.rule_id}</span><span class="muted">${x.enforced ? '' : '(not enforced)'} ${x.detail || ''}</span></li>`)}</ul></details>`;
-}
 
 export function ReportView({ r, compact = false }) {
   if (!r) return null;

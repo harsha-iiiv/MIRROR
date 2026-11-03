@@ -28,3 +28,13 @@ export function PlanOutcome({ plan = null, report = null, outcome = null, compac
     ${o.kind === 'no_route_found' ? html`<div class="muted" style="margin-top:4px">Not a safety guarantee either way: the robot did not move.</div>` : ''}
   </div>`;
 }
+
+const VERDICT = { satisfied: 'held', violated: 'broken', unknown: 'unknown', not_applicable: 'not applicable', not_evaluated: 'not checked' };
+// Per-rule verdicts from the independent checker (enforced rules first).
+export function RuleResults({ rr }) {
+  if (!rr || !rr.length) return null;
+  const rows = [...rr].sort((a, b) => (b.enforced - a.enforced));
+  return html`<details class="ov-details"><summary>Per-rule verdicts (${rows.filter((x) => x.enforced).length} enforced)</summary>
+    <ul class="rr">${rows.map((x) => html`<li><span class=${'v ' + x.verdict}>${VERDICT[x.verdict] || x.verdict}</span>
+      <span class="num">${x.rule_id}</span><span class="muted">${x.enforced ? '' : '(not enforced)'} ${x.detail || ''}</span></li>`)}</ul></details>`;
+}

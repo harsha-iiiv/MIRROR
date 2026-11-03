@@ -36,8 +36,18 @@ export function manualOps(spec, form) {
     return { ops, error: ops.length ? null : 'The specification already says this.' };
   }
   if (status === 'rejected') return { ops: [], error: 'There is no such rule to mark as not required.' };
-  const id = `c_${slug(form.type)}_${form.phase}_${form.who}_manual`;
+  const id = `c_${form.type}_${form.phase}_${form.who}`;   // same id a correction would produce
   return { ops: [{ op: 'add_constraint', target_id: id, rationale: 'manual edit', value: {
     id, type: form.type, applies_to: sel(form.who), phase: form.phase, params, status, provenance: prov, description: '' } }], error: null };
 }
 
+
+// The edit object the studio's manual form endpoint takes (mirror/studio/manual.py).
+export function manualEdit(form) {
+  if (form.type === 'ordering') return { action: 'add_ordering', before: form.before, after: form.after };
+  const e = { action: 'set_rule', type: form.type, object: form.who, phase: form.phase, status: form.status === 'rejected' ? 'rejected' : 'confirmed' };
+  if (form.type === 'upright') e.max_tilt_deg = Number(form.max_tilt_deg);
+  if (form.type === 'keep_clearance') e.min_m = Number(form.min_m);
+  if (form.type === 'forbidden_contact') e.with = form.with || [];
+  return e;
+}

@@ -4,7 +4,7 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import htm from 'htm';
-import { manualOps, KINDS, PHASES, CONTACT_WITH } from './manual_ops.js';
+import { manualOps, manualEdit, KINDS, PHASES, CONTACT_WITH } from './manual_ops.js';
 
 const html = htm.bind(h);
 export { manualOps };
@@ -29,7 +29,7 @@ export function ManualEditor({ spec, onSubmit, disabled }) {
         ${f.type === 'forbidden_contact' ? html`<label>Must not touch<select value=${f.with[0]} onChange=${(e) => setF({ ...f, with: [e.target.value] })}>${Object.entries(CONTACT_WITH).map(([k, t]) => html`<option value=${k}>${t}</option>`)}</select></label>` : ''}`}
       <label>Status<select value=${f.status} onChange=${set('status')}><option value="confirmed">required</option><option value="rejected">not required</option></select></label>
     </div>
-    ${error ? html`<p class="muted">${error}</p>` : html`<p class="faint">${ops.length} change${ops.length === 1 ? '' : 's'}: ${ops.map((o) => `${o.op} ${o.target_id}`).join(', ')}</p>`}
-    <div class="row"><span class="spacer"></span><button class="btn primary" disabled=${disabled || !!error || !ops.length} onClick=${() => onSubmit(ops, f)}>Propose this change</button></div>
+    ${error ? html`<p class="muted">${error}</p>` : html`<p class="faint">Preview: ${ops.map((o) => `${o.op} ${o.target_id}`).join(', ')} (the server validates and decides).</p>`}
+    <div class="row"><span class="spacer"></span><button class="btn primary" disabled=${disabled || !!error || !ops.length} onClick=${() => onSubmit([manualEdit(f)], ops, f)}>Propose this change</button></div>
   </div>`;
 }
