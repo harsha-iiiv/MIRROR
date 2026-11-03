@@ -447,6 +447,18 @@ def analyse(cache: Path) -> dict:
                         meds.append(float(np.median(g)))
             block["variants"][v]["registration_style_median_of_object_medians_cm"] = \
                 round(float(np.median(meds)), 4) if meds else None
+        # sensitivity: seeds where no sam-3.1 estimate lands within 5 cm (a whole-scene failure such as a wrong
+        # camera calibration, which every variant here shares) reported separately, never silently dropped
+        failed_scene = [r["seed"] for r in rs if r["estimates"].get("sam") and
+                        not any(_classify(x) == "hit" for x in frame_table(r, "sam"))]
+        if failed_scene:
+            keep = [r for r in rs if r["seed"] not in failed_scene]
+            block["sensitivity_without_whole_scene_failures"] = dict(
+                excluded_seeds=failed_scene,
+                reason="no sam-3.1 estimate within 5 cm in any frame; reconstruction notes in the frame records",
+                notes={str(r["seed"]): [n for n in (r["reconstruction_notes"].get("sam") or []) if not str(n).startswith("{")]
+                       for r in rs if r["seed"] in failed_scene},
+                position={v: position_summary([x for r in keep for x in frame_table(r, v)]) for v in ("sam", "colour", "oracle")})
         tilts = [tilt_summary(r) for r in rs]
         cup = [t for ts in tilts for t in ts.values()]
         per_seed_med = [t["registered_tilt_error_deg"]["median"] for t in cup if t["registered_tilt_error_deg"]]
@@ -475,6 +487,91 @@ def analyse(cache: Path) -> dict:
     return report
 
 
+# --------------------------------------------------------------- markdown ---
+
+def _c(q, k="median", unit=""):
+    return "n/a" if not q or q.get(k) is None else f"{q[k]:.2f}{unit}"
+
+
+def markdown(rep: dict) -> str:
+    L = ["# Video benchmark re-analysis (derived, offline)", "",
+         "Rebuilt from the stored sam-3.1 masks with the registration's own reconstruction; each seed's rebuilt "
+         "row was checked against the stored row first. No model call. Thresholds of the registration are not "
+         "re-applied here: these are descriptive, unconditional views of the same estimates.", "",
+         f"Miss penalty in the imputed view: {rep['miss_penalty']} (error of the object's last detection; table "
+         "centre if none yet). The registration's 5 cm gate is reported, never applied, in the unconditional "
+         "views.", "", "Variants: the colour-threshold baseline and the simulator-mask oracle replace only the cup, block and "
+         "marker masks; camera calibration still comes from the sam-3.1 table and tray masks, so a calibration "
+         "failure affects all three variants alike.", "", f"Tilt observability: {rep['tilt_observability']}.", ""]
+    for src, b in rep["sources"].items():
+        L += [f"## {src}: {b['note']}", "", f"Seeds: {len(b['seeds'])} ({', '.join(map(str, b['seeds']))}).", ""]
+        rr = b.get("reproduces_stored_rows") or {}
+        if any(v for v in rr.values()):
+            ok = sum(1 for v in rr.values() if v and all(v.values()))
+            L += [f"Rebuilt rows equal to the stored rows: {ok} of {sum(1 for v in rr.values() if v)} seeds.", ""]
+        L += ["### Position (table plane), every visible object-frame", "",
+              "| estimate | object-frames | within 5 cm | outliers (>5 cm) | identity errors | misses | "
+              "median, hits only (registered view) | median, all estimates | p90, all estimates | max | "
+              "median, misses as infinite | p90, misses as infinite | p90, misses held at last detection |",
+              "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+        names = dict(sam="sam-3.1 masks (registered)", colour="colour threshold (classical baseline)",
+                     oracle="simulator masks (oracle, upper bound)")
+        for v in ("sam", "colour", "oracle"):
+            p = b["variants"][v]["position"]
+            if not p:
+                L.append(f"| {names[v]} | not reconstructed | | | | | | | | | | | |")
+                continue
+            c = p["counts"]
+            L.append(f"| {names[v]} | {p['n_visible_object_frames']} | {c['hit']} ({p['rates']['hit']:.3f}) | "
+                     f"{c['outlier']} | {c['identity']} | {c['miss']} | {_c(p['error_cm_gated_hits_only'], unit=' cm')} | "
+                     f"{_c(p['error_cm_all_estimates_no_gate'], unit=' cm')} | {_c(p['error_cm_all_estimates_no_gate'], 'p90', ' cm')} | "
+                     f"{_c(p['error_cm_all_estimates_no_gate'], 'max', ' cm')} | "
+                     f"{_c(p['error_cm_misses_as_infinite'], unit=' cm') if p['error_cm_misses_as_infinite'].get('median') is not None else 'undefined'} | "
+                     f"{_c(p['error_cm_misses_as_infinite'], 'p90', ' cm') if p['error_cm_misses_as_infinite'].get('p90') is not None else 'undefined'} | "
+                     f"{_c(p['error_cm_misses_hold_last'], 'p90', ' cm')} |")
+        sp = b["variants"]["sam"]["position"]
+        if sp:
+            st = sp["error_cm_static_first_detection"]
+            L += ["", f"Static baseline (every object kept at its first sam-3.1 detection): median {_c(st, unit=' cm')}, "
+                  f"p90 {_c(st, 'p90', ' cm')}.", "",
+                  "By object kind (sam-3.1): " + "; ".join(
+                      f"{k}: {sp['by_kind'][k]['counts']['hit']}/{sp['by_kind'][k]['n_visible_object_frames']} within 5 cm, "
+                      f"{sp['by_kind'][k]['counts']['outlier']} outliers, {sp['by_kind'][k]['counts']['identity']} identity, "
+                      f"{sp['by_kind'][k]['counts']['miss']} misses, p90 all estimates "
+                      f"{_c(sp['by_kind'][k]['error_cm_all_estimates_no_gate'], 'p90', ' cm')}"
+                      for k in KIT_KINDS if sp["by_kind"].get(k)) + ".",
+                  "", "While an object is held (sam-3.1): "
+                  f"{sp['held_frames_only']['counts']['hit']}/{sp['held_frames_only']['n_visible_object_frames']} within 5 cm, "
+                  f"median all estimates {_c(sp['held_frames_only']['error_cm_all_estimates_no_gate'], unit=' cm')}, "
+                  f"p90 {_c(sp['held_frames_only']['error_cm_all_estimates_no_gate'], 'p90', ' cm')}.", ""]
+        sens = b.get("sensitivity_without_whole_scene_failures")
+        if sens:
+            L += [f"Whole-scene failure: seed(s) {', '.join(map(str, sens['excluded_seeds']))} ({sens['reason']}; "
+                  + "; ".join(f"{k}: {', '.join(v)}" for k, v in sens["notes"].items()) + "). Without them, for reference only: "
+                  + "; ".join(f"{v} {sens['position'][v]['counts']['hit']}/{sens['position'][v]['n_visible_object_frames']} within 5 cm, "
+                              f"p90 all estimates {_c(sens['position'][v]['error_cm_all_estimates_no_gate'], 'p90', ' cm')}"
+                              for v in ("sam", "colour", "oracle") if sens["position"].get(v)) + ".", ""]
+        L += ["Registration-style aggregate (median of per-object medians over hits within 5 cm): " + ", ".join(
+            f"{v} {b['variants'][v]['registration_style_median_of_object_medians_cm']} cm" for v in ("sam", "colour", "oracle")) + ".", ""]
+        t = b["tilt"]
+        L += ["### Cup tilt", "",
+              f"- Largest true cup tilt in any frame of any seed: {t['gt_tilt_max_deg_over_all_seeds']} deg.",
+              f"- Registered measure (median over seeds of per-seed median |estimate - truth|, on frames found within 5 cm "
+              f"with a tilt estimate): {t['registered_median_of_seed_medians_deg']} deg, from {t['scored_frames_total']} scored "
+              f"frames in {t['seeds_with_any_scored_tilt_frame']} seeds.",
+              f"- Constant-zero estimator on exactly those frames: {t['constant_zero_median_of_seed_medians_deg']} deg.",
+              f"- Side-view sampled frames with the cup visible: {t['side_visible_sampled_frames_total']}; with a tilt "
+              f"estimate: {t['side_visible_with_tilt_estimate_total']}. The rest are unobservable for tilt, not zero.",
+              ("- The true tilt never exceeds "
+               f"{t['gt_tilt_max_deg_over_all_seeds']} deg, so this benchmark cannot measure tilt estimation: "
+               + ("a constant-zero estimator beats the registered estimate, and " if (t['constant_zero_median_of_seed_medians_deg'] or 0)
+                  < (t['registered_median_of_seed_medians_deg'] or 0) else "")
+               + "no claim about tilt accuracy follows from it."
+               if (t['gt_tilt_max_deg_over_all_seeds'] or 0) < 1.0 else
+               "- The true tilt varies by more than 1 deg; compare the registered measure with the constant-zero row."), ""]
+    return "\n".join(L) + "\n"
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("cmd", choices=("extract", "analyse"))
@@ -494,6 +591,7 @@ def main(argv=None) -> int:
         out = repo / a.out
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(rep, indent=1, sort_keys=True) + "\n")
+        out.with_suffix(".md").write_text(markdown(rep))
         print(out)
     return 0
 
