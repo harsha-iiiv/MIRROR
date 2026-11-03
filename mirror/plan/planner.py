@@ -113,7 +113,10 @@ def mode_restrictions(spec: TaskSpec, g: Grounding, obj_id: str, cfg: PlannerCon
                                       f"max_tilt_deg {lim:g} during {c.phase})")
         elif c.type == "keep_clearance":
             if c.phase in ("transport", "always"):
-                margin_extra = max(margin_extra, float(c.params.get("min_m", 0.0)))
+                margin_extra = max(margin_extra, float(c.params.get("min_m", 0.0)) + cfg.clearance_tracking_margin)
+                if cfg.clearance_tracking_margin:
+                    notes.append(f"{c.id}: planned {cfg.clearance_tracking_margin:g} m wider than its "
+                                 f"{float(c.params.get('min_m', 0.0)):g} m (execution tolerance)")
             else:
                 notes.append(f"{c.id}: the tray spot for {obj_id} is checked against the clearance")
         elif c.type == "upright" and c.phase == "final":
@@ -295,12 +298,15 @@ def build_core(spec: TaskSpec, scene: SceneState, cfg: PlannerConfig = DEFAULT_C
             continue
         if crules:
             dp, near = object_clearance(obj, scene, pl.obj_pos, quat_to_mat(_yaw_quat(pl.obj_yaw)))
-            need = max(float(c.params.get("min_m", 0.0)) for c in crules)
+            rule_need = max(float(c.params.get("min_m", 0.0)) for c in crules)
+            need = rule_need + cfg.clearance_tracking_margin
             if dp < need - CLEARANCE_TOL:
+                extra = (f" plus the {cfg.clearance_tracking_margin:g} m planning margin"
+                         if cfg.clearance_tracking_margin else "")
                 core.objects.append(ObjectPlan(
                     obj, gm, gy, grasp_tcp, pre, None, transit, [], banned, allowed,
                     failure=(f"the chosen spot for {oid} in {tray.id} is {dp:.3f} m from {near}, closer than "
-                             f"the {need:g} m required by keep_clearance; no other spot was searched")))
+                             f"the {rule_need:g} m required by keep_clearance{extra}; no other spot was searched")))
                 continue
         held = gm.held(oid, rel)
         env_h = make_envelope(gm.width, held)

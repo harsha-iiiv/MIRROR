@@ -47,6 +47,7 @@ BACKEND_ID = "mirror.arm/1"
 CARRY_HEIGHTS = (None, 0.40)    # None: as planned
 MAX_ATTEMPTS = 40               # validation attempts per plan() call
 MAX_ROUTE_SWITCHES = 8
+CLEARANCE_TRACKING_MARGIN = 0.005   # m added to keep_clearance min_m when planning for the arm
 
 
 @dataclass
@@ -76,10 +77,19 @@ class ArmBackend:
     label = "articulated arm (UR10e, MuJoCo)"
 
     def __init__(self, mount: Mount = DEFAULT_MOUNT, *, max_attempts: int = MAX_ATTEMPTS,
-                 carry_heights: tuple = CARRY_HEIGHTS):
+                 carry_heights: tuple = CARRY_HEIGHTS,
+                 clearance_tracking_margin: float = CLEARANCE_TRACKING_MARGIN):
+        from dataclasses import replace
+
+        from mirror.plan.config import DEFAULT_CONFIG
         self.mount = mount
         self.max_attempts = max_attempts
         self.carry_heights = carry_heights
+        self.clearance_tracking_margin = clearance_tracking_margin
+        # keep_clearance rules are planned this much wider than min_m (the checker still uses min_m):
+        # the arm tracks its trajectory with a 2-3 mm lag, which dipped 0.4 mm below a rule planned
+        # at exactly min_m (0.0396 vs 0.040 m on the reference scene).
+        self.planner_config = replace(DEFAULT_CONFIG, clearance_tracking_margin=clearance_tracking_margin)
         self._cache: dict[str, _Choice] = {}
 
     # ------------------------------------------------------------ cache ---
@@ -93,10 +103,9 @@ class ArmBackend:
     # --------------------------------------------------------- planning ---
     def plan(self, spec: TaskSpec, scene: SceneState, *, prefer: Optional[str] = None) -> PlanResult:
         t0 = time.perf_counter()
-        from mirror.plan.config import DEFAULT_CONFIG
         from mirror.plan.planner import assemble, default_choices, feasible_sorted, plan_core
         try:
-            core = plan_core(spec, scene, DEFAULT_CONFIG)
+            core = plan_core(spec, scene, self.planner_config)
             base = assemble(core, default_choices(core, prefer))
         except Exception as exc:   # report, never hide
             return PlanResult(status="error", reason=f"{type(exc).__name__}: {exc}", spec_version=spec.version,

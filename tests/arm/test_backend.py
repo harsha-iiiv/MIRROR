@@ -118,3 +118,26 @@ def test_development_layouts_paired(arm_backend, specs, seed):
         assert rep.status == "success", (seed, spec.version, rep.status, rep.notes)
         cup = next(o for o in rep.outcomes if o.object_id.startswith("cup"))
         assert cup.beads_in_container == cup.beads_total
+
+
+def test_arm_plans_clearance_with_a_tracking_margin(arm_backend):
+    from mirror.arm.backend import CLEARANCE_TRACKING_MARGIN
+    assert CLEARANCE_TRACKING_MARGIN > 0
+    assert arm_backend.planner_config.clearance_tracking_margin == CLEARANCE_TRACKING_MARGIN
+
+
+@pytest.mark.slow
+def test_arm_execution_keeps_clearance_with_margin(arm_backend, specs, scenes):
+    """The arm tracks its trajectory with a 2-3 mm lag, so clearance rules are planned
+    CLEARANCE_TRACKING_MARGIN wider than min_m; the checker still judges min_m."""
+    from mirror.evaluate.geom import quat_to_mat
+    from mirror.plan.planner import object_clearance
+    s = scenes["demo"]
+    spec = _clearance_spec(specs[1], 0.04)
+    ro, log, plan = execute_trial(s, spec, condition="v3", planner=arm_backend.plan, env_factory=arm_backend.env)
+    assert plan.status == "ok" and ro.report.status == "success", ro.report.notes
+    cup = next(o for o in s.objects if o.kind == "cup")
+    i = log.object_ids.index(cup.id)
+    held = [k for k in range(log.n) if log.held[k][i]]
+    dmin = min(object_clearance(cup, s, log.obj_pos[k, i], quat_to_mat(log.obj_quat[k, i]))[0] for k in held[::5])
+    assert dmin >= 0.04
