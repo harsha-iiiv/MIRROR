@@ -76,6 +76,10 @@ class Speech(_M):
 class Gold(_M):
     outcome: Outcome
     edit: Optional[StructuredEdit] = None        # for "apply": the adjudicated change
+    # Other edits the adjudicators accept as meaning the same thing (scored as correct,
+    # reported separately as "acceptable alternative").
+    alternatives: list[StructuredEdit] = Field(default_factory=list)
+    adjudicators: list[str] = Field(default_factory=list)    # pseudonymous ids; empty for team fixtures
 
     @model_validator(mode="after")
     def _edit(self):
@@ -122,13 +126,19 @@ class SceneRef(_M):
         return f"ref_{self.name}" if self.kind == "reference" else f"{self.split}_{self.family}_{self.seed}"
 
 
+Base = Literal["reference_reviewed", "reference_unreviewed", "cup_transport_confirmed",
+               "block_strict", "ordering_confirmed", "all_transport_upright"]
+Track = Literal["authoring", "language"]
+
+
 class Case(_M):
     id: str
     category: Category
     author_id: str
+    track: Track = "authoring"                   # language: authoring-only, scored semantically
     scope_tags: list[str] = Field(default_factory=list)
     scene: SceneRef
-    base: Literal["reference_reviewed"] = "reference_reviewed"
+    base: Base = "reference_reviewed"
     turns: list[Turn]
     expect_execution: Expect = "compliant_completion"
     notes: str = ""
@@ -137,6 +147,8 @@ class Case(_M):
     def _turns(self):
         if not self.turns:
             raise ValueError("a case needs at least one turn")
+        if self.track == "language" and self.expect_execution != "not_executed":
+            raise ValueError("language-understanding cases are scored without execution")
         return self
 
 

@@ -6,6 +6,10 @@ dry-run on development cases only. Nothing here is frozen. No held-out case
 exists yet, no independent author has been recruited, and no number from this
 protocol is an evaluation result.
 
+Its separate **language-understanding track** (fresh independent corrections on
+varied bases, scored by independent adjudicators, no execution) is described in
+[v3_language.md](v3_language.md).
+
 ## Why a new protocol
 
 The two pre-registered evaluations run one fixed specification pair on new
@@ -193,6 +197,7 @@ tests the harness, not MIRROR:
 |---|---|---|
 | J0, optional: record Muse Spark on the development cases | at most 22 `compile_correction` requests to `muse-spark-1.3`, at most 2 repair retries each | $1.50 |
 | J1: the frozen held-out run | at most 250 turns × 3 attempts to `muse-spark-1.3`; at most 120 real-speaker clips (15 minutes of audio) to `muse-voice-transcribe-1.0` | $8.50 (expected about $3; admission reserves $0.05 per turn) |
+| J2: the frozen language-understanding run ([v3_language.md](v3_language.md)) | at most 300 turns × 3 attempts to `muse-spark-1.3` | $6 (expected about $3.50) |
 
 Prerequisites besides the budget: recruited independent authors, editors,
 adjudicators and speakers with signed consent (`study/consent_form.md`), a

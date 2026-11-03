@@ -5,6 +5,9 @@
   python -m mirror.evaluate.protocol_v3 report DIR
   python -m mirror.evaluate.protocol_v3 commit HOLDOUT.json     # custodian: hashes and counts only
   python -m mirror.evaluate.protocol_v3 verify MANIFEST.json
+  python -m mirror.evaluate.protocol_v3 adjudication-pack RUN_DIR --out DIR --seed N
+  python -m mirror.evaluate.protocol_v3 adjudication-agreement FIRST.json SECOND.json
+  python -m mirror.evaluate.protocol_v3 adjudication-unblind JUDGEMENTS.json KEY.json
 
 Dry runs read only the development cases and never generate evaluation
 layouts. ``--mirror-mode offline`` substitutes the offline rules for the model
@@ -61,7 +64,35 @@ def main(argv=None) -> int:
     c.add_argument("bundle")
     v = sub.add_parser("verify")
     v.add_argument("manifest")
+    p = sub.add_parser("adjudication-pack")
+    p.add_argument("run")
+    p.add_argument("--out", required=True)
+    p.add_argument("--seed", type=int, required=True)
+    g = sub.add_parser("adjudication-agreement")
+    g.add_argument("first")
+    g.add_argument("second")
+    u = sub.add_parser("adjudication-unblind")
+    u.add_argument("judgements")
+    u.add_argument("key")
+    d.add_argument("--language", action="store_true",
+                   help="use the development language-understanding cases (dev_language_cases.json)")
     a = ap.parse_args(argv)
+    if a.cmd == "dry-run" and a.language and a.cases == str(DEV_CASES):
+        from .access import DEV_LANGUAGE_CASES
+        a.cases = str(DEV_LANGUAGE_CASES)
+    if a.cmd.startswith("adjudication"):
+        from . import adjudication as J
+        if a.cmd == "adjudication-pack":
+            from .metrics import latest, load
+            res, _ = load(Path(a.run))
+            print(json.dumps(J.make_pack(latest(res).values(), Path(a.out), seed=a.seed)))
+        elif a.cmd == "adjudication-agreement":
+            print(json.dumps(J.gold_agreement(json.loads(Path(a.first).read_text()),
+                                              json.loads(Path(a.second).read_text())), indent=2))
+        else:
+            print(json.dumps(J.unblind(json.loads(Path(a.judgements).read_text()),
+                                       json.loads(Path(a.key).read_text())), indent=2))
+        return 0
 
     if a.cmd == "dry-run":
         from .runner import run

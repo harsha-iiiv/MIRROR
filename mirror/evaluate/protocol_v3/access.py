@@ -19,6 +19,7 @@ from .schema import CaseFile
 PKG_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PKG_DIR.parents[2]
 DEV_CASES = PKG_DIR / "dev_cases.json"
+DEV_LANGUAGE_CASES = PKG_DIR / "dev_language_cases.json"
 
 # Seed ranges reserved for protocol v3 (see design.json). Development cases may
 # only use development layouts and the reference scenes; held-out cases get

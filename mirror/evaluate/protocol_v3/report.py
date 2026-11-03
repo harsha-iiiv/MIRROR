@@ -8,7 +8,8 @@ from .metrics import load, paired, per_condition
 
 ROWS = [("Attempts by status", lambda s: ", ".join(f"{k} {v}" for k, v in sorted(s["attempt_status"].items())) or "-"),
         ("Turns exact (not measured)", lambda s: f"{s['turn_exact']}/{s['turns']} ({s['not_measured_turns']})"),
-        ("Apply turns exact", lambda s: f"{s['apply_exact']}/{s['apply_turns']}"),
+        ("Apply turns exact (of which acceptable alternative)",
+         lambda s: f"{s['apply_exact']}/{s['apply_turns']} ({s.get('acceptable_alternatives', 0)})"),
         ("Refusal turns exact (any refusal)", lambda s: f"{s['refusal_exact']}/{s['refusal_turns']} ({s['refused_any_type']})"),
         ("False accepts", lambda s: str(s["false_accepts"])),
         ("False refusals", lambda s: str(s["false_refusals"])),
@@ -25,8 +26,12 @@ ROWS = [("Attempts by status", lambda s: ", ".join(f"{k} {v}" for k, v in sorted
         ("Network calls / cost (USD)", lambda s: f"{s['network_calls']} / {s['cost_usd']}")]
 
 
-def markdown(out: Path, *, title: str, label: str, n_cases: int) -> str:
+def markdown(out: Path, *, title: str, label: str, n_cases: int, track=None) -> str:
     res, led = load(out)
+    if track is not None:
+        keep = {r["case_id"] for r in res if r.get("track", "authoring") == track}
+        res = [r for r in res if r["case_id"] in keep]
+        led = [e for e in led if e.get("case_id") in keep]
     summ = per_condition(res, led, n_cases)
     conds = list(summ)
     lines = [f"# {title}", "", label, "",
@@ -45,6 +50,14 @@ def markdown(out: Path, *, title: str, label: str, n_cases: int) -> str:
         cats = summ[c]["by_category"]
         lines.append(f"- {c}: " + "; ".join(f"{k} {v.get('cases', 0)}/{v.get('end_to_end_success', 0)}/"
                                               f"{v.get('final_state_exact', 0)}" for k, v in cats.items()))
+    tags = sorted({t for c in conds for t in summ[c].get("by_tag", {})})
+    if tags:
+        lines += ["", "By tag (turns exact / turns):", "", "| tag | " + " | ".join(conds) + " |",
+                  "|---|" + "---|" * len(conds)]
+        for tg in tags:
+            lines.append(f"| {tg} | " + " | ".join(
+                (lambda v: f"{v.get('turn_exact', 0)}/{v.get('turns', 0)}" if v else "-")(summ[c]["by_tag"].get(tg))
+                for c in conds) + " |")
     lines += ["", "Failures (every non-exact turn):", ""]
     for r in sorted(res, key=lambda r: (r["condition"], r["case_id"])):
         for i, t in enumerate(r["turns"]):
@@ -79,5 +92,13 @@ def write(out: Path, **kw) -> Path:
     p = out / "report.md"
     p.write_text(markdown(out, **kw))
     res, led = load(out)
-    (out / "summary.json").write_text(json.dumps(per_condition(res, led, kw.get("n_cases")), indent=2) + "\n")
+    summary = {"all": per_condition(res, led, kw.get("n_cases"))}
+    tracks = sorted({r.get("track", "authoring") for r in res})
+    if len(tracks) > 1:
+        for tr in tracks:
+            (out / f"report_{tr}.md").write_text(markdown(out, **{**kw, "title": kw["title"] + f" ({tr} track)"},
+                                                          track=tr))
+    for tr in tracks:
+        summary[tr] = per_condition(res, led, None, track=tr)
+    (out / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     return p
