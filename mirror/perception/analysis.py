@@ -153,3 +153,48 @@ def aggregate(rows: list[dict]) -> dict:
         required_corrections_total=sum(r["spec_offline"]["required_corrections"] for r in ok),
         seeds_with_abstain=sum(1 for r in ok if r["review"]["abstain"]),
     )
+
+
+def question_items(draft) -> list[tuple]:
+    """(type, phase, object kind) of proposal rules that are questions only: the
+    evidence did not show the property (lean "unclear", no supporting regularity)."""
+    return [(r.type, r.phase, r.object_kind) for r in draft.rules if r.lean == "unclear" and not r.regularity_ids]
+
+
+def spec_agreement(video_trace, gt_trace) -> dict:
+    """Offline proposal from the video trace against the offline proposal from the
+    ground-truth trace, with clarifying questions accounted for.
+
+    * equal_without_answers: the items the proposal asserts from evidence (question-
+      only items left unanswered, so not enforced) equal the ground-truth proposal.
+    * questions: the question-only items asked.
+    * equal_after_scripted_answers: each question answered from the ground-truth
+      specification (SCRIPTED: "required" if the ground-truth proposal has the same
+      rule type, phase and object, otherwise "incidental"); no person answered.
+    """
+    from mirror.evaluate.bench_video import proposal_signature
+    from mirror.interpret import propose_spec, summarize_demo
+    from mirror.interpret.offline import propose_offline
+    draft = propose_offline(summarize_demo(video_trace), video_trace.scene)
+    qs = question_items(draft)
+    sig_v = _sig_items(proposal_signature(propose_spec(video_trace)))
+    sig_g = _sig_items(proposal_signature(propose_spec(gt_trace)))
+
+    def key(item):
+        return None if item[0] != "constraint" else (item[1], item[2], json.loads(item[3]).get("kind"))
+    q_set = set(qs)
+    q_items = {i for i in sig_v if key(i) in q_set}
+    asserted = sig_v - q_items
+    gt_keys = {key(i) for i in sig_g if key(i) is not None}
+    answers = {f"{t} {p}: {k}": ("required" if (t, p, k) in gt_keys else "incidental") for t, p, k in qs}
+    answered = asserted | {i for i in q_items if key(i) in gt_keys}
+    return dict(
+        questions=len(qs), question_items=[f"{t} {p}: {k}" for t, p, k in qs],
+        scripted_answers=answers,
+        equal_without_answers=asserted == sig_g,
+        equal_without_answers_and_no_questions=(asserted == sig_g and not qs),
+        equal_after_scripted_answers=answered == sig_g,
+        missing_without_answers=sorted(_readable(i) for i in sig_g - asserted),
+        extra_without_answers=sorted(_readable(i) for i in asserted - sig_g),
+        missing_after_answers=sorted(_readable(i) for i in sig_g - answered),
+        extra_after_answers=sorted(_readable(i) for i in answered - sig_g))
