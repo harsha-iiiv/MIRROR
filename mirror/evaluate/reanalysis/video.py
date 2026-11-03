@@ -239,12 +239,15 @@ def demo_dir_for(root: Path, inputs: str, seed: int) -> Path:
     return subs[0]
 
 
-def extract_all(repo: Path, out: Path, sources=tuple(SOURCES), variants=("sam", "colour", "oracle")) -> None:
+def extract_all(repo: Path, out: Path, sources=tuple(SOURCES), variants=("sam", "colour", "oracle"),
+                seeds=None) -> None:
     for name in sources:
         cfg = SOURCES[name]
         base = repo / cfg["results"]
         for tp in sorted((base / cfg["tracks"]).glob("*.json.gz")):
             seed = int(tp.name.split(".")[0])
+            if seeds and seed not in seeds:
+                continue
             dst = out / name / f"{seed}.json.gz"
             if dst.exists():
                 continue
@@ -480,11 +483,12 @@ def main(argv=None) -> int:
     ap.add_argument("--out", default="results/reanalysis_v1/video/report.json")
     ap.add_argument("--sources", nargs="*", default=list(SOURCES))
     ap.add_argument("--variants", nargs="*", default=["sam", "colour", "oracle"])
+    ap.add_argument("--seeds", nargs="*", type=int, help="extract only these seeds (one short job each)")
     a = ap.parse_args(argv)
     repo = Path(a.repo)
     cache = repo / a.cache
     if a.cmd == "extract":
-        extract_all(repo, cache, tuple(a.sources), tuple(a.variants))
+        extract_all(repo, cache, tuple(a.sources), tuple(a.variants), set(a.seeds or ()))
     else:
         rep = analyse(cache)
         out = repo / a.out
