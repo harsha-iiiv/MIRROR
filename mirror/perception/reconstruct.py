@@ -49,6 +49,7 @@ CARRY_MAX_XY = 0.08        # m: gripper-object table-plane distance during a car
 TABLE_FIT_MAX_PX = 10.0     # a table outline fitting worse than this (RMS px) is not used for calibration
 MOVE_SPEED = 0.04          # m/s: an object moving faster than this (smoothed) is being carried
 SMOOTH_S = 0.4
+ACTORS = ("robot_gripper", "human_hand", "unknown")
 SCALE_TOL = 0.25           # reconstructed tray extent may differ from the kit by this fraction
 GRASP_LOOKBACK_S = 2.5     # s: window before motion onset searched for the gripper's lowest point
 
@@ -806,7 +807,8 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
              gripper_label="gripper", table_label="table", calib_frame: int = 0,
              tilt_every: int = 1, bead_label: str = "beads", calib_override: Optional[dict] = None,
              intrinsics_source: str = "assumed_rendered_model", table_half=None,
-             event_timing: str = "gripper_lowest") -> Estimates:
+             event_timing: str = "gripper_lowest", tilt_min_visible: float = 0.8,
+             actor: str = "robot_gripper") -> Estimates:
     """``calib_override``: camera -> Calib from a calibration board (real footage);
     the table outline and the kit table size are then not used. Otherwise each
     camera is calibrated from the table outline with ``table_half`` (default:
@@ -815,7 +817,16 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
     ``event_timing``: "gripper_lowest" (grasp and release at the gripper's lowest
     point around each carry, seen as its smallest top-view outline) or "motion"
     (the object's motion onset and the gripper rising afterwards; the timing of
-    results recorded before this option existed)."""
+    results recorded before this option existed).
+    ``actor``: who moves the objects. "robot_gripper" (simulated or real gripper
+    tracked as ``gripper_label``) or "human_hand" / "unknown": object-centric
+    event inference only. No gripper is used for depth, carries or timing, carry
+    start/end come from object motion between resting places, and the trace marks
+    them inferred carry intervals, never observed robot contact."""
+    if actor not in ACTORS:
+        raise ValueError(f"actor must be one of {ACTORS}")
+    if actor != "robot_gripper":
+        gripper_label = "\x00no-robot-gripper"      # never a track label: every gripper step is skipped
     cams = list(tracks.masks)
     calib, calib_choice, hyps = {}, {}, {}
     table_half_ = tuple(table_half) if table_half is not None else tuple(WORLD.table_half[:2])
@@ -1007,7 +1018,8 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
                         if other != gripper_label and (ring & om).sum() > 10:
                             touching = True
                 if not touching:
-                    tilt[lab][i] = tilt_by_silhouette(sil & ~occ, occ, calib[side], X, -yaw)
+                    tilt[lab][i] = tilt_by_silhouette(sil & ~occ, occ, calib[side], X, -yaw,
+                                                     min_visible=tilt_min_visible)
     # Gripper seen only from above: depth along the top camera's ray from its
     # apparent size (area ~ 1/depth^2), scaled on frames where it was triangulated.
     ref = [np.linalg.norm(grip[i] - g_ray[i][0]) * math.sqrt(g_area[i]) for i in range(n)
@@ -1137,7 +1149,8 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
         for a, b in segs:
             rel = b
             grasp_i = a
-            basis = "object motion onset"
+            basis = ("object motion between resting places (no robot gripper observed)" if actor != "robot_gripper"
+                     else "object motion onset")
             if aok.sum() >= 3:
                 # fingers opening or the gripper rising changes its outline from above
                 # the gripper is lowest (smallest from above) when it lets go
@@ -1204,11 +1217,11 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
                                message=f"{lab} was found in only {100 * fr:.0f}% of frames."))
         identity[lab] = dict(identity=ident, note=note)
     for lab in [l for l in labels if l not in kinds and not l.startswith("wall") and not l.startswith("tray")
-                and l != bead_label]:
+                and l != bead_label and l not in ("gripper", "hand")]:
         review.append(dict(code="unknown_object", severity="review", object_id=lab,
                            message=f"Tracked label '{lab}' is not a supported kit object; it was ignored."))
     return Estimates(t=t, objects=pos, found=found, tilt_deg=tilt, gripper=grip, events=events,
-                     calib=calib, scene_checks={"kinds": kinds, "calibration_mask": calib_choice,
+                     calib=calib, scene_checks={"kinds": kinds, "calibration_mask": calib_choice, "actor": actor,
                                                 "calibration_residual_px": {c: round(v.residual, 2)
                                                                             for c, v in calib.items()}},
                      pos_status=pstat, tilt_status=tstat, gripper_status=gstat, rest_tilt=rest,
@@ -1496,8 +1509,14 @@ def evidence_from_estimates(tracks: Tracks, est: Estimates, ids: dict, *, kind: 
         else:
             kind = "unverified_video_reconstruction"
     kinds = est.scene_checks["kinds"]
+    actor = est.scene_checks.get("actor", "robot_gripper")
+    robot = actor == "robot_gripper"
     positions, quats, objs = {}, {}, {}
     review = [ReviewItem(**r) for r in est.review]
+    if not robot:
+        review.append(ReviewItem(code="object_centric_events", severity="review",
+                                 message=("Carry intervals were inferred from object motion only (no robot gripper "
+                                          "in the footage): check the start and end of each carry.")))
     pos_sigma = {"measured": 0.01, "inferred": 0.02, "interpolated": 0.02}
     for lab in kinds:
         if lab not in ids:
@@ -1578,10 +1597,13 @@ def evidence_from_estimates(tracks: Tracks, est: Estimates, ids: dict, *, kind: 
             "measured": "two views triangulated", "inferred": "one view (depth from apparent size or assumed height)",
             "interpolated": f"interpolated across a gap of at most {INTERP_MAX_S:g} s",
             "unobserved": "not seen: last known position held for display"}),
-        gripper_width=spans_from_statuses(["inferred"] * n, basis={
-            "inferred": "not observed: closed while an object is carried, open otherwise"}),
-        events_basis=("grasp and release inferred from object motion between resting places; release timing "
-                      "refined from the gripper's top-view outline"),
+        gripper_width=(spans_from_statuses(["inferred"] * n, basis={
+            "inferred": "not observed: closed while an object is carried, open otherwise"}) if robot else
+            spans_from_statuses(["unobserved"] * n, basis={"unobserved": "no robot gripper in this footage"})),
+        events_basis=("grasp and release inferred from object motion between resting places; timing from the "
+                      "gripper's top-view outline" if robot else
+                      "carry start and end inferred from object motion between resting places; no robot gripper was "
+                      f"observed (actor: {actor}), so these are not robot contact events"),
         models=[ModelArtifact(**m) for m in (models if models is not None else models_from_tracks(tracks))],
         review=review,
         notes=[f"tracks: {tracks.source}"] + [x for x in (tracks.notes or []) if not x.startswith("{")])
@@ -1596,6 +1618,7 @@ def trace_from_estimates(tracks: Tracks, est: Estimates, scene: SceneState, *, d
     kinds = est.scene_checks["kinds"]
     ids = {lab: (lab if any(o.id == lab for o in scene.objects) else f"{kinds[lab]}_0") for lab in kinds}
     evidence, positions, quats = evidence_from_estimates(tracks, est, ids, kind=kind, media=media, models=models)
+    actor = est.scene_checks.get("actor", "robot_gripper")
     held = {}
     for e in est.events:
         held.setdefault(e["object"], []).append(e)
@@ -1613,10 +1636,14 @@ def trace_from_estimates(tracks: Tracks, est: Estimates, scene: SceneState, *, d
             g = G[prev[-1]] if prev else np.array(scene.gripper_start.pos)
         carrying = any(e0["t"] <= ti <= e1["t"] for lab, evs in held.items()
                        for e0, e1 in zip(evs[0::2], evs[1::2]))
+        width = (0.0 if carrying else GRIPPER.max_opening) if actor == "robot_gripper" else GRIPPER.max_opening
         frames.append(TraceFrame(t=float(ti), gripper=Pose(pos=tuple(float(v) for v in g)),
-                                 gripper_width=0.0 if carrying else GRIPPER.max_opening, objects=objs))
+                                 gripper_width=width, objects=objs))
+    actor = est.scene_checks.get("actor", "robot_gripper")
     events = [TraceEvent(t=e["t"], type=e["type"], object_id=ids.get(e["object"], e["object"]),
-                         detail={"from": "video", "observability": "inferred",
+                         detail={"from": "video", "observability": "inferred", "actor": actor,
+                                 "meaning": ("robot grasp/release inferred from video" if actor == "robot_gripper"
+                                             else "carry start/end inferred from object motion; not robot contact"),
                                  "basis": e.get("basis", "object motion")}) for e in est.events]
     what = {"rendered_video_reconstruction": "simulator-rendered video",
             "camera_video_reconstruction": "calibrated camera footage",

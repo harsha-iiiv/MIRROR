@@ -120,3 +120,24 @@ def test_failed_calibration_abstains_instead_of_placing_objects():
                    intrinsics_source="rendered_camera_model")
     codes = {r["code"] for r in est.review if r["severity"] == "abstain"}
     assert {"calibration_invalid", "scale_mismatch"} <= codes
+
+
+def test_object_centric_events_never_claim_robot_contact():
+    """SYNTHETIC stand-in for human-hand footage: recorded tracks of a rendered demo with
+    the gripper ignored (actor="human_hand")."""
+    from mirror.perception.reconstruct import estimate, scene_from_video, trace_from_estimates
+    dv, gt, tr = _load(["top"])
+    est = estimate(tr, {"top": dv.cameras["top"].K}, intrinsics_source="rendered_camera_model", actor="human_hand")
+    assert np.isnan(est.gripper).all()
+    scene, _ = scene_from_video(tr, est, scene_id="t")
+    trace = trace_from_estimates(tr, est, scene, demo_id="t")
+    assert trace.events, "carry intervals are still inferred from object motion"
+    for e in trace.events:
+        assert e.detail["actor"] == "human_hand" and e.detail["observability"] == "inferred"
+        assert "not robot contact" in e.detail["meaning"]
+    ev = trace.evidence
+    assert all(s.status == "unobserved" for s in ev.gripper_position + ev.gripper_width)
+    assert "no robot gripper" in ev.events_basis
+    assert "object_centric_events" in {r.code for r in ev.review}
+    with pytest.raises(ValueError):
+        estimate(tr, {"top": dv.cameras["top"].K}, actor="robot")

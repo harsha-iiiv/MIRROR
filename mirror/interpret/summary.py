@@ -151,7 +151,11 @@ def summarize_demo(trace: DemoTrace) -> DemoSummary:
         notes.append("No grasp events in the trace; carry intervals were inferred from "
                      "object motion near the gripper.")
     elif not simulated:
-        notes.append("Grasp and release times were inferred from object motion in the video, not observed.")
+        if "no robot gripper" in (ev.events_basis or ""):
+            notes.append("No robot gripper was observed: carry start and end times were inferred from object "
+                         "motion only and are not robot contact events.")
+        else:
+            notes.append("Grasp and release times were inferred from object motion in the video, not observed.")
     if any(ob.kind == "wall" and ob.slots for ob in scene.obstacles):
         notes.append("Obstacle distances are measured to the full wall slab; slots are ignored.")
 

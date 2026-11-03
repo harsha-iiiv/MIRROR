@@ -21,7 +21,7 @@ from mirror.perception.calibration import CalibrationRequired  # noqa: E402  (re
 def trace_from_video(top_video, side_video=None, *, fps: Optional[float] = None, intrinsics: Optional[dict] = None,
                      prompts=None, client=None, tracks=None, demo_id: Optional[str] = None,
                      return_details: bool = False, footage: Optional[str] = None,
-                     calibration=None, models: Optional[list] = None):
+                     calibration=None, models: Optional[list] = None, actor: Optional[str] = None):
     """Reconstruct a DemoTrace (source "video_grounded") from a top-camera video
     and an optional side-camera video.
 
@@ -39,6 +39,10 @@ def trace_from_video(top_video, side_video=None, *, fps: Optional[float] = None,
       with an ``abstain`` review item, so it cannot support a specification until
       a person confirms the footage or calibrates the camera.
 
+    ``actor``: who moves the objects ("robot_gripper", "human_hand", "unknown").
+    Defaults: rendered footage "robot_gripper"; camera footage "human_hand"
+    (object-centric events, never robot contact); unspecified "unknown".
+
     ``intrinsics``: camera -> 3x3 K; with ``footage="rendered"`` overrides the
     rendered cameras' defaults. With ``return_details`` returns
     (trace, estimates, scene, checks, tracks)."""
@@ -47,6 +51,8 @@ def trace_from_video(top_video, side_video=None, *, fps: Optional[float] = None,
     from mirror.perception.track import _objects_from, track_videos
     if footage not in (None, "rendered", "camera"):
         raise ValueError(f"footage must be 'rendered', 'camera' or None, not {footage!r}")
+    if actor is None:
+        actor = {"rendered": "robot_gripper", "camera": "human_hand"}.get(footage, "unknown")
     if footage == "camera":
         if calibration is None:
             raise CalibrationRequired([
@@ -65,7 +71,8 @@ def trace_from_video(top_video, side_video=None, *, fps: Optional[float] = None,
     if footage == "camera":
         tracks = calibration.apply_correspondence(tracks)
         est = estimate(tracks, {c: calibration.cameras[c].K for c in videos if c in calibration.cameras},
-                       calib_override=calibration.calibs(), intrinsics_source=calibration.intrinsics_source())
+                       calib_override=calibration.calibs(), intrinsics_source=calibration.intrinsics_source(),
+                       actor=actor)
         kind = "camera_video_reconstruction"
     else:
         K = {}
@@ -76,7 +83,7 @@ def trace_from_video(top_video, side_video=None, *, fps: Optional[float] = None,
                 w, h = tracks.size[cam]
                 K[cam] = intrinsics_for(w, h, CAMERAS.get(cam, CAMERAS["top"])["fovy"])
         src = "rendered_camera_model" if footage == "rendered" else "assumed_rendered_model"
-        est = estimate(tracks, K, intrinsics_source=src, event_timing="gripper_lowest")
+        est = estimate(tracks, K, intrinsics_source=src, event_timing="gripper_lowest", actor=actor)
         kind = "rendered_video_reconstruction" if footage == "rendered" else "unverified_video_reconstruction"
     did = demo_id or Path(top_video).parent.name + "_from_video"
     scene, checks = scene_from_video(tracks, est, scene_id=did)
