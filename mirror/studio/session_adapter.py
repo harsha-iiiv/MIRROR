@@ -1020,6 +1020,9 @@ class StudioService:
         """Reserve room for an upload of ``nbytes`` before it is written (raises UploadRejected / RateLimited)."""
         if self.closed:
             raise RuntimeError("this session has ended")
+        if nbytes > self.upload_limits.max_file_bytes:
+            raise UploadRejected(f"upload larger than {self.upload_limits.max_file_bytes // 2**20} MB",
+                                 code="too_large", status=413)
         if self.admission is not None:
             self.admission.check("upload", self.client_addr)
             try:
@@ -1027,7 +1030,13 @@ class StudioService:
             except Exception:
                 self.admission.give_back("upload", self.client_addr)
                 raise
-        self.media.admit(nbytes)
+        try:
+            self.media.admit(nbytes)
+        except UploadRejected:
+            if self.admission is not None:
+                self.admission.give_back("upload", self.client_addr)
+                self.admission.give_back("upload_bytes", self.client_addr, max(1, nbytes // 2**20))
+            raise
 
     def upload_dir(self) -> Path:
         d = self._runtime_dir() / "uploads"
