@@ -30,8 +30,9 @@ class ObjectSummary(_Model):
     release_times: list[float] = Field(default_factory=list)
     start_pose: Pose
     end_pose: Pose
-    start_tilt_deg: float
-    end_tilt_deg: float
+    # None when the trace's evidence marks the tilt unobserved (never a placeholder 0)
+    start_tilt_deg: Optional[float]
+    end_tilt_deg: Optional[float]
     ended_in_tray: Optional[str] = None
     carry_duration_s: float = 0.0
     carry_max_tilt_deg: Optional[float] = None
@@ -41,6 +42,8 @@ class ObjectSummary(_Model):
     min_obstacle_distance_m: Optional[float] = None
     nearest_obstacle: Optional[str] = None
     wall_crossings: list[str] = Field(default_factory=list)  # e.g. "wall_0:around_+y"
+    # How the values above were obtained (mirror.observability); None for simulator traces.
+    observability: Optional[dict[str, Any]] = None
 
 
 class Regularity(_Model):
@@ -66,6 +69,10 @@ class DemoSummary(_Model):
     obstacles: list[dict[str, Any]]
     regularities: list[Regularity]
     notes: list[str] = Field(default_factory=list)
+    # mirror.observability.EvidenceKind of the trace, and items a person must review
+    # before the summary may support a specification ("abstain" items block it).
+    evidence_kind: Optional[str] = None
+    review: list[dict[str, Any]] = Field(default_factory=list)
 
     def object(self, object_id: str) -> ObjectSummary:
         for o in self.objects:

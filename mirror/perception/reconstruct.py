@@ -29,6 +29,7 @@ Steps
 """
 from __future__ import annotations
 
+import json
 import math
 from dataclasses import dataclass, field
 from typing import Optional
@@ -48,6 +49,9 @@ CARRY_MAX_XY = 0.08        # m: gripper-object table-plane distance during a car
 TABLE_FIT_MAX_PX = 10.0     # a table outline fitting worse than this (RMS px) is not used for calibration
 MOVE_SPEED = 0.04          # m/s: an object moving faster than this (smoothed) is being carried
 SMOOTH_S = 0.4
+ACTORS = ("robot_gripper", "human_hand", "unknown")
+SCALE_TOL = 0.25           # reconstructed tray extent may differ from the kit by this fraction
+GRASP_LOOKBACK_S = 2.5     # s: window before motion onset searched for the gripper's lowest point
 
 
 @dataclass
@@ -83,6 +87,7 @@ class Tracks:
     notes: list = field(default_factory=list)
     extra: dict = field(default_factory=dict)
     static: set = field(default_factory=set)     # labels segmented once (frame 0) and held
+    loaded_from: Optional[str] = None            # saved tracks file these masks were read from
 
     def get(self, cam, label, i):
         d = self.masks.get(cam, {}).get(label, {})
@@ -151,7 +156,13 @@ def _pose_from_h(K, H):
     return Rm, t, resid
 
 
-def calibrate(table_mask: np.ndarray, K: np.ndarray, table_half=WORLD.table_half[:2]) -> Calib:
+def calibrate(table_mask: np.ndarray, K: np.ndarray, table_half=WORLD.table_half[:2],
+              all_candidates: bool = False):
+    """Camera pose from the table outline. With ``all_candidates`` returns every
+    corner assignment consistent with a camera above the table on the operator's
+    side (refined, best residual first): a rectangle's symmetry can make a wrong
+    assignment fit almost as well, so other cameras are checked against resting
+    objects before one is chosen."""
     quad = _quad_from_mask(table_mask)
     # image quad in a consistent (counter-clockwise in image) order
     c = quad.mean(0)
@@ -160,6 +171,7 @@ def calibrate(table_mask: np.ndarray, K: np.ndarray, table_half=WORLD.table_half
     hx, hy = table_half
     world = np.array([[-hx, -hy], [hx, -hy], [hx, hy], [-hx, hy]])
     best = None
+    cands = []
     for flip in (False, True):
         q = quad[::-1] if flip else quad
         for k in range(4):
@@ -168,10 +180,18 @@ def calibrate(table_mask: np.ndarray, K: np.ndarray, table_half=WORLD.table_half
             Rm, t, resid = _pose_from_h(K, H)
             C = -Rm.T @ t
             ok = C[2] > 0 and C[1] < 0 and np.linalg.det(Rm) > 0
+            if ok:
+                cands.append((resid, Rm, t, img))
             if ok and (best is None or resid < best[0]):
                 best = (resid, Rm, t, img)
     if best is None:
         raise ValueError("table corners do not give a camera above the table on the operator's side")
+    if all_candidates:
+        out = []
+        for c_ in cands:
+            Rm_, t_, r_ = _refine_slab(table_mask, np.asarray(K, float), c_[1], c_[2], table_half)
+            out.append(Calib(K=np.asarray(K, float), R=Rm_, t=t_, corners_px=c_[3], residual=float(r_)))
+        return sorted(out, key=lambda c: c.residual)
     resid, Rm, t, img = best
     Rm, t, resid2 = _refine_slab(table_mask, np.asarray(K, float), Rm, t, table_half)
     return Calib(K=np.asarray(K, float), R=Rm, t=t, corners_px=img, residual=float(resid2))
@@ -193,8 +213,16 @@ def _seg_dist(p, a, b):
 
 
 def _poly_dist(pts, poly):
-    return np.array([min(_seg_dist(p, poly[i], poly[(i + 1) % len(poly)]) for i in range(len(poly)))
-                     for p in pts])
+    """Distance from each point to the closed polygon outline (vectorised _seg_dist)."""
+    pts = np.asarray(pts, float)
+    a = np.asarray(poly, float)
+    b = np.roll(a, -1, axis=0)
+    ab = b - a                                                     # (M, 2)
+    den = np.maximum(1e-9, np.einsum("ij,ij->i", ab, ab))          # (M,)
+    ap = pts[:, None, :] - a[None, :, :]                           # (N, M, 2)
+    s_ = np.clip(np.einsum("nmk,mk->nm", ap, ab) / den, 0, 1)
+    d = ap - s_[..., None] * ab[None]
+    return np.sqrt(np.einsum("nmk,nmk->nm", d, d)).min(axis=1)
 
 
 def _refine_slab(mask, K, Rm, t, table_half, thickness=2 * WORLD.table_half[2]):
@@ -548,6 +576,153 @@ class Estimates:
     events: list
     calib: dict
     scene_checks: dict
+    # observability (mirror.observability): per-frame status of each estimated value
+    pos_status: dict = field(default_factory=dict)      # label -> (N,) "measured"|"inferred"|"unobserved"
+    tilt_status: dict = field(default_factory=dict)     # cup label -> (N,) "measured"|"unobserved"
+    gripper_status: Optional[np.ndarray] = None         # (N,) "measured"|"inferred"|"unobserved"
+    rest_tilt: dict = field(default_factory=dict)       # label -> {"start"|"end": inference dict}
+    identity: dict = field(default_factory=dict)        # label -> {"identity": ..., "note": ...}
+    calibration: list = field(default_factory=list)     # CalibrationRecord-shaped dicts
+    review: list = field(default_factory=list)          # ReviewItem-shaped dicts
+
+
+
+# ------------------------------------------------------------ observability helpers
+
+# Resting orientation from the top view: the object's outline is compared with
+# the projected silhouettes of its catalogue shape standing upright and lying
+# on its side. Only "standing" vs "lying" is resolvable this way; small tilts
+# are not (about REST_TILT_SIGMA_DEG), and an upside-down object looks the
+# same as an upright one from above.
+REST_IOU_MIN = 0.55          # the upright silhouette must match the outline at least this well
+REST_IOU_MARGIN = 0.10       # ... and better than any lying hypothesis by this margin
+REST_TILT_SIGMA_DEG = 15.0
+REST_WINDOW_S = 1.0
+
+
+def _shape_half(kind):
+    if kind == "cup":
+        return tuple(CUP.outer_half)
+    if kind == "block":
+        return tuple(BLOCK.half)
+    return (MARKER.radius, MARKER.radius, MARKER.half_length)
+
+
+def _poly_mask_iou(mask, poly):
+    from PIL import Image, ImageDraw
+    ys, xs = np.nonzero(mask)
+    if len(xs) == 0:
+        return 0.0
+    x0 = int(max(0, min(xs.min(), poly[:, 0].min()) - 2))
+    y0 = int(max(0, min(ys.min(), poly[:, 1].min()) - 2))
+    x1 = int(min(mask.shape[1], max(xs.max(), poly[:, 0].max()) + 3))
+    y1 = int(min(mask.shape[0], max(ys.max(), poly[:, 1].max()) + 3))
+    if x1 <= x0 or y1 <= y0:
+        return 0.0
+    im = Image.new("1", (x1 - x0, y1 - y0), 0)
+    ImageDraw.Draw(im).polygon([(float(p[0] - x0), float(p[1] - y0)) for p in poly], fill=1)
+    sil = np.asarray(im, dtype=bool)
+    m = mask[y0:y1, x0:x1]
+    u = (sil | m).sum()
+    return float((sil & m).sum() / u) if u else 0.0
+
+
+def _silhouette(cal, center, half, yaw, lying):
+    from scipy.spatial import ConvexHull
+    hx, hy, hz = half
+    if lying:                      # local z (the axis) horizontal, along yaw
+        dims = (hz, hy, hx)
+    else:
+        dims = (hx, hy, hz)
+    C = np.array([[x, y, z] for x in (-dims[0], dims[0]) for y in (-dims[1], dims[1]) for z in (-dims[2], dims[2])])
+    Rz = np.array([[math.cos(yaw), -math.sin(yaw), 0], [math.sin(yaw), math.cos(yaw), 0], [0, 0, 1]])
+    P = np.array([cal.project(center + Rz @ c) for c in C])
+    try:
+        return P[ConvexHull(P).vertices]
+    except Exception:
+        return None
+
+
+def rest_tilt_from_top(mask, cal, xy, kind, *, plane_z=0.0):
+    """Standing-vs-lying inference for a resting object from its top-view mask.
+
+    Returns {"status": "inferred"|"unobserved", "upright": bool|None, "iou_upright",
+    "iou_lying", "basis"}. A cube is symmetric (every face looks alike), so its
+    tilt is never inferred."""
+    if kind == "block" and len(set(np.round(BLOCK.half, 6))) == 1:
+        return dict(status="unobserved", upright=None, basis="a cube looks the same on every face")
+    if mask is None or mask.sum() < 30:
+        return dict(status="unobserved", upright=None, basis="not visible from above")
+    half = _shape_half(kind)
+    best_up, best_ly = 0.0, 0.0
+    for yaw in np.radians(np.arange(0, 180, 7.5)):
+        up = _silhouette(cal, np.array([xy[0], xy[1], plane_z + half[2]]), half, yaw, False)
+        ly = _silhouette(cal, np.array([xy[0], xy[1], plane_z + half[0]]), half, yaw, True)
+        if up is not None:
+            best_up = max(best_up, _poly_mask_iou(mask, up))
+        if ly is not None:
+            best_ly = max(best_ly, _poly_mask_iou(mask, ly))
+    out = dict(iou_upright=round(best_up, 3), iou_lying=round(best_ly, 3))
+    if best_up >= REST_IOU_MIN and best_up - best_ly >= REST_IOU_MARGIN:
+        return dict(out, status="inferred", upright=True,
+                    basis=f"top-view outline matches the upright shape (IoU {best_up:.2f} vs {best_ly:.2f} lying)")
+    if best_ly >= REST_IOU_MIN and best_ly - best_up >= REST_IOU_MARGIN:
+        return dict(out, status="inferred", upright=False,
+                    basis=f"top-view outline matches the shape lying on its side (IoU {best_ly:.2f} vs {best_up:.2f})")
+    return dict(out, status="unobserved", upright=None,
+                basis=f"top-view outline does not decide standing vs lying (IoU {best_up:.2f} / {best_ly:.2f})")
+
+
+def _rest_tilt_window(tracks, calib, top, lab, kind, pos, frames, bead_label, tray_poly):
+    """Majority of per-frame standing/lying inferences over ``frames``."""
+    votes = []
+    for i in frames:
+        m = tracks.get(top, lab, i)
+        if m is None or not m.any() or np.isnan(pos[i][0]):
+            continue
+        if kind == "cup":
+            bead = tracks.get(top, bead_label, i)
+            if bead is not None and bead.any():
+                ys, xs = np.nonzero(m)
+                box = np.zeros_like(m)
+                box[max(0, ys.min() - 3):ys.max() + 4, max(0, xs.min() - 3):xs.max() + 4] = True
+                m = m | (bead & box)
+            m = ndimage.binary_fill_holes(m)
+        z0 = TRAY_FLOOR if (tray_poly is not None and _inside(pos[i][:2], tray_poly)) else 0.0
+        votes.append(rest_tilt_from_top(m, calib[top], pos[i][:2], kind, plane_z=z0))
+    if not votes:
+        return dict(status="unobserved", upright=None, basis="not seen from above while resting", frames=0)
+    ups = [v for v in votes if v.get("upright") is True]
+    lys = [v for v in votes if v.get("upright") is False]
+    n = len(votes)
+    res = None
+    if len(ups) >= 0.6 * n:
+        res = dict(ups[len(ups) // 2], frames=n, agree=len(ups))
+    elif len(lys) >= 0.6 * n:
+        res = dict(lys[len(lys) // 2], frames=n, agree=len(lys))
+    else:
+        bases = {v.get("basis") for v in votes if v.get("upright") is None}
+        why = (bases.pop() if len(bases) == 1 and not ups and not lys and "cube" in next(iter(bases), "")
+               else f"top-view outline inconclusive ({len(ups)} standing, {len(lys)} lying of {n} frames)")
+        res = dict(status="unobserved", upright=None, frames=n, basis=why)
+    if res.get("upright") is True and kind == "cup":
+        bead_inside = False
+        for i in frames:
+            bead = tracks.get(top, bead_label, i)
+            mm = tracks.get(top, lab, i)
+            if bead is not None and mm is not None and mm.any() and bead.any():
+                if (ndimage.binary_fill_holes(mm | (bead & ndimage.binary_dilation(mm, iterations=3)))
+                        & bead).sum() >= 10:
+                    bead_inside = True
+                    break
+        if not bead_inside:
+            res = dict(status="unobserved", upright=None, frames=n,
+                       basis="standing, but upright and upside-down look alike from above (no beads seen inside)")
+        else:
+            res["basis"] += "; beads visible inside, so the opening faces up"
+    elif res.get("upright") is True and kind == "marker":
+        res["basis"] += "; standing on one end (which end is up cannot be seen from above)"
+    return res
 
 
 def _resting_anchors(tracks, top_cal, top, i0=0):
@@ -645,10 +820,41 @@ def _label_kinds(labels, prompts):
 
 def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
              gripper_label="gripper", table_label="table", calib_frame: int = 0,
-             tilt_every: int = 1, bead_label: str = "beads") -> Estimates:
+             tilt_every: int = 1, bead_label: str = "beads", calib_override: Optional[dict] = None,
+             intrinsics_source: str = "assumed_rendered_model", table_half=None,
+             event_timing: str = "gripper_lowest", tilt_min_visible: float = 0.8,
+             actor: str = "robot_gripper", tilt_occlusion: str = "visibility") -> Estimates:
+    """``calib_override``: camera -> Calib from a calibration board (real footage);
+    the table outline and the kit table size are then not used. Otherwise each
+    camera is calibrated from the table outline with ``table_half`` (default:
+    the kit table, recorded as an assumption). ``intrinsics_source`` records
+    where ``K`` came from (mirror.observability.IntrinsicsSource).
+    ``event_timing``: "gripper_lowest" (grasp and release at the gripper's lowest
+    point around each carry, seen as its smallest top-view outline) or "motion"
+    (the object's motion onset and the gripper rising afterwards; the timing of
+    results recorded before this option existed).
+    ``actor``: who moves the objects. "robot_gripper" (simulated or real gripper
+    tracked as ``gripper_label``) or "human_hand" / "unknown": object-centric
+    event inference only. No gripper is used for depth, carries or timing, carry
+    start/end come from object motion between resting places, and the trace marks
+    them inferred carry intervals, never observed robot contact."""
+    if actor not in ACTORS:
+        raise ValueError(f"actor must be one of {ACTORS}")
+    # tilt_occlusion: "visibility" (default) fits the side-view silhouette whenever at least
+    # 80% of it is unoccluded (occluded pixels are excluded from the fit); "touching" also
+    # skips every frame where the cup touches another mask (the earlier, stricter rule).
+    if tilt_occlusion not in ("touching", "visibility"):
+        raise ValueError("tilt_occlusion must be 'touching' or 'visibility'")
+    if actor != "robot_gripper":
+        gripper_label = "\x00no-robot-gripper"      # never a track label: every gripper step is skipped
     cams = list(tracks.masks)
     calib, calib_choice, hyps = {}, {}, {}
-    for c in cams:
+    table_half_ = tuple(table_half) if table_half is not None else tuple(WORLD.table_half[:2])
+    if calib_override:
+        cams_cal = [c for c in cams if c in calib_override]
+    else:
+        cams_cal = cams
+    for c in ([] if calib_override else cams):
         cands = [l for l in tracks.masks[c] if l == table_label or l.startswith(table_label + "~")]
         hyps[c] = []
         for lab in cands:
@@ -660,16 +866,24 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
             if tm is None or tm.sum() < 500:
                 continue
             try:
-                hyps[c].append((calibrate(ndimage.binary_fill_holes(tm), np.asarray(K[c], float)), lab))
+                hyps[c].append((calibrate(ndimage.binary_fill_holes(tm), np.asarray(K[c], float),
+                                          table_half=table_half_), lab))
             except (ValueError, np.linalg.LinAlgError):
                 continue
-    top = "top" if hyps.get("top") else next((c for c in cams if hyps.get(c)), None)
-    if top is None:
-        raise ValueError("no camera could be calibrated from the table")
-    calib[top], calib_choice[top] = min(hyps[top], key=lambda h: h[0].residual)
+    if calib_override:
+        for c in cams_cal:
+            calib[c], calib_choice[c] = calib_override[c], "calibration board"
+        top = "top" if "top" in calib else (cams_cal[0] if cams_cal else None)
+        if top is None:
+            raise ValueError("no calibrated camera")
+    else:
+        top = "top" if hyps.get("top") else next((c for c in cams if hyps.get(c)), None)
+        if top is None:
+            raise ValueError("no camera could be calibrated from the table")
+        calib[top], calib_choice[top] = min(hyps[top], key=lambda h: h[0].residual)
     anchors = _resting_anchors(tracks, calib[top], top, calib_frame)
     for c in cams:
-        if c == top:
+        if c == top or calib_override:
             continue
         best = None
         for cal, lab in hyps.get(c, []):
@@ -678,6 +892,22 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
             err = _anchor_error(cal, anchors, tracks, c, calib_frame)
             if err is not None and err <= ANCHOR_MAX_PX and (best is None or err < best[0]):
                 best = (err, cal, lab)
+        if best is None:
+            # the best-fitting corner assignment failed the resting-object check: try the others
+            for cal0, lab in hyps.get(c, []):
+                try:
+                    tm = next((tracks.get(c, lab, i) for i in range(calib_frame, min(tracks.n_frames, calib_frame + 30))
+                               if tracks.get(c, lab, i) is not None and tracks.get(c, lab, i).any()), None)
+                    alts = calibrate(ndimage.binary_fill_holes(tm), np.asarray(K[c], float), table_half=table_half_,
+                                     all_candidates=True) if tm is not None else []
+                except (ValueError, np.linalg.LinAlgError):
+                    alts = []
+                for cal in alts:
+                    if cal.residual > TABLE_FIT_MAX_PX:
+                        continue
+                    err = _anchor_error(cal, anchors, tracks, c, calib_frame)
+                    if err is not None and err <= ANCHOR_MAX_PX and (best is None or err < best[0]):
+                        best = (err, cal, lab + " (alternative corner assignment)")
         if best is not None:
             calib[c], calib_choice[c] = best[1], best[2]
             continue
@@ -692,6 +922,42 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
         except ValueError:
             tracks.notes.append(f"{c}: could not be calibrated; camera not used")
     _check_side_tray(tracks, calib, top)
+    review: list = []
+    calib_records = []
+    for c in cams:
+        if c not in calib:
+            calib_records.append(dict(camera=c, intrinsics_source=intrinsics_source, extrinsics_source="scene_geometry",
+                                      valid=False, assumptions=["camera could not be calibrated; not used"]))
+            continue
+        choice = calib_choice.get(c, "")
+        if calib_override:
+            ext, tsize, assume = "calibration_board", "not_used", []
+        elif choice.startswith(table_label):
+            ext, tsize = "table_outline_known_size", "kit_catalogue"
+            assume = [f"table size {2 * table_half_[0]:.2f} m x {2 * table_half_[1]:.2f} m (kit catalogue)"]
+        else:
+            ext, tsize = "scene_geometry", "kit_catalogue"
+            assume = ["object sizes from the kit catalogue", "pose solved against the calibrated top camera"]
+        if intrinsics_source in ("assumed_rendered_model", "rendered_camera_model"):
+            assume.append("intrinsics of the rendered demonstration camera")
+        calib_records.append(dict(camera=c, intrinsics_source=intrinsics_source, extrinsics_source=ext,
+                                  table_size_source=tsize, residual_px=round(float(calib[c].residual), 2),
+                                  valid=bool(calib[c].residual <= TABLE_FIT_MAX_PX) if ext != "scene_geometry" else True,
+                                  assumptions=assume))
+    bad = [r_ for r_ in calib_records if r_.get("camera") in calib and not r_.get("valid", True)]
+    if bad:
+        review.append(dict(code="calibration_invalid", severity="abstain",
+                           message=("Camera calibration did not fit (" + ", ".join(
+                               f"{r_['camera']}: {r_.get('residual_px')} px" for r_ in bad)
+                                    + "); positions and sizes from this camera are not reliable.")))
+    if intrinsics_source == "assumed_rendered_model":
+        review.append(dict(code="calibration_assumed", severity="abstain",
+                           message=("Camera intrinsics, table size and object sizes were taken from the simulated "
+                                    "demonstration set-up without confirmation. Confirm the video is "
+                                    "simulator-rendered, or calibrate the camera (docs/CAMERA_CAPTURE.md).")))
+    if not any(c != top for c in calib):
+        review.append(dict(code="single_view", severity="review",
+                           message="Only one calibrated camera: object tilt cannot be measured."))
     labels = object_labels or sorted({lab for c in cams for lab in tracks.masks[c]
                                       if not lab.startswith(table_label)} - {gripper_label})
     kinds = _label_kinds(labels, prompts)
@@ -699,6 +965,8 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
     n = tracks.n_frames
     t = np.arange(n) / tracks.fps
     pos = {l: np.full((n, 3), np.nan) for l in obj_labels}
+    pstat = {l: np.full(n, "unobserved", dtype=object) for l in obj_labels}
+    gstat = np.full(n, "unobserved", dtype=object)
     found = {l: np.zeros(n, bool) for l in obj_labels}
     single = {l: np.zeros(n, bool) for l in obj_labels}
     g_tri = np.zeros(n, bool)
@@ -740,12 +1008,14 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
             if lab == gripper_label:
                 grip[i] = X
                 g_tri[i] = len(rays) >= 2
+                gstat[i] = "measured" if len(rays) >= 2 else "inferred"
                 top_r = [r for c_, r in rays if c_ == top]
                 if top_r:
                     g_ray[i] = top_r[0]
                 continue
             pos[lab][i] = X
             found[lab][i] = True
+            pstat[lab][i] = "measured" if len(rays) >= 2 else "inferred"
             if len(rays) == 1:
                 single[lab][i] = True
                 top_ray[lab][i] = rays[0][1]
@@ -783,8 +1053,9 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
                         # partly hidden behind another thing (not the gripper holding it): unreliable
                         if other != gripper_label and (ring & om).sum() > 10:
                             touching = True
-                if not touching:
-                    tilt[lab][i] = tilt_by_silhouette(sil & ~occ, occ, calib[side], X, -yaw)
+                if not touching or tilt_occlusion == "visibility":
+                    tilt[lab][i] = tilt_by_silhouette(sil & ~occ, occ, calib[side], X, -yaw,
+                                                     min_visible=tilt_min_visible)
     # Gripper seen only from above: depth along the top camera's ray from its
     # apparent size (area ~ 1/depth^2), scaled on frames where it was triangulated.
     ref = [np.linalg.norm(grip[i] - g_ray[i][0]) * math.sqrt(g_area[i]) for i in range(n)
@@ -795,6 +1066,7 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
             if not g_tri[i] and i in g_ray and not np.isnan(g_area[i]) and g_area[i] > 50:
                 o, d = g_ray[i]
                 grip[i] = o + d * (kd / math.sqrt(g_area[i]))
+                gstat[i] = "inferred"
     k = max(1, int(round(SMOOTH_S * tracks.fps)))
     for lab, series in tilt.items():          # tilt changes smoothly: drop samples its neighbours do not support
         ok0 = np.flatnonzero(~np.isnan(series))
@@ -812,6 +1084,22 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
                                          size=max(3, int(2 * tracks.fps) | 1), mode="nearest")
             tilt[lab] = np.where(ok, filt, np.nan)
     tray_poly = _tray_polygon(tracks, calib, top)
+    if tray_poly is not None and len(tray_poly) >= 3:
+        P_ = np.asarray(tray_poly, float)
+        best_ = None
+        for a_ in np.radians(np.arange(0.0, 90.0, 0.5)):       # minimum-area enclosing rectangle
+            R_ = np.array([[math.cos(a_), -math.sin(a_)], [math.sin(a_), math.cos(a_)]])
+            Q_ = P_ @ R_
+            e_ = (float(np.ptp(Q_[:, 0])), float(np.ptp(Q_[:, 1])))
+            if best_ is None or e_[0] * e_[1] < best_[0] * best_[1]:
+                best_ = e_
+        ext = sorted(best_)
+        ref = sorted([2 * (TRAY.inner_half[0] + TRAY.wall_thickness), 2 * (TRAY.inner_half[1] + TRAY.wall_thickness)])
+        ratio = [e / r for e, r in zip(ext, ref)]
+        if any(abs(x - 1) > SCALE_TOL for x in ratio):
+            review.append(dict(code="scale_mismatch", severity="abstain",
+                               message=(f"The tray measures {ext[1]:.2f} x {ext[0]:.2f} m in the reconstruction but "
+                                        f"{ref[1]:.2f} x {ref[0]:.2f} m in the kit: calibration or tray identity is wrong.")))
     idx = np.arange(n)
     G = grip.copy()
     gok = ~np.isnan(G[:, 0])
@@ -880,6 +1168,7 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
                 X = _plane_z(ray, h + TRAY_FLOOR)
             if X is not None:
                 pos[lab][i] = X - np.array([0, 0, h / 2])
+                pstat[lab][i] = "measured"      # top-view ray at the resting height
         # Carried and hidden under the gripper (small top-view mask, no second view):
         # the object moves with the gripper, at the offset measured when the carry began.
         areas = np.array([float(tracks.get(top, lab, i).sum()) if tracks.get(top, lab, i) is not None else 0.0
@@ -895,11 +1184,15 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
                     if areas[i] < 0.5 * rest_area and single[lab][i] | np.isnan(pos[lab][i][0]):
                         pos[lab][i] = G[i] + off
                         found[lab][i] = True
+                        pstat[lab][i] = "inferred"   # hidden under the gripper: moves with it
         ok = found[lab]
         P = filled(lab)
         segs = carries(P)
         for a, b in segs:
             rel = b
+            grasp_i = a
+            basis = ("object motion between resting places (no robot gripper observed)" if actor != "robot_gripper"
+                     else "object motion onset")
             if aok.sum() >= 3:
                 # fingers opening or the gripper rising changes its outline from above
                 # the gripper is lowest (smallest from above) when it lets go
@@ -907,21 +1200,74 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
                 j0 = b + int(np.argmin(A[b:b + w_ + 1]))
                 ref = A[j0]
                 after = np.flatnonzero(A[j0:] > ref * 1.06)
-                if len(after) and j0 - b + after[0] < tracks.fps * 6:
+                if event_timing == "gripper_lowest":
+                    rel = j0
+                    # grasp: the gripper's lowest point (smallest from above) just before the object moves
+                    wg = int(round(tracks.fps * GRASP_LOOKBACK_S))
+                    lo = max(0, a - wg)
+                    grasp_i = lo + int(np.argmin(A[lo:a + 1]))
+                    basis = "gripper lowest point (top-view outline smallest) around the object's motion"
+                elif len(after) and j0 - b + after[0] < tracks.fps * 6:
                     rel = j0 + after[0]
             elif gok.sum() >= 3:
                 d0 = np.linalg.norm(G[b] - P[b])
                 after = np.flatnonzero(np.linalg.norm(G[b:] - P[b], axis=1) > d0 + 0.015)
                 if len(after) and after[0] < tracks.fps * 6:
                     rel = b + after[0]
-            events.append({"type": "grasp", "object": lab, "t": float(t[a])})
-            events.append({"type": "release", "object": lab, "t": float(t[rel])})
+            events.append({"type": "grasp", "object": lab, "t": float(t[grasp_i]), "basis": basis})
+            events.append({"type": "release", "object": lab, "t": float(t[rel]), "basis": basis})
         pos[lab] = np.where(ok[:, None], P, np.nan)
     events.sort(key=lambda e: e["t"])
+    for lab in obj_labels:
+        pstat[lab][~found[lab]] = "unobserved"
+    tstat = {lab: np.where(np.isnan(series), "unobserved", "measured").astype(object) for lab, series in tilt.items()}
+    # resting orientation (standing vs lying) from the top view, before the first grasp and after the last release
+    rest = {}
+    w_ = max(1, int(round(REST_WINDOW_S * tracks.fps)))
+    for lab in obj_labels:
+        evs = [e for e in events if e["object"] == lab]
+        g0 = min((e["t"] for e in evs if e["type"] == "grasp"), default=None)
+        r1 = max((e["t"] for e in evs if e["type"] == "release"), default=None)
+        i_g = int(np.searchsorted(t, g0)) if g0 is not None else n
+        i_r = int(np.searchsorted(t, r1 + 0.5)) if r1 is not None else 0
+        start_fr = list(range(calib_frame, min(i_g, calib_frame + w_)))
+        end_fr = list(range(max(i_r, n - w_), n)) if r1 is not None else []
+        rest[lab] = {"start": _rest_tilt_window(tracks, calib, top, lab, kinds[lab], pos[lab], start_fr, bead_label,
+                                                tray_poly),
+                     "end": (_rest_tilt_window(tracks, calib, top, lab, kinds[lab], pos[lab], end_fr, bead_label,
+                                               tray_poly) if end_fr else None)}
+    # identity
+    identity = {}
+    by_kind: dict = {}
+    for lab in obj_labels:
+        by_kind.setdefault(kinds[lab], []).append(lab)
+    for lab in obj_labels:
+        fr = float(found[lab].mean()) if n else 0.0
+        how = "label" if kinds[lab] in lab else "grounding prompt"
+        note = f"kind '{kinds[lab]}' from the tracking {how}; found in {100 * fr:.0f}% of frames"
+        ident = "assumed_from_label"
+        if not found[lab].any():
+            ident = "not_found"
+            review.append(dict(code="object_not_found", severity="abstain", object_id=lab,
+                               message=f"{lab} was never found in the video."))
+        elif len(by_kind[kinds[lab]]) > 1:
+            ident = "ambiguous"
+            review.append(dict(code="identity_ambiguous", severity="review", object_id=lab,
+                               message=f"Several tracks are labelled {kinds[lab]}: confirm which is which."))
+        elif fr < 0.5:
+            review.append(dict(code="low_coverage", severity="review", object_id=lab,
+                               message=f"{lab} was found in only {100 * fr:.0f}% of frames."))
+        identity[lab] = dict(identity=ident, note=note)
+    for lab in [l for l in labels if l not in kinds and not l.startswith("wall") and not l.startswith("tray")
+                and l != bead_label and l not in ("gripper", "hand") and not l.startswith("box")]:
+        review.append(dict(code="unknown_object", severity="review", object_id=lab,
+                           message=f"Tracked label '{lab}' is not a supported kit object; it was ignored."))
     return Estimates(t=t, objects=pos, found=found, tilt_deg=tilt, gripper=grip, events=events,
-                     calib=calib, scene_checks={"kinds": kinds, "calibration_mask": calib_choice,
+                     calib=calib, scene_checks={"kinds": kinds, "calibration_mask": calib_choice, "actor": actor,
                                                 "calibration_residual_px": {c: round(v.residual, 2)
-                                                                            for c, v in calib.items()}})
+                                                                            for c, v in calib.items()}},
+                     pos_status=pstat, tilt_status=tstat, gripper_status=gstat, rest_tilt=rest,
+                     identity=identity, calibration=calib_records, review=review)
 
 
 # ------------------------------------------------------------ scene
@@ -1102,43 +1448,251 @@ def scene_from_video(tracks: Tracks, est: Estimates, *, scene_id: str, prompts=N
     return scene, checks
 
 
+INTERP_MAX_S = 1.0          # gaps between measured positions up to this long are interpolated
+TILT_INTERP_MAX_S = 0.6     # ... and between measured tilts (inside one carry)
+
+
+def _gap_fill(status: np.ndarray, values: np.ndarray, t: np.ndarray, max_gap_s: float, good=("measured", "inferred")):
+    """Linear interpolation across short runs of non-``good`` frames bounded by good
+    frames on both sides. Returns (values, status) copies; filled frames get
+    status "interpolated"."""
+    st = status.copy()
+    v = values.copy()
+    ok = np.isin(st, good)
+    idx = np.flatnonzero(ok)
+    for a, b in zip(idx, idx[1:]):
+        if b - a > 1 and t[b] - t[a] <= max_gap_s:
+            for j in range(a + 1, b):
+                w = (t[j] - t[a]) / (t[b] - t[a])
+                v[j] = (1 - w) * v[a] + w * v[b]
+                st[j] = "interpolated"
+    return v, st
+
+
+def _carry_mask(est: Estimates, lab: str) -> np.ndarray:
+    evs = sorted((e for e in est.events if e["object"] == lab), key=lambda e: e["t"])
+    m = np.zeros(len(est.t), bool)
+    start = None
+    for e in evs:
+        if e["type"] == "grasp" and start is None:
+            start = e["t"]
+        elif e["type"] == "release" and start is not None:
+            m |= (est.t >= start) & (est.t <= e["t"])
+            start = None
+    if start is not None:
+        m |= est.t >= start
+    return m
+
+
+def models_from_tracks(tracks: Tracks) -> list[dict]:
+    """Model calls behind the masks (ModelArtifact-shaped), from the tracker's notes.
+    Masks read back from a saved tracks file are a recording, whatever the
+    original calls were."""
+    if "ground-truth" in (tracks.source or "") or "oracle" in (tracks.source or ""):
+        return [dict(role="segmentation", model="simulator segmentation", origin="oracle_ground_truth",
+                     note="ground-truth masks: development and upper bound only")]
+    info = None
+    for n_ in tracks.notes or []:
+        try:
+            d = json.loads(n_) if isinstance(n_, str) else n_
+        except ValueError:
+            continue
+        if isinstance(d, dict) and ("sam" in d or "grounding" in d):
+            info = d
+            break
+    if info is None:
+        return [dict(role="segmentation", model=tracks.source or "unknown", origin="unknown")]
+    saved = getattr(tracks, "loaded_from", None)
+    out = []
+
+    def origin(cas):
+        if saved:
+            return "recorded_replay"
+        return "recorded_replay" if cas else "fresh_model_call"
+    g_calls = [c for g in (info.get("grounding") or {}).values() for c in (g.get("calls") or [])]
+    main = {c.get("model") for c in g_calls if c.get("model")}
+    for r_ in info.get("reseed") or []:
+        if r_.get("grounding"):
+            g = dict(r_["grounding"])
+            g.setdefault("model", next(iter(main)) if len(main) == 1 else "unknown grounding model")
+            g_calls.append(g)
+    for model in sorted({c.get("model", "?") for c in g_calls}):
+        cs = [c for c in g_calls if c.get("model", "?") == model]
+        cas = all(c.get("cassette") for c in cs)
+        out.append(dict(role="grounding", model=model, origin=origin(cas), calls=len(cs),
+                        note=("read from saved tracks; " if saved else "") + ("all calls replayed" if cas else
+                                                                               "made live when tracked")))
+    sams = list((info.get("sam") or {}).values()) + [r_.get("sam") for r_ in (info.get("reseed") or []) if r_.get("sam")]
+    if sams:
+        cas = all(x.get("cassette") for x in sams)
+        out.append(dict(role="segmentation", model="sam-3.1", origin=origin(cas), calls=len(sams),
+                        note=("read from saved tracks; " if saved else "") + ("all calls replayed" if cas else
+                                                                               "made live when tracked")))
+    return out
+
+
+def evidence_from_estimates(tracks: Tracks, est: Estimates, ids: dict, *, kind: Optional[str] = None,
+                            media: Optional[dict] = None, models: Optional[list] = None):
+    """Per-frame observability and provenance for the trace built from ``est``.
+    Returns (TraceEvidence, positions, quats) where positions/quats are the
+    per-label arrays written into the trace (placeholders where unobserved)."""
+    from mirror.observability import (CalibrationRecord, ModelArtifact, ObjectEvidence, ReviewItem, TraceEvidence,
+                                      spans_from_statuses)
+    n = len(est.t)
+    t = est.t
+    if kind is None:
+        srcs = {c.get("intrinsics_source") for c in est.calibration if c.get("valid", True)}
+        if est.scene_checks.get("calibration_mask") and all(v == "calibration board" for v in
+                                                           est.scene_checks["calibration_mask"].values()) \
+                and srcs <= {"checkerboard", "user_supplied"}:
+            kind = "camera_video_reconstruction"
+        elif srcs == {"rendered_camera_model"}:
+            kind = "rendered_video_reconstruction"
+        else:
+            kind = "unverified_video_reconstruction"
+    kinds = est.scene_checks["kinds"]
+    actor = est.scene_checks.get("actor", "robot_gripper")
+    robot = actor == "robot_gripper"
+    positions, quats, objs = {}, {}, {}
+    review = [ReviewItem(**r) for r in est.review]
+    if not robot:
+        review.append(ReviewItem(code="object_centric_events", severity="review",
+                                 message=("Carry intervals were inferred from object motion only (no robot gripper "
+                                          "in the footage): check the start and end of each carry.")))
+    pos_sigma = {"measured": 0.01, "inferred": 0.02, "interpolated": 0.02}
+    for lab in kinds:
+        if lab not in ids:
+            continue
+        P = np.asarray(est.objects[lab], float)
+        st = np.asarray(est.pos_status.get(lab, np.where(np.isnan(P[:, 0]), "unobserved", "measured")), dtype=object)
+        P, st = _gap_fill(st, P, t, INTERP_MAX_S)
+        # beyond short gaps: hold the nearest known position for display only
+        known = np.flatnonzero(~np.isnan(P[:, 0]))
+        if len(known):
+            for j in range(n):
+                if np.isnan(P[j, 0]):
+                    k = known[np.searchsorted(known, j, side="right") - 1] if j > known[0] else known[0]
+                    P[j] = P[k]
+                    st[j] = "unobserved"
+        positions[lab] = P
+        # tilt
+        carried = _carry_mask(est, lab)
+        tilt = np.full(n, np.nan)
+        tst = np.full(n, "unobserved", dtype=object)
+        tbasis = {"unobserved": "not observed (the stored orientation is a display placeholder)"}
+        if lab in est.tilt_deg:
+            tilt = np.asarray(est.tilt_deg[lab], float).copy()
+            tst = np.asarray(est.tilt_status.get(lab, np.where(np.isnan(tilt), "unobserved", "measured")), dtype=object)
+            # bridge short gaps only inside one carry
+            filled, fst = _gap_fill(tst, tilt, t, TILT_INTERP_MAX_S, good=("measured",))
+            same = np.ones(n, bool)
+            for j in np.flatnonzero(fst == "interpolated"):
+                same[j] = carried[j]
+            sel = (fst == "interpolated") & same
+            tilt[sel], tst[sel] = filled[sel], "interpolated"
+            tbasis["measured"] = "side-view silhouette fit (in-image component of tilt)"
+            tbasis["interpolated"] = f"interpolated across a gap of at most {TILT_INTERP_MAX_S:g} s"
+        rest = est.rest_tilt.get(lab, {})
+        i_first = int(np.argmax(carried)) if carried.any() else n
+        i_last = int(n - 1 - np.argmax(carried[::-1])) if carried.any() else -1
+        for key, rng in (("start", range(0, i_first)), ("end", range(i_last + 1, n) if carried.any() else range(0))):
+            inf = rest.get(key)
+            if not inf or inf.get("status") != "inferred":
+                continue
+            for j in rng:
+                if tst[j] == "unobserved":
+                    tst[j] = "inferred"
+                    tilt[j] = 0.0 if inf.get("upright") else 90.0
+            tbasis["inferred"] = (tbasis.get("inferred", "") + ("; " if tbasis.get("inferred") else "")
+                                  + f"{key}: {inf.get('basis', '')}")
+        q = np.zeros((n, 4))
+        q[:, 0] = 1.0
+        for j in range(n):
+            if tst[j] != "unobserved" and not np.isnan(tilt[j]):
+                q[j] = _tilt_quat(0.0, float(tilt[j]))
+        quats[lab] = q
+        tsig = {"measured": 5.0, "interpolated": 8.0, "inferred": REST_TILT_SIGMA_DEG}
+        ident = est.identity.get(lab, {})
+        objs[ids[lab]] = ObjectEvidence(
+            object_id=ids[lab], label=lab, identity=ident.get("identity", "assumed_from_label"),
+            identity_note=ident.get("note", ""),
+            position=spans_from_statuses(list(st), sigma=pos_sigma, basis={
+                "measured": "mask centroid (two views triangulated, or the top-view ray at the resting height)",
+                "inferred": "one view with an assumed height, or hidden under the gripper and moved with it",
+                "interpolated": f"interpolated across a gap of at most {INTERP_MAX_S:g} s",
+                "unobserved": "not seen: nearest known position held for display"}),
+            tilt=spans_from_statuses(list(tst), sigma=tsig, basis=tbasis))
+        if carried.any() and lab in est.tilt_deg:
+            cov = float(np.mean(np.isin(tst[carried], ("measured", "interpolated"))))
+            if cov < 0.8:
+                review.append(ReviewItem(code="tilt_unobserved", severity="review", object_id=ids[lab],
+                                         message=(f"{kinds[lab]} tilt was observed on {100 * cov:.0f}% of the "
+                                                  "time it was carried; the rest is unknown, not upright.")))
+    gst = np.asarray(est.gripper_status if est.gripper_status is not None
+                     else np.where(np.isnan(est.gripper[:, 0]), "unobserved", "measured"), dtype=object)
+    G, gst = _gap_fill(gst, np.asarray(est.gripper, float), t, INTERP_MAX_S)
+    positions["__gripper__"] = G
+    ev = TraceEvidence(
+        kind=kind, cameras=sorted(tracks.masks), media=dict(media or {}),
+        calibration=[CalibrationRecord(**c) for c in est.calibration], objects=objs,
+        gripper_position=spans_from_statuses(list(gst), basis={
+            "measured": "two views triangulated", "inferred": "one view (depth from apparent size or assumed height)",
+            "interpolated": f"interpolated across a gap of at most {INTERP_MAX_S:g} s",
+            "unobserved": "not seen: last known position held for display"}),
+        gripper_width=(spans_from_statuses(["inferred"] * n, basis={
+            "inferred": "not observed: closed while an object is carried, open otherwise"}) if robot else
+            spans_from_statuses(["unobserved"] * n, basis={"unobserved": "no robot gripper in this footage"})),
+        events_basis=("grasp and release inferred from object motion between resting places; timing from the "
+                      "gripper's top-view outline" if robot else
+                      "carry start and end inferred from object motion between resting places; no robot gripper was "
+                      f"observed (actor: {actor}), so these are not robot contact events"),
+        models=[ModelArtifact(**m) for m in (models if models is not None else models_from_tracks(tracks))],
+        review=review,
+        notes=[f"tracks: {tracks.source}"] + [x for x in (tracks.notes or []) if not x.startswith("{")])
+    return ev, positions, quats
+
+
 def trace_from_estimates(tracks: Tracks, est: Estimates, scene: SceneState, *, demo_id: str,
-                         video_path: Optional[str] = None) -> DemoTrace:
+                         video_path: Optional[str] = None, kind: Optional[str] = None,
+                         media: Optional[dict] = None, models: Optional[list] = None) -> DemoTrace:
+    """``kind``: mirror.observability.EvidenceKind; by default derived from how
+    the cameras were calibrated (assumed intrinsics -> unverified)."""
     kinds = est.scene_checks["kinds"]
     ids = {lab: (lab if any(o.id == lab for o in scene.objects) else f"{kinds[lab]}_0") for lab in kinds}
+    evidence, positions, quats = evidence_from_estimates(tracks, est, ids, kind=kind, media=media, models=models)
+    actor = est.scene_checks.get("actor", "robot_gripper")
     held = {}
     for e in est.events:
         held.setdefault(e["object"], []).append(e)
     frames = []
-    last = {}
+    G = positions["__gripper__"]
     for i, ti in enumerate(est.t):
         objs = {}
-        for lab, P in est.objects.items():
-            if lab not in ids:
+        for lab, P in positions.items():
+            if lab not in ids or np.isnan(P[i][0]):
                 continue
-            p = P[i]
-            if np.isnan(p[0]):
-                p = last.get(lab)
-                if p is None:
-                    continue
-            last[lab] = p
-            q = (1.0, 0.0, 0.0, 0.0)
-            if lab in est.tilt_deg and not np.isnan(est.tilt_deg[lab][i]):
-                q = _tilt_quat(0.0, float(est.tilt_deg[lab][i]))
-            objs[ids[lab]] = Pose(pos=tuple(float(v) for v in p), quat=q)
-        g = est.gripper[i]
+            objs[ids[lab]] = Pose(pos=tuple(float(v) for v in P[i]), quat=tuple(float(v) for v in quats[lab][i]))
+        g = G[i]
         if np.isnan(g[0]):
-            g = last.get("__g", np.array(scene.gripper_start.pos))
-        last["__g"] = g
+            prev = [j for j in range(i) if not np.isnan(G[j][0])]
+            g = G[prev[-1]] if prev else np.array(scene.gripper_start.pos)
         carrying = any(e0["t"] <= ti <= e1["t"] for lab, evs in held.items()
                        for e0, e1 in zip(evs[0::2], evs[1::2]))
+        width = (0.0 if carrying else GRIPPER.max_opening) if actor == "robot_gripper" else GRIPPER.max_opening
         frames.append(TraceFrame(t=float(ti), gripper=Pose(pos=tuple(float(v) for v in g)),
-                                 gripper_width=0.0 if carrying else GRIPPER.max_opening, objects=objs))
+                                 gripper_width=width, objects=objs))
+    actor = est.scene_checks.get("actor", "robot_gripper")
     events = [TraceEvent(t=e["t"], type=e["type"], object_id=ids.get(e["object"], e["object"]),
-                         detail={"from": "video"}) for e in est.events]
-    note = (f"Reconstructed from video with {tracks.source}: table-plane calibration from the table corners, "
-            "two-view triangulation of mask centroids, carry events from object motion, cup tilt from the "
-            "side-view mask principal axis (in-image component only). Gripper width is not observed: "
-            "closed while an object is carried, open otherwise.")
+                         detail={"from": "video", "observability": "inferred", "actor": actor,
+                                 "meaning": ("robot grasp/release inferred from video" if actor == "robot_gripper"
+                                             else "carry start/end inferred from object motion; not robot contact"),
+                                 "basis": e.get("basis", "object motion")}) for e in est.events]
+    what = {"rendered_video_reconstruction": "simulator-rendered video",
+            "camera_video_reconstruction": "calibrated camera footage",
+            "unverified_video_reconstruction": "video with assumed camera calibration"}.get(evidence.kind, "video")
+    note = (f"Reconstructed from {what} with {tracks.source}: positions from mask centroids (two views "
+            "triangulated, or one view at a known height), carry events from object motion, cup tilt from the "
+            "side-view silhouette (in-image component only). Values not observed are marked unobserved in the "
+            "trace's evidence and are display placeholders, not measurements. Gripper width is not observed.")
     return DemoTrace(demo_id=demo_id, scene=scene, source="video_grounded", source_note=note,
-                     sample_hz=tracks.fps, frames=frames, events=events, video_path=video_path)
+                     sample_hz=tracks.fps, frames=frames, events=events, video_path=video_path, evidence=evidence)

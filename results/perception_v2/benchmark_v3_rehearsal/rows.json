@@ -1,0 +1,1181 @@
+{
+ "status": "rehearsal on development seeds with simulator (oracle) masks; no model calls; code at 37ac7d5 before the fixes in 1e77ea9",
+ "seeds": [
+  9101,
+  9102
+ ],
+ "hold_s": 2.0,
+ "fps": 5.0,
+ "rows": [
+  {
+   "demo_id": "demo_dev_9101_tilt35r",
+   "true_cup_tilt": {
+    "max_deg": 34.82,
+    "mean_deg": 4.47,
+    "frames": 616
+   },
+   "conditions": {
+    "two_view": {
+     "localisation": {
+      "mirror": {
+       "per_object": {
+        "cup_0": {
+         "visible": 477,
+         "missing": 0,
+         "outliers": 27,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 477,
+          "p50": 0.0026,
+          "p90": 0.0399,
+          "p99": 0.0664,
+          "max": 0.0822,
+          "mean": 0.0122
+         },
+         "within_2cm_of_visible": 0.7442
+        },
+        "block_0": {
+         "visible": 477,
+         "missing": 35,
+         "outliers": 25,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 442,
+          "p50": 0.0033,
+          "p90": 0.0212,
+          "p99": 0.0992,
+          "max": 0.1146,
+          "mean": 0.0099
+         },
+         "within_2cm_of_visible": 0.8197
+        },
+        "marker_0": {
+         "visible": 477,
+         "missing": 0,
+         "outliers": 27,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 477,
+          "p50": 0.0122,
+          "p90": 0.0254,
+          "p99": 0.0977,
+          "max": 0.1278,
+          "mean": 0.0176
+         },
+         "within_2cm_of_visible": 0.8449
+        }
+       },
+       "all": {
+        "visible": 1431,
+        "missing": 35,
+        "missing_rate": 0.0245,
+        "outliers": 79,
+        "identity_errors": 0,
+        "error_m_answered": {
+         "n": 1396,
+         "p50": 0.0073,
+         "p90": 0.0298,
+         "p99": 0.0967,
+         "max": 0.1278,
+         "mean": 0.0133
+        },
+        "within_1cm_of_visible": 0.4941,
+        "within_2cm_of_visible": 0.8029,
+        "within_5cm_of_visible": 0.9203
+       }
+      },
+      "static_positions": {
+       "per_object": {
+        "cup_0": {
+         "visible": 477,
+         "missing": 0,
+         "outliers": 428,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 477,
+          "p50": 0.2992,
+          "p90": 0.4111,
+          "p99": 0.5764,
+          "max": 0.5881,
+          "mean": 0.2919
+         },
+         "within_2cm_of_visible": 0.1006
+        },
+        "block_0": {
+         "visible": 477,
+         "missing": 0,
+         "outliers": 244,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 477,
+          "p50": 0.2109,
+          "p90": 0.3662,
+          "p99": 0.3675,
+          "max": 0.3675,
+          "mean": 0.1831
+         },
+         "within_2cm_of_visible": 0.4885
+        },
+        "marker_0": {
+         "visible": 477,
+         "missing": 0,
+         "outliers": 82,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 477,
+          "p50": 0.0122,
+          "p90": 0.5618,
+          "p99": 0.6222,
+          "max": 0.635,
+          "mean": 0.1011
+         },
+         "within_2cm_of_visible": 0.826
+        }
+       },
+       "all": {
+        "visible": 1431,
+        "missing": 0,
+        "missing_rate": 0.0,
+        "outliers": 754,
+        "identity_errors": 0,
+        "error_m_answered": {
+         "n": 1431,
+         "p50": 0.2922,
+         "p90": 0.3675,
+         "p99": 0.5818,
+         "max": 0.635,
+         "mean": 0.192
+        },
+        "within_1cm_of_visible": 0.1957,
+        "within_2cm_of_visible": 0.4717,
+        "within_5cm_of_visible": 0.4731
+       }
+      },
+      "colour_tracker": {
+       "per_object": {
+        "cup_0": {
+         "visible": 477,
+         "missing": 473,
+         "outliers": 2,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 4,
+          "p50": 0.05,
+          "p90": 0.0553,
+          "p99": 0.0572,
+          "max": 0.0574,
+          "mean": 0.0398
+         },
+         "within_2cm_of_visible": 0.0021
+        },
+        "block_0": {
+         "visible": 477,
+         "missing": 285,
+         "outliers": 0,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 192,
+          "p50": 0.0013,
+          "p90": 0.0013,
+          "p99": 0.0151,
+          "max": 0.0158,
+          "mean": 0.0019
+         },
+         "within_2cm_of_visible": 0.4025
+        },
+        "marker_0": {
+         "visible": 477,
+         "missing": 107,
+         "outliers": 0,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 370,
+          "p50": 0.0006,
+          "p90": 0.0006,
+          "p99": 0.0014,
+          "max": 0.0077,
+          "mean": 0.0007
+         },
+         "within_2cm_of_visible": 0.7757
+        }
+       },
+       "all": {
+        "visible": 1431,
+        "missing": 865,
+        "missing_rate": 0.6045,
+        "outliers": 2,
+        "identity_errors": 0,
+        "error_m_answered": {
+         "n": 566,
+         "p50": 0.0006,
+         "p90": 0.0013,
+         "p99": 0.015,
+         "max": 0.0574,
+         "mean": 0.0014
+        },
+        "within_1cm_of_visible": 0.3885,
+        "within_2cm_of_visible": 0.3934,
+        "within_5cm_of_visible": 0.3941
+       }
+      }
+     },
+     "tilt": {
+      "mirror": {
+       "carry_frames": 103,
+       "answered": 0,
+       "coverage": 0.0,
+       "error_deg_answered": null,
+       "within_5deg_of_carry": 0.0,
+       "truly_tilted_frames": 13,
+       "false_upright_frames": 0,
+       "abstained_on_tilted_frames": 13,
+       "true_max_deg": 34.79,
+       "est_max_deg": null,
+       "upright_decision": "abstained",
+       "upright_truth": "tilted",
+       "upright_decision_correct": null
+      },
+      "constant_zero": {
+       "carry_frames": 103,
+       "answered": 103,
+       "coverage": 1.0,
+       "error_deg_answered": {
+        "n": 103,
+        "p50": 0.057,
+        "p90": 32.2972,
+        "p99": 34.792,
+        "max": 34.792,
+        "mean": 4.4507
+       },
+       "within_5deg_of_carry": 0.8544,
+       "truly_tilted_frames": 13,
+       "false_upright_frames": 13,
+       "abstained_on_tilted_frames": 0,
+       "true_max_deg": 34.79,
+       "est_max_deg": 0.0,
+       "upright_decision": "upright",
+       "upright_truth": "tilted",
+       "upright_decision_correct": false
+      },
+      "pca_axis": {
+       "carry_frames": 103,
+       "answered": 76,
+       "coverage": 0.7379,
+       "error_deg_answered": {
+        "n": 76,
+        "p50": 15.6918,
+        "p90": 26.0433,
+        "p99": 44.2037,
+        "max": 58.002,
+        "mean": 14.7446
+       },
+       "within_5deg_of_carry": 0.1456,
+       "truly_tilted_frames": 13,
+       "false_upright_frames": 13,
+       "abstained_on_tilted_frames": 0,
+       "true_max_deg": 34.79,
+       "est_max_deg": 58.04,
+       "upright_decision": "abstained",
+       "upright_truth": "tilted",
+       "upright_decision_correct": null
+      }
+     },
+     "review": [
+      [
+       "single_view",
+       "review"
+      ],
+      [
+       "tilt_unobserved",
+       "review"
+      ]
+     ]
+    },
+    "top_only": {
+     "localisation": {
+      "mirror": {
+       "per_object": {
+        "cup_0": {
+         "visible": 477,
+         "missing": 0,
+         "outliers": 27,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 477,
+          "p50": 0.0026,
+          "p90": 0.0399,
+          "p99": 0.0664,
+          "max": 0.0822,
+          "mean": 0.0122
+         },
+         "within_2cm_of_visible": 0.7442
+        },
+        "block_0": {
+         "visible": 477,
+         "missing": 35,
+         "outliers": 25,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 442,
+          "p50": 0.0033,
+          "p90": 0.0212,
+          "p99": 0.0992,
+          "max": 0.1146,
+          "mean": 0.0099
+         },
+         "within_2cm_of_visible": 0.8197
+        },
+        "marker_0": {
+         "visible": 477,
+         "missing": 0,
+         "outliers": 27,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 477,
+          "p50": 0.0122,
+          "p90": 0.0254,
+          "p99": 0.0977,
+          "max": 0.1278,
+          "mean": 0.0176
+         },
+         "within_2cm_of_visible": 0.8449
+        }
+       },
+       "all": {
+        "visible": 1431,
+        "missing": 35,
+        "missing_rate": 0.0245,
+        "outliers": 79,
+        "identity_errors": 0,
+        "error_m_answered": {
+         "n": 1396,
+         "p50": 0.0073,
+         "p90": 0.0298,
+         "p99": 0.0967,
+         "max": 0.1278,
+         "mean": 0.0133
+        },
+        "within_1cm_of_visible": 0.4941,
+        "within_2cm_of_visible": 0.8029,
+        "within_5cm_of_visible": 0.9203
+       }
+      },
+      "static_positions": {
+       "per_object": {
+        "cup_0": {
+         "visible": 477,
+         "missing": 0,
+         "outliers": 428,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 477,
+          "p50": 0.2992,
+          "p90": 0.4111,
+          "p99": 0.5764,
+          "max": 0.5881,
+          "mean": 0.2919
+         },
+         "within_2cm_of_visible": 0.1006
+        },
+        "block_0": {
+         "visible": 477,
+         "missing": 0,
+         "outliers": 244,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 477,
+          "p50": 0.2109,
+          "p90": 0.3662,
+          "p99": 0.3675,
+          "max": 0.3675,
+          "mean": 0.1831
+         },
+         "within_2cm_of_visible": 0.4885
+        },
+        "marker_0": {
+         "visible": 477,
+         "missing": 0,
+         "outliers": 82,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 477,
+          "p50": 0.0122,
+          "p90": 0.5618,
+          "p99": 0.6222,
+          "max": 0.635,
+          "mean": 0.1011
+         },
+         "within_2cm_of_visible": 0.826
+        }
+       },
+       "all": {
+        "visible": 1431,
+        "missing": 0,
+        "missing_rate": 0.0,
+        "outliers": 754,
+        "identity_errors": 0,
+        "error_m_answered": {
+         "n": 1431,
+         "p50": 0.2922,
+         "p90": 0.3675,
+         "p99": 0.5818,
+         "max": 0.635,
+         "mean": 0.192
+        },
+        "within_1cm_of_visible": 0.1957,
+        "within_2cm_of_visible": 0.4717,
+        "within_5cm_of_visible": 0.4731
+       }
+      },
+      "colour_tracker": {
+       "per_object": {
+        "cup_0": {
+         "visible": 477,
+         "missing": 473,
+         "outliers": 2,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 4,
+          "p50": 0.05,
+          "p90": 0.0553,
+          "p99": 0.0572,
+          "max": 0.0574,
+          "mean": 0.0398
+         },
+         "within_2cm_of_visible": 0.0021
+        },
+        "block_0": {
+         "visible": 477,
+         "missing": 285,
+         "outliers": 0,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 192,
+          "p50": 0.0013,
+          "p90": 0.0013,
+          "p99": 0.0151,
+          "max": 0.0158,
+          "mean": 0.0019
+         },
+         "within_2cm_of_visible": 0.4025
+        },
+        "marker_0": {
+         "visible": 477,
+         "missing": 107,
+         "outliers": 0,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 370,
+          "p50": 0.0006,
+          "p90": 0.0006,
+          "p99": 0.0014,
+          "max": 0.0077,
+          "mean": 0.0007
+         },
+         "within_2cm_of_visible": 0.7757
+        }
+       },
+       "all": {
+        "visible": 1431,
+        "missing": 865,
+        "missing_rate": 0.6045,
+        "outliers": 2,
+        "identity_errors": 0,
+        "error_m_answered": {
+         "n": 566,
+         "p50": 0.0006,
+         "p90": 0.0013,
+         "p99": 0.015,
+         "max": 0.0574,
+         "mean": 0.0014
+        },
+        "within_1cm_of_visible": 0.3885,
+        "within_2cm_of_visible": 0.3934,
+        "within_5cm_of_visible": 0.3941
+       }
+      }
+     },
+     "tilt": {
+      "mirror": {
+       "carry_frames": 103,
+       "answered": 0,
+       "coverage": 0.0,
+       "error_deg_answered": null,
+       "within_5deg_of_carry": 0.0,
+       "truly_tilted_frames": 13,
+       "false_upright_frames": 0,
+       "abstained_on_tilted_frames": 13,
+       "true_max_deg": 34.79,
+       "est_max_deg": null,
+       "upright_decision": "abstained",
+       "upright_truth": "tilted",
+       "upright_decision_correct": null
+      },
+      "constant_zero": {
+       "carry_frames": 103,
+       "answered": 103,
+       "coverage": 1.0,
+       "error_deg_answered": {
+        "n": 103,
+        "p50": 0.057,
+        "p90": 32.2972,
+        "p99": 34.792,
+        "max": 34.792,
+        "mean": 4.4507
+       },
+       "within_5deg_of_carry": 0.8544,
+       "truly_tilted_frames": 13,
+       "false_upright_frames": 13,
+       "abstained_on_tilted_frames": 0,
+       "true_max_deg": 34.79,
+       "est_max_deg": 0.0,
+       "upright_decision": "upright",
+       "upright_truth": "tilted",
+       "upright_decision_correct": false
+      },
+      "pca_axis": {
+       "carry_frames": 103,
+       "answered": 0,
+       "coverage": 0.0,
+       "error_deg_answered": null,
+       "within_5deg_of_carry": 0.0,
+       "truly_tilted_frames": 13,
+       "false_upright_frames": 0,
+       "abstained_on_tilted_frames": 13,
+       "true_max_deg": 34.79,
+       "est_max_deg": null,
+       "upright_decision": "abstained",
+       "upright_truth": "tilted",
+       "upright_decision_correct": null
+      }
+     },
+     "review": [
+      [
+       "single_view",
+       "review"
+      ],
+      [
+       "tilt_unobserved",
+       "review"
+      ]
+     ]
+    }
+   },
+   "signatures": {
+    "ground_truth": {
+     "offline": "{\"constraints\": [[\"upright\", \"final\", \"{\\\"kind\\\": \\\"block\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"], [\"upright\", \"final\", \"{\\\"kind\\\": \\\"cup\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"], [\"upright\", \"final\", \"{\\\"kind\\\": \\\"marker\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"], [\"upright\", \"transport\", \"{\\\"kind\\\": \\\"block\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"], [\"upright\", \"transport\", \"{\\\"kind\\\": \\\"marker\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"]], \"goals\": [[\"{\\\"kind\\\": \\\"block\\\"}\", \"destination\"], [\"{\\\"kind\\\": \\\"cup\\\"}\", \"destination\"], [\"{\\\"kind\\\": \\\"marker\\\"}\", \"destination\"]]}"
+    },
+    "two_view": {
+     "offline": "{\"constraints\": [[\"upright\", \"final\", \"{\\\"kind\\\": \\\"cup\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"]], \"goals\": [[\"{\\\"kind\\\": \\\"block\\\"}\", \"destination\"], [\"{\\\"kind\\\": \\\"cup\\\"}\", \"destination\"], [\"{\\\"kind\\\": \\\"marker\\\"}\", \"destination\"]]}"
+    },
+    "top_only": {
+     "offline": "{\"constraints\": [[\"upright\", \"final\", \"{\\\"kind\\\": \\\"cup\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"]], \"goals\": [[\"{\\\"kind\\\": \\\"block\\\"}\", \"destination\"], [\"{\\\"kind\\\": \\\"cup\\\"}\", \"destination\"], [\"{\\\"kind\\\": \\\"marker\\\"}\", \"destination\"]]}"
+    }
+   },
+   "spec": {
+    "offline_equal": {
+     "two_view": false,
+     "top_only": false
+    }
+   },
+   "seed": 9101,
+   "commanded_tilt_deg": 35.0,
+   "axis": "roll",
+   "render_s": 177.9,
+   "score_s": 147.1,
+   "tracker": "oracle masks (simulator segmentation): rehearsal only",
+   "fps": 5.0
+  },
+  {
+   "demo_id": "demo_dev_9102_tilt60p",
+   "true_cup_tilt": {
+    "max_deg": 59.85,
+    "mean_deg": 9.18,
+    "frames": 625
+   },
+   "conditions": {
+    "two_view": {
+     "localisation": {
+      "mirror": {
+       "per_object": {
+        "cup_0": {
+         "visible": 476,
+         "missing": 0,
+         "outliers": 1,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 476,
+          "p50": 0.0044,
+          "p90": 0.0241,
+          "p99": 0.0418,
+          "max": 0.0508,
+          "mean": 0.0087
+         },
+         "within_2cm_of_visible": 0.8634
+        },
+        "block_0": {
+         "visible": 472,
+         "missing": 0,
+         "outliers": 3,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 472,
+          "p50": 0.0032,
+          "p90": 0.0144,
+          "p99": 0.0308,
+          "max": 0.0864,
+          "mean": 0.0054
+         },
+         "within_2cm_of_visible": 0.9343
+        },
+        "marker_0": {
+         "visible": 476,
+         "missing": 0,
+         "outliers": 4,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 476,
+          "p50": 0.0023,
+          "p90": 0.0176,
+          "p99": 0.0353,
+          "max": 0.06,
+          "mean": 0.0055
+         },
+         "within_2cm_of_visible": 0.9097
+        }
+       },
+       "all": {
+        "visible": 1424,
+        "missing": 0,
+        "missing_rate": 0.0,
+        "outliers": 8,
+        "identity_errors": 0,
+        "error_m_answered": {
+         "n": 1424,
+         "p50": 0.0032,
+         "p90": 0.0193,
+         "p99": 0.041,
+         "max": 0.0864,
+         "mean": 0.0065
+        },
+        "within_1cm_of_visible": 0.8055,
+        "within_2cm_of_visible": 0.9024,
+        "within_5cm_of_visible": 0.9944
+       }
+      },
+      "static_positions": {
+       "per_object": {
+        "cup_0": {
+         "visible": 476,
+         "missing": 0,
+         "outliers": 425,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 476,
+          "p50": 0.4269,
+          "p90": 0.5135,
+          "p99": 0.6448,
+          "max": 0.6546,
+          "mean": 0.3945
+         },
+         "within_2cm_of_visible": 0.105
+        },
+        "block_0": {
+         "visible": 472,
+         "missing": 0,
+         "outliers": 236,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 472,
+          "p50": 0.0562,
+          "p90": 0.3399,
+          "p99": 0.395,
+          "max": 0.4323,
+          "mean": 0.1693
+         },
+         "within_2cm_of_visible": 0.4979
+        },
+        "marker_0": {
+         "visible": 476,
+         "missing": 0,
+         "outliers": 82,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 476,
+          "p50": 0.0023,
+          "p90": 0.678,
+          "p99": 0.7153,
+          "max": 0.7269,
+          "mean": 0.1082
+         },
+         "within_2cm_of_visible": 0.8277
+        }
+       },
+       "all": {
+        "visible": 1424,
+        "missing": 0,
+        "missing_rate": 0.0,
+        "outliers": 743,
+        "identity_errors": 0,
+        "error_m_answered": {
+         "n": 1424,
+         "p50": 0.3392,
+         "p90": 0.427,
+         "p99": 0.6784,
+         "max": 0.7269,
+         "mean": 0.2242
+        },
+        "within_1cm_of_visible": 0.4761,
+        "within_2cm_of_visible": 0.4768,
+        "within_5cm_of_visible": 0.4782
+       }
+      },
+      "colour_tracker": {
+       "per_object": {
+        "cup_0": {
+         "visible": 476,
+         "missing": 376,
+         "outliers": 99,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 100,
+          "p50": 0.5011,
+          "p90": 0.8327,
+          "p99": 0.8473,
+          "max": 0.8479,
+          "mean": 0.4475
+         },
+         "within_2cm_of_visible": 0.0021
+        },
+        "block_0": {
+         "visible": 472,
+         "missing": 218,
+         "outliers": 34,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 254,
+          "p50": 0.0017,
+          "p90": 0.7666,
+          "p99": 1.3593,
+          "max": 1.3983,
+          "mean": 0.136
+         },
+         "within_2cm_of_visible": 0.4449
+        },
+        "marker_0": {
+         "visible": 476,
+         "missing": 58,
+         "outliers": 45,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 418,
+          "p50": 0.0124,
+          "p90": 0.0935,
+          "p99": 0.5583,
+          "max": 0.5686,
+          "mean": 0.0486
+         },
+         "within_2cm_of_visible": 0.7836
+        }
+       },
+       "all": {
+        "visible": 1424,
+        "missing": 652,
+        "missing_rate": 0.4579,
+        "outliers": 178,
+        "identity_errors": 0,
+        "error_m_answered": {
+         "n": 772,
+         "p50": 0.0124,
+         "p90": 0.5595,
+         "p99": 1.3327,
+         "max": 1.3983,
+         "mean": 0.129
+        },
+        "within_1cm_of_visible": 0.1475,
+        "within_2cm_of_visible": 0.4101,
+        "within_5cm_of_visible": 0.4171
+       }
+      }
+     },
+     "tilt": {
+      "mirror": {
+       "carry_frames": 104,
+       "answered": 38,
+       "coverage": 0.3654,
+       "error_deg_answered": {
+        "n": 38,
+        "p50": 1.8765,
+        "p90": 6.5388,
+        "p99": 13.5124,
+        "max": 13.809,
+        "mean": 2.9751
+       },
+       "within_5deg_of_carry": 0.3077,
+       "truly_tilted_frames": 18,
+       "false_upright_frames": 0,
+       "abstained_on_tilted_frames": 2,
+       "true_max_deg": 59.78,
+       "est_max_deg": 60.0,
+       "upright_decision": "abstained",
+       "upright_truth": "tilted",
+       "upright_decision_correct": null
+      },
+      "constant_zero": {
+       "carry_frames": 104,
+       "answered": 104,
+       "coverage": 1.0,
+       "error_deg_answered": {
+        "n": 104,
+        "p50": 1.105,
+        "p90": 54.0021,
+        "p99": 59.6946,
+        "max": 59.776,
+        "mean": 9.1938
+       },
+       "within_5deg_of_carry": 0.8077,
+       "truly_tilted_frames": 18,
+       "false_upright_frames": 18,
+       "abstained_on_tilted_frames": 0,
+       "true_max_deg": 59.78,
+       "est_max_deg": 0.0,
+       "upright_decision": "upright",
+       "upright_truth": "tilted",
+       "upright_decision_correct": false
+      },
+      "pca_axis": {
+       "carry_frames": 104,
+       "answered": 67,
+       "coverage": 0.6442,
+       "error_deg_answered": {
+        "n": 67,
+        "p50": 13.4129,
+        "p90": 17.15,
+        "p99": 20.3486,
+        "max": 20.5561,
+        "mean": 12.364
+       },
+       "within_5deg_of_carry": 0.0385,
+       "truly_tilted_frames": 18,
+       "false_upright_frames": 4,
+       "abstained_on_tilted_frames": 0,
+       "true_max_deg": 59.78,
+       "est_max_deg": 47.12,
+       "upright_decision": "abstained",
+       "upright_truth": "tilted",
+       "upright_decision_correct": null
+      }
+     },
+     "review": [
+      [
+       "scale_mismatch",
+       "abstain"
+      ],
+      [
+       "tilt_unobserved",
+       "review"
+      ],
+      [
+       "unknown_object",
+       "review"
+      ]
+     ]
+    },
+    "top_only": {
+     "localisation": {
+      "mirror": {
+       "per_object": {
+        "cup_0": {
+         "visible": 476,
+         "missing": 0,
+         "outliers": 33,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 476,
+          "p50": 0.0045,
+          "p90": 0.0409,
+          "p99": 0.0744,
+          "max": 0.0962,
+          "mean": 0.0146
+         },
+         "within_2cm_of_visible": 0.7143
+        },
+        "block_0": {
+         "visible": 472,
+         "missing": 4,
+         "outliers": 18,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 468,
+          "p50": 0.0032,
+          "p90": 0.0215,
+          "p99": 0.0901,
+          "max": 0.0982,
+          "mean": 0.009
+         },
+         "within_2cm_of_visible": 0.8686
+        },
+        "marker_0": {
+         "visible": 476,
+         "missing": 0,
+         "outliers": 35,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 476,
+          "p50": 0.0182,
+          "p90": 0.0315,
+          "p99": 0.1237,
+          "max": 0.1451,
+          "mean": 0.025
+         },
+         "within_2cm_of_visible": 0.8403
+        }
+       },
+       "all": {
+        "visible": 1424,
+        "missing": 4,
+        "missing_rate": 0.0028,
+        "outliers": 86,
+        "identity_errors": 0,
+        "error_m_answered": {
+         "n": 1420,
+         "p50": 0.0101,
+         "p90": 0.0306,
+         "p99": 0.1105,
+         "max": 0.1451,
+         "mean": 0.0162
+        },
+        "within_1cm_of_visible": 0.4979,
+        "within_2cm_of_visible": 0.8076,
+        "within_5cm_of_visible": 0.9368
+       }
+      },
+      "static_positions": {
+       "per_object": {
+        "cup_0": {
+         "visible": 476,
+         "missing": 0,
+         "outliers": 425,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 476,
+          "p50": 0.4153,
+          "p90": 0.5035,
+          "p99": 0.6338,
+          "max": 0.6435,
+          "mean": 0.3849
+         },
+         "within_2cm_of_visible": 0.105
+        },
+        "block_0": {
+         "visible": 472,
+         "missing": 0,
+         "outliers": 236,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 472,
+          "p50": 0.0567,
+          "p90": 0.3371,
+          "p99": 0.3934,
+          "max": 0.4308,
+          "mean": 0.169
+         },
+         "within_2cm_of_visible": 0.4979
+        },
+        "marker_0": {
+         "visible": 476,
+         "missing": 0,
+         "outliers": 81,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 476,
+          "p50": 0.0182,
+          "p90": 0.6577,
+          "p99": 0.6968,
+          "max": 0.7082,
+          "mean": 0.1181
+         },
+         "within_2cm_of_visible": 0.8277
+        }
+       },
+       "all": {
+        "visible": 1424,
+        "missing": 0,
+        "missing_rate": 0.0,
+        "outliers": 742,
+        "identity_errors": 0,
+        "error_m_answered": {
+         "n": 1424,
+         "p50": 0.3364,
+         "p90": 0.4153,
+         "p99": 0.6581,
+         "max": 0.7082,
+         "mean": 0.2242
+        },
+        "within_1cm_of_visible": 0.2001,
+        "within_2cm_of_visible": 0.4768,
+        "within_5cm_of_visible": 0.4789
+       }
+      },
+      "colour_tracker": {
+       "per_object": {
+        "cup_0": {
+         "visible": 476,
+         "missing": 476,
+         "outliers": 0,
+         "identity_errors": 0,
+         "error_m": null,
+         "within_2cm_of_visible": 0.0
+        },
+        "block_0": {
+         "visible": 472,
+         "missing": 262,
+         "outliers": 0,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 210,
+          "p50": 0.0008,
+          "p90": 0.002,
+          "p99": 0.0154,
+          "max": 0.0179,
+          "mean": 0.0017
+         },
+         "within_2cm_of_visible": 0.4449
+        },
+        "marker_0": {
+         "visible": 476,
+         "missing": 104,
+         "outliers": 0,
+         "identity_errors": 0,
+         "error_m": {
+          "n": 372,
+          "p50": 0.0091,
+          "p90": 0.0092,
+          "p99": 0.0092,
+          "max": 0.0092,
+          "mean": 0.0091
+         },
+         "within_2cm_of_visible": 0.7815
+        }
+       },
+       "all": {
+        "visible": 1424,
+        "missing": 842,
+        "missing_rate": 0.5913,
+        "outliers": 0,
+        "identity_errors": 0,
+        "error_m_answered": {
+         "n": 582,
+         "p50": 0.0091,
+         "p90": 0.0092,
+         "p99": 0.0115,
+         "max": 0.0179,
+         "mean": 0.0064
+        },
+        "within_1cm_of_visible": 0.4024,
+        "within_2cm_of_visible": 0.4087,
+        "within_5cm_of_visible": 0.4087
+       }
+      }
+     },
+     "tilt": {
+      "mirror": {
+       "carry_frames": 104,
+       "answered": 0,
+       "coverage": 0.0,
+       "error_deg_answered": null,
+       "within_5deg_of_carry": 0.0,
+       "truly_tilted_frames": 18,
+       "false_upright_frames": 0,
+       "abstained_on_tilted_frames": 18,
+       "true_max_deg": 59.78,
+       "est_max_deg": null,
+       "upright_decision": "abstained",
+       "upright_truth": "tilted",
+       "upright_decision_correct": null
+      },
+      "constant_zero": {
+       "carry_frames": 104,
+       "answered": 104,
+       "coverage": 1.0,
+       "error_deg_answered": {
+        "n": 104,
+        "p50": 1.105,
+        "p90": 54.0021,
+        "p99": 59.6946,
+        "max": 59.776,
+        "mean": 9.1938
+       },
+       "within_5deg_of_carry": 0.8077,
+       "truly_tilted_frames": 18,
+       "false_upright_frames": 18,
+       "abstained_on_tilted_frames": 0,
+       "true_max_deg": 59.78,
+       "est_max_deg": 0.0,
+       "upright_decision": "upright",
+       "upright_truth": "tilted",
+       "upright_decision_correct": false
+      },
+      "pca_axis": {
+       "carry_frames": 104,
+       "answered": 0,
+       "coverage": 0.0,
+       "error_deg_answered": null,
+       "within_5deg_of_carry": 0.0,
+       "truly_tilted_frames": 18,
+       "false_upright_frames": 0,
+       "abstained_on_tilted_frames": 18,
+       "true_max_deg": 59.78,
+       "est_max_deg": null,
+       "upright_decision": "abstained",
+       "upright_truth": "tilted",
+       "upright_decision_correct": null
+      }
+     },
+     "review": [
+      [
+       "scale_mismatch",
+       "abstain"
+      ],
+      [
+       "single_view",
+       "review"
+      ],
+      [
+       "tilt_unobserved",
+       "review"
+      ],
+      [
+       "unknown_object",
+       "review"
+      ]
+     ]
+    }
+   },
+   "signatures": {
+    "ground_truth": {
+     "offline": "{\"constraints\": [[\"upright\", \"final\", \"{\\\"kind\\\": \\\"block\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"], [\"upright\", \"final\", \"{\\\"kind\\\": \\\"cup\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"], [\"upright\", \"final\", \"{\\\"kind\\\": \\\"marker\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"], [\"upright\", \"transport\", \"{\\\"kind\\\": \\\"block\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"], [\"upright\", \"transport\", \"{\\\"kind\\\": \\\"marker\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"]], \"goals\": [[\"{\\\"kind\\\": \\\"block\\\"}\", \"destination\"], [\"{\\\"kind\\\": \\\"cup\\\"}\", \"destination\"], [\"{\\\"kind\\\": \\\"marker\\\"}\", \"destination\"]]}"
+    },
+    "two_view": {
+     "offline": "{\"constraints\": [[\"upright\", \"final\", \"{\\\"kind\\\": \\\"cup\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"], [\"upright\", \"final\", \"{\\\"kind\\\": \\\"marker\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"]], \"goals\": [[\"{\\\"kind\\\": \\\"block\\\"}\", \"destination\"], [\"{\\\"kind\\\": \\\"cup\\\"}\", \"destination\"], [\"{\\\"kind\\\": \\\"marker\\\"}\", \"destination\"]]}"
+    },
+    "top_only": {
+     "offline": "{\"constraints\": [[\"upright\", \"final\", \"{\\\"kind\\\": \\\"cup\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"], [\"upright\", \"final\", \"{\\\"kind\\\": \\\"marker\\\"}\", \"{\\\"max_tilt_deg\\\": 15.0}\"]], \"goals\": [[\"{\\\"kind\\\": \\\"block\\\"}\", \"destination\"], [\"{\\\"kind\\\": \\\"cup\\\"}\", \"destination\"], [\"{\\\"kind\\\": \\\"marker\\\"}\", \"destination\"]]}"
+    }
+   },
+   "spec": {
+    "offline_equal": {
+     "two_view": false,
+     "top_only": false
+    }
+   },
+   "seed": 9102,
+   "commanded_tilt_deg": 60.0,
+   "axis": "pitch",
+   "render_s": 213.1,
+   "score_s": 198.7,
+   "tracker": "oracle masks (simulator segmentation): rehearsal only",
+   "fps": 5.0
+  }
+ ]
+}

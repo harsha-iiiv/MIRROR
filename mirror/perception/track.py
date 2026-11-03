@@ -312,6 +312,8 @@ def load_tracks(path) -> Tracks:
                       for c, dd in d["masks"].items()}, source=d["source"], notes=d.get("notes", []),
                static=set(d.get("static", [])))
     t.extra = d.get("extra", {})
+    # provenance: these masks are a saved record, whatever the original calls were
+    t.loaded_from = str(path)
     return t
 
 
