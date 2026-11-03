@@ -138,6 +138,6 @@ def test_arm_execution_keeps_clearance_with_margin(arm_backend, specs, scenes):
     assert plan.status == "ok" and ro.report.status == "success", ro.report.notes
     cup = next(o for o in s.objects if o.kind == "cup")
     i = log.object_ids.index(cup.id)
-    held = [k for k in range(log.n) if log.held[k][i]]
+    held = [k for k in range(log.n) if int(log.held[k]) == i]
     dmin = min(object_clearance(cup, s, log.obj_pos[k, i], quat_to_mat(log.obj_quat[k, i]))[0] for k in held[::5])
     assert dmin >= 0.04
