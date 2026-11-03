@@ -11,6 +11,7 @@ from typing import Any, Iterable, Optional
 from mirror.contracts import (Constraint, CorrectionRecord, Goal, ObjectSelector,
                               OrderingConstraint, SpecOp, Status, TaskSpec)
 from mirror.interpret.types import InterpretError
+from mirror.rules_support import unsupported_reason
 
 CONTACT_GROUPS = ("obstacle", "table_outside_tray", "other_objects")
 
@@ -151,6 +152,13 @@ def validate_spec(spec: TaskSpec) -> list[str]:
             m = c.params.get("min_m")
             if not isinstance(m, (int, float)) or isinstance(m, bool) or not (0 < m <= 0.5):
                 errs.append(f"{where}: keep_clearance needs params.min_m in (0, 0.5]")
+            extra = set(c.params) - {"min_m", "from"}
+            if extra:
+                errs.append(f"{where}: unknown params {sorted(extra)}")
+        if c.status != Status.rejected:
+            why = unsupported_reason(c)
+            if why:
+                errs.append(f"{where}: unsupported rule: {why}")
 
     seen: dict[tuple, str] = {}
     for c in spec.constraints:
@@ -169,6 +177,10 @@ def validate_spec(spec: TaskSpec) -> list[str]:
         check_sel(where, o.after, allow_all=False)
         if o.before == o.after:
             errs.append(f"{where}: before and after select the same objects")
+        if o.status != Status.rejected:
+            why = unsupported_reason(o)
+            if why:
+                errs.append(f"{where}: unsupported rule: {why}")
         if o.status == Status.confirmed and o.before.kind and o.after.kind:
             edges.setdefault(o.before.kind, set()).add(o.after.kind)
     if _has_cycle(edges):
