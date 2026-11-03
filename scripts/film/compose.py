@@ -168,8 +168,11 @@ def sim_frames(shot: SimShot, width: int, height: int, fps: int = FPS):
         rr.close()
 
 
+SHADOWS = True     # False: draw without shadow maps (some macOS OpenGL drivers darken translucent walls)
+
+
 def shadows_ok(shot):
-    return shot.shadows
+    return shot.shadows and SHADOWS
 
 
 # --------------------------------------------------------------------- text

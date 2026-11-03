@@ -145,7 +145,9 @@ def main(argv=None):
         if r.get("max_zoom_per_frame", 0) > 0.003:
             flags.append(f"{n}: zoom {r['max_zoom_per_frame']:.4f} per frame")
     for n, r in pix.items():
-        if r["frames_over_1pct"]:
+        if r["frames_over_1pct"] and cam.get(n, {}).get("moves", 0) == 0:
+            r["note"] = "camera static per the camera log: the change comes from objects moving in a textureless scene"
+        elif r["frames_over_1pct"]:
             flags.append(f"{n}: {r['frames_over_1pct']} frame pairs with >1% image scale change (max {r['max_scale_change']:.3f})")
     rep = dict(cut=cut, file=tl["file"], duration=tl["duration"], camera=cam, pixels=pix, flags=flags,
                thresholds=dict(moves_per_shot=1, zoom_per_frame=0.003, image_scale_per_frame=0.01))

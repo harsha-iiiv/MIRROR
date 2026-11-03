@@ -826,6 +826,7 @@ def main(argv=None):
     ap.add_argument("--sources", default=None)
     ap.add_argument("--demos", default=None)
     ap.add_argument("--fetch", default=None, help="URL of a .tar.gz holding sources/, demos/ and fonts/")
+    ap.add_argument("--no-shadows", action="store_true", help="render without shadow maps")
     ap.add_argument("--font-dir", default=None, help="directory with Roboto and DejaVu Sans Mono TTF files")
     ap.add_argument("--out", required=True)
     ap.add_argument("--cut", default="both", choices=["social", "judging", "both"])
@@ -842,6 +843,9 @@ def main(argv=None):
             compose.FONT_DIRS.insert(0, str(base / "fonts"))
     else:
         sources, demos = Path(a.sources), Path(a.demos)
+    if a.no_shadows:
+        from scripts.film import compose
+        compose.SHADOWS = False
     if a.font_dir:
         from scripts.film import compose
         compose.FONT_DIRS.insert(0, a.font_dir)
