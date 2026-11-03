@@ -62,3 +62,8 @@ Entries: defect → reproduction → fix commit → guard test → result.
 ### 2 Nov 17:50 PT: merge semantics (5f280c5)
 - Review: 9 commits, no existing results/ file modified, footprint clean. Cross-track tests (protocol_v3 matrix incl. reserved-term lexicon check, interpret understanding, study, release): 61 passed. Full fast suite queued under the shared lock.
 - Noted: 145acc3 is titled as paraphrase sets but also contains rules_support.py and the validator gate (compiler unchanged then); history not rewritten.
+
+### 2 Nov 19:25 PT: merges web, studio (×2), perception, lock pin, portability
+- web 0bf8131, studio 392151f + a8f1948, perception 9ef9a06 (one conflict: perception's import block at the end of contracts.py, kept), lock pin 52ce6de (camera extra), portability 3df66cd. No existing results/ or data/ file modified in any merge; footprint clean each time.
+- Second platform: Apple M3 Pro, macOS 26.6.2, Python 3.12 (Homebrew), MUJOCO_GL=cgl, dependency lock installed as is. Fast suite at 3df66cd: 812 passed, 1 skipped (needs the eval-final tag, absent from that checkout), 0 failed, 244 s.
+- Before portability the same machine failed 3 tests: PNG bytes differ across zlib builds (replay key), slowed-video length depends on the ffmpeg build (Linux 7.75 s, Mac 7.0 s, intended 8.0 s), physics golden differs ≤8.4e-5 m on arm64. Fixed without editing any recording; golden stays strict on its recording platform and checks outcomes elsewhere.
