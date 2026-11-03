@@ -381,17 +381,28 @@ def reconstruct(cams: dict[str, CameraModel], tracks: dict[str, Sequence[TrackSe
 
 
 def _resting(t: np.ndarray, P: np.ndarray) -> np.ndarray:
-    """Frames where the object moves slower than REST_SPEED for REST_MIN_S around them."""
+    """Frames where the object moves slower than REST_SPEED for REST_MIN_S around
+    them (one-sided windows only at the very ends of the clip)."""
     N = len(t)
     rest = np.zeros(N, bool)
     ok = ~np.isnan(P[:, 0])
+    if not ok.any():
+        return rest
+    t_first, t_last = t[ok][0], t[ok][-1]
     for i in range(N):
         if not ok[i]:
             continue
-        w = (np.abs(t - t[i]) <= REST_MIN_S / 2) & ok
-        idx = np.where(w)[0]
-        if len(idx) < 2 or t[idx[-1]] - t[idx[0]] < 0.6 * REST_MIN_S:
-            continue
-        span = np.linalg.norm(P[idx, :2].max(0) - P[idx, :2].min(0))
-        rest[i] = span / max(t[idx[-1]] - t[idx[0]], 1e-6) < REST_SPEED_M_S * 2 and span < 0.01
+        windows = [(t[i] - REST_MIN_S / 2, t[i] + REST_MIN_S / 2)]
+        if t[i] - t_first < REST_MIN_S / 2:
+            windows.append((t[i], t[i] + REST_MIN_S))
+        if t_last - t[i] < REST_MIN_S / 2:
+            windows.append((t[i] - REST_MIN_S, t[i]))
+        for lo, hi in windows:
+            idx = np.where((t >= lo - 1e-9) & (t <= hi + 1e-9) & ok)[0]
+            if len(idx) < 2 or t[idx[-1]] - t[idx[0]] < 0.6 * REST_MIN_S:
+                continue
+            span = np.linalg.norm(P[idx, :2].max(0) - P[idx, :2].min(0))
+            if span / max(t[idx[-1]] - t[idx[0]], 1e-6) < REST_SPEED_M_S * 2 and span < 0.01:
+                rest[i] = True
+                break
     return rest

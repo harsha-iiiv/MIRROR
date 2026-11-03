@@ -163,7 +163,8 @@ def align(top: Sequence[SyncEvent], side: Sequence[SyncEvent], *, top_meta: Opti
                          if (y.kind, y.direction) == (x.kind, x.direction) and j not in used]
                 if cands:
                     err, j = min(cands)
-                    if err <= T["match_tolerance_s"]:
+                    # allow the largest acceptable clock drift to accumulate with time from the anchor event
+                    if err <= T["match_tolerance_s"] + T["max_abs_drift"] * abs(x.t - a.t):
                         used.add(j)
                         pairs.append((x, side[j]))
             score = (len(pairs), -sum(abs((y.t - x.t) - off) for x, y in pairs))
