@@ -1,0 +1,132 @@
+{
+ "built_from_commit": "f19abfe3038120afed5649b40ea8b929192b7c3d",
+ "code": {
+  "code_scope": "import closure of mirror.evaluate.prereg, mirror.evaluate.bench_voice, mirror.evaluate.costs, mirror.interpret.voice, mirror.interpret.benchmark.score, mirror.meta, mirror.scenes",
+  "freeze_commit_tree": {
+   "code_files": 64,
+   "code_sha256": "24fef070c1fb5c3a11b9cdf4ed6e2d783c32635ff2005bfffc0a745f250e55a2",
+   "file_hashes": {
+    "cassettes": {
+     "files": 238,
+     "path": "data/cassettes",
+     "sha256": "cc02ce78ccfad0b3da412dc1d3f635377f6ee90b3aec7d1c613e7d5f45f378a9"
+    },
+    "cassettes_muse": {
+     "files": 76,
+     "path": "data/cassettes_muse",
+     "sha256": "1e5391615b0e1616367e43a0096e5cd4ff404f10c8770075772ff5db0f3ffac4"
+    },
+    "demos": {
+     "files": 3,
+     "path": "data/demos",
+     "sha256": "e6acadd621815a74bd805d7ca110f6b4bb16b627f3fd89ccdd4d49b1d68bff13"
+    },
+    "scripts": {
+     "files": 3,
+     "path": "scripts",
+     "sha256": "2b11f60e4a70fff054ab0e66dd8eddce8965c5c378ab573ec33bd58fae5c1758"
+    }
+   }
+  },
+  "freeze_commit_tree_matches": true,
+  "frozen_code_files": 64,
+  "frozen_code_sha256": "24fef070c1fb5c3a11b9cdf4ed6e2d783c32635ff2005bfffc0a745f250e55a2",
+  "frozen_file_hashes": {
+   "cassettes": {
+    "files": 238,
+    "path": "data/cassettes",
+    "sha256": "cc02ce78ccfad0b3da412dc1d3f635377f6ee90b3aec7d1c613e7d5f45f378a9"
+   },
+   "cassettes_muse": {
+    "files": 76,
+    "path": "data/cassettes_muse",
+    "sha256": "1e5391615b0e1616367e43a0096e5cd4ff404f10c8770075772ff5db0f3ffac4"
+   },
+   "demos": {
+    "files": 3,
+    "path": "data/demos",
+    "sha256": "e6acadd621815a74bd805d7ca110f6b4bb16b627f3fd89ccdd4d49b1d68bff13"
+   },
+   "scripts": {
+    "files": 3,
+    "path": "scripts",
+    "sha256": "2b11f60e4a70fff054ab0e66dd8eddce8965c5c378ab573ec33bd58fae5c1758"
+   }
+  },
+  "frozen_versions": {
+   "mujoco": "3.17.0",
+   "numpy": "2.4.6",
+   "python": "3.11.18",
+   "scipy": "1.17.1"
+  },
+  "report_freeze_code_sha256": "24fef070c1fb5c3a11b9cdf4ed6e2d783c32635ff2005bfffc0a745f250e55a2"
+ },
+ "directory": "results/eval_voice",
+ "freeze": {
+  "amendments": {},
+  "created_at": "2026-10-31T21:42:07.465580+00:00",
+  "design_file_sha256": "42740c196986b517116e75375a8b1a0b288717b9376eeb944755fec68685a4bf",
+  "design_matches": true,
+  "design_sha256": "42740c196986b517116e75375a8b1a0b288717b9376eeb944755fec68685a4bf",
+  "file": "results/eval_voice/freeze.json",
+  "first_commit": {
+   "commit": "308ab44484554362ab8811a5f5e77f11be8d7a3f",
+   "committed_at": "2026-10-31T14:53:11-07:00"
+  },
+  "inputs_file_sha256": "6fe77f5df640ab24d28acaace21bab9417745aab50936c0eeb48b370622eda5a",
+  "inputs_matches": true,
+  "inputs_sha256": "6fe77f5df640ab24d28acaace21bab9417745aab50936c0eeb48b370622eda5a",
+  "sha256": "6a8fbbd54bf6930d1fcc0a53041bead68807b2a462e54f62c1e877500bca819c"
+ },
+ "inputs": {
+  "digest": "aa5a2e3bb39e6c3cabb728dfa18ce67998fdc4bb94e8172b71bb12fcd5515719",
+  "files": 288
+ },
+ "kind": "prereg",
+ "manifest_version": "manifests_v1",
+ "models": {
+  "design": {
+   "asr": "muse-voice-transcribe-1.0 (/v1/asr/transcribe, PUSH_TO_TALK)",
+   "correction": "muse-spark-1.3"
+  },
+  "usage": {
+   "muse-voice-transcribe-1.0": {
+    "calls": 288,
+    "from_cassette": 0,
+    "reported_models": []
+   }
+  }
+ },
+ "ordering": {
+  "freeze_commit_before_first_model_call": true,
+  "freeze_commit_before_run_start": true,
+  "freeze_created_before_commit": true,
+  "note": "commit times are the committer's clock, not an external timestamp"
+ },
+ "outputs": {
+  "report.json": "cfb1982eda9a63092efe618b7d4f07a915a9c87d2800061929f272b7d5a5fc86"
+ },
+ "prompts": {
+  "prompt_file_sha256": {
+   "mirror/interpret/prompts.py": "7cc1ebcceaccafa74dd20c22c9aba870f262d88de49e91bd066c22bdc9a96187",
+   "mirror/interpret/sam_prompts.py": "64d7813a7668ad47783e0b1477d009e7523c281654aceaa6d2bf715545912988",
+   "mirror/interpret/video_observe.py": "aff286c87e55dcd13a4d610b136ceed73010397fe8d9f06aed7a369b0a04bcc3",
+   "mirror/interpret/voice.py": "b5195c4d064d19af30195bd5955eb1126fbafba38f27a7a1667a079a6057bd8d"
+  },
+  "prompt_revision": "3"
+ },
+ "recorded_responses": {},
+ "registration": "voice",
+ "run": {
+  "first_model_call": "2026-10-31T21:54:17.008000+00:00",
+  "last_model_call": "2026-10-31T22:19:24.300000+00:00",
+  "ledger_sha256": "35085d4c56441fdaa6f4cc06d152434351c6b614f49d84d469c0794356c84cd3",
+  "model_calls": 288,
+  "results_first_commit": {
+   "commit": "f74602bfeead2dfa7cd5755a557f93253a6563c2",
+   "committed_at": "2026-10-31T15:30:23-07:00"
+  },
+  "started_at": "2026-10-31T21:54:14.660655+00:00"
+ },
+ "status": "completed"
+}

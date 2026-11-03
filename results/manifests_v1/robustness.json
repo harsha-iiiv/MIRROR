@@ -1,0 +1,147 @@
+{
+ "built_from_commit": "f19abfe3038120afed5649b40ea8b929192b7c3d",
+ "code": {
+  "code_scope": "import closure of mirror.evaluate.prereg, mirror.evaluate.bench_robust, mirror.evaluate.costs, mirror.robustness, mirror.robustness.geometry, mirror.robustness.local, mirror.robustness.frames, mirror.robustness.instructions, mirror.interpret.sam_prompts, mirror.meta",
+  "freeze_commit_tree": {
+   "code_files": 69,
+   "code_sha256": "f466fbebcb1e7e20f761cb4c3e63b4a59ad37e7331ac957a8f3cbbf79bded4da",
+   "file_hashes": {
+    "cassettes": {
+     "files": 238,
+     "path": "data/cassettes",
+     "sha256": "cc02ce78ccfad0b3da412dc1d3f635377f6ee90b3aec7d1c613e7d5f45f378a9"
+    },
+    "cassettes_muse": {
+     "files": 224,
+     "path": "data/cassettes_muse",
+     "sha256": "3344fe395c690ad4a64a75c27f88945fc80ad1fcc6dede3d743cda2e34d0d262"
+    },
+    "demos": {
+     "files": 3,
+     "path": "data/demos",
+     "sha256": "e6acadd621815a74bd805d7ca110f6b4bb16b627f3fd89ccdd4d49b1d68bff13"
+    },
+    "scripts": {
+     "files": 3,
+     "path": "scripts",
+     "sha256": "e53e06886b23da9a00dd2727b1bd1b8939cc60e5f5939fd77e0b023052a28af8"
+    }
+   }
+  },
+  "freeze_commit_tree_matches": true,
+  "frozen_code_files": 69,
+  "frozen_code_sha256": "f466fbebcb1e7e20f761cb4c3e63b4a59ad37e7331ac957a8f3cbbf79bded4da",
+  "frozen_file_hashes": {
+   "cassettes": {
+    "files": 238,
+    "path": "data/cassettes",
+    "sha256": "cc02ce78ccfad0b3da412dc1d3f635377f6ee90b3aec7d1c613e7d5f45f378a9"
+   },
+   "cassettes_muse": {
+    "files": 224,
+    "path": "data/cassettes_muse",
+    "sha256": "3344fe395c690ad4a64a75c27f88945fc80ad1fcc6dede3d743cda2e34d0d262"
+   },
+   "demos": {
+    "files": 3,
+    "path": "data/demos",
+    "sha256": "e6acadd621815a74bd805d7ca110f6b4bb16b627f3fd89ccdd4d49b1d68bff13"
+   },
+   "scripts": {
+    "files": 3,
+    "path": "scripts",
+    "sha256": "e53e06886b23da9a00dd2727b1bd1b8939cc60e5f5939fd77e0b023052a28af8"
+   }
+  },
+  "frozen_versions": {
+   "mujoco": "3.17.0",
+   "numpy": "2.4.6",
+   "python": "3.11.18",
+   "scipy": "1.17.1"
+  },
+  "report_freeze_code_sha256": "f466fbebcb1e7e20f761cb4c3e63b4a59ad37e7331ac957a8f3cbbf79bded4da"
+ },
+ "directory": "results/eval_robustness",
+ "freeze": {
+  "amendments": {},
+  "created_at": "2026-10-31T22:32:06.337063+00:00",
+  "design_file_sha256": "170ac8748af2c5ea847f83332f456907ae0361c642d273cd05c7ac53434fca2f",
+  "design_matches": true,
+  "design_sha256": "170ac8748af2c5ea847f83332f456907ae0361c642d273cd05c7ac53434fca2f",
+  "file": "results/eval_robustness/freeze.json",
+  "first_commit": {
+   "commit": "024f1cb31ab0ec11b2f6d5b923e7841a75d1d6eb",
+   "committed_at": "2026-10-31T15:33:14-07:00"
+  },
+  "inputs_file_sha256": "cd2c842833ba8b8da393ec08db7805c0cd7050416e72afdab6b322bae4f74d3a",
+  "inputs_matches": true,
+  "inputs_sha256": "cd2c842833ba8b8da393ec08db7805c0cd7050416e72afdab6b322bae4f74d3a",
+  "sha256": "fb82ef3599ca2892ed386ce77f080487ec5b8e3330bc6f1841d58d0538ba06b7"
+ },
+ "inputs": {
+  "digest": "5397fa370d76efa4d97b1655374ea9ed14d68a794c6c8821446a7fff26042a6c",
+  "files": 32
+ },
+ "kind": "prereg",
+ "manifest_version": "manifests_v1",
+ "models": {
+  "design": {
+   "edit": "muse-image-1.0",
+   "phrases": "muse-spark-1.3",
+   "segmentation": "sam-3.1"
+  },
+  "usage": {
+   "muse-image-1.0": {
+    "calls": 63,
+    "from_cassette": 0,
+    "reported_models": []
+   },
+   "muse-spark-1.3": {
+    "calls": 14,
+    "from_cassette": 0,
+    "reported_models": []
+   },
+   "sam-3.1": {
+    "calls": 575,
+    "from_cassette": 0,
+    "reported_models": []
+   }
+  }
+ },
+ "ordering": {
+  "freeze_commit_before_first_model_call": true,
+  "freeze_commit_before_run_start": true,
+  "freeze_created_before_commit": true,
+  "note": "commit times are the committer's clock, not an external timestamp"
+ },
+ "outputs": {
+  "plan_report": {
+   "digest": "effa284770de2b45862e6b979dcc61371e364eb82beee6fea9fbca6f0d59eee1",
+   "files": 65
+  },
+  "report.json": "8ad111307893f8ef246a6fbfea9e594d9c9e760626200e73560accffe5409776"
+ },
+ "prompts": {
+  "prompt_file_sha256": {
+   "mirror/interpret/prompts.py": "7cc1ebcceaccafa74dd20c22c9aba870f262d88de49e91bd066c22bdc9a96187",
+   "mirror/interpret/sam_prompts.py": "54252f8f63c4029e93c69820f56d8d11144e39c7e19febf34e0af6399d59b26e",
+   "mirror/interpret/video_observe.py": "aff286c87e55dcd13a4d610b136ceed73010397fe8d9f06aed7a369b0a04bcc3",
+   "mirror/interpret/voice.py": "b5195c4d064d19af30195bd5955eb1126fbafba38f27a7a1667a079a6057bd8d"
+  },
+  "prompt_revision": "3"
+ },
+ "recorded_responses": {},
+ "registration": "robustness",
+ "run": {
+  "first_model_call": "2026-10-31T22:36:25.272000+00:00",
+  "last_model_call": "2026-10-31T23:03:42.422000+00:00",
+  "ledger_sha256": "b6b5e19b6842e62285b9cadfa94a349aa69d30c1ed275ebbcefb93c2ae48e8ed",
+  "model_calls": 652,
+  "results_first_commit": {
+   "commit": "cb03bf81a6b8513f9e68d59e81a7e74258e9a3b0",
+   "committed_at": "2026-10-31T17:14:58-07:00"
+  },
+  "started_at": "2026-10-31T22:36:19.362931+00:00"
+ },
+ "status": "completed"
+}
