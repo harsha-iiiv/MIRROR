@@ -1,0 +1,160 @@
+{
+ "built_from_commit": "f19abfe3038120afed5649b40ea8b929192b7c3d",
+ "code": {
+  "code_scope": "import closure of mirror.evaluate.prereg, mirror.evaluate.bench_video, mirror.evaluate.costs, mirror.perception, mirror.perception.track, mirror.perception.reconstruct, mirror.interpret.video_observe, mirror.interpret, mirror.meta, mirror.contracts",
+  "freeze_commit_tree": {
+   "code_files": 69,
+   "code_sha256": "74c73336fc308449cc79ccbb8bc032241220b6b403bcfec8c936e0707fda8392",
+   "file_hashes": {
+    "cassettes": {
+     "files": 238,
+     "path": "data/cassettes",
+     "sha256": "cc02ce78ccfad0b3da412dc1d3f635377f6ee90b3aec7d1c613e7d5f45f378a9"
+    },
+    "cassettes_muse": {
+     "files": 247,
+     "path": "data/cassettes_muse",
+     "sha256": "7cce5dfba440b8350b44ec42f6a7f564dc18a60fc8e5881125c910b3c3df1d9e"
+    },
+    "demos": {
+     "files": 23,
+     "path": "data/demos",
+     "sha256": "305153e4043efb4b7dc55b10c57a21fc1a9298270395884b6fd779e91b9d4812"
+    },
+    "scripts": {
+     "files": 3,
+     "path": "scripts",
+     "sha256": "10020332578862315374750d9f889229b6dec3b4d072a64040ed042af5558b2c"
+    }
+   }
+  },
+  "freeze_commit_tree_matches": true,
+  "frozen_code_files": 69,
+  "frozen_code_sha256": "74c73336fc308449cc79ccbb8bc032241220b6b403bcfec8c936e0707fda8392",
+  "frozen_file_hashes": {
+   "cassettes": {
+    "files": 238,
+    "path": "data/cassettes",
+    "sha256": "cc02ce78ccfad0b3da412dc1d3f635377f6ee90b3aec7d1c613e7d5f45f378a9"
+   },
+   "cassettes_muse": {
+    "files": 247,
+    "path": "data/cassettes_muse",
+    "sha256": "7cce5dfba440b8350b44ec42f6a7f564dc18a60fc8e5881125c910b3c3df1d9e"
+   },
+   "demos": {
+    "files": 23,
+    "path": "data/demos",
+    "sha256": "305153e4043efb4b7dc55b10c57a21fc1a9298270395884b6fd779e91b9d4812"
+   },
+   "scripts": {
+    "files": 3,
+    "path": "scripts",
+    "sha256": "10020332578862315374750d9f889229b6dec3b4d072a64040ed042af5558b2c"
+   }
+  },
+  "frozen_versions": {
+   "mujoco": "3.17.0",
+   "numpy": "2.4.6",
+   "python": "3.11.18",
+   "scipy": "1.17.1"
+  },
+  "report_freeze_code_sha256": null
+ },
+ "directory": "results/eval_video",
+ "freeze": {
+  "amendments": {
+   "design_amendment_1.json": "9aa3cc803455b8a393e4dfa2fb1173c5431c1b3764ea24634273ead04decd177",
+   "design_amendment_2.json": "92ecdc59209df6c1a22dfa8f83b8572a0ab6d98998ef9ebc49ee8808d793e6f6"
+  },
+  "created_at": "2026-11-01T01:53:21.920240+00:00",
+  "design_file_sha256": "31980f0adadd404d1c3939c111635781434d79f98dd4a329222266f914f2ad45",
+  "design_matches": true,
+  "design_sha256": "31980f0adadd404d1c3939c111635781434d79f98dd4a329222266f914f2ad45",
+  "file": "results/eval_video/freeze.json",
+  "first_commit": {
+   "commit": "8e3b36951cfa23208a1493a27c0152f2e942d95c",
+   "committed_at": "2026-10-31T18:54:20-07:00"
+  },
+  "inputs_file_sha256": "1eaca93886df6f7315250d39e7d886f97cdf2c40aa5242311439781b17f3cf81",
+  "inputs_matches": true,
+  "inputs_sha256": "1eaca93886df6f7315250d39e7d886f97cdf2c40aa5242311439781b17f3cf81",
+  "sha256": "2ba0e7497fe6c10f3481cd0f1ccb876d59ab62e9a2ef7753c65aab3fad9c3639"
+ },
+ "inputs": {
+  "digest": "53e709642cc3bc43224ed32dc55a37e97ca028f374750466e48afbaa37a19389",
+  "files": 160
+ },
+ "kind": "prereg",
+ "manifest_version": "manifests_v1",
+ "models": {
+  "design": {
+   "observations": [
+    "muse-wonder-1.0",
+    "muse-spark-1.3"
+   ],
+   "specification": "muse-spark-1.3",
+   "tracking": "sam-3.1"
+  },
+  "usage": {
+   "files": {
+    "calls": 50,
+    "from_cassette": 0,
+    "reported_models": []
+   },
+   "muse-spark-1.3": {
+    "calls": 103,
+    "from_cassette": 0,
+    "reported_models": []
+   },
+   "sam-3.1": {
+    "calls": 75,
+    "from_cassette": 0,
+    "reported_models": []
+   }
+  }
+ },
+ "ordering": {
+  "freeze_commit_before_first_model_call": true,
+  "freeze_commit_before_run_start": null,
+  "freeze_created_before_commit": true,
+  "note": "commit times are the committer's clock, not an external timestamp"
+ },
+ "outputs": {
+  "attempt_1/cassettes": {
+   "digest": "c0649db3c8dacdebd8619478bb2e14a948833f6de6415e4add68f071cc58f26a",
+   "files": 24
+  },
+  "attempt_1/meta_usage_run.jsonl": "10bf2f542052dcf39f7762cd3888b77e208ff2fd4a3bdc668767ac5c5ef36d11",
+  "attempt_1/tracks": {
+   "digest": "300433c0f297c2c64cb3ce17694b08eb1e515abe628210772fcc4f09b63a2d55",
+   "files": 12
+  }
+ },
+ "prompts": {
+  "prompt_file_sha256": {
+   "mirror/interpret/prompts.py": "7cc1ebcceaccafa74dd20c22c9aba870f262d88de49e91bd066c22bdc9a96187",
+   "mirror/interpret/sam_prompts.py": "54252f8f63c4029e93c69820f56d8d11144e39c7e19febf34e0af6399d59b26e",
+   "mirror/interpret/video_observe.py": "aff286c87e55dcd13a4d610b136ceed73010397fe8d9f06aed7a369b0a04bcc3",
+   "mirror/interpret/voice.py": "b5195c4d064d19af30195bd5955eb1126fbafba38f27a7a1667a079a6057bd8d",
+   "mirror/perception/track.py": "3fa24c08654c6011a0cb41ba891bd4eeb2b5011ee1a258c4de430864a84375d4"
+  },
+  "prompt_revision": "3"
+ },
+ "recorded_responses": {
+  "attempt_1/cassettes": {
+   "digest": "c0649db3c8dacdebd8619478bb2e14a948833f6de6415e4add68f071cc58f26a",
+   "files": 24
+  }
+ },
+ "registration": "video",
+ "run": {
+  "first_model_call": "2026-11-01T01:56:36.740000+00:00",
+  "last_model_call": "2026-11-01T03:30:43.118000+00:00",
+  "ledger_sha256": "9389fded988efaa8ff56cf7b86e843fb57507fb1aaf091cf169f0bd6e0ac1f44",
+  "model_calls": 228,
+  "results_first_commit": null,
+  "started_at": null
+ },
+ "status": "no report (see notes)"
+}
