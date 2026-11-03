@@ -174,3 +174,21 @@ def to_demo_trace(session: CaptureSession, *, demo_id: Optional[str] = None):
                      source_note="phone capture (human hand, calibrated cameras)" + (" SYNTHETIC test render" if session.synthetic else ""),
                      sample_hz=float(1.0 / np.median(np.diff(times))) if n > 1 else 1.0, frames=frames, events=events,
                      evidence=ev)
+
+
+class CaptureNotReviewed(RuntimeError):
+    pass
+
+
+def propose_offline_from_capture(session: CaptureSession):
+    """Offline-rule task proposal from a reviewed capture. Refuses while any
+    blocking review item is open (a person must resolve it first)."""
+    ok, blocking = session.gate()
+    if not ok:
+        raise CaptureNotReviewed("resolve these first: " + "; ".join(b.message for b in blocking))
+    from mirror.interpret.offline import propose_offline
+    from mirror.interpret.summary import summarize_demo
+    trace = to_demo_trace(session)
+    summary = summarize_demo(trace)
+    return {"trace": trace, "summary": summary, "draft": propose_offline(summary, trace.scene),
+            "provenance": "offline_rules", "evidence_kind": trace.evidence.kind}

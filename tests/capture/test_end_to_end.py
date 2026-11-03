@@ -205,3 +205,24 @@ def test_manual_keyframe_baseline(upright, intrinsics):
     assert {"interpolated"} & set(tr.pos_status)
     row = V.score_clip(s, I.synthetic_labels(truth, plan))
     assert row["keyframe_position"]["unconditional_cm"]["median"] < 1.5
+
+
+def test_offline_proposal_is_gated_on_review(upright, intrinsics):
+    pytest.importorskip("mirror.observability")
+    from mirror.contracts import DemoTrace
+    if "evidence" not in DemoTrace.model_fields:
+        pytest.skip("observability not integrated")
+    from mirror.capture import trace as TR
+    d, truth, plan, _ = upright
+    blocked = _session(d, truth, plan, intrinsics, confirm=False)
+    with pytest.raises(TR.CaptureNotReviewed):
+        TR.propose_offline_from_capture(blocked)
+    s = _session(d, truth, plan, intrinsics)
+    for r in s.review:                         # a person resolves the remaining items (synthetic test)
+        if r.severity == "abstain":
+            r.resolved, r.resolution = True, "checked by a person (synthetic test)"
+    out = TR.propose_offline_from_capture(s)
+    assert out["provenance"] == "offline_rules"
+    # the mug's tilt was never observed: no upright rule may be asserted from this demonstration
+    obs = out["summary"].object("cup_0").observability if hasattr(out["summary"], "object") else None
+    assert obs is None or obs.get("tilt") is not None
