@@ -151,6 +151,7 @@ class CaptureClipsIn(BaseModel):
 
 
 class CaptureInputsIn(BaseModel):
+    synthetic: Optional[bool] = None        # one-way: mark rendered test clips SYNTHETIC
     print_check: Optional[dict[str, Any]] = None
     objects: Optional[list[dict[str, Any]]] = None
     tags: Optional[dict[str, str]] = None
@@ -165,6 +166,8 @@ class CaptureReviewIn(BaseModel):
     objects: list[dict[str, Any]] = []
     identity_confirmations: list[Any] = []
     corrections: list[dict[str, Any]] = []
+    correspondence: list[dict[str, Any]] = []       # the wizard's shape (translated, see capture.translate_review)
+    events: list[dict[str, Any]] = []
 
 
 class ManualEditIn(BaseModel):
@@ -604,6 +607,14 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
     def capture_run(cid: str, svc: StudioService = Depends(session)):
         return guard(svc.capture_run, cid).public()
 
+    @app.post("/api/capture/{cid}/calibrate")
+    def capture_calibrate(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.capture_calibrate, cid).public()
+
+    @app.post("/api/capture/{cid}/track")
+    def capture_track(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.capture_run, cid).public()
+
     @app.post("/api/capture/{cid}/review")
     def capture_review(cid: str, body: CaptureReviewIn, svc: StudioService = Depends(session)):
         return guard(capture_guard, svc.capture_review, cid, body.model_dump())
@@ -704,6 +715,17 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
         finally:
             unsubscribe()
             task.cancel()
+
+    cal_dir = Path(__file__).resolve().parents[2] / "assets" / "calibration"
+    if serve_web and cal_dir.exists():
+        @app.get("/calibration/{name}")
+        def calibration_file(name: str):
+            """Printable calibration targets (PDF) and their geometry; nothing else from assets."""
+            p = cal_dir / name
+            if "/" in name or name.startswith(".") or p.suffix not in (".pdf", ".png", ".json") or not p.is_file():
+                raise StudioError(404, "not_found", "no such calibration file")
+            return FileResponse(p, media_type={".pdf": "application/pdf", ".png": "image/png",
+                                               ".json": "application/json"}[p.suffix])
 
     if serve_web and WEB_DIR.exists():
         @app.get("/")

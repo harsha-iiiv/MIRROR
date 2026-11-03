@@ -85,6 +85,8 @@ class Capture:
         self.proposal: Optional[dict] = None
         self.errors: list[str] = []
         self.state = "awaiting_clips"
+        self.calibration_preview: Optional[dict] = None   # calibrate step: lens, pose and sync before tracking
+        self.reviewed = False
 
     # ------------------------------------------------------------ state
     def missing(self) -> list[str]:
@@ -102,16 +104,20 @@ class Capture:
         return out
 
     def refresh_state(self) -> None:
+        """awaiting_clips -> clips_ready -> calibrated -> tracked -> reviewed -> proposed (``stale`` when the
+        inputs changed since the last run; ``missing`` lists what tracking still needs)."""
         if self.state in ("running", "proposing"):
             return
-        if self.proposal is not None and not self.stale:
+        if self.proposal is not None and self.proposal.get("spec_version_id") and not self.stale:
             self.state = "proposed"
-        elif self.session is not None and not self.stale:
-            self.state = "processed"
-        elif self.missing():
-            self.state = "awaiting_clips" if "take_top" not in self.clips else "inputs_needed"
+        elif self.session is not None:
+            self.state = "reviewed" if self.reviewed else "tracked"
+        elif self.calibration_preview is not None:
+            self.state = "calibrated"
+        elif "take_top" in self.clips:
+            self.state = "clips_ready"
         else:
-            self.state = "ready_to_run" if self.session is None else "needs_rerun"
+            self.state = "awaiting_clips"
 
     def gate(self) -> tuple[bool, list[dict]]:
         if self.session is None:
@@ -173,6 +179,9 @@ class Capture:
         self.refresh_state()
         ok, blocking = self.gate()
         return {"id": self.id, "created_at": self.created_at, "mode": self.mode, "state": self.state,
+                "hooks": dict.fromkeys(("calibrate", "track", "reconstruct"), capture_available()[0]),
+                "calibration": self.calibration_status(), "sync": self.sync_status(), "session": self.session,
+                "print_check": self.inputs.get("print_check"),
                 "synthetic": self.synthetic, "notes": self.notes,
                 "label": ("SYNTHETIC test render: not real footage" if self.synthetic else
                           "Real phone footage (calibrated, reviewed)" if (self.session or {}).get("evidence_kind")
@@ -188,8 +197,43 @@ class Capture:
                                   "tilt is not observed unless a tag is visible" if self.mode == "single_view" else
                                   "two views, synchronised by the pipeline from the sync events in both clips")}
 
+    def _cal_source(self) -> Optional[dict]:
+        return self.session if self.session is not None else self.calibration_preview
+
+    def calibration_status(self) -> Optional[dict]:
+        """{ok, errors, cameras}: accepted only if every camera with a take has an accepted lens and pose."""
+        s = self._cal_source()
+        if s is None:
+            return None
+        cams = sorted({PIPELINE_ROLE[r][1] for r in self.clips if r.startswith("take_")})
+        if self.mode == "single_view":
+            cams = ["top"]
+        errors, per = [], {}
+        for cam in cams:
+            intr = (s.get("intrinsics") or {}).get(cam)
+            pose = (s.get("poses") or {}).get(cam)
+            ok = bool(intr and intr.get("accepted") and pose and pose.get("accepted"))
+            per[cam] = {"lens_accepted": bool(intr and intr.get("accepted")), "pose_accepted": bool(pose and pose.get("accepted")),
+                        "rms_px": intr.get("rms_px") if intr else None, "n_views": intr.get("n_views") if intr else None,
+                        "pose_rms_px": pose.get("rms_px") if pose else None, "ok": ok}
+        for r in s.get("review") or []:
+            if r["code"] in ("print_scale_invalid", "intrinsics_missing", "calibration_invalid", "recalibration_required",
+                             "pose_invalid", "camera_moved", "no_calibrated_camera"):
+                errors.append(r["message"])
+        return {"ok": bool(per) and all(v["ok"] for v in per.values()) and not errors, "errors": errors, "cameras": per,
+                "source": "full run" if self.session is not None else "calibration step"}
+
+    def sync_status(self) -> Optional[dict]:
+        s = self._cal_source()
+        y = (s or {}).get("sync")
+        if y:
+            return {**y, "status": "detected" if y.get("ok") else "refused"}
+        if self.declared_sync:
+            return self.declared_sync
+        return None
+
     def to_state(self) -> dict:
-        return {"id": self.id, "created_at": self.created_at, "mode": self.mode, "notes": self.notes,
+        return {"calibration_preview": self.calibration_preview, "reviewed": self.reviewed, "id": self.id, "created_at": self.created_at, "mode": self.mode, "notes": self.notes,
                 "synthetic": self.synthetic, "clips": self.clips, "declared_sync": self.declared_sync,
                 "inputs": self.inputs, "session": self.session, "summary": self.summary, "runs": self.runs,
                 "stale": self.stale, "review_log": self.review_log, "proposal": self.proposal, "errors": self.errors,
@@ -199,28 +243,50 @@ class Capture:
     def from_state(cls, d: dict) -> "Capture":
         c = cls(d.get("mode", "two_view"), d.get("notes", ""), d.get("synthetic", False))
         for k in ("id", "created_at", "clips", "declared_sync", "inputs", "session", "summary", "runs", "stale",
-                  "review_log", "proposal", "errors", "state"):
+                  "review_log", "proposal", "errors", "state", "calibration_preview", "reviewed"):
             if k in d:
                 setattr(c, k, d[k])
         if c.state in ("running", "proposing"):
-            c.state = "needs_rerun" if c.session is None else "processed"
+            c.state = "clips_ready"
             c.errors.append("the server restarted while this capture was being processed")
+            c.refresh_state()
         return c
 
 
 # ---------------------------------------------------------------- inputs
 
+def check_print(pc: dict, synthetic: bool = False) -> dict:
+    """The person's print measurements, refused with the pipeline's own rule (50 mm bar within
+    tolerance, the square consistent with the bar) so a bad print never reaches calibration."""
+    from mirror.capture import calibrate as C
+    from mirror.capture.target import DEFAULT_TARGET
+    pc = {k: pc.get(k) for k in ("measured_bar_mm", "measured_square_mm")}
+    pc["measured_by"] = "synthetic_test" if synthetic else "person"
+    try:
+        obj = C.PrintCheck(**pc)
+    except Exception as exc:  # noqa: BLE001
+        raise CaptureError(f"print_check: give measured_bar_mm and measured_square_mm in millimetres ({exc.__class__.__name__})")
+    failed = [c for c in obj.checks(DEFAULT_TARGET) if c.passed is False]
+    if failed:
+        raise CaptureError("print check failed: " + "; ".join(f"{c.name} = {c.value} ({c.note})" for c in failed)
+                           + ". Reprint at 100% (Actual size) and measure again.")
+    return obj.model_dump(mode="json")
+
+
 def set_inputs(cap: Capture, body: dict) -> None:
     """print_check, objects (proxy mappings), tags, tray: validated with the pipeline's own models."""
-    from mirror.capture import calibrate as C, events as EV, proxy as PX
+    from mirror.capture import events as EV, proxy as PX
     changed = False
+    if body.get("synthetic") is True and not cap.synthetic:
+        # one-way: rendered test clips are labelled SYNTHETIC from here on; a capture is never un-marked
+        cap.synthetic = True
+        if cap.inputs.get("print_check"):
+            cap.inputs["print_check"]["measured_by"] = "synthetic_test"
+        changed = True
+    elif body.get("synthetic") is False and cap.synthetic:
+        raise CaptureError("a SYNTHETIC capture cannot be relabelled as real footage")
     if body.get("print_check") is not None:
-        pc = dict(body["print_check"])
-        pc["measured_by"] = "synthetic_test" if cap.synthetic else "person"
-        try:
-            cap.inputs["print_check"] = C.PrintCheck(**pc).model_dump(mode="json")
-        except Exception as exc:  # noqa: BLE001
-            raise CaptureError(f"print_check: {exc}")
+        cap.inputs["print_check"] = check_print(dict(body["print_check"]), cap.synthetic)
         changed = True
     if body.get("objects") is not None:
         objs = list(body["objects"])
@@ -379,3 +445,109 @@ def calibration_summary(cap: Capture) -> dict:
             "evidence_kind": r.get("evidence_kind"), "synthetic": cap.synthetic, "mode": r.get("mode"),
             "calibration": r.get("calibration"), "poses": r.get("poses"), "sync": r.get("sync"),
             "effort": cap.effort()}
+
+
+def calibrate(cap: Capture, paths: dict[str, str]) -> dict:
+    """Calibration step before any box is drawn: lens intrinsics, table pose and synchronisation,
+    with the pipeline's own functions and thresholds (mirror.capture). Tracking is a separate step."""
+    from mirror.capture import calibrate as C, media as M, session as SE, sync as Y
+    from mirror.capture.target import DEFAULT_TARGET as spec
+    if not cap.inputs.get("print_check"):
+        raise CaptureError("enter the print check (measured 50 mm bar and one square) first")
+    pc = C.PrintCheck(**cap.inputs["print_check"])
+    take = {PIPELINE_ROLE[r][1]: p for r, p in paths.items() if r.startswith("take_")}
+    lens = {PIPELINE_ROLE[r][1]: p for r, p in paths.items() if r.startswith("lens_")}
+    if cap.mode == "single_view":
+        take = {"top": take["top"]}
+    out = {"intrinsics": {}, "poses": {}, "recalibration": {}, "sync": None, "review": []}
+    metas = {}
+    for cam, path in take.items():
+        m = M.probe(path)
+        metas[cam] = m
+        intr = None
+        if cam in lens:
+            lm = M.probe(lens[cam])
+            intr = C.calibrate_intrinsics(SE.lens_detections(lm, spec), spec, pc, lm.fingerprint)
+        if intr is None:
+            out["review"].append({"code": "intrinsics_missing", "severity": "abstain", "camera": cam,
+                                  "message": f"No lens calibration for the {cam} phone. Film the board waved in front of it."})
+            continue
+        out["intrinsics"][cam] = intr.model_dump(mode="json")
+        if not intr.accepted:
+            failed = [f"{c.name} = {c.value} (limit {c.threshold})" for c in intr.checks if c.passed is False]
+            out["review"].append({"code": "calibration_invalid", "severity": "abstain", "camera": cam,
+                                  "message": f"{cam} lens calibration rejected: " + "; ".join(failed)})
+        d0 = SE.first_board(m, spec)
+        reasons, checks = C.recalibration_reasons(intr, m.fingerprint, d0, spec, pc)
+        out["recalibration"][cam] = {"reasons": reasons, "checks": [c.model_dump(mode="json") for c in checks]}
+        if reasons:
+            out["review"].append({"code": "recalibration_required", "severity": "abstain", "camera": cam,
+                                  "message": f"{cam}: " + "; ".join(reasons)})
+        if d0 is None or d0.n < 4:
+            out["review"].append({"code": "pose_invalid", "severity": "abstain", "camera": cam,
+                                  "message": f"The board was not found lying on the table at the start of the {cam} take."})
+            continue
+        pose = C.table_pose(d0, intr, spec, pc, clip_sha256=m.sha256)
+        out["poses"][cam] = pose.model_dump(mode="json")
+        if not pose.accepted:
+            failed = [f"{c.name} = {c.value} (limit {c.threshold})" for c in pose.checks if c.passed is False]
+            out["review"].append({"code": "pose_invalid", "severity": "abstain", "camera": cam,
+                                  "message": f"{cam} camera pose on the table rejected: " + "; ".join(failed)})
+    if len(metas) >= 2 and "top" in metas:
+        other = next(c for c in metas if c != "top")
+        evs = {}
+        for cam in ("top", other):
+            cards, light = Y.scan(metas[cam], spec)
+            evs[cam] = Y.card_events(metas[cam], spec, states=cards) + Y.light_events(metas[cam], series=light)
+        sync = Y.align(evs["top"], evs[other], top_meta=metas["top"], side_meta=metas[other])
+        out["sync"] = sync.model_dump(mode="json")
+        if not sync.ok:
+            out["review"].append({"code": "sync_refused", "severity": "review",
+                                  "message": "Not triangulating: " + "; ".join(sync.reasons) + ". Using single-view positions."})
+    return out
+
+
+EVENT_TYPES = {"grasp": "pick", "pick": "pick", "release": "place", "place": "place", "carry_start": "pick", "carry_end": "place"}
+
+
+def translate_review(cap: Capture, body: dict) -> dict:
+    """Accept the wizard's review shape {correspondence, events} besides the canonical one.
+
+    correspondence -> the person confirms each object and its proxy;
+    events -> matched to the pipeline's events by object, kind and order: "confirmed" confirms the
+    bracketed moment, "edited" sets its time, "rejected" rejects it, "uncertain" changes nothing.
+    Identity confirmations have no equivalent there and must be sent explicitly."""
+    out = {k: list(body.get(k) or []) for k in ("objects", "identity_confirmations", "corrections")}
+    labels = {m["track_label"] for m in cap.inputs["objects"]}
+    for c in body.get("correspondence") or []:
+        lab = str(c.get("track_id"))
+        if lab not in labels:
+            raise CaptureError(f"unknown object {lab!r}")
+        upd = {"track_label": lab, "confirmed_by_person": True, "seconds_spent": c.get("seconds_spent")}
+        if c.get("proxy") in ("cup", "block", "marker"):
+            upd["proxy"] = c["proxy"]
+        if c.get("label"):
+            upd["real_identity"] = str(c["label"])[:120]
+        if c.get("unsupported_features") is not None:
+            upd["unsupported_features"] = list(c["unsupported_features"])[:5]
+        out["objects"].append(upd)
+    events = (cap.session or {}).get("events") or []
+    seen: dict[tuple, int] = {}
+    for e in body.get("events") or []:
+        key = (str(e.get("track_id")), EVENT_TYPES.get(e.get("type"), e.get("type")))
+        n = seen.get(key, 0)
+        seen[key] = n + 1
+        matches = [x for x in events if x.get("object") == key[0] and x.get("type") == key[1]]
+        if n >= len(matches):
+            raise CaptureError(f"no {key[1]} event number {n + 1} for {key[0]!r} in this capture")
+        ev = matches[n]
+        st = e.get("status")
+        if st == "confirmed" and ev.get("ambiguous") and ev.get("status") != "person_corrected":
+            out["corrections"].append({"target": ev["id"], "field": "confirm", "seconds_spent": e.get("seconds_spent")})
+        elif st == "edited":
+            t = float(e.get("t_start"))
+            out["corrections"].append({"target": ev["id"], "field": "t", "before": str(ev.get("t")), "after": str(t),
+                                       "seconds_spent": e.get("seconds_spent")})
+        elif st == "rejected":
+            out["corrections"].append({"target": ev["id"], "field": "reject", "seconds_spent": e.get("seconds_spent")})
+    return out

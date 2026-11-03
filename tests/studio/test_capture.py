@@ -97,7 +97,8 @@ def test_clip_roles_inputs_and_prompts_are_validated(api, clip):
     r = c.post(f"/api/capture/{cap['id']}/clips", json={"clips": {"take_top": t, "take_side": s, "lens_top": l},
                                                        "sync": {"method": "clap", "top_t": 0.2, "side_t": 0.4}}).json()
     assert set(r["clips"]) == {"take_top", "take_side", "lens_top"} and r["declared_sync"]["status"] == "declared"
-    assert "path" not in str(r["clips"]) and r["state"] == "inputs_needed"
+    assert "path" not in str(r["clips"]) and r["state"] == "clips_ready" and r["sync"]["offset_s"] == 0.2
+    assert r["hooks"] == {"calibrate": True, "track": True, "reconstruct": True} and r["session"] is None
     bad = c.post(f"/api/capture/{cap['id']}/inputs", json={"objects": [MUG, MUG]})
     assert bad.status_code == 422
     assert c.post(f"/api/capture/{cap['id']}/inputs", json={"print_check": {"measured_bar_mm": "x"}}).status_code == 422
@@ -109,7 +110,7 @@ def test_clip_roles_inputs_and_prompts_are_validated(api, clip):
         {"camera": "top", "label": "mug", "frame": 9999, "box": [1, 1, 30, 30]}]}).status_code == 422
     r = c.post(f"/api/capture/{cap['id']}/prompts", json={"prompts": [
         {"camera": "top", "label": "mug", "frame": 3, "box": [1, 1, 30, 30]}]}).json()
-    assert r["state"] == "ready_to_run" and not r["missing"]
+    assert r["state"] == "clips_ready" and not r["missing"]
     png = c.get(f"/api/capture/{cap['id']}/frame/take_top/3")
     assert png.status_code == 200 and png.content[:8] == b"\x89PNG\r\n\x1a\n"
     assert c.get(f"/api/capture/{cap['id']}/frame/take_top/999").status_code == 409
@@ -147,7 +148,8 @@ def test_review_gates_the_proposal_and_records_effort(api, clip, monkeypatch):
     assert [e["kind"] for e in r["recorded"]] == ["mapping", "identity"]
     wait(c, r["job"])
     st = c.get(f"/api/capture/{cid}").json()
-    assert st["gate_open"] and st["report"]["review"][0]["code"] == "tilt_unobserved"
+    assert st["gate_open"] and st["report"]["review"][0]["code"] == "tilt_unobserved" and st["state"] == "reviewed"
+    assert st["session"]["evidence_kind"] == "synthetic_test_render"
     assert st["effort"] == {"actions": 2, "by_kind": {"mapping": 1, "identity": 1}, "seconds_spent_total": 9.5,
                             "actions_without_time": 0}
     assert calls[-1]["inputs"]["identity_confirmations"] == [["top", "mug", 12]]
@@ -197,3 +199,85 @@ def test_capture_clips_get_capture_limits():
     svc = StudioService(backend="fixture", session_id="l", private_runtime=True)
     assert svc._limits_for("take_top").max_file_bytes > svc._limits_for("top").max_file_bytes
     assert svc._limits_for("lens_side").max_side == 3840 and svc._limits_for("side").max_side == 1920
+
+
+@pytest.mark.parametrize("pc,ok", [({"measured_bar_mm": 50.0, "measured_square_mm": 30.0}, True),
+                                    ({"measured_bar_mm": 51.0, "measured_square_mm": 30.6}, True),
+                                    ({"measured_bar_mm": 52.0, "measured_square_mm": 31.2}, False),   # bar off by 2 mm
+                                    ({"measured_bar_mm": 50.0, "measured_square_mm": 31.0}, False),   # square disagrees > 2%
+                                    ({"measured_bar_mm": None, "measured_square_mm": 30.0}, False)])
+def test_print_check_uses_the_pipeline_rule(api, pc, ok):
+    r = api.post("/api/capture", json={"mode": "single_view", "print_check": pc})
+    assert (r.status_code == 200) is ok, r.text
+    if not ok:
+        assert r.status_code == 422 and "print" in r.json()["detail"]
+
+
+def test_wizard_review_shape_is_translated_and_identity_still_needs_a_person(api, clip, monkeypatch):
+    calls = []
+    monkeypatch.setattr(CP, "build", fake_build(calls))
+    c = api
+    cid = ready_capture(c, clip)["id"]
+    wait(c, c.post(f"/api/capture/{cid}/track").json())
+    r = c.post(f"/api/capture/{cid}/review", json={"correspondence": [{"track_id": "mug", "proxy": "cup", "label": "red mug"}],
+                                                  "events": []}).json()
+    assert [e["kind"] for e in r["recorded"]] == ["mapping"]
+    wait(c, r["job"])
+    st = c.get(f"/api/capture/{cid}").json()
+    assert [x["code"] for x in st["report"]["review"] if x["blocking"]] == ["identity_uncertain"]   # never assumed
+    assert c.post(f"/api/capture/{cid}/propose").status_code == 409
+    bad = c.post(f"/api/capture/{cid}/review", json={"events": [{"track_id": "mug", "type": "grasp", "status": "confirmed"}]})
+    assert bad.status_code == 422 and "no pick event" in bad.json()["detail"]
+
+
+def test_calibrate_step_reports_quality_and_sync(api, clip, monkeypatch):
+    out = {"intrinsics": {"top": {"accepted": True, "rms_px": 0.4, "n_views": 18, "checks": []}},
+           "poses": {"top": {"accepted": False, "rms_px": 3.1, "checks": [{"name": "pose_rms_px", "passed": False}]}},
+           "recalibration": {}, "sync": None,
+           "review": [{"code": "pose_invalid", "severity": "abstain", "camera": "top", "message": "top pose rejected"}]}
+    monkeypatch.setattr(CP, "calibrate", lambda cap, paths: out)
+    c = api
+    cap = c.post("/api/capture", json={"mode": "single_view", "print_check": PC}).json()
+    assert c.post(f"/api/capture/{cap['id']}/calibrate").status_code == 409                # no clips yet
+    c.post(f"/api/capture/{cap['id']}/clips", json={"clips": {"single": upload(c, clip, "single")}})
+    j = wait(c, c.post(f"/api/capture/{cap['id']}/calibrate").json())
+    assert j["status"] == "done" and j["result"]["calibration"]["ok"] is False
+    st = c.get(f"/api/capture/{cap['id']}").json()
+    assert st["state"] == "calibrated" and st["calibration"]["errors"] == ["top pose rejected"]
+    assert st["calibration"]["cameras"]["top"] == {"lens_accepted": True, "pose_accepted": False, "rms_px": 0.4,
+                                                   "n_views": 18, "pose_rms_px": 3.1, "ok": False}
+    r = c.post(f"/api/capture/{cap['id']}/track")
+    assert r.status_code == 409 and "objects" in r.json()["detail"]                       # no boxes, no tracking
+
+
+def test_calibration_targets_are_served(api):
+    r = api.get("/calibration/mirror_charuco_v1_A4.pdf")
+    assert r.status_code == 200 and r.content[:4] == b"%PDF"
+    assert api.get("/calibration/..%2Fsecrets.pdf").status_code == 404
+    assert api.get("/calibration/README.md").status_code == 404
+
+
+def test_export_ships_targets_and_only_a_synthetic_sample(tmp_path):
+    import json
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+    import export_static as ex
+    names = ex.copy_calibration(tmp_path)
+    assert "mirror_charuco_v1_A4.pdf" in names and (tmp_path / "calibration" / "mirror_charuco_v1_Letter.pdf").exists()
+    good = tmp_path / "s.json"
+    good.write_text(json.dumps({"synthetic": True, "evidence_kind": "synthetic_test_render", "notes": []}))
+    ex.copy_capture_sample(tmp_path, good)
+    out = json.loads((tmp_path / "data" / "capture" / "synthetic_session.json").read_text())
+    assert out["synthetic"] is True and "SYNTHETIC" in out["notes"][-1]
+    bad = tmp_path / "b.json"
+    bad.write_text(json.dumps({"synthetic": False, "evidence_kind": "camera_video_reconstruction"}))
+    with pytest.raises(SystemExit):
+        ex.copy_capture_sample(tmp_path, bad)
+
+
+def test_synthetic_label_is_one_way(api):
+    cap = api.post("/api/capture", json={"mode": "single_view"}).json()
+    r = api.post(f"/api/capture/{cap['id']}/inputs", json={"synthetic": True}).json()
+    assert r["synthetic"] and r["label"].startswith("SYNTHETIC")
+    assert api.post(f"/api/capture/{cap['id']}/inputs", json={"synthetic": False}).status_code == 422

@@ -2359,7 +2359,12 @@ class StudioService:
             if c.mode == "single_view" and "take_side" in c.clips:
                 raise CaptureError("a single-view capture has no side take")
             if sync:
-                c.declared_sync = {**{k: sync.get(k) for k in ("method", "top_t", "side_t")}, "status": "declared",
+                ds = {k: sync.get(k) for k in ("method", "top_t", "side_t")}
+                try:
+                    ds["offset_s"] = round(float(ds["side_t"]) - float(ds["top_t"]), 3)
+                except (TypeError, ValueError, KeyError):
+                    ds["offset_s"] = None
+                c.declared_sync = {**ds, "status": "declared",
                                    "note": "the person's note; the pipeline detects the sync events itself"}
             c.stale = c.session is not None or c.stale
             self._changed()
@@ -2404,6 +2409,45 @@ class StudioService:
             raise RuntimeError("could not encode the frame")
         return bytes(buf)
 
+    def capture_calibrate(self, cid: str) -> Job:
+        """Lens intrinsics, table pose and synchronisation (no tracking, no boxes needed)."""
+        from .capture import calibrate
+        c = self._capture(cid)
+        if "take_top" not in c.clips:
+            raise RuntimeError("upload the take clip(s) first")
+        if not c.inputs.get("print_check"):
+            raise RuntimeError("enter the print check (measured 50 mm bar and one square) first")
+        ids = [clip["id"] for clip in c.clips.values()]
+
+        def work(job):
+            for vid in ids:
+                self.media.acquire(vid)
+            try:
+                self._progress(job, 0.05, "Calibrating lenses, finding the board on the table, matching sync events")
+                t0 = time.time()
+                paths = {r: self.media.get(clip["id"]).path for r, clip in c.clips.items()}
+                try:
+                    out = calibrate(c, paths)
+                except Exception as exc:  # noqa: BLE001 - recorded; nothing calibrated
+                    with self.lock:
+                        c.errors.append(f"calibration failed: {type(exc).__name__}: {exc}"[:400])
+                        self._changed()
+                    raise
+                wall = round(time.time() - t0, 2)
+            finally:
+                for vid in ids:
+                    self.media.release(vid)
+            with self.lock:
+                c.calibration_preview = out
+                self._changed()
+                st = c.calibration_status()
+            return {"capture_id": c.id, "state": c.public()["state"], "calibration": st, "sync": c.sync_status(),
+                    "wall_s": wall, "step_provenance": {"kind": "offline_pipeline", "label": "Offline calibration (no model calls)",
+                                                        "model": None, "request_status": "ok", "latency_s": wall,
+                                                        "latency_source": "measured_now", "cost_usd": None,
+                                                        "fallback_reason": None}}
+        return self.submit("capture", {"capture_id": cid, "step": "calibrate"}, work)
+
     def capture_run(self, cid: str) -> Job:
         from .capture import build
         c = self._capture(cid)
@@ -2415,7 +2459,6 @@ class StudioService:
         def work(job):
             for vid in ids:
                 self.media.acquire(vid)
-            c.state = "running"
             try:
                 self._progress(job, 0.05, "Calibrating, synchronising and tracking (offline, no model calls)")
                 t0 = time.time()
@@ -2425,7 +2468,8 @@ class StudioService:
                 except Exception as exc:  # noqa: BLE001 - recorded; nothing reconstructed
                     with self.lock:
                         c.errors.append(f"{type(exc).__name__}: {exc}"[:400])
-                        c.state = "needs_rerun" if c.session is not None else "ready_to_run"
+                        c.state = "clips_ready"
+                        c.refresh_state()
                         self._changed()
                     raise
                 from mirror.capture.session import summary_lines
@@ -2435,11 +2479,13 @@ class StudioService:
                     self.media.release(vid)
             with self.lock:
                 c.session = json.loads(s.model_dump_json())
+                c.reviewed = bool(c.review_log)    # results of a re-run after a review
                 c.summary = summary_lines(s)
                 c.runs += 1
                 c.stale = False
                 c.proposal = None
-                c.state = "processed"
+                c.state = "tracked"
+                c.refresh_state()
                 self._changed()
                 ok, blocking = c.gate()
             return {"capture_id": c.id, "state": c.state, "gate_open": ok, "blocking": len(blocking), "wall_s": wall,
@@ -2452,10 +2498,11 @@ class StudioService:
     def capture_review(self, cid: str, review: dict) -> dict:
         """Record confirmations and corrections (with time spent), then re-run the pipeline so they take
         effect. The studio never marks a review item resolved itself."""
-        from .capture import add_review
+        from .capture import add_review, translate_review
         c = self._capture(cid)
         with self.lock:
-            entries = add_review(c, review or {})
+            entries = add_review(c, translate_review(c, review or {}))
+            c.reviewed = True                 # state "reviewed" (stale until the re-run finishes)
             self._changed()
         job = self.capture_run(cid)
         return {"capture": c.public(), "recorded": entries, "job": job.public()}
@@ -2497,7 +2544,8 @@ class StudioService:
                     c.errors.append(f"proposal failed: {type(exc).__name__}: {exc}"[:400])
                     c.proposal = {"generation_id": self.generation_id, "spec_version_id": None,
                                   "error": f"{type(exc).__name__}: {exc}"[:400], "synthetic": c.synthetic}
-                    c.state = "processed"
+                    c.state = "tracked"
+                    c.refresh_state()
                     self._changed()
                     raise
                 sp = self._model_prov(fb, mark, t0, spec.interpreter)
