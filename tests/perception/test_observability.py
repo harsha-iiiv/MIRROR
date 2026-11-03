@@ -187,3 +187,21 @@ def test_review_items_reach_the_summary():
     assert [r["code"] for r in s.review] == ["identity_ambiguous"]
     assert s.evidence_kind == "rendered_video_reconstruction"
     assert summary_payload(s)["notes"][0].startswith("Evidence: Simulator-rendered video reconstructed from pixels")
+
+
+def test_charuco_board_is_an_accepted_intrinsics_source():
+    """Phone captures calibrate with a ChArUco board and say so (added after 'checkerboard';
+    earlier records still validate unchanged)."""
+    import typing
+    from mirror import observability as O
+    assert "charuco_board" in typing.get_args(O.IntrinsicsSource)
+    assert {"checkerboard", "charuco_board"} == set(O.MEASURED_INTRINSICS)
+    rec = O.CalibrationRecord(camera="top", intrinsics_source="charuco_board", extrinsics_source="calibration_board",
+                              valid=True)
+    again = O.CalibrationRecord.model_validate_json(rec.model_dump_json())
+    assert again.intrinsics_source == "charuco_board"
+    old = O.CalibrationRecord(camera="top", intrinsics_source="checkerboard", extrinsics_source="calibration_board")
+    assert old.intrinsics_source == "checkerboard"
+    import pydantic
+    with pytest.raises(pydantic.ValidationError):
+        O.CalibrationRecord(camera="top", intrinsics_source="charuco", extrinsics_source="calibration_board")
