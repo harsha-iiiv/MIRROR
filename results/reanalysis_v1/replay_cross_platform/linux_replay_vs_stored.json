@@ -1,0 +1,70 @@
+{
+ "comparison": {
+  "bead_differences": [
+   {
+    "first": 2,
+    "object": "cup_0",
+    "second": 6,
+    "seed": 60002,
+    "side": "a",
+    "stratum": "shortcut"
+   }
+  ],
+  "beads_equal": 94,
+  "detail_equal": 94,
+  "max_abs_bead_difference": 4,
+  "max_abs_execution_time_s": 0.0,
+  "max_abs_final_tilt_deg": 0.043861,
+  "max_abs_max_transport_tilt_deg": 0.076849,
+  "max_abs_physics_steps": 0,
+  "only_in_first": 0,
+  "only_in_second": 0,
+  "outcome_equal": 95,
+  "routes_equal": 95,
+  "trials_compared": 95
+ },
+ "first": {
+  "code_identical_to_freeze": false,
+  "code_state_label": "linux-x86_64-5f3b0fa",
+  "kind": "replay",
+  "network_calls_refused": 0,
+  "outcome_counts": {
+   "blocked": 5,
+   "primary": 60,
+   "shortcut": 30
+  },
+  "platform": {
+   "machine": "x86_64",
+   "system": "Linux"
+  },
+  "replay_code_sha256": "5c5f67220ebbf1466ca022d1d59773856cb159692f1193ec356ed75c5bdc2f1c",
+  "runtime": {
+   "mujoco": "3.17.0",
+   "numpy": "2.4.6",
+   "python": "3.11.18",
+   "scipy": "1.17.1"
+  },
+  "scene_counts": {
+   "blocked": 5,
+   "primary": 60,
+   "shortcut": 30
+  },
+  "source": "eval_muse_linux_x86_64.json",
+  "spec_pair_identical": {
+   "a": true,
+   "b": true
+  }
+ },
+ "purpose": "development check, not a registered result",
+ "second": {
+  "kind": "stored",
+  "manifest_versions": {
+   "mujoco": "3.17.0",
+   "numpy": "2.4.6",
+   "python": "3.11.18",
+   "scipy": "1.17.1"
+  },
+  "source": "report.json"
+ },
+ "version": "reanalysis_v1/cross_platform"
+}

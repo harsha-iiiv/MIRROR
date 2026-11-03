@@ -33,3 +33,15 @@ reported here; tilts and executed time are the continuous quantities the stored 
 Files: `eval_muse_mac_arm64.json` (arm64 replay), `mac_arm64_vs_stored.json` (per-trial comparison incl. every
 bead difference), `scenes_mac_arm64_vs_linux.json` (layout comparison; the Linux dump reproduces all 95 stored
 layout hashes).
+
+## Three-way view (same commit `5f3b0fa` on both platforms)
+
+| pair | outcomes equal | beads equal | largest bead diff | largest final-tilt diff | largest peak-tilt diff | largest executed-time diff |
+|---|---|---|---|---|---|---|
+| arm64 replay vs Linux x86_64 replay (this machine) | 95/95 | 52/95 | 2 | 0.048 deg | 0.226 deg | 0.832 s |
+| Linux x86_64 replay vs stored report (another x86_64 machine, same runtime versions) | 95/95 | 94/95 | 4 | 0.044 deg | 0.077 deg | 0.000 s |
+
+Between two x86_64 machines with identical versions, executed time and physics-step counts are identical and
+tilts differ by under 0.08 deg; one spilling trial differs in beads. Across architectures the differences are
+larger but still sub-degree, and outcomes still agree everywhere. Files: `eval_muse_linux_x86_64.json`,
+`mac_arm64_vs_linux_replay.json`, `linux_replay_vs_stored.json`.
