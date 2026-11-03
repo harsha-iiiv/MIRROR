@@ -13,7 +13,10 @@
     objects                               one mapping per tracked object (see mirror.capture.proxy)
     prompts                               boxes [x, y, w, h] drawn on a frame of each take clip
     tags                                  {"95": "mug"} if a printed tag is taped to an object
-    tracker                               "classical" (default) or "manual" (baseline: clicked key frames only)
+    tracker                               "classical" (default), "manual" (baseline: clicked key frames only)
+                                          or "model" (imported model tracks only)
+    model_tracks                          {camera: {"path": tracks.json.gz, "origin": "recorded_replay"|"fresh_model_call",
+                                          "labels": {"model label": "your label"}}}
     manual_keyframes                      {camera: {label: {frame: [u, v]}}} for the manual baseline
     identity_confirmations                [[camera, label, from_frame], ...] after review
     corrections                           event corrections after review
@@ -113,8 +116,24 @@ def _load_inputs(d: Path):
         identity_confirmations=[tuple(x) for x in cfg.get("identity_confirmations", [])],
         corrections=[EV.Correction(**c) for c in cfg.get("corrections", [])],
         tracker=cfg.get("tracker", "classical"),
+        model_tracks=_model_tracks(d, cfg),
         manual_keyframes={cam: {lab: {int(k): tuple(v) for k, v in kf.items()} for lab, kf in d2.items()}
                           for cam, d2 in (cfg.get("manual_keyframes") or {}).items()} or None)
+
+
+def _model_tracks(d: Path, cfg: dict):
+    """{camera: {"path": ..., "origin": "recorded_replay" | "fresh_model_call", "labels": {...}}} -> TrackSets."""
+    spec = cfg.get("model_tracks") or {}
+    if not spec:
+        return None
+    from mirror.capture import media as M, track as TR
+    out = {}
+    for cam, m in spec.items():
+        clip = cfg["clips"]["take"].get(cam)
+        meta = M.probe(_resolve(d, clip))
+        out[cam] = TR.from_perception_tracks(meta, _resolve(d, m["path"]), camera=cam, track_camera=m.get("camera"),
+                                             origin=m.get("origin", "recorded_replay"), labels=m.get("labels"))
+    return out
 
 
 def cmd_run(d: Path) -> int:

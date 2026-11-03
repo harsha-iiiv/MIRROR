@@ -48,3 +48,27 @@ def test_occlusion_loses_then_reacquires_with_identity_unconfirmed(tmp_path, ffm
     assert later and all(o.status == "reacquired" and not o.identity_confirmed for o in later)
     TR.confirm_identity(ts, "obj", 16)
     assert all(o.identity_confirmed for o in ts.tracks["obj"][17:] if o.seen)
+
+
+def test_import_perception_tracks_with_origin(tmp_path, ffmpeg):
+    from mirror.perception.masks import rle_encode
+    from mirror.perception.reconstruct import Tracks
+    from mirror.perception.track import save_tracks
+    m = _clip(tmp_path, (200, 40, 40), n=12, name="i.mp4")
+    masks = {}
+    for k in range(12):
+        mk = np.zeros((180, 320), bool)
+        if k != 5:
+            mk[70:110, 60 + 6 * k:90 + 6 * k] = True
+        masks[k] = rle_encode(mk)
+    save_tracks(Tracks(fps=15.0, n_frames=12, size={"top": (320, 180)}, masks={"top": {"cup_0": masks}}, source="sam-3.1"),
+                tmp_path / "t.json.gz")
+    ts = TR.from_perception_tracks(m, tmp_path / "t.json.gz", camera="top", labels={"cup_0": "mug"})
+    assert ts.source == "model" and ts.model == "sam-3.1" and ts.model_origin == "recorded_replay"
+    obs = ts.tracks["mug"]
+    assert obs[5].status == "lost" and obs[4].status == "model"
+    assert abs(obs[3].cx - (60 + 18 + 14.5)) < 0.6
+    import pytest
+    with pytest.raises(ValueError, match="not the same clip"):
+        save_tracks(Tracks(fps=15.0, n_frames=99, size={"top": (320, 180)}, masks={"top": {"cup_0": masks}}), tmp_path / "u.json.gz")
+        TR.from_perception_tracks(m, tmp_path / "u.json.gz", camera="top")

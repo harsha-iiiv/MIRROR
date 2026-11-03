@@ -301,3 +301,26 @@ def from_masks(meta: ClipMeta, masks: dict[str, dict[int, np.ndarray]], *, camer
                              axis_deg=ang, elongation=el))
         out[label] = obs
     return TrackSet(camera=camera, clip_sha256=meta.sha256, source="model", model=model, model_origin=model_origin, tracks=out)
+
+
+def from_perception_tracks(meta: ClipMeta, path, *, camera: str, track_camera: Optional[str] = None,
+                           origin: Literal["fresh_model_call", "recorded_replay"] = "recorded_replay",
+                           labels: Optional[dict[str, str]] = None) -> TrackSet:
+    """Import a tracks file written by mirror.perception.track.save_tracks
+    (camera -> label -> frame -> RLE mask). Frame indices must be this clip's
+    decoded frame indices; ``labels`` renames model labels to the person's labels."""
+    from mirror.perception.masks import rle_decode
+    from mirror.perception.track import load_tracks
+    tr = load_tracks(path)
+    cam = track_camera or camera
+    if cam not in tr.masks:
+        raise ValueError(f"tracks file has no camera {cam!r}")
+    if tr.n_frames and tr.n_frames != meta.n_frames:
+        raise ValueError(f"tracks file covers {tr.n_frames} frames, clip has {meta.n_frames}: not the same clip/decoding")
+    masks = {}
+    for lab, fr in tr.masks[cam].items():
+        name = (labels or {}).get(lab, lab)
+        masks[name] = {int(i): (rle_decode(m) if isinstance(m, dict) else np.asarray(m)) for i, m in fr.items()}
+    ts = from_masks(meta, masks, camera=camera, model=tr.source, model_origin=origin)
+    ts.notes.append(f"imported tracks file ({tr.source})")
+    return ts
