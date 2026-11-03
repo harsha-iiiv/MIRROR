@@ -17,9 +17,11 @@ def fixture_manager(**kw):
 @pytest.fixture()
 def client():
     with TestClient(create_app(fixture_manager())) as c:
-        sid = c.post("/api/session").json()["session"]
-        c.headers.update({"X-Mirror-Session": sid})
+        r = c.post("/api/session").json()
+        sid = r["session"]
+        c.headers.update({"X-Mirror-Session": sid, "X-Mirror-Token": r["token"]})
         c.sid = sid
+        c.token = r["token"]
         yield c
 
 
@@ -130,7 +132,7 @@ def test_evaluation_and_clarification(client):
 
 def test_websocket_announces_state_changes(client):
     c = client
-    with c.websocket_connect(f"/ws?session={c.sid}") as ws:
+    with c.websocket_connect(f"/ws?session={c.sid}&token={c.token}") as ws:
         assert ws.receive_json()["type"] == "hello"
         c.post("/api/demo/load")
         msg = ws.receive_json()

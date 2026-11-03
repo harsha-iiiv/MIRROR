@@ -37,6 +37,7 @@ from typing import Optional
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from mirror.studio.session_adapter import TOUR_DIR, tour_record  # noqa: E402
 from mirror.studio.session_adapter import (REFERENCE_CORRECTION, SHOWCASE_SEEDS, SHOWCASE_SPLIT,  # noqa: E402
                                            StudioService, check_showcase)
 
@@ -128,6 +129,7 @@ def write_site(svc: StudioService, out: Path, steps: list[dict], extra: dict) ->
     snap = svc.snapshot()
     snap["jobs"] = []
     snap["static"] = True
+    snap["provenance"] = "recorded"     # the site replays this session; nothing is computed when it is viewed
     # The site replays recordings: calls that were live while recording are recorded responses here.
     for m in snap.get("models") or []:
         if m.get("source") == "live":
@@ -153,7 +155,20 @@ def write_site(svc: StudioService, out: Path, steps: list[dict], extra: dict) ->
     # Rollout files are cached as immutable; the page asks for them with ?v=<export id>.
     snap["export_id"] = hashlib.sha256(f"{time.time_ns()}:{len(snap['rollouts'])}".encode()).hexdigest()[:12]
     (data / "session.json").write_text(json.dumps(snap, separators=(",", ":")))
+    # The recorded Challenge-mode tour (no live inference), labelled as a recording.
+    tour = tour_record()
+    if tour is not None:
+        (data / "tour" / "rollouts").mkdir(parents=True)
+        (data / "tour" / "record.json").write_text(json.dumps(tour, separators=(",", ":")))
+        src = TOUR_DIR / tour["tour_version"] / "rollouts"
+        for f in sorted(src.glob("*.json")):
+            shutil.copyfile(f, data / "tour" / "rollouts" / f.name)
+        snap["tour"] = {"file": "tour/record.json", "record_id": tour.get("record_id"),
+                        "version": tour.get("tour_version"), "provenance": "recorded", "label": tour.get("label")}
+        (data / "session.json").write_text(json.dumps(snap, separators=(",", ":")))
     ids = [r["id"] for r in snap["rollouts"]] + (["demo"] if snap.get("demo") else [])
+    if (snap.get("demo") or {}).get("playback_id"):
+        ids.append(snap["demo"]["playback_id"])         # the immutable id the alias points to
     svc.payload_digits = 3          # 1 mm and 0.001 quaternion steps: smaller files, same picture
     svc.payload_cache.clear()
     total = 0
@@ -247,6 +262,8 @@ def header_rules(index_html: str, api_base: str = "", ws_base: str = "", generic
         ("/data/session.json", {"Cache-Control": NO_CACHE}),
         ("/data/provenance.json", {"Cache-Control": NO_CACHE}),
         ("/data/rollouts/*", {"Cache-Control": IMMUTABLE}),
+        ("/data/tour/record.json", {"Cache-Control": REVALIDATE}),
+        ("/data/tour/rollouts/*", {"Cache-Control": IMMUTABLE}),
         ("/data/media/*", {"Cache-Control": "public, max-age=86400"}),
         ("/js/*", {"Cache-Control": REVALIDATE}),
         ("/styles.css", {"Cache-Control": REVALIDATE}),

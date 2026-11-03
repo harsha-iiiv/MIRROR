@@ -28,6 +28,7 @@ from ..contracts import (Constraint, CorrectionRecord, DemoTrace, Goal,
                          VisualGeom, VisualScene, Workspace, ObjectOutcome)
 from ..geometry import (BLOCK, CUP, DEFAULT_UPRIGHT_TOL_DEG, GRIPPER, MARKER,
                         TRAY, WORLD)
+from ..pipeline import Session
 
 FIXTURE_NOTE = "fixture: kinematic key-framed motion for interface development, not a physics simulation"
 
@@ -427,45 +428,25 @@ def fixture_correction_ops(spec: TaskSpec, text: str) -> list[SpecOp]:
 # -------------------------------------------------------------- session ---
 
 
-@dataclass
-class FixtureEntry:
-    rollout: Rollout
-    log: Any
-    plan: PlanResult
-    scene: SceneState
-    spec_version: int
-    stats: dict = field(default_factory=dict)
+def FixtureEntry(rollout, log, plan, scene, spec_version, stats=None):  # noqa: N802 - kept for old callers
+    """Backward-compatible constructor: fixture rollouts are pipeline RolloutEntry objects."""
+    from ..pipeline import RolloutEntry
+    e = RolloutEntry(rollout, log, plan, scene, spec_version)
+    e.stats = stats or {}
+    return e
 
 
-@dataclass
-class FixtureSession:
-    """Duck-typed stand-in for mirror.pipeline.Session (subset used by the studio)."""
+class FixtureSession(Session):
+    """Duck-typed stand-in for mirror.pipeline.Session (subset used by the studio).
 
-    session_id: str = field(default_factory=lambda: "fx" + uuid.uuid4().hex[:8])
-    demo: Optional[DemoTrace] = None
-    scene: Optional[SceneState] = None
-    specs: list[TaskSpec] = field(default_factory=list)
-    rollouts: dict[str, FixtureEntry] = field(default_factory=dict)
-    clarification: Any = None
-    events: list[dict] = field(default_factory=list)
-    is_fixture: bool = True
+    Shares the pipeline's lineage (generations, immutable rollout ids, archive);
+    only planning, execution and checking are kinematic stand-ins."""
 
-    def _event(self, event, **data):
-        self.events.append({"t": time.time(), "event": event, **data})
+    is_fixture = True
 
-    @property
-    def spec(self) -> TaskSpec:
-        if not self.specs:
-            raise RuntimeError("no specification yet")
-        return self.specs[-1]
-
-    def spec_version(self, version: Optional[int]) -> TaskSpec:
-        if version is None:
-            return self.spec
-        for s in self.specs:
-            if s.version == version:
-                return s
-        raise KeyError(f"no specification version {version}")
+    def __init__(self, session_id: Optional[str] = None, client: Any = None, **kw):
+        super().__init__(session_id=session_id or "fx" + uuid.uuid4().hex[:8], client=client, **kw)
+        self._demo_frames: list = []
 
     # demonstration ------------------------------------------------------
     def record_demo(self, scene: Optional[SceneState] = None) -> DemoTrace:
@@ -483,8 +464,8 @@ class FixtureSession:
                 if not events or events[-1].object_id != ph[1] or events[-1].type != ph[0]:
                     events.append(TraceEvent(t=f.t, type=ph[0], object_id=ph[1]))
             held_prev = f.phase
-        self.demo = DemoTrace(demo_id="demo-fixture", scene=scene, source="teleop_scripted", source_note=FIXTURE_NOTE,
-                              sample_hz=_HZ / 3, frames=trace_frames, events=events)
+        self.set_demo(DemoTrace(demo_id="demo-fixture", scene=scene, source="teleop_scripted", source_note=FIXTURE_NOTE,
+                                sample_hz=_HZ / 3, frames=trace_frames, events=events), reason="demo_recorded")
         self.scene = scene
         self._demo_frames = frames
         self._event("demo_recorded", demo_id=self.demo.demo_id, source=self.demo.source)
@@ -493,13 +474,19 @@ class FixtureSession:
     def demo_rollout(self) -> Rollout:
         if self.demo is None:
             self.record_demo()
+        frames = self._demo_frames
+        if not frames:   # a restored or replaced trace: play the trace itself
+            frames = [RolloutFrame(t=f.t, bodies={**f.objects, "gripper": f.gripper}, gripper_width=f.gripper_width)
+                      for f in self.demo.frames]
         rep = RolloutReport(rollout_id="demo", scene_id=self.demo.scene.scene_id, spec_id="", spec_version=0,
                             condition="demonstration", status="success", completion=True, checker="none",
                             notes=[FIXTURE_NOTE])
-        return Rollout(report=rep, visual=visual_scene(self.demo.scene), frame_hz=_HZ, frames=self._demo_frames)
+        return Rollout(report=rep, visual=visual_scene(self.demo.scene), frame_hz=_HZ, frames=frames)
 
     # interpretation -----------------------------------------------------
     def interpret(self) -> TaskSpec:
+        if self.specs or self.rollouts:
+            self._start_generation("reinterpreted", carry_demo=True)
         self.specs = [fixture_spec(self.demo.demo_id if self.demo else "demo-fixture")]
         self._event("spec_proposed", version=1, interpreter="offline-fixture")
         return self.spec
@@ -510,20 +497,25 @@ class FixtureSession:
         self._event("spec_updated", version=new.version, kind=kind, text=text)
         return new
 
-    def correct(self, text):
+    def preview_correction(self, text, focus_kind=None):
         ops = fixture_correction_ops(self.spec, text)
         if not ops:
             rec = CorrectionRecord(version=self.spec.version, text=text, kind="correction", diff=[], model="offline-fixture")
             return self.spec, rec
-        new, rec = _apply(self.spec, ops, text, "correction")
+        return _apply(self.spec, ops, text, "correction")
+
+    def correct(self, text, focus_kind=None):
+        new, rec = self.preview_correction(text)
+        if new is self.spec:
+            return new, rec
         self.specs.append(new)
         self._event("correction", version=new.version, text=text)
         return new, rec
 
     def clarify(self):
         spec, scene = self.spec, self.scene
-        a = self._run(scene, spec, condition="candidate A", tilt_cup=False, force=True)
-        b = self._run(scene, spec, condition="candidate B", tilt_cup=True, force=True)
+        a = self._run(scene, spec, condition="candidate A", tilt_cup=False, force=True, kind="c")
+        b = self._run(scene, spec, condition="candidate B", tilt_cup=True, force=True, kind="c")
         self.clarification = {
             "id": "clar_1", "question": "Would both of these still count as doing the task correctly?",
             "spec_version": spec.version,
@@ -590,8 +582,8 @@ class FixtureSession:
         tilt = has_slot and "c_upright_transport" not in enforced
         return self._run(self.scene, spec, condition, tilt_cup=tilt)
 
-    def _run(self, scene, spec, condition, tilt_cup, force=False):
-        rid = f"r{len(self.rollouts) + 1:03d}"
+    def _run(self, scene, spec, condition, tilt_cup, force=False, kind="r"):
+        rid = ""
         keys, slot_center, around_y, wall = self._keys(scene, tilt_cup)
         enforced = {c.id for c in spec.enforced_constraints()}
         blocked = wall is not None and abs(wall.length) >= 0.79
@@ -611,17 +603,17 @@ class FixtureSession:
             rep = RolloutReport(rollout_id=rid, scene_id=scene.scene_id, spec_id=spec.spec_id, spec_version=spec.version,
                                 condition=condition, status="planning_failed", plan_status="no_plan", plan_reason=plan.reason,
                                 checker="fixture", notes=[FIXTURE_NOTE])
-            e = FixtureEntry(Rollout(report=rep, visual=visual), None, plan, scene, spec.version, {})
-            self.rollouts[rid] = e
+            e = self._register(Rollout(report=rep, visual=visual), None, plan, scene, spec, kind)
+            e.stats = {}
             return e
         frames, stats = _play(scene, keys, scene.gripper_start.pos)
         plan = PlanResult(status="ok", spec_version=spec.version, scene_id=scene.scene_id, routes=routes, planner="fixture",
                           object_order=[o.id for o in scene.objects])
-        e = FixtureEntry(None, {"frames": frames, "stats": stats}, plan, scene, spec.version, stats)
-        e.rollout = Rollout(report=self._report(rid, scene, spec, condition, frames, stats, tilt_cup),
-                            visual=visual, frame_hz=_HZ, frames=frames)
-        self.rollouts[rid] = e
-        self._event("rollout", rollout_id=rid, status=e.rollout.report.status, spec_version=spec.version,
+        rollout = Rollout(report=self._report(rid, scene, spec, condition, frames, stats, tilt_cup),
+                          visual=visual, frame_hz=_HZ, frames=frames)
+        e = self._register(rollout, {"frames": frames, "stats": stats}, plan, scene, spec, kind)
+        e.stats = stats
+        self._event("rollout", rollout_id=e.rollout_id, status=e.rollout.report.status, spec_version=spec.version,
                     scene_id=scene.scene_id)
         return e
 
@@ -646,15 +638,13 @@ class FixtureSession:
                              execution_time_s=frames[-1].t, physics_steps=int(frames[-1].t / 0.002),
                              checker="fixture", ground_truth_use=["fixture: none"], notes=[FIXTURE_NOTE])
 
-    def recheck(self, rollout_id, spec_version=None):
-        e = self.rollouts[rollout_id]
+    def recheck(self, rollout_id, spec_version=None, *, spec_version_id=None):
+        e, spec, svid, own = self.recheck_target(rollout_id, spec_version, spec_version_id)
         if e.log is None:
             raise ValueError("rollout has no step log (planning failed)")
-        spec = self.spec_version(spec_version)
-        rep = self._report(f"{rollout_id}@v{spec.version}", e.scene, spec,
-                           f"recheck of {rollout_id} under v{spec.version}", e.log["frames"], e.log["stats"],
+        rep = self._report(rollout_id, e.scene, spec, "", e.log["frames"], e.log["stats"],
                            "through_slot:pitched_90" in e.rollout.report.route_labels)
-        return rep
+        return self._label_recheck(rep, e, rollout_id, svid, own)
 
     # evaluation ---------------------------------------------------------
     def paired_eval(self, spec_a: TaskSpec, spec_b: TaskSpec, seeds: list[int], progress=None) -> dict:
@@ -762,7 +752,8 @@ class FixtureMeta:
         import shutil
         shutil.rmtree(tmp, ignore_errors=True)
 
-    def perceive(self, top: str, side: Optional[str] = None, progress=None, ground_truth=None, demo_id=None) -> dict:
+    def perceive(self, top: str, side: Optional[str] = None, progress=None, ground_truth=None, demo_id=None,
+                 footage=None) -> dict:
         s = self.session
         trace = s.demo or s.record_demo()
         kinds = {o.id: o.kind for o in trace.scene.objects}
@@ -785,6 +776,12 @@ class FixtureMeta:
                 objects[oid].append({"t": round(fr.t, 3), "box": [round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)],
                                      "polygon": poly, "score": 1.0})
         vt = trace.model_copy(update={"source": "video_grounded", "source_note": FIXTURE_NOTE, "video_path": top})
+        if "evidence" in type(vt).model_fields:
+            try:   # never mistaken for video evidence (mirror.observability, when present)
+                from ..observability import simulator_evidence
+                vt = vt.model_copy(update={"evidence": simulator_evidence(trace, kind="interface_fixture")})
+            except Exception:  # noqa: BLE001
+                pass
         return {"trace": vt, "tracks": {"top": {"fps": _VID_FPS, "width": _VID_W, "height": _VID_H, "objects": objects}},
                 "metrics": None, "model": FIXTURE_META_MODEL, "latency_s": 0.0, "source": "fixture", "calls": []}
 
