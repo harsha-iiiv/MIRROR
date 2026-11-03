@@ -107,9 +107,17 @@ def main(argv=None) -> int:
                                 text=True, timeout=10).stdout.strip()
     except Exception:
         commit = ""
+    import os
+
     import mujoco
+    import numpy
     meta = {"generated_unix": time.time(), "commit": commit, "mujoco": mujoco.__version__,
-            "python": platform.python_version(), "seeds": seeds, "split": "dev",
+            "python": platform.python_version(), "numpy": numpy.__version__,
+            "platform": {"system": platform.system(), "machine": platform.machine(),
+                         "release": platform.release(), "processor": platform.processor(),
+                         "mujoco_gl": os.environ.get("MUJOCO_GL", "")},
+            "platform_note": "Physics results differ slightly between platforms (about 1e-4 m); "
+                             "compare runs only within one platform.", "seeds": seeds, "split": "dev",
             "excluded_tuning_seeds": sorted(TUNING_SEEDS), "total_wall_time_s": round(time.perf_counter() - t_all, 1),
             "specs": {"v1": "cup upright at the end (reference original)",
                       "v2": "v1 + cup upright while carried (reference corrected)"},
@@ -124,7 +132,9 @@ def main(argv=None) -> int:
 
 def render_md(meta, rows) -> str:
     lines = ["# Arm backend vs baseline gripper (development layouts)", "",
-             f"Commit {meta['commit']}, MuJoCo {meta['mujoco']}. {meta['note']}", "",
+             f"Commit {meta['commit']}, MuJoCo {meta['mujoco']}, Python {meta['python']}, "
+             f"{meta['platform']['system']} {meta['platform']['machine']}. {meta['note']} "
+             f"{meta['platform_note']}", "",
              "| backend | scene | spec | status | routes (transport) | cup beads | v1 re-checked under v2 | plan s | episode s |",
              "|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
