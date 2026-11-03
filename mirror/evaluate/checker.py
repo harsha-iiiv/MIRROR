@@ -246,6 +246,10 @@ def _forbidden(ctx: _Ctx, c: Constraint) -> tuple[list[ViolationInterval], list[
 
 
 def _clearance(ctx: _Ctx, c: Constraint) -> list[ViolationInterval]:
+    """Distance from the object's solid shape (box; capsule for the marker) to
+    every obstacle box stays >= min_m during the phase. A bounding sphere gives
+    a cheap lower bound; steps where that bound is below min_m are measured
+    exactly (checker 2; checker 1 used the bounding-sphere estimate alone)."""
     min_m = float(c.params.get("min_m", 0.0))
     boxes = [b for o in ctx.scene.obstacles for b in geom.obstacle_boxes(o)]
     objs = geom.objects_by_id(ctx.scene)
@@ -254,15 +258,23 @@ def _clearance(ctx: _Ctx, c: Constraint) -> list[ViolationInterval]:
         return out
     for oid in _resolve(ctx, c):
         k = ctx.log.index(oid)
-        r = geom.bounding_radius(objs[oid]) if oid in objs else 0.0
         p = ctx.log.obj_pos[:, k, :]
-        dist = np.min(np.stack([geom.point_box_distance(p, b) for b in boxes]), axis=0) - r
-        mask = _phase_mask(ctx, k, c.phase) & (dist < min_m)
-        for s, e in _intervals(mask):
+        mask = _phase_mask(ctx, k, c.phase)
+        if oid not in objs:
+            ctx.notes.append(f"{c.id}: {oid} has no geometry in the scene; clearance not measured")
+            continue
+        r = geom.bounding_radius(objs[oid])
+        lower = np.min(np.stack([geom.point_box_distance(p, b) for b in boxes]), axis=0) - r
+        dist = np.where(mask, np.maximum(lower, 0.0), np.inf)
+        need = np.flatnonzero(mask & (lower < min_m))
+        if need.size:
+            dist[need] = geom.object_obstacle_distance(objs[oid], p[need], ctx.log.obj_quat[need, k], boxes)
+        bad = mask & (dist < min_m)
+        for s, e in _intervals(bad):
             out.append(ViolationInterval(
                 constraint_id=c.id, object_id=oid, t_start=float(ctx.log.t[s]),
                 t_end=float(ctx.log.t[e]), peak=float(dist[s:e + 1].min()),
-                detail=f"clearance below {min_m:g} m (bounding-sphere estimate) during {c.phase}"))
+                detail=f"clearance below {min_m:g} m (closest {float(dist[s:e + 1].min()):.4f} m, solid shape) during {c.phase}"))
     return out
 
 
