@@ -135,6 +135,9 @@ def test_live_switch_connects_and_falls_back(tmp_path):
             # interpret on the server: wait for the live session's own button, not the recording's "Next"
             btn = pg.get_by_role("button", name="Interpret the demonstration")
             btn.wait_for(timeout=30_000)
+            # The page loads the demonstration on the server when it goes live; an interpret request sent
+            # before that finishes is refused as stale (409), correctly. Let the page settle first.
+            pg.wait_for_load_state("networkidle", timeout=30_000)
             pg.wait_for_function("() => [...document.querySelectorAll('.story .btn.primary')].some("
                                  "(b) => b.textContent.includes('Interpret the demonstration') && !b.disabled)",
                                  timeout=30_000)
