@@ -25,8 +25,49 @@ from ..contracts import (DemoTrace, ObjectSpec, ObstacleSpec, PlanResult, Pose, 
                          RolloutFrame, RolloutReport, SceneState, SlotSpec,
                          SpecOp, TaskSpec, TraySpec, VisualScene)
 from ..geometry import WORLD
+from ..lineage import file_sha256, scene_sha256, sha256_of
+from .uploads import MediaQuota, SessionMedia, UploadEntry, UploadLimits, UploadRejected, validate_video
 
 SNAPSHOT_FORMAT = "mirror-studio-session/1"
+STATE_FORMAT = "mirror-studio-state/1"
+
+# Provenance vocabulary (docs/CHALLENGE_API.md section 3). Offline or recorded output is
+# never labelled as a fresh model call.
+PROVENANCE = ("recorded", "fresh_model_call", "offline_interpreter", "replayed_cassette", "fixture", "simulated")
+
+
+class StaleGeneration(RuntimeError):
+    """A request or job belongs to a demonstration generation that is no longer current."""
+
+    def __init__(self, asked: Optional[str], current: str):
+        super().__init__(f"generation {asked} is no longer current (now {current}): the demonstration or "
+                         "its interpretation changed; reload the state")
+        self.asked, self.current = asked, current
+
+
+class JobCancelled(RuntimeError):
+    pass
+
+
+def provenance_of(source: Optional[str]) -> str:
+    """Map an internal source label onto the public provenance vocabulary."""
+    s = (source or "").lower()
+    if s == "recorded":
+        # Internally "recorded" means a model response replayed from a cassette.
+        return "replayed_cassette"
+    if s in PROVENANCE:
+        return s
+    if s.startswith("fixture"):
+        return "fixture"
+    if s in ("live", "record") or s.startswith("live"):
+        return "fresh_model_call"
+    if s in ("recorded", "replay", "cassette") or s.startswith("replay"):
+        return "replayed_cassette"
+    if "offline" in s:
+        return "offline_interpreter"
+    if s in ("recording", "shipped_recording"):
+        return "recorded"
+    return "offline_interpreter" if not s else s
 ROLLOUT_FORMAT = "mirror-studio-rollout/1"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -245,30 +286,84 @@ def trace_to_rollout(trace: DemoTrace, visual: Optional[VisualScene]) -> Rollout
 
 
 class Job:
-    def __init__(self, kind: str, params: dict):
+    def __init__(self, kind: str, params: dict, generation_id: Optional[str] = None):
         self.id = "j" + uuid.uuid4().hex[:8]
         self.kind = kind
         self.params = params
-        self.status = "queued"  # queued | running | done | error
+        self.status = "queued"  # queued | running | done | error | cancelled
         self.progress = 0.0
         self.message = ""
         self.result: Any = None
         self.error: Optional[str] = None
+        self.error_code: Optional[str] = None
         self.started = time.time()
+        self.run_started: Optional[float] = None
         self.finished: Optional[float] = None
         self.queue_position = 0     # > 0 while waiting for a free simulator
+        self.generation_id = generation_id      # the generation the request was made in
+        self.cancel_requested = False
+        self.stale = False                      # finished after its generation was replaced: result not applied
 
     def public(self) -> dict:
         return {"id": self.id, "kind": self.kind, "params": self.params, "status": self.status,
                 "progress": round(self.progress, 3), "message": self.message, "result": self.result,
-                "error": self.error, "started": self.started, "finished": self.finished,
-                "queue_position": self.queue_position}
+                "error": self.error, "error_code": self.error_code, "started": self.started,
+                "finished": self.finished, "queue_position": self.queue_position,
+                "generation_id": self.generation_id, "cancel_requested": self.cancel_requested,
+                "stale": self.stale}
+
+    @classmethod
+    def interrupted(cls, d: dict) -> "Job":
+        """A job that was queued or running when the server stopped (restored as failed)."""
+        j = cls(d.get("kind", "?"), d.get("params") or {}, d.get("generation_id"))
+        j.id, j.started = d.get("id", j.id), d.get("started", j.started)
+        j.status, j.finished = "error", time.time()
+        j.error_code = "interrupted"
+        j.error = "the server restarted while this job was waiting or running; nothing from it was kept"
+        return j
 
 
 # Jobs that run the simulator (the expensive part); they share the server's job gate.
-SIM_JOB_KINDS = {"run", "clarify", "evaluate", "video"}
+SIM_JOB_KINDS = {"run", "clarify", "evaluate", "video", "challenge", "challenge_execute"}
 
-MAX_UPLOAD_MB = 40          # per video file
+TOUR_DIR = REPO_ROOT / "data" / "challenge_tour"
+
+
+def tour_record(version: Optional[str] = None) -> Optional[dict]:
+    """The shipped, recorded challenge tour (no live inference), newest version unless named."""
+    if not TOUR_DIR.exists():
+        return None
+    dirs = sorted(d for d in TOUR_DIR.iterdir() if (d / "record.json").exists())
+    if version:
+        dirs = [d for d in dirs if d.name == version]
+    if not dirs:
+        return None
+    rec = json.loads((dirs[-1] / "record.json").read_text())
+    rec["tour_version"] = dirs[-1].name
+    return rec
+
+
+def tour_rollout(rollout_id: str, version: Optional[str] = None) -> dict:
+    rec = tour_record(version)
+    if rec is None:
+        raise KeyError("tour")
+    if not all(c.isalnum() or c in "._-@" for c in rollout_id):
+        raise KeyError(rollout_id)
+    p = TOUR_DIR / rec["tour_version"] / "rollouts" / f"{rollout_id}.json"
+    if not p.exists():
+        raise KeyError(rollout_id)
+    return json.loads(p.read_text())
+
+
+def tour_summary() -> Optional[dict]:
+    rec = tour_record()
+    if rec is None:
+        return None
+    return {"record_id": rec.get("record_id"), "version": rec.get("tour_version"), "provenance": "recorded",
+            "label": rec.get("label") or "Recorded tour: no live model call or simulation happens when you watch it"}
+
+MAX_UPLOAD_MB = 40          # per video file (default; MIRROR_UPLOAD_MAX_MB, see uploads.py)
+JOB_TIMEOUT_S = float(os.environ.get("MIRROR_JOB_TIMEOUT_S") or 900)
 # Worst case of one video demonstration (perception's own caps): Muse Spark grounding on the first
 # frame (3 per camera) plus up to 2 re-seeds per camera; SAM: per camera one video request, one
 # scene-parts request and up to 2 re-seed requests.
@@ -279,24 +374,9 @@ MAX_WAV_S = 30.0
 
 
 def _probe_video(path: Path) -> dict:
-    """Duration and size from ffprobe when it is installed (best effort)."""
-    import shutil
-    import subprocess
-    exe = shutil.which("ffprobe")
-    if not exe:
-        return {}
-    try:
-        r = subprocess.run([exe, "-v", "error", "-select_streams", "v:0", "-show_entries",
-                            "stream=width,height,r_frame_rate:format=duration", "-of", "json", str(path)],
-                           capture_output=True, text=True, timeout=20, stdin=subprocess.DEVNULL)
-        d = json.loads(r.stdout or "{}")
-        st = (d.get("streams") or [{}])[0]
-        num, _, den = (st.get("r_frame_rate") or "0/1").partition("/")
-        fps = float(num) / float(den or 1) if float(den or 1) else None
-        return {"duration": float(d.get("format", {}).get("duration") or 0) or None,
-                "width": st.get("width"), "height": st.get("height"), "fps": round(fps, 3) if fps else None}
-    except Exception:  # noqa: BLE001
-        return {}
+    """Strict probe (kept name): raises UploadRejected unless duration, size and rate are known and bounded."""
+    from .uploads import probe_video
+    return probe_video(Path(path), UploadLimits.from_env())
 
 
 def _video_meta(tr: Optional[dict]) -> dict:
@@ -350,7 +430,9 @@ def _budget_exc():
 class StudioService:
     def __init__(self, backend: Optional[str] = None, *, session_id: Optional[str] = None, gate=None,
                  budget=None, meta_budgets: Optional[dict] = None, one_job: bool = False,
-                 private_runtime: bool = False):
+                 private_runtime: bool = False, admission=None, client_addr: str = "local",
+                 media_quota: Optional[MediaQuota] = None, records=None, state_dir: Optional[Path] = None,
+                 upload_limits: Optional[UploadLimits] = None):
         backend = (backend or os.environ.get("MIRROR_STUDIO_BACKEND", "auto")).lower()
         ok, missing = packages_available()
         self.missing = missing
@@ -373,7 +455,7 @@ class StudioService:
         self.rechecks: list[dict] = []
         self.evaluation: Optional[dict] = None
         self.scene_seq = 0
-        self.demo_rollout: Optional[Rollout] = None
+        self.demo_rollouts: dict = {}                        # demo playback id -> playback (all generations)
         self.clarification: Optional[dict] = None
         self.payload_cache: dict[str, dict] = {}
         self.trace_cache: dict[str, Optional[dict]] = {}
@@ -390,13 +472,78 @@ class StudioService:
         self.closed = False
         self.model_log: list[dict] = []      # which model produced each artifact (Models panel)
         self.video_demo: Optional[dict] = None
-        self.uploads: dict[str, dict] = {}
         self.transcripts: dict[str, dict] = {}
+        self.admission = admission            # per-address admission (public server)
+        self.client_addr = client_addr
+        self.records = records                # shared immutable record store (challenge share/replay)
+        self.state_dir = Path(state_dir) if state_dir else None   # persisted for restart recovery
+        self.upload_limits = upload_limits or UploadLimits.from_env()
+        self.media = SessionMedia(self.upload_limits, media_quota)
+        self.challenges: dict = {}
+        self.challenge_order: list[str] = []
+        self._seen_generation = self.session.generation.id
         if self.mode == "live" and (gate is not None or budget is not None):
             from .sessions import make_client
             client = make_client(budget, session_id or "local")
             if client is not None:
                 self.session.client = client
+
+    @property
+    def uploads(self) -> dict:
+        """Upload id -> public description (read only; managed by ``self.media``)."""
+        return {vid: {**e.public(), "path": e.path} for vid, e in self.media.entries.items()}
+
+    # -------------------------------------------------------- lineage
+    @property
+    def demo_playback_id(self) -> Optional[str]:
+        return self.session.generation.demo_playback_id
+
+    @property
+    def demo_rollout(self) -> Optional[Rollout]:
+        pid = self.demo_playback_id
+        return self.demo_rollouts.get(pid) if pid else None
+
+    @demo_rollout.setter
+    def demo_rollout(self, r: Optional[Rollout]) -> None:
+        pid = self.demo_playback_id
+        if pid and r is not None:
+            r.report.rollout_id = pid
+            self.demo_rollouts[pid] = r
+
+    @property
+    def generation_id(self) -> str:
+        return self.session.generation.id
+
+    def check_generation(self, asked: Optional[str]) -> None:
+        """Refuse a request that names a generation other than the current one."""
+        if asked and asked != self.generation_id:
+            raise StaleGeneration(asked, self.generation_id)
+
+    def _guard(self, job: "Job") -> None:
+        """Inside the lock, before a job changes anything: still the generation it was made for?"""
+        if job.cancel_requested:
+            raise JobCancelled("cancelled before it changed anything")
+        if job.generation_id and job.generation_id != self.generation_id:
+            raise StaleGeneration(job.generation_id, self.generation_id)
+
+    def _sync_generation(self) -> None:
+        """Drop adapter state that belonged to a replaced generation."""
+        gid = self.generation_id
+        if gid == self._seen_generation:
+            return
+        self._seen_generation = gid
+        self.clarification = None
+        if self.evaluation and (self.evaluation.get("source") or {}).get("kind") == "showcase":
+            self.evaluation = None
+        self.video_demo = self.video_demo if (self.video_demo or {}).get("generation_id") == gid else None
+        keep = {g.id for g in self.session.all_generations()}
+        self.media.forget_generations(keep)
+
+    def _spec_vid(self, version: Optional[int] = None) -> Optional[str]:
+        try:
+            return self.session.spec_version_id(version)
+        except RuntimeError:
+            return None
 
     # ------------------------------------------------------------ events
     def subscribe(self, fn: Callable[[dict], None]) -> Callable[[], None]:
@@ -411,19 +558,57 @@ class StudioService:
                 pass
 
     def _changed(self) -> None:
+        self._sync_generation()
         self.revision += 1
-        self._emit({"type": "state", "revision": self.revision})
+        self.persist()
+        self._emit({"type": "state", "revision": self.revision, "generation_id": self.generation_id})
 
     # ------------------------------------------------------------- jobs
     def busy(self) -> bool:
+        self._expire_jobs()
         return any(j.status in ("queued", "running") for j in self.jobs.values())
 
-    def close(self, reason: str = "") -> None:
-        """End this session: stop accepting work and release its resources."""
+    def _expire_jobs(self) -> None:
+        """A job running longer than MIRROR_JOB_TIMEOUT_S is reported failed; if its thread ever
+        returns, the result is discarded (it cannot be interrupted mid-simulation)."""
+        now = time.time()
+        for j in list(self.jobs.values()):
+            started = getattr(j, "run_started", None)
+            if getattr(j, "status", None) == "running" and started and now - started > JOB_TIMEOUT_S:
+                j.status, j.error_code = "error", "timeout"
+                j.error = f"the job ran longer than {JOB_TIMEOUT_S:.0f} s and was abandoned; its result will not be used"
+                j.stale, j.cancel_requested, j.finished = True, True, now
+                self._emit({"type": "job", "job": j.public()})
+
+    def cancel_job(self, job_id: str) -> dict:
+        """Cancel a queued job at once; a running job stops at its next step boundary."""
+        j = self.jobs[job_id]
+        if j.status in ("queued", "running"):
+            j.cancel_requested = True
+            if j.status == "queued" and self.gate is None:
+                pass        # the runner sees the flag before it starts
+            self._emit({"type": "job", "job": j.public()})
+        return j.public()
+
+    def close(self, reason: str = "", keep_files: bool = False) -> None:
+        """End this session: stop accepting work and release its resources.
+
+        ``keep_files`` (server stopping with persistence on): media and runtime files stay
+        on disk for the restored session; only in-memory resources are released."""
+        if keep_files:
+            self.persist()
         self.closed = True
+        for j in self.jobs.values():
+            if j.status in ("queued", "running"):
+                j.cancel_requested = True
         self._emit({"type": "expired", "reason": reason})
         self.listeners.clear()
         self.executor.shutdown(wait=False, cancel_futures=True)
+        if keep_files:
+            if self.media.quota is not None:
+                self.media.quota.release(self.media.held_bytes())
+            return
+        self.media.clear()
         if self.private_runtime and hasattr(self, "_rt"):
             import shutil
             shutil.rmtree(self._rt, ignore_errors=True)
@@ -434,43 +619,72 @@ class StudioService:
         if self.one_job and self.busy():
             from .sessions import SessionBusy
             raise SessionBusy("a job is already running in this session; wait for it to finish")
-        job = Job(kind, params)
+        if self.admission is not None:
+            self.admission.check("job", self.client_addr)
+        job = Job(kind, params, self.generation_id)
         self.jobs[job.id] = job
+        if len(self.jobs) > 200:                      # bounded job history
+            for old in sorted((j for j in self.jobs.values() if j.status not in ("queued", "running")),
+                              key=lambda j: j.started)[:len(self.jobs) - 200]:
+                self.jobs.pop(old.id, None)
         gated = self.gate is not None and kind in SIM_JOB_KINDS
 
         def runner():
             if gated:
                 job.message = "Waiting for a free simulator"
                 ok = self.gate.acquire(job, notify=lambda j: self._emit({"type": "job", "job": j.public()}),
-                                       cancelled=lambda: self.closed)
+                                       cancelled=lambda: self.closed or job.cancel_requested)
                 if not ok:
-                    job.status = "error"
-                    job.error = "session ended while waiting"
+                    job.status = "cancelled" if job.cancel_requested and not self.closed else "error"
+                    job.error = "cancelled while waiting" if job.status == "cancelled" else "session ended while waiting"
+                    job.error_code = "job_cancelled"
                     job.finished = time.time()
+                    self._emit({"type": "job", "job": job.public()})
                     return
-            job.status = "running"
-            job.message = ""
-            self._emit({"type": "job", "job": job.public()})
+            job.run_started = time.time()
             try:
-                job.result = fn(job)
+                if job.cancel_requested:
+                    raise JobCancelled("cancelled before it started")
+                if job.generation_id != self.generation_id:
+                    raise StaleGeneration(job.generation_id, self.generation_id)
+                job.status = "running"
+                job.message = ""
+                self._emit({"type": "job", "job": job.public()})
+                result = fn(job)
+                if job.stale:                         # abandoned by the watchdog meanwhile
+                    raise RuntimeError("finished after it was abandoned; result discarded")
+                job.result = result
                 job.status = "done"
                 job.progress = 1.0
+            except JobCancelled as exc:
+                job.status, job.error, job.error_code = "cancelled", str(exc), "job_cancelled"
+            except StaleGeneration as exc:
+                job.status, job.error, job.error_code = "error", str(exc), "stale_generation"
+                job.stale = True
             except Exception as exc:  # noqa: BLE001 - surfaced to the user
-                job.status = "error"
-                job.error = f"{type(exc).__name__}: {exc}"
-                job.message = traceback.format_exc(limit=4)
+                if job.status != "error":
+                    job.status = "error"
+                    job.error = f"{type(exc).__name__}: {exc}"
+                    job.error_code = job.error_code or "job_failed"
+                    job.message = traceback.format_exc(limit=4)
             finally:
                 if gated:
                     self.gate.release()
-            job.finished = time.time()
+            job.finished = job.finished or time.time()
             self._emit({"type": "job", "job": job.public()})
             self._changed()
 
-        self.executor.submit(runner)
+        try:
+            self.executor.submit(runner)
+        except RuntimeError as exc:                   # executor shut down (session closing)
+            self.jobs.pop(job.id, None)
+            raise RuntimeError("this session has ended") from exc
         self._emit({"type": "job", "job": job.public()})
         return job
 
     def _progress(self, job: Job, frac: float, message: str) -> None:
+        if job.cancel_requested and job.status == "running":
+            raise JobCancelled("cancelled")
         job.progress = frac
         job.message = message
         self._emit({"type": "job", "job": job.public()})
@@ -492,8 +706,7 @@ class StudioService:
             if self.mode == "live" and pinned.exists():
                 # The demonstration the recorded model responses were made from.
                 import gzip
-                s.demo = DemoTrace.model_validate_json(gzip.decompress(pinned.read_bytes()))
-                s.scene = s.demo.scene
+                s.set_demo(DemoTrace.model_validate_json(gzip.decompress(pinned.read_bytes())), reason="demo_loaded")
                 s._event("demo_loaded", demo_id=s.demo.demo_id, source=s.demo.source)
             elif self.mode == "live" and ref.exists():
                 s.load_demo(ref)
@@ -503,7 +716,6 @@ class StudioService:
             else:
                 s.record_demo()
             self.demo_rollout = self._make_demo_rollout()
-            self.payload_cache.pop("demo", None)
             self.video_demo = None
             self._changed()
             return self.snapshot()
@@ -550,6 +762,7 @@ class StudioService:
         def work(job):
             self._progress(job, 0.1, "Reading the demonstration")
             with self.lock:
+                self._guard(job)
                 if self.session.demo is None:
                     self.load_demo()
                 t0, mark = time.time(), self._llm_mark()
@@ -559,7 +772,10 @@ class StudioService:
                 lat, tok = self._llm_latency(mark, t0)
                 self._log_model(f"specification v{spec.version}", "proposes the task from the demonstration",
                                 spec.interpreter, lat, self._client_source(fb), tokens=tok)
-            return {"version": spec.version, "fallback": fb}
+                job.generation_id = self.generation_id      # interpreting may start a new generation
+            return {"version": spec.version, "fallback": fb, "spec_version_id": self._spec_vid(spec.version),
+                    "generation_id": self.generation_id, "provenance": provenance_of(self._client_source(fb)),
+                    "fallback_reason": fb}
         return self.submit("interpret", {}, work)
 
     def commit_decisions(self, decisions: dict[str, str], note: str = "") -> dict:
@@ -608,6 +824,7 @@ class StudioService:
         def work(job):
             self._progress(job, 0.1, "Compiling the correction")
             with self.lock:
+                self._guard(job)
                 before = self.session.spec.version
                 try:
                     t0, mark = time.time(), self._llm_mark()
@@ -632,25 +849,37 @@ class StudioService:
                         return {"version": before, "changed": False, "rejected": str(exc)}
                     raise
                 changed = spec.version != before
-                result = {"version": spec.version, "changed": changed, "record": _dump(record)}
+                result = {"version": spec.version, "changed": changed, "record": _dump(record),
+                          "spec_version_id": self._spec_vid(spec.version), "generation_id": self.generation_id,
+                          "provenance": provenance_of(self._client_source(fb)), "fallback_reason": fb}
                 question = getattr(record, "question", None) or (record.get("question") if isinstance(record, dict) else None)
                 if question:
                     result["question"] = question
                 # Re-check every recorded rollout under the new version, so an
                 # old behaviour's violation of the new rule is visible.
                 if changed:
-                    for rid, e in list(self.session.rollouts.items()):
-                        if getattr(e, "log", None) is None:
-                            continue
-                        try:
-                            rep = self.session.recheck(rid, spec.version)
-                            self.rechecks.append({"rollout_id": rid, "spec_version": spec.version,
-                                                  "report": _dump(rep)})
-                        except Exception as exc:  # noqa: BLE001
-                            self.rechecks.append({"rollout_id": rid, "spec_version": spec.version,
-                                                  "error": str(exc)})
+                    self._recheck_generation(spec.version)
                 return result
         return self.submit("correct", {"text": text, "transcript_id": transcript_id}, work)
+
+    def _recheck_generation(self, version: int) -> list[dict]:
+        """Re-check every rollout of the current generation under ``version`` (from step logs)."""
+        out = []
+        svid = self._spec_vid(version)
+        for rid, e in list(self.session.rollouts.items()):
+            if getattr(e, "log", None) is None:
+                continue
+            item = {"rollout_id": rid, "spec_version": version, "spec_version_id": svid,
+                    "generation_id": self.generation_id}
+            try:
+                item["report"] = _dump(self.session.recheck(rid, version))
+            except Exception as exc:  # noqa: BLE001
+                item["error"] = str(exc)
+            self.rechecks = [r for r in self.rechecks
+                             if not (r["rollout_id"] == rid and r.get("spec_version_id") == svid)]
+            self.rechecks.append(item)
+            out.append(item)
+        return out
 
     # ------------------------------------------------- models and Meta stages
     def _client_label(self) -> str:
@@ -702,7 +931,8 @@ class StudioService:
                    **extra) -> dict:
         entry = {"artifact": artifact, "role": role, "model": model or "unknown",
                  "latency_s": round(float(latency_s), 3) if latency_s is not None else None,
-                 "source": source, "at": time.time(),
+                 "source": source, "provenance": provenance_of(source), "at": time.time(),
+                 "generation_id": self.generation_id,
                  **{k: v for k, v in extra.items() if v is not None}}
         self.model_log.append(entry)
         return entry
@@ -733,6 +963,8 @@ class StudioService:
         b = self.meta_budgets.get(kind)
         if b is None or self.mode == "fixture":
             return
+        if self.admission is not None:
+            self.admission.check("model", self.client_addr, n)
         for _ in range(n):
             why = b.take(self.session_id or "local")
             if why:
@@ -751,6 +983,8 @@ class StudioService:
             return {}
         sid = self.session_id or "local"
         want = [("interpreter", VIDEO_WORST_GROUNDING + 1), ("sam", VIDEO_WORST_SAM), ("video", 1)]
+        if self.admission is not None:
+            self.admission.check("model", self.client_addr, sum(n for _k, n in want))
         held: dict = {}
         for kind, n in want:
             b = self._budget_for(kind)
@@ -782,22 +1016,62 @@ class StudioService:
             for _ in range(used - n):
                 b.take(sid)
 
-    def upload_video(self, data: bytes, view: str = "top") -> dict:
-        if view not in ("top", "side"):
-            raise ValueError("view must be top or side")
-        if len(data) > MAX_UPLOAD_MB * 1024 * 1024:
-            raise ValueError(f"video larger than {MAX_UPLOAD_MB} MB")
-        if len(data) < 64 or data[4:8] != b"ftyp":
-            raise ValueError("not an MP4 video (expected an ISO media 'ftyp' header)")
-        vid = "v" + uuid.uuid4().hex[:10]
-        path = self._runtime_dir() / f"{vid}.mp4"
-        path.write_bytes(data)
-        info = _probe_video(path)
-        if info.get("duration") and info["duration"] > MAX_VIDEO_S:
+    def admit_upload(self, nbytes: int) -> None:
+        """Reserve room for an upload of ``nbytes`` before it is written (raises UploadRejected / RateLimited)."""
+        if self.closed:
+            raise RuntimeError("this session has ended")
+        if self.admission is not None:
+            self.admission.check("upload", self.client_addr)
+            try:
+                self.admission.check("upload_bytes", self.client_addr, max(1, nbytes // 2**20))
+            except Exception:
+                self.admission.give_back("upload", self.client_addr)
+                raise
+        self.media.admit(nbytes)
+
+    def upload_dir(self) -> Path:
+        d = self._runtime_dir() / "uploads"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+    def accept_upload(self, path: Path, view: str, nbytes: int) -> dict:
+        """Validate an admitted upload already written to ``path``. Rejected files are deleted
+        and their reservation is given back; accepted ones are registered and expire if unused."""
+        path = Path(path)
+        try:
+            if view not in ("top", "side"):
+                raise UploadRejected("view must be top or side")
+            size = path.stat().st_size
+            if size != nbytes:
+                raise UploadRejected("upload size does not match what was announced")
+            if size < 64:
+                raise UploadRejected("file too small to be a video")
+            info = validate_video(path, self.upload_limits)
+            vid = "v" + uuid.uuid4().hex[:10]
+            final = self.upload_dir() / f"{vid}.mp4"
+            path.replace(final)
+            entry = UploadEntry(id=vid, path=str(final), view=view, bytes=size, sha256=file_sha256(final), info=info)
+        except BaseException:
             path.unlink(missing_ok=True)
-            raise ValueError(f"video longer than {MAX_VIDEO_S:.0f} s")
-        self.uploads[vid] = {"id": vid, "path": str(path), "view": view, "bytes": len(data), **info}
-        return {k: v for k, v in self.uploads[vid].items() if k != "path"}
+            self.media.unadmit(nbytes)
+            raise
+        self.media.add(entry)
+        self.persist()
+        return entry.public()
+
+    def upload_video(self, data: bytes, view: str = "top") -> dict:
+        """Bytes in memory (tests, small clients): admit, write, validate."""
+        if view not in ("top", "side"):
+            raise UploadRejected("view must be top or side")
+        self.admit_upload(len(data))
+        tmp = self.upload_dir() / f".incoming-{uuid.uuid4().hex[:8]}"
+        try:
+            tmp.write_bytes(data)
+        except BaseException:
+            tmp.unlink(missing_ok=True)
+            self.media.unadmit(len(data))
+            raise
+        return self.accept_upload(tmp, view, len(data))
 
     def video_file(self, vid: str) -> str:
         if vid == "bundled-top" or vid == "bundled-side":
@@ -806,7 +1080,7 @@ class StudioService:
             if not p:
                 raise KeyError(vid)
             return str(p)
-        return self.uploads[vid]["path"]
+        return self.media.get(vid).path
 
     def process_video(self, top: str = "bundled", side: Optional[str] = None) -> Job:
         """Video demonstration -> tracks (SAM) -> observations -> Muse Spark proposal -> new session."""
@@ -835,9 +1109,40 @@ class StudioService:
             top_id, top_path = top, self.video_file(top)
             side_id, side_path = (side, self.video_file(side)) if side else (None, None)
             demo_id = f"upload_{top}_from_video"
-        held = self._reserve_video()
+        media = []
+        for vid, pth in ((top_id, top_path), (side_id, side_path)):
+            if not vid:
+                continue
+            if vid in self.media.entries:
+                e = self.media.acquire(vid)                # cannot expire while the job reads it
+                media.append({k: v for k, v in e.public().items() if k not in ("used_by", "created")})
+            else:
+                info = {}
+                try:
+                    info = _probe_video(Path(pth))
+                except Exception:  # noqa: BLE001 - a shipped file; its facts are informative only
+                    info = {}
+                media.append({"id": vid, "view": "top" if vid.endswith("top") or vid == top_id else "side",
+                              "bundled": True, "sha256": file_sha256(pth), "bytes": Path(pth).stat().st_size, **info})
+        try:
+            held = self._reserve_video()
+        except BaseException:
+            for m in media:
+                self.media.release(m["id"])
+            raise
+
+        def release_media(gen: Optional[str] = None):
+            for m in media:
+                self.media.release(m["id"], gen)
 
         def work(job):
+            try:
+                return _work(job)
+            except BaseException:
+                release_media()
+                raise
+
+        def _work(job):
             def stage(lo, hi):
                 def cb(*a, **k):
                     frac = next((x for x in a if isinstance(x, (int, float))), None)
@@ -861,10 +1166,16 @@ class StudioService:
             self._settle(held, "video", sum(1 for c in (obs.get("calls") or []) if c.get("source") == "live"))
             self._progress(job, 0.82, "Proposing the task from the reconstruction and the observations")
             with self.lock:
-                self._reset_session()
+                self._guard(job)
                 trace = per["trace"]
-                self.session.demo = trace
-                self.session.scene = trace.scene
+                self.session.set_demo(trace, reason="video_processed", source_media=media,
+                                      calibration=_dump(per.get("calibration")) if per.get("calibration") else None)
+                job.generation_id = self.generation_id
+                self.tags.clear()
+                self.rechecks = []
+                self.evaluation = None
+                self.clarification = None
+                self.scene_seq = 0
                 self.session._event("demo_loaded", demo_id=trace.demo_id, source=trace.source)
                 t0, mark = time.time(), self._llm_mark()
                 spec, fb = self._with_fallback(lambda: meta.propose_with_observations(trace, getattr(self.session, "client", None)
@@ -890,8 +1201,8 @@ class StudioService:
                 self._log_model(f"specification v{spec.version}", "proposes the task from the video reconstruction",
                                 spec.interpreter, lat, self._client_source(fb), tokens=tok)
                 self.demo_rollout = self._make_demo_rollout()
-                self.payload_cache.pop("demo", None)
                 self.video_demo = {
+                    "generation_id": self.generation_id, "source_media": media,
                     "views": {"top": {"id": top_id, **_video_meta(per["tracks"].get("top"))},
                               **({"side": {"id": side_id, **_video_meta(per["tracks"].get("side"))}} if side_id else {})},
                     "tracks": per["tracks"], "observations": obs["observations"], "metrics": per.get("metrics"),
@@ -900,30 +1211,22 @@ class StudioService:
                         "fixture" if self.mode == "fixture" else "recorded"),
                     "bundled": top == "bundled", "fixture": self.mode == "fixture",
                     "trace_source": trace.source, "spec_version": spec.version,
+                    "spec_version_id": self._spec_vid(spec.version),
                 }
+                release_media(self.generation_id)
                 self._changed()
-            return {"version": spec.version, "fallback": fb}
+            return {"version": spec.version, "fallback": fb, "generation_id": self.generation_id,
+                    "spec_version_id": self._spec_vid(spec.version), "provenance": provenance_of(self._client_source(fb)),
+                    "fallback_reason": fb}
         return self.submit("video", {"top": top_id, "side": side_id}, work)
 
     def _reset_session(self) -> None:
-        """Start a fresh pipeline session (a new demonstration replaces the old story)."""
-        if self.mode == "fixture":
-            from .fixtures import FixtureSession
-            new = FixtureSession()
-            new.record_demo()
-            if hasattr(self, "_fixture_meta"):
-                self._fixture_meta.session = new
-        else:
-            from ..pipeline import Session
-            new = Session()
-            new.client = getattr(self.session, "client", None)
-        self.session = new
+        """Start over: archive the current generation (nothing is mutated or reused)."""
+        self.session.set_demo(None, reason="reset")
         self.tags.clear()
         self.rechecks = []
         self.evaluation = None
         self.clarification = None
-        self.payload_cache.clear()
-        self.trace_cache.clear()
         self.scene_seq = 0
 
     def transcribe(self, wav: bytes) -> Job:
@@ -939,13 +1242,25 @@ class StudioService:
             tid = "t" + uuid.uuid4().hex[:8]
             (self._runtime_dir() / f"{tid}.wav").write_bytes(wav)     # kept for recorded sessions (export)
             rec = {"id": tid, "text": res["text"], "model": res.get("model"), "latency_s": res.get("latency_s"),
-                   "source": res.get("source"), "audio_s": info["seconds"], "at": time.time()}
+                   "source": res.get("source"), "provenance": provenance_of(res.get("source")),
+                   "audio_sha256": sha256_of(bytes(wav)), "audio_s": info["seconds"], "at": time.time(),
+                   "generation_id": self.generation_id}
             self.transcripts[tid] = rec
+            while len(self.transcripts) > 20:            # bounded: the oldest audio is deleted
+                old = next(iter(self.transcripts))
+                self.transcripts.pop(old)
+                (self._runtime_dir() / f"{old}.wav").unlink(missing_ok=True)
             self._log_model("transcript", "speech to text", res.get("model"), res.get("latency_s", 0.0),
                             res.get("source", "unknown"), id=tid)
             self._changed()
             return rec
-        return self.submit("voice", {"seconds": info["seconds"]}, work)
+        try:
+            return self.submit("voice", {"seconds": info["seconds"]}, work)
+        except BaseException:
+            b = self.meta_budgets.get("voice")
+            if b is not None and self.mode != "fixture":
+                b.release(self.session_id or "local", 1)
+            raise
 
     def transcript_audio(self, tid: str) -> Optional[str]:
         p = self._runtime_dir() / f"{tid}.wav"
@@ -961,18 +1276,26 @@ class StudioService:
         def work(job):
             self._progress(job, 0.05, "Planning")
             with self.lock:
+                self._guard(job)
                 entry = self.session.run(spec_version=spec_version, condition=condition)
             rid = entry.rollout.report.rollout_id
             self.tags[rid] = list(tags or [])
-            return {"rollout_id": rid, "status": entry.rollout.report.status}
+            return {"rollout_id": rid, "status": entry.rollout.report.status, "label": entry.label,
+                    "generation_id": entry.generation_id, "spec_version_id": entry.spec_version_id,
+                    "content_sha256": entry.content_sha256,
+                    "provenance": "fixture" if self.mode == "fixture" else "simulated"}
         return self.submit("run", {"spec_version": spec_version, "condition": condition}, work)
 
-    def recheck(self, rollout_id: str, spec_version: Optional[int] = None) -> dict:
+    def recheck(self, rollout_id: str, spec_version: Optional[int] = None,
+                spec_version_id: Optional[str] = None) -> dict:
         with self.lock:
-            rep = self.session.recheck(rollout_id, spec_version)
-            v = spec_version or self.session.spec.version
-            item = {"rollout_id": rollout_id, "spec_version": v, "report": _dump(rep)}
-            self.rechecks = [r for r in self.rechecks if not (r["rollout_id"] == rollout_id and r["spec_version"] == v)]
+            entry, spec, svid, own = self.session.recheck_target(rollout_id, spec_version, spec_version_id)
+            rep = self.session.recheck(rollout_id, spec.version if spec_version_id is None else None,
+                                       spec_version_id=spec_version_id)
+            item = {"rollout_id": rollout_id, "spec_version": spec.version, "spec_version_id": svid,
+                    "generation_id": own, "cross_generation": not svid.startswith(own + "."), "report": _dump(rep)}
+            self.rechecks = [r for r in self.rechecks
+                             if not (r["rollout_id"] == rollout_id and r.get("spec_version_id", r["spec_version"]) == svid)]
             self.rechecks.append(item)
             self._changed()
             return item
@@ -981,6 +1304,7 @@ class StudioService:
         def work(job):
             self._progress(job, 0.05, "Finding distinct valid behaviours")
             with self.lock:
+                self._guard(job)
                 if self.mode == "live":
                     clar = self.session.clarify()
                     plans = list(getattr(self.session, "clarification_candidates", None) or [])
@@ -1001,7 +1325,6 @@ class StudioService:
     def _execute_candidates(self, job: Job, plans: list, cd: dict) -> dict:
         """Execute each candidate plan in simulation so both behaviours can be watched."""
         from ..evaluate import check
-        from ..pipeline import RolloutEntry
         from ..sim import SimEnv
         spec, scene = self.session.spec, self.session.scene
         digests = (cd.get("candidates") or []) if isinstance(cd, dict) else []
@@ -1020,15 +1343,14 @@ class StudioService:
             env = SimEnv(scene)
             res = env.execute(plan)
             rep = check(res.log, spec, scene)
-            rid = f"c{len(self.session.rollouts) + 1:03d}"
-            rep.rollout_id = rid
             rep.condition = f"candidate {i + 1}"
             rep.route_labels = [s.note for s in plan.steps if s.kind == "transport"]
             if res.status != "completed":
                 rep.status = "timeout" if res.status == "timeout" else "execution_failed"
                 rep.notes.append(res.reason)
-            self.session.rollouts[rid] = RolloutEntry(Rollout(report=rep, visual=env.visual_scene(), frames=res.frames),
-                                                      res.log, plan, scene, spec.version)
+            entry = self.session.add_rollout(Rollout(report=rep, visual=env.visual_scene(), frames=res.frames),
+                                             res.log, plan, scene, spec, kind="c")
+            rid = entry.rollout_id
             self.tags[rid] = ["candidate"]
             digests = (cd.get("candidates") or []) if isinstance(cd, dict) else []
             digest = digests[i] if i < len(digests) else {}
@@ -1041,11 +1363,14 @@ class StudioService:
     def answer(self, text: str) -> Job:
         def work(job):
             with self.lock:
+                self._guard(job)
                 (spec, record), fb = self._with_fallback(lambda: self.session.answer(text), job)
                 if fb:
                     self.fallbacks.append({"step": "answer", "used": fb, "version": spec.version})
                 self.clarification = None
-            return {"version": spec.version, "record": _dump(record), "fallback": fb}
+            return {"version": spec.version, "record": _dump(record), "fallback": fb,
+                    "spec_version_id": self._spec_vid(spec.version), "generation_id": self.generation_id,
+                    "provenance": provenance_of(self._client_source(fb)), "fallback_reason": fb}
         return self.submit("answer", {"text": text}, work)
 
     def evaluate(self, seeds: list[int], spec_a: Optional[int] = None, spec_b: Optional[int] = None,
@@ -1057,10 +1382,16 @@ class StudioService:
             a = s.spec_version(spec_a) if spec_a else s.specs[0]
             b = s.spec_version(spec_b) if spec_b else s.spec
             self._progress(job, 0.02, f"Paired evaluation on {len(seeds)} layouts")
+            self._guard(job)
             if self.mode == "fixture":
                 rep = s.paired_eval(a, b, seeds, progress=lambda i, n: self._progress(job, i / n, f"Layout {i}/{n}"))
+                rep["source"] = {"kind": "showcase", "split": SHOWCASE_SPLIT, "note": "fixture"}
             else:
                 rep = self._paired_eval_live(job, a, b, seeds, split)
+            rep["generation_id"] = self.generation_id
+            rep["spec_a_id"], rep["spec_b_id"] = self._spec_vid(a.version), self._spec_vid(b.version)
+            if self.generation_id != job.generation_id:
+                raise StaleGeneration(job.generation_id, self.generation_id)
             self.evaluation = rep
             return {"pairs": len(rep.get("pairs") or rep.get("trials") or []) if isinstance(rep, dict) else None}
         return self.submit("evaluate", {"seeds": seeds, "split": split}, work)
@@ -1069,7 +1400,9 @@ class StudioService:
         if not hasattr(self, "_rt"):
             import tempfile
             base = os.environ.get("MIRROR_STUDIO_RUNTIME")
-            if self.private_runtime:
+            if self.state_dir is not None:
+                self._rt = self.state_dir / "runtime"
+            elif self.private_runtime:
                 root = Path(base) if base else Path(tempfile.gettempdir())
                 root.mkdir(parents=True, exist_ok=True)
                 self._rt = Path(tempfile.mkdtemp(prefix="session-", dir=root))
@@ -1108,8 +1441,10 @@ class StudioService:
         finally:
             done.set()
         (run_dir / "report.json").write_text(rep.model_dump_json())
+        # Showcase runs get their own id prefix: repeating a seed never reuses an earlier run's ids.
         out = self._register_evaluation(_dump(rep), run_dir, a.version, b.version,
-                                        log_dir=run_dir / "logs", rollout_dir=run_dir / "rollouts")
+                                        log_dir=run_dir / "logs", rollout_dir=run_dir / "rollouts",
+                                        prefix=f"s{uuid.uuid4().hex[:6]}-")
         out["source"] = {"kind": "showcase", "split": SHOWCASE_SPLIT,
                          "note": "development seeds run in the studio; not the pre-registered evaluation"}
         return out
@@ -1224,6 +1559,333 @@ class StudioService:
         from ..statelog import StateLog
         return statelog_to_rollout(StateLog.load(e["log_path"]), e["report"], visual)
 
+    # ------------------------------------------------------------ challenge
+    def _record_store(self):
+        if self.records is None:
+            from .records import RecordStore
+            self.records = RecordStore(self._runtime_dir() / "records")
+        return self.records
+
+    def _challenge(self, cid: str):
+        ch = self.challenges.get(cid)
+        if ch is None:
+            raise KeyError(f"challenge {cid}")
+        return ch
+
+    def _challenge_current(self, cid: str):
+        ch = self._challenge(cid)
+        if ch.generation_id != self.generation_id:
+            raise StaleGeneration(ch.generation_id, self.generation_id)
+        return ch
+
+    @staticmethod
+    def _rollout_brief(entry, report=None) -> dict:
+        rep = report or entry.rollout.report
+        beads = [{"object_id": o.object_id, "beads_total": o.beads_total, "beads_in_container": o.beads_in_container}
+                 for o in rep.outcomes if getattr(o, "beads_total", 0)]
+        return {"rollout_id": entry.rollout_id, "label": entry.label, "status": rep.status,
+                "spec_version_id": entry.spec_version_id, "content_sha256": entry.content_sha256,
+                "scene_id": entry.scene.scene_id, "route_labels": list(rep.route_labels), "beads": beads,
+                "plan_status": rep.plan_status, "plan_reason": rep.plan_reason,
+                "violations": [{"constraint_id": v.constraint_id, "object_id": v.object_id, "t_start": v.t_start,
+                                "t_end": v.t_end, "peak": v.peak, "detail": v.detail} for v in rep.violations]}
+
+    def challenge_options(self) -> dict:
+        from .challenge import options
+        out = options(audio=bool(self.capabilities().get("voice")))
+        out["tour"] = tour_summary()
+        return out
+
+    def challenge_create(self, family: str, seed: Optional[int] = None, preset: Optional[str] = None,
+                         edits: Optional[list] = None) -> Job:
+        """Build a development challenge scene and execute the current specification on it (prior behaviour)."""
+        from .challenge import ChallengeState, challenge_scene
+        scene, origin = challenge_scene(family, seed, list(edits or []), preset=preset, fixture=self.mode == "fixture")
+
+        def work(job):
+            prep = []
+            with self.lock:
+                self._guard(job)
+                if self.session.demo is None:
+                    self.load_demo()
+                    prep.append({"step": "demonstration loaded", "demo_id": self.session.demo.demo_id,
+                                 "provenance": "fixture" if self.mode == "fixture" else "recorded"})
+                if not self.session.specs:
+                    self._progress(job, 0.1, "Interpreting the demonstration")
+                    t0, mark = time.time(), self._llm_mark()
+                    spec, fb = self._with_fallback(self.session.interpret, job)
+                    if fb:
+                        self.fallbacks.append({"step": "interpret", "used": fb, "version": spec.version})
+                    lat, tok = self._llm_latency(mark, t0)
+                    self._log_model(f"specification v{spec.version}", "proposes the task from the demonstration",
+                                    spec.interpreter, lat, self._client_source(fb), tokens=tok)
+                    prep.append({"step": "demonstration interpreted", "spec_version_id": self._spec_vid(spec.version),
+                                 "provenance": provenance_of(self._client_source(fb)), "fallback_reason": fb})
+                job.generation_id = self.generation_id
+                ch = ChallengeState(self.generation_id, scene, origin, self._spec_vid())
+                ch.preparation = prep
+                self.challenges[ch.id] = ch
+                self.challenge_order.append(ch.id)
+                while len(self.challenge_order) > 10:
+                    self.challenges.pop(self.challenge_order.pop(0), None)
+                self.session.set_scene(scene)
+                self._progress(job, 0.3, "Executing the current specification on the challenge layout")
+                entry = self.session.run(condition=f"challenge {ch.id}: before")
+                self.tags[entry.rollout_id] = ["challenge", "before"]
+                ch.before = self._rollout_brief(entry)
+                ch.state = "scene_ready"
+            return {"challenge_id": ch.id, "before_rollout_id": entry.rollout_id, "status": entry.rollout.report.status,
+                    "generation_id": self.generation_id,
+                    "provenance": "fixture" if self.mode == "fixture" else "simulated"}
+        return self.submit("challenge", {"family": family, "seed": seed, "preset": preset, "edits": len(edits or [])}, work)
+
+    def challenge_correction(self, cid: str, text: Optional[str] = None, transcript_id: Optional[str] = None) -> Job:
+        """Compile a correction for review; nothing is committed."""
+        from .challenge import spec_scope
+        ch = self._challenge_current(cid)
+        tr = None
+        if transcript_id is not None:
+            tr = self.transcripts.get(transcript_id)
+            if tr is None:
+                raise KeyError(f"transcript {transcript_id}")
+            text = text if text else tr["text"]
+        text = (text or "").strip()
+        if not text:
+            raise ValueError("empty correction")
+        if len(text) > 600:
+            raise ValueError("a correction is one or two sentences (600 characters at most)")
+        how = "typed" if tr is None else ("spoken" if text == tr["text"] else "spoken_edited")
+
+        def work(job):
+            self._progress(job, 0.1, "Compiling the correction")
+            with self.lock:
+                self._guard(job)
+                base = self.session.spec
+                t0, mark = time.time(), self._llm_mark()
+                prop = {"text": text, "input": how, "transcript_id": transcript_id, "changed": False,
+                        "base_spec_version_id": self._spec_vid(base.version), "ops": [], "diff": None, "scope": None,
+                        "question": None, "options": [], "rejected": None}
+                try:
+                    (new, record), fb = self._with_fallback(lambda: self.session.preview_correction(text), job)
+                except Exception as exc:  # noqa: BLE001 - typed outcomes from the interpreter
+                    name = type(exc).__name__
+                    if name == "NeedsClarification":
+                        prop.update(question=getattr(exc, "question", str(exc)), options=getattr(exc, "options", []))
+                    elif name in ("CorrectionRejected", "InterpretError"):
+                        prop["rejected"] = str(exc)
+                    else:
+                        raise
+                    new, record, fb = base, None, None
+                src = self._client_source(fb)
+                prop.update(provenance=provenance_of(src), fallback_reason=fb,
+                            model=getattr(record, "model", None) if record is not None else None)
+                q = getattr(record, "question", None) if record is not None else None
+                if q:
+                    prop["question"] = q
+                if new.version != base.version:
+                    diff, scope = spec_scope(base, new, ch.scene)
+                    prop.update(changed=True, diff=diff, scope=scope,
+                                ops=[op.model_dump(mode="json") for op in (record.diff if record is not None else [])],
+                                proposed_version=new.version)
+                    ch.pending_spec, ch.pending_base_version = new, base.version
+                    lat, tok = self._llm_latency(mark, t0)
+                    self._log_model(f"proposed specification v{new.version} (challenge {ch.id})",
+                                    "compiles the correction for review" + {"typed": " (typed)", "spoken": " (spoken)",
+                                                                            "spoken_edited": " (spoken, edited)"}[how],
+                                    prop["model"] or self._client_label(), lat, src, input=transcript_id, tokens=tok)
+                else:
+                    ch.pending_spec, ch.pending_base_version = None, None
+                    if not prop["question"] and not prop["rejected"]:
+                        prop["rejected"] = "the correction did not change the specification"
+                ch.proposal = prop
+                ch.state = "proposed" if prop["changed"] else "scene_ready"
+            return prop
+        return self.submit("challenge_correction", {"challenge_id": cid, "input": how}, work)
+
+    def challenge_review(self, cid: str, accept: bool, note: str = "") -> dict:
+        with self.lock:
+            ch = self._challenge_current(cid)
+            if ch.pending_spec is None or ch.proposal is None:
+                raise RuntimeError("nothing to review: submit a correction that changes the specification first")
+            if not accept:
+                ch.proposal = {**ch.proposal, "decision": "discarded"}
+                ch.pending_spec = None
+                ch.state = "scene_ready"
+                self._changed()
+                return ch.public()
+            spec = self.session.commit_spec(ch.pending_spec, ch.pending_base_version, ch.proposal["text"])
+            ch.pending_spec = None
+            ch.proposal = {**ch.proposal, "decision": "accepted", "note": note[:300]}
+            ch.revised_spec_version_id = self._spec_vid(spec.version)
+            # Independent recheck from the recorded step logs: the planner is not consulted.
+            items = self._recheck_generation(spec.version)
+            out = []
+            for it in items:
+                e = self.session.rollouts[it["rollout_id"]]
+                if "report" in it:
+                    br = self._rollout_brief(e, RolloutReport.model_validate(it["report"]))
+                    br["spec_version_id"] = it["spec_version_id"]
+                    br["was"] = e.rollout.report.status
+                else:
+                    br = {"rollout_id": it["rollout_id"], "error": it["error"], "status": "unknown"}
+                br["is_before"] = it["rollout_id"] == (ch.before or {}).get("rollout_id")
+                out.append(br)
+            out.sort(key=lambda r: not r.get("is_before"))
+            ch.rechecks = out
+            ch.state = "reviewed"
+            self._changed()
+            return ch.public()
+
+    def challenge_execute(self, cid: str) -> Job:
+        ch = self._challenge_current(cid)
+        if not ch.revised_spec_version_id:
+            raise RuntimeError("accept a reviewed correction before executing")
+        version = int(ch.revised_spec_version_id.rpartition(".v")[2])
+
+        def work(job):
+            self._progress(job, 0.05, "Planning with the revised specification")
+            with self.lock:
+                self._guard(job)
+                self.session.set_scene(ch.scene)
+                entry = self.session.run(spec_version=version, condition=f"challenge {ch.id}: after")
+                self.tags[entry.rollout_id] = ["challenge", "after"]
+                ch.after = self._rollout_brief(entry)
+                ch.state = "executed"
+            return {"challenge_id": ch.id, "after_rollout_id": entry.rollout_id, "status": entry.rollout.report.status,
+                    "generation_id": self.generation_id,
+                    "provenance": "fixture" if self.mode == "fixture" else "simulated"}
+        return self.submit("challenge_execute", {"challenge_id": cid}, work)
+
+    def challenge_record(self, cid: str) -> dict:
+        """The immutable record a published challenge resolves to (not yet stored)."""
+        from .. import __version__ as pkg_version
+        ch = self._challenge(cid)
+        if ch.state not in ("executed", "published") or not ch.after or not ch.revised_spec_version_id:
+            raise RuntimeError("execute the revised specification before sharing")
+        base = self.session.resolve_spec_id(ch.base_spec_version_id)
+        revised = self.session.resolve_spec_id(ch.revised_spec_version_id)
+        gen = next(g for g in self.session.all_generations() if g.id == ch.generation_id)
+        interp = (ch.proposal or {}).get("provenance")
+        return {
+            "format": "mirror-challenge-record/1", "created_at": round(time.time(), 3), "challenge_id": ch.id,
+            "scene": {**ch.origin, "scene": ch.scene.model_dump(mode="json")},
+            "generation": {"id": gen.id, "demo": {"demo_id": gen.demo_id, "content_sha256": gen.demo_sha256,
+                                                  "source": gen.demo_source},
+                           "source_media": gen.source_media, "calibration": gen.calibration},
+            "preparation": ch.preparation,
+            "spec_versions": {
+                "base": {"version_id": ch.base_spec_version_id, "content_sha256": sha256_of(base),
+                         "spec": base.model_dump(mode="json")},
+                "revised": {"version_id": ch.revised_spec_version_id, "content_sha256": sha256_of(revised),
+                            "spec": revised.model_dump(mode="json")}},
+            "correction": {k: (ch.proposal or {}).get(k) for k in ("text", "input", "ops", "diff", "scope", "provenance",
+                                                                    "fallback_reason", "model")},
+            "transcript": ({k: v for k, v in self.transcripts[ch.proposal["transcript_id"]].items()}
+                           if (ch.proposal or {}).get("transcript_id") in self.transcripts else None),
+            "rechecks": ch.rechecks,
+            "rollouts": {"before": ch.before, "after": ch.after},
+            "provenance": {"interpreter": interp, "recorded": False,
+                           "simulation": "fixture" if self.mode == "fixture" else "mujoco",
+                           "server_version": os.environ.get("MIRROR_CODE_VERSION") or pkg_version},
+        }
+
+    def challenge_publish(self, cid: str) -> dict:
+        with self.lock:
+            ch = self._challenge(cid)
+            if ch.record_id:
+                return {"record_id": ch.record_id, "share_path": f"?challenge={ch.record_id}"}
+            record = self.challenge_record(cid)
+            ids = [ch.before["rollout_id"], ch.after["rollout_id"]]
+            payloads = {rid: self.rollout_payload(rid) for rid in ids}
+            rid = self._record_store().put(record, payloads)
+            ch.record_id = rid
+            ch.state = "published"
+            self._changed()
+            return {"record_id": rid, "share_path": f"?challenge={rid}"}
+
+    def challenge_public(self, cid: str) -> dict:
+        return self._challenge(cid).public()
+
+    # ------------------------------------------------------------ persistence
+    def persist(self) -> None:
+        """Write this session to ``state_dir`` (restart recovery). Never raises into a request."""
+        if self.state_dir is None or self.closed:
+            return
+        try:
+            with self.lock:
+                d = self.state_dir
+                d.mkdir(parents=True, exist_ok=True)
+                self.session.save_state(d / "pipeline")
+                state = {
+                    "format": STATE_FORMAT, "saved_at": time.time(), "session_id": self.session_id, "mode": self.mode,
+                    "revision": self.revision, "tags": self.tags, "rechecks": self.rechecks[-200:],
+                    "model_log": self.model_log[-200:], "fallbacks": self.fallbacks[-50:],
+                    "transcripts": self.transcripts, "video_demo": self.video_demo, "scene_seq": self.scene_seq,
+                    "uploads": [{**e.public(), "path": e.path, "info": e.info} for e in self.media.entries.values()],
+                    "challenges": [self.challenges[c].to_state() for c in self.challenge_order if c in self.challenges],
+                    "evaluation": self.evaluation if (self.evaluation or {}).get("source", {}).get("kind") != "loaded" else None,
+                    "jobs": [j.public() for j in sorted(self.jobs.values(), key=lambda j: j.started)[-30:]],
+                }
+                tmp = d / f"service.json.tmp{uuid.uuid4().hex[:6]}"
+                tmp.write_text(json.dumps(state, default=str))
+                tmp.replace(d / "service.json")
+        except Exception as exc:  # noqa: BLE001 - persistence is best effort; the live state is authoritative
+            self.fallbacks.append({"step": "persist", "used": f"state not saved: {type(exc).__name__}: {exc}"[:200]})
+
+    def restore(self, state_dir: Path) -> None:
+        """Load a session written by :meth:`persist` (after a server restart)."""
+        from .challenge import ChallengeState
+        state_dir = Path(state_dir)
+        state = json.loads((state_dir / "service.json").read_text())
+        if state.get("format") != STATE_FORMAT:
+            raise ValueError("unknown session state format")
+        if state.get("mode") != self.mode:
+            raise ValueError(f"saved session ran on the {state.get('mode')} backend, this server is {self.mode}")
+        cls = type(self.session)
+        client = getattr(self.session, "client", None)
+        with self.lock:
+            self.session = cls.load_state(state_dir / "pipeline", client=client)
+            if hasattr(self, "_fixture_meta"):
+                self._fixture_meta.session = self.session
+            self._seen_generation = self.session.generation.id
+            self.revision = int(state.get("revision") or 0) + 1
+            self.tags = dict(state.get("tags") or {})
+            self.rechecks = list(state.get("rechecks") or [])
+            self.model_log = list(state.get("model_log") or [])
+            self.fallbacks = list(state.get("fallbacks") or [])
+            self.transcripts = dict(state.get("transcripts") or {})
+            self.video_demo = state.get("video_demo")
+            self.scene_seq = int(state.get("scene_seq") or 0)
+            self.evaluation = state.get("evaluation")
+            for u in state.get("uploads") or []:
+                if Path(u["path"]).exists() and (self.media.quota is None or self.media.quota.reserve(u["bytes"])):
+                    self.media.entries[u["id"]] = UploadEntry(id=u["id"], path=u["path"], view=u["view"], bytes=u["bytes"],
+                                                              sha256=u["sha256"], info=u.get("info") or {},
+                                                              created=u.get("created") or time.time(),
+                                                              used_by=list(u.get("used_by") or []))
+            for c in state.get("challenges") or []:
+                try:
+                    ch = ChallengeState.from_state(c)
+                except Exception:  # noqa: BLE001 - an unreadable challenge is dropped, not guessed
+                    continue
+                self.challenges[ch.id] = ch
+                self.challenge_order.append(ch.id)
+            for jd in state.get("jobs") or []:
+                j = Job.interrupted(jd) if jd.get("status") in ("queued", "running") else None
+                if j is None:
+                    j = Job(jd.get("kind", "?"), jd.get("params") or {}, jd.get("generation_id"))
+                    for k in ("id", "status", "progress", "message", "result", "error", "error_code", "started",
+                              "finished", "stale"):
+                        if k in jd:
+                            setattr(j, k, jd[k])
+                self.jobs[j.id] = j
+            if self.session.demo is not None:
+                try:
+                    self.demo_rollout = self._make_demo_rollout()
+                except Exception:  # noqa: BLE001 - playback only
+                    pass
+        self._changed()
+
     # ------------------------------------------------------------ scene
     def scene_presets(self) -> list[str]:
         return ["demo", "shortcut", "blocked"]
@@ -1242,57 +1904,12 @@ class StudioService:
         """Derive a custom scene from the current one. Supported edits:
         tray {x, y}; object {id, x, y}; slot "on" | "off"; obstacle {x, y} (adds a box);
         remove_obstacle id."""
+        from .challenge import apply_scene_edit
         with self.lock:
             base = self.session.scene
             if base is None:
                 raise RuntimeError("no scene loaded")
-            sc = base.model_copy(deep=True)
-            ws = sc.workspace
-
-            def clamp(v, lo, hi, m=0.03):
-                return float(min(hi - m, max(lo + m, v)))
-
-            if "tray" in edit:
-                t = sc.trays[0]
-                x, y = edit["tray"]["x"], edit["tray"]["y"]
-                hx, hy = t.inner_half
-                t.pose = Pose(pos=(clamp(x, ws.x_range[0] + hx, ws.x_range[1] - hx, 0.0),
-                                   clamp(y, ws.y_range[0] + hy, ws.y_range[1] - hy, 0.0), t.pose.pos[2]), quat=t.pose.quat)
-            if "object" in edit:
-                o = next(o for o in sc.objects if o.id == edit["object"]["id"])
-                o.pose = Pose(pos=(clamp(edit["object"]["x"], *ws.x_range), clamp(edit["object"]["y"], *ws.y_range),
-                                   o.pose.pos[2]), quat=o.pose.quat)
-            if "slot" in edit:
-                for w in sc.obstacles:
-                    if w.kind != "wall":
-                        continue
-                    if edit["slot"] == "off":
-                        w.slots = []
-                    elif not w.slots:
-                        cy = edit.get("slot_y")
-                        if cy is None:
-                            # Put the slot on the straight line from the cup to the tray.
-                            cup = next((o for o in sc.objects if o.kind == "cup"), None)
-                            tr = sc.trays[0].pose.pos
-                            if cup is not None and abs(tr[0] - cup.pose.pos[0]) > 1e-6:
-                                k = (w.pose.pos[0] - cup.pose.pos[0]) / (tr[0] - cup.pose.pos[0])
-                                cy = cup.pose.pos[1] + k * (tr[1] - cup.pose.pos[1])
-                            else:
-                                cy = w.pose.pos[1]
-                        half = WORLD.slot_length / 2
-                        lo = w.pose.pos[1] - w.length / 2 + 0.02
-                        hi = w.pose.pos[1] + w.length / 2 - 0.02
-                        cy = float(min(hi - half, max(lo + half, cy)))
-                        w.slots = [SlotSpec(y_min=cy - half, y_max=cy + half, z_min=WORLD.slot_z[0], z_max=WORLD.slot_z[1])]
-            if "obstacle" in edit:
-                n = sum(1 for o in sc.obstacles if o.kind == "box")
-                half = tuple(edit["obstacle"].get("half", (0.04, 0.04, 0.12)))
-                sc.obstacles.append(ObstacleSpec(id=f"box_{n}", kind="box",
-                                                 pose=Pose(pos=(clamp(edit["obstacle"]["x"], *ws.x_range),
-                                                                clamp(edit["obstacle"]["y"], *ws.y_range), half[2])),
-                                                 half=half))
-            if "remove_obstacle" in edit:
-                sc.obstacles = [o for o in sc.obstacles if o.id != edit["remove_obstacle"] or o.kind == "wall"]
+            sc = apply_scene_edit(base, edit)
             self.scene_seq += 1
             sc.scene_id = f"custom-{self.scene_seq}"
             sc.split = "custom"
@@ -1341,15 +1958,20 @@ class StudioService:
         with self.lock:
             trace = self.teleop.finish()
             self.teleop = None
-            self.session.demo = trace
-            self.session.scene = trace.scene
+            self.session.set_demo(trace, reason="teleop_recorded")
             self.demo_rollout = self._make_demo_rollout()
-            self.payload_cache.pop("demo", None)
+            self.video_demo = None
             self._changed()
             return self.snapshot()
 
     # ---------------------------------------------------------- output
     def rollout_payload(self, rollout_id: str) -> dict:
+        """Playback payload. Ids are immutable, so a cached payload never goes stale;
+        "demo" is an alias of the current generation's demonstration playback id."""
+        if rollout_id == "demo":
+            if self.demo_playback_id is None:
+                raise KeyError("demo")
+            rollout_id = self.demo_playback_id
         if rollout_id in self.payload_cache:
             return self.payload_cache[rollout_id]
         with self.lock:
@@ -1359,20 +1981,26 @@ class StudioService:
                     "kind": "eval", "scene": e["scene"].model_dump(mode="json") if e["scene"] else None, "plan": None})
                 self.payload_cache[rollout_id] = payload
                 return payload
-            if rollout_id == "demo":
-                if self.demo_rollout is None:
-                    raise KeyError("demo")
-                extra = {"beads_hidden": self.mode == "live", "kind": "demonstration"}
-                payload = compact_rollout(self.demo_rollout, extra=extra, digits=self.payload_digits)
+            if rollout_id in self.demo_rollouts:
+                gen = next((g for g in self.session.all_generations() if g.demo_playback_id == rollout_id), None)
+                extra = {"beads_hidden": self.mode == "live", "kind": "demonstration", "alias": "demo",
+                         "generation_id": gen.id if gen else None,
+                         "demo_sha256": gen.demo_sha256 if gen else None}
+                payload = compact_rollout(self.demo_rollouts[rollout_id], extra=extra, digits=self.payload_digits)
+                payload["id"] = rollout_id
             else:
-                e = self.session.rollouts[rollout_id]
-                plan = e.plan
+                e, owner = self.session.find_rollout(rollout_id)
                 payload = compact_rollout(e.rollout, digits=self.payload_digits, extra={
                     "kind": "rollout", "scene": e.scene.model_dump(mode="json"),
-                    "plan": _plan_summary(plan)})
+                    "plan": _plan_summary(e.plan), **e.lineage(),
+                    "provenance": "fixture" if self.mode == "fixture" else "simulated"})
                 if payload.get("visual") is None:
                     payload["visual"] = self.visual_for(e.scene)
             self.payload_cache[rollout_id] = payload
+            if len(self.payload_cache) > 64:              # bounded memory; payloads are rebuilt on demand
+                for k in list(self.payload_cache)[:len(self.payload_cache) - 64]:
+                    if k != rollout_id:
+                        self.payload_cache.pop(k, None)
             return payload
 
     def _llm_public(self) -> Optional[dict]:
@@ -1392,7 +2020,9 @@ class StudioService:
                                  "scene_id": e.scene.scene_id, "spec_version": e.spec_version,
                                  "scene": e.scene.model_dump(mode="json"),
                                  "plan": _plan_summary(e.plan), "tags": self.tags.get(rid, []),
-                                 "has_frames": bool(e.rollout.frames), "trace": self.trace_cache[rid]})
+                                 "has_frames": bool(e.rollout.frames), "trace": self.trace_cache[rid],
+                                 **{k: v for k, v in e.lineage().items() if k != "rollout_id"},
+                                 "provenance": "fixture" if self.mode == "fixture" else "simulated"})
             for rid, e in self.eval_entries.items():
                 if rid not in self.trace_cache:
                     try:
@@ -1412,6 +2042,7 @@ class StudioService:
                         "duration": d.frames[-1].t if d.frames else 0.0,
                         "events": [e.model_dump(mode="json") for e in d.events],
                         "video_path": d.video_path, "rollout_id": "demo",
+                        "playback_id": self.demo_playback_id, "content_sha256": s.generation.demo_sha256,
                         "scene": d.scene.model_dump(mode="json")}
             scene = s.scene.model_dump(mode="json") if s.scene is not None else None
             return {
@@ -1425,9 +2056,14 @@ class StudioService:
                 "scene_visual": self.visual_for(s.scene) if s.scene is not None else None,
                 "scene_presets": self.scene_presets(),
                 "demo": demo,
-                "specs": [sp.model_dump(mode="json") for sp in s.specs],
+                "generation": s.generation.public(),
+                "archive": [a.public() for a in s.archive][-10:],
+                "specs": [{**sp.model_dump(mode="json"), "version_id": s.spec_version_id(sp),
+                           "content_sha256": sha256_of(sp), "generation_id": s.generation.id} for sp in s.specs],
                 "rollouts": rollouts,
-                "rechecks": self.rechecks,
+                "rechecks": [r for r in self.rechecks if r.get("generation_id", s.generation.id) == s.generation.id
+                             or r["rollout_id"] in s.rollouts],
+                "challenges": [self.challenges[c].public() for c in self.challenge_order[-5:] if c in self.challenges],
                 "clarification": self.clarification,
                 "evaluation": self.evaluation,
                 "jobs": [j.public() for j in sorted(self.jobs.values(), key=lambda j: j.started)[-12:]],
@@ -1441,7 +2077,9 @@ class StudioService:
                 "capabilities": self.capabilities(),
                 "fallbacks": self.fallbacks,
                 "limits": {"max_eval_seeds": max_eval_seeds(), "one_job_at_a_time": self.one_job,
-                           "showcase_seeds": [SHOWCASE_SEEDS.start, SHOWCASE_SEEDS.stop - 1]},
+                           "showcase_seeds": [SHOWCASE_SEEDS.start, SHOWCASE_SEEDS.stop - 1],
+                           "uploads": {**self.upload_limits.public(), "held_mb": round(self.media.held_bytes() / 2**20, 2)},
+                           "job_timeout_s": JOB_TIMEOUT_S},
             }
 
 
