@@ -1,0 +1,39 @@
+{
+  "name": "mirror_charuco_v1",
+  "version": 1,
+  "kind": "charuco",
+  "dictionary": "DICT_5X5_100",
+  "squares_x": 5,
+  "squares_y": 7,
+  "square_mm": 30.0,
+  "marker_mm": 21.0,
+  "marker_ids": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "legacy_pattern": false,
+  "scale_bar_mm": 50.0,
+  "sync_marker_id": 90,
+  "sync_marker_mm": 80.0,
+  "board_top_mm": 22.0,
+  "papers": [
+    "A4",
+    "Letter"
+  ],
+  "notes": "Board frame: origin at the board's outer top-left corner as printed, x along the 5-square side, y along the 7-square side, z out of the paper. Chessboard corner ids follow OpenCV."
+}
