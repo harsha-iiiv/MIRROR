@@ -111,16 +111,23 @@ and [docs/EVALUATION.md](docs/EVALUATION.md).
 
 ## Quick start
 
-```bash
-git clone https://github.com/harsha-iiiv/MIRROR && cd MIRROR
-python -m venv .venv && . .venv/bin/activate
-pip install -e ".[dev]"
+No key is needed: recorded model responses replay the story, the studio and the
+published results.
 
-mirror doctor            # checks MuJoCo and the model configuration
+```bash
+sudo apt-get install -y libosmesa6 libgl1 ffmpeg   # headless rendering and media tools
+git clone https://github.com/harsha-iiiv/MIRROR && cd MIRROR
+python3.11 -m venv .venv && . .venv/bin/activate
+pip install -r requirements-lock.txt && pip install -e . --no-deps   # tested versions
+
+export MUJOCO_GL=osmesa MIRROR_LLM_MODE=replay MIRROR_META_MODE=replay
+mirror doctor            # checks MuJoCo and lists the recordings that will be used
 mirror story             # runs the whole narrative above and prints a transcript
 mirror studio            # opens the interactive studio at http://127.0.0.1:8000
 python -m pytest -q -m "not slow"  # fast test suite
 ```
+
+Details, headless rendering, CI and release checks: [docs/INSTALL.md](docs/INSTALL.md).
 
 ### Model configuration
 
@@ -172,7 +179,7 @@ flowchart LR
   proven infeasibility are reported separately and never converted into
   success.
 
-More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md),
+More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/INSTALL.md](docs/INSTALL.md),
 [docs/CONTRACTS.md](docs/CONTRACTS.md), [docs/EVALUATION.md](docs/EVALUATION.md),
 [docs/CLAIMS.md](docs/CLAIMS.md), and the concept brief
 [docs/CONCEPT.md](docs/CONCEPT.md).
@@ -190,6 +197,8 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md),
 | `mirror/pipeline.py` | `Session`: the end-to-end flow used by the CLI and the studio |
 | `data/` | Reference demonstration and recorded model responses |
 | `results/` | Evaluation reports |
+| `mirror/evaluate/protocol_v3`, `docs/protocols/` | Fresh authoring evaluation protocol and harness (prepared, not run) |
+| `study/` | Impact study kit (prepared, not run; fixtures are synthetic) |
 
 ## License
 
