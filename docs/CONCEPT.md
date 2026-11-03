@@ -1,13 +1,15 @@
 # MIRROR
 ## Teach a simulated robot what you mean, then test its understanding
 
-**Concept brief | 31 October 2026 | MuJoCo-only | Proposed, not implemented**
+**Concept brief | 31 October 2026 | MuJoCo-only | Historical**
+
+> This is the original proposal, kept for the record. The shipped headline is **corrections you can check** (see README). The quote below was retired: with the planner's rotation price calibrated to execution time, the cup correction changes nothing on layouts that have an upright route (docs/EVALUATION.md, objective_v1).
 
 > Demonstrate a supported task. Inspect what the robot thinks matters. Change the environment. Correct one misunderstanding. Test whether that correction changes its behavior in new simulated worlds.
 
 MIRROR is a robot task-authoring and testing studio, not a video-to-animation generator. Its central contribution is an inspectable loop from demonstration to task specification, clarification, physics-based execution and correction testing.
 
-The memorable moment is: **“I corrected it once, and the correction changed what it did somewhere else.”**
+The memorable moment was proposed as: “I corrected it once, and the correction changed what it did somewhere else.” (Retired; see the note above.)
 
 ## 1. The problem
 
