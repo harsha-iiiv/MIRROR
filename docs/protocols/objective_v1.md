@@ -42,9 +42,16 @@ fastest on development layouts, and the seconds lost when it does not).
 
 ## Step 2: registration (frozen before any of its layouts exists)
 
-Strata: primary (eval, mixed family, seeds 85000-85079), shortcut (eval,
-shortcut family, seeds 86000-86039), blocked (blocked split, seeds
-85000-85009; the slot is the only opening, so it shows what a never-tilt
+Calibration result used here (committed before the freeze): rotation price
+**0.2445 m/rad** (model A on 417 transport segments from 80 development
+layouts, bootstrap 95% CI 0.225 to 0.269; the transit fit gives 0.245). On the
+60 development layouts with more than one executable cup route, the fastest
+cup route was never a tilted one; 0.05 picked a tilted route on 51/60 and lost
+184.5 s in total, 0.2445 picked the fastest route on 60/60.
+
+Strata: primary (eval, mixed family, seeds 82600-82679), shortcut (eval,
+shortcut family, seeds 83400-83439), blocked (blocked split, seeds
+82600-82609; the slot is the only opening, so it shows what a never-tilt
 policy gives up). The freeze refuses overlap with every recorded or reserved
 range and any ledger or output file naming these seeds.
 

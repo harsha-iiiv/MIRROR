@@ -69,9 +69,9 @@ def test_seed_ranges_do_not_overlap_reserved_ranges():
 
 def test_ledger_hits(tmp_path):
     p = tmp_path / "a_ledger.jsonl"
-    p.write_text(json.dumps({"seed": 85001, "split": "eval"}) + "\n" + json.dumps({"seed": 85001, "split": "dev"}) + "\n")
-    assert len(design.ledger_hits({"eval": {85001}}, [tmp_path])) == 1
-    assert design.ledger_hits({"blocked": {85001}}, [tmp_path]) == []
+    p.write_text(json.dumps({"seed": 82601, "split": "eval"}) + "\n" + json.dumps({"seed": 82601, "split": "dev"}) + "\n")
+    assert len(design.ledger_hits({"eval": {82601}}, [tmp_path])) == 1
+    assert design.ledger_hits({"blocked": {82601}}, [tmp_path]) == []
 
 
 def test_frozen_reports_recount_reproduces_audit():

@@ -24,13 +24,17 @@ CALIBRATION = OUT / "calibration" / "calibration.json"
 LEDGER = OUT / "ledger.jsonl"
 
 STRATA = [
-    dict(name="primary", role="primary", split="eval", family="mixed", seeds=list(range(85_000, 85_080)),
+    dict(name="primary", role="primary", split="eval", family="mixed", seeds=list(range(82_600, 82_680)),
          description="standard sampler, unbiased mix of layouts"),
-    dict(name="shortcut", role="stratum", split="eval", family="shortcut", seeds=list(range(86_000, 86_040)),
+    dict(name="shortcut", role="stratum", split="eval", family="shortcut", seeds=list(range(83_400, 83_440)),
          description="disclosed stratum: a wall slot near the straight cup-to-tray line (geometry only)"),
-    dict(name="blocked", role="blocked", split="blocked", family="mixed", seeds=list(range(85_000, 85_010)),
+    dict(name="blocked", role="blocked", split="blocked", family="mixed", seeds=list(range(82_600, 82_610)),
          description="the wall spans the workspace; the slot is the only opening (trade-off stratum)"),
 ]
+# Ranges chosen so that no five-digit token in any ledger, report or other
+# text output (or file name) equals one of the seeds, since the inherited seed
+# audit is token-based (a first choice, 85000+, was refused because a cassette
+# file name contains "85020").
 # Ranges used or reserved elsewhere; the freeze refuses any overlap.
 RESERVED = [
     ("first registration", "eval", 30_000, 40_029), ("muse registration", "eval", 50_000, 60_029),
