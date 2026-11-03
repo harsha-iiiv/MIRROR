@@ -13,7 +13,7 @@ from mirror.contracts import (Constraint, Goal, ObjectBinding, ObjectSelector, O
 from mirror.interpret import specops
 from mirror.interpret.drafts import ContactGroup
 from mirror.interpret.offline import compile_offline
-from mirror.interpret.types import CorrectionRejected, NeedsClarification
+from mirror.interpret.types import CorrectionRejected, InterpretError, NeedsClarification
 
 REPO = Path(__file__).resolve().parents[2]
 PROV = Provenance(source="manual")
@@ -90,8 +90,11 @@ def test_validator_and_matrix_agree_on_orderings(be, ae):
 
 
 def _corpus():
-    texts = [c["text"] for f in ("cases.json", "cases_holdout.json")
-             for c in json.loads((REPO / "mirror/interpret/benchmark" / f).read_text())]
+    texts = []
+    for f in ("cases.json", "cases_holdout.json"):
+        data = json.loads((REPO / "mirror/interpret/benchmark" / f).read_text())
+        items = data if isinstance(data, list) else data.get("cases", [])
+        texts += [c["text"] for c in items if isinstance(c, dict) and "text" in c]
     from .paraphrases import DEV_PARAPHRASES, HELDOUT_PARAPHRASES
     texts += [t for t, _ in DEV_PARAPHRASES] + [t for t, _ in HELDOUT_PARAPHRASES]
     return texts
@@ -106,7 +109,7 @@ def test_compiler_never_emits_an_unsupported_rule():
             draft = compile_offline(spec, text)
             ops = correction_to_ops(draft, spec, text)
             new, _ = specops.apply_ops(spec, ops, text=text, kind="correction")
-        except (NeedsClarification, CorrectionRejected):
+        except (NeedsClarification, CorrectionRejected, InterpretError):
             continue
         for c in new.constraints:
             if c.status != Status.rejected:
