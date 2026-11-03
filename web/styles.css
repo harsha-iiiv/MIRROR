@@ -385,13 +385,15 @@ ul.plain { padding-left: 18px; margin: 4px 0; font-size: 13px; }
 .badge .short, .v-legend .short { display: none; }
 
 /* ---------- phones and narrow panes ---------- */
-@media (max-width: 720px) {
+@media (max-width: 960px) {
   .top { flex-wrap: wrap; height: auto; padding: 6px var(--s3); row-gap: 4px; gap: var(--s2); }
   .brand { order: 1; }
   .top-right { order: 2; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; row-gap: 4px; flex: 0 1 auto; min-width: 0; }
   .steps { order: 3; flex: 1 0 100%; margin: 0; justify-content: space-between; }
   .steps button { padding: 6px 6px; }
   .steps button:not([aria-current="step"]) .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+@media (max-width: 720px) {
   .badge .long, .v-legend .long { display: none; }
   .badge .short, .v-legend .short { display: inline; }
   .v-tools { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: 100%; }

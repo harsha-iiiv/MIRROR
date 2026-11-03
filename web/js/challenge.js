@@ -419,7 +419,7 @@ function RecordPanel({ ctx, record, tour }) {
     <div class="sec">
       <p class="kicker">${tour ? 'Recorded tour' : 'Shared test'}</p>
       <h2>${tour ? 'A test of MIRROR, step by step' : 'Someone broke it, then corrected it'}</h2>
-      <p class="prov-line"><span class="src recorded">recorded</span>
+      <p class="prov-line"><span class="src recorded">recorded</span>${' '}
         ${record.label || (pv.recorded ? 'Produced offline and shipped with the site; nothing here calls a model or the simulator.'
           : `Computed on a MIRROR server${record.created_at ? ' on ' + new Date(record.created_at * 1000).toLocaleString() : ''}; this page replays the stored record and computes nothing.`)}
         ${pv.simulation === 'fixture' ? ' Fixture motion, not physics.' : ''}</p>
