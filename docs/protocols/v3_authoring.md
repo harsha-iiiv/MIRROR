@@ -173,9 +173,12 @@ tests the harness, not MIRROR:
 * All 54 attempts completed; nothing was dropped.
 * Offline rules: 15 of 20 turns exact, 2 false refusals, 1 error, no false
   accepts, no wrong-scope edits.
-* Base-specification rollouts re-checked under the gold: 6 of 12 cases whose gold
-  changes the specification reject the old behaviour; in the other 6 the change
-  did not matter in that scene.
+* Base-specification rollouts re-checked under the gold: of 12 cases whose gold
+  changes the specification, 6 reject the old behaviour, in 5 the change did not
+  matter in that scene, and 1 (an ordering) is unverified.
+* End-to-end: 16 of 17 known cases succeed in every condition and 1 is unknown
+  (the ordering case); the failure is the clearance case below.
+* Files: [`results/protocol_v3/dryrun-dev-2026-11-02/`](../../results/protocol_v3/dryrun-dev-2026-11-02/).
 * Found defects, reported to their owners rather than worked around: the offline
   compiler raises a duplicate-id error on "keep it at least 3 cm away from the
   wall"; with a confirmed 3 cm clearance rule for the cup the planner chose a

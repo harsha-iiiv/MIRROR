@@ -83,8 +83,8 @@ From a fresh clone of the release branch into an empty directory: a new Python
 3.11 virtual environment, `pip install -r requirements-lock.txt`, `pip install
 -e . --no-deps`, then with an empty environment except `MUJOCO_GL=osmesa` and
 replay modes: `mirror doctor` passed every check, `mirror story` completed in
-25 s (Muse Spark recordings, no network), and the fast test suite was run (see
-the release notes for its count).
+25 s (Muse Spark recordings, no network), and the fast suite gave 519 passed,
+1 skipped, 22 deselected (slow) in 249 s on 4 CPU cores with software rendering.
 
 ## Media and recordings in the repository
 
