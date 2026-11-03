@@ -28,12 +28,12 @@ Start point: main at 1787aa6 (audited commit 7be0be7 plus the static-export head
 ## Final acceptance matrix
 | ID | Requirement | Evidence required | Status |
 |---|---|---|---|
-| A1 | Ordering checked from execution evidence; wrong-order historical run fails; missing evidence never passes | regression tests | in progress |
+| A1 | Ordering checked from execution evidence; wrong-order historical run fails; missing evidence never passes | regression tests | merged 5f280c5: cup-first rollout under confirmed marker-before-cup fails (cup grasp 3.45 s before marker placed 51.16 s); 266/266 stored rollouts re-check to recorded status; unsettled evidence → unverified | done (full suite pending) |
 | A2 | Unobserved tilt never becomes measured upright | tests on top-only video | in progress |
 | A3 | Demo A → run → demo B → run never mixes lineage | integration test | in progress |
 | B | Uploads probed and decoded; storage, duration, frame and admission bounds | tests per bound | in progress |
 | C | No horizontal overflow 360–1920 px; first-visit story; Challenge mode | screenshots + measured widths | in progress |
-| D | Two or more correction types, scoped, multi-turn, ambiguous → question, new constraint, transfer | scripted demos with old-run failure | in progress |
+| D | Two or more correction types, scoped, multi-turn, ambiguous → question, new constraint, transfer | scripted demos with old-run failure | merged 5f280c5: 6 correction cases on unseen dev seeds 6200–6302 (old run violates new rule 5/6–6/6, new run 6/6); demo manifest records a dirty tree, clean re-run pending | mostly done |
 | E1 | Articulated arm with IK, limits, collision, controller execution | tests + episodes | in progress |
 | E2 | Separate perception provenance; calibrated real-camera workflow | tests; real footage pending | in progress |
 | F1 | Existing results described at their actual scope | doc review | in progress |
@@ -46,7 +46,7 @@ Start point: main at 1787aa6 (audited commit 7be0be7 plus the static-export head
 | F-A5 | Holdout chronology investigated; manifests with hashes | investigation note + manifests | in progress |
 | M2-1 | Correctness gates re-verified with regression tests before any new demonstration is used as evidence (ordering, unknown tilt, lineage, mobile, uploads, F-A1/F-A3) | gate test list run on integration | in progress |
 | M2-2 | Guided "Test MIRROR" flow with per-step provenance (fresh / recorded / offline fallback / new simulation / recorded playback, model id, status, latency, fallback reason) | screenshots + API tests | in progress |
-| M2-3 | Understanding matrix: paraphrase, scope, phase, ordering, clearance, multi-turn, vague, absent object vs alias, unsupported, infeasible (certificate vs no route) | tests + docs/RULES.md | in progress |
+| M2-3 | Understanding matrix: paraphrase, scope, phase, ordering, clearance, multi-turn, vague, absent object vs alias, unsupported, infeasible (certificate vs no route) | tests + docs/RULES.md | merged 5f280c5: 25 interpretation + 3 infeasibility cases, all author-written (development evidence); held-out paraphrases 9/16 (developer smoke) | done (dev only) |
 | M2-4 | Consented anonymous trial recording and JSON/CSV/summary export; dev, usability and benchmark stores separate | tests on synthetic trials | in progress |
 | M2-5 | 3–5 person usability pilot kit | prepared, not run (needs participants and approval) | in progress |
 | M2-6 | Calibrated real-phone path: printable target, calibration quality gates, simultaneous-view sync or single-view mode, object mapping, object-centric hand events | tests on synthetic renders; real footage pending | in progress |
@@ -58,3 +58,7 @@ Start point: main at 1787aa6 (audited commit 7be0be7 plus the static-export head
 ## Verification log
 Entries: defect → reproduction → fix commit → guard test → result.
 - F-A1/A2/A3/A5 reproduced on 1787aa6 by the coordinator: `PlannerConfig.rotation_penalty = 0.05` (mirror/plan/config.py); spec agreement requirement in mirror/evaluate/specs.py; `frame_errors` computes centroid error only for estimates within 5 cm (mirror/evaluate/bench_video.py); holdout `frozen_at` 2026-10-31T04:45:00-07:00 vs `generated_at` 2026-10-31T11:27:50 without a zone. Investigation assigned; originals untouched.
+
+### 2 Nov 17:50 PT: merge semantics (5f280c5)
+- Review: 9 commits, no existing results/ file modified, footprint clean. Cross-track tests (protocol_v3 matrix incl. reserved-term lexicon check, interpret understanding, study, release): 61 passed. Full fast suite queued under the shared lock.
+- Noted: 145acc3 is titled as paraphrase sets but also contains rules_support.py and the validator gate (compiler unchanged then); history not rewritten.
