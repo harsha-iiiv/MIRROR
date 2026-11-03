@@ -83,3 +83,35 @@ export function latest(rollouts, pred = () => true) {
 
 export const isAux = (r) => r.tags.includes('candidate') || r.tags.includes('eval');
 export const isBlockedScene = (id) => /blocked/.test(id || '');
+
+// Plain-language route names; the raw planner id stays available as a tooltip.
+const OBJ_PREFIX = /^((?:cup|block|marker)_\d+):\s*/;
+export function humanRoute(raw, short = false) {
+  if (!raw) return '';
+  let s = String(raw).trim();
+  const m0 = s.match(/^route=([^;]+)/);
+  if (m0) s = m0[1];
+  let obj = '';
+  const mo = s.match(OBJ_PREFIX);
+  if (mo) { obj = mo[1].replace(/_\d+$/, ''); s = s.slice(mo[0].length); }
+  let transit = false;
+  if (s.startsWith('transit:')) { transit = true; s = s.slice(8); }
+  const p = s.split(':');
+  const last = p[p.length - 1];
+  const mm = last.match(/^(pitched|rolled|tilted)([+-]?\d+(?:\.\d+)?)$/);
+  const paths = short
+    ? { direct: 'straight', around: 'around', through_slot: 'slot', over: 'over', rrt: 'search', detour: 'detour' }
+    : { direct: 'straight across', around: 'around the wall', through_slot: 'through the slot', over: 'over the wall',
+        rrt: 'free-space search', detour: 'detour' };
+  const path = paths[p[0]] || s;
+  let mode = '';
+  if (mm) {
+    const a = Math.round(Math.abs(parseFloat(mm[2])));
+    mode = a >= 80 ? (short ? 'on side' : `on its side (${a}°)`) : (short ? `${a}°` : `tilted ${a}°`);
+  } else if (last === 'upright' || p[0] === 'around' || p[0] === 'direct' || p[0] === 'over') {
+    mode = 'upright';
+  }
+  const txt = path + (mode && !transit ? ', ' + mode : '');
+  return (obj ? obj + ': ' : '') + (transit ? (short ? 'empty, ' : 'empty gripper, ') + path : txt);
+}
+

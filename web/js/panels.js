@@ -5,7 +5,10 @@ import htm from 'htm';
 import * as api from './api.js';
 import { VideoDemoCard, VideoObservations, MicButton } from './media.js';
 import { MiniMap } from './minimap.js';
-import { fmtT, fmtNum, statusLabel, constraintText, selectorText, provText, sceneLabel, latest, cupOutcome, cap, isAux, isBlockedScene } from './util.js';
+import { fmtT, fmtNum, statusLabel, constraintText, selectorText, provText, sceneLabel, latest, cupOutcome, cap, isAux, isBlockedScene, humanRoute } from './util.js';
+export { humanRoute };
+import { rolloutCacheKey } from './identity.js';
+import { demoSource, videoMediaKind } from './provenance.js';
 
 const html = htm.bind(h);
 const TOL = 15;
@@ -119,37 +122,6 @@ export function ReportView({ r, compact = false }) {
       ${(rep.notes || []).length ? html`<dt>Notes</dt><dd>${rep.notes.join('; ')}</dd>` : ''}
     </dl>` : ''}
   </div>`;
-}
-
-// Plain-language route names; the raw planner id stays available as a tooltip.
-const OBJ_PREFIX = /^((?:cup|block|marker)_\d+):\s*/;
-export function humanRoute(raw, short = false) {
-  if (!raw) return '';
-  let s = String(raw).trim();
-  const m0 = s.match(/^route=([^;]+)/);
-  if (m0) s = m0[1];
-  let obj = '';
-  const mo = s.match(OBJ_PREFIX);
-  if (mo) { obj = mo[1].replace(/_\d+$/, ''); s = s.slice(mo[0].length); }
-  let transit = false;
-  if (s.startsWith('transit:')) { transit = true; s = s.slice(8); }
-  const p = s.split(':');
-  const last = p[p.length - 1];
-  const mm = last.match(/^(pitched|rolled|tilted)([+-]?\d+(?:\.\d+)?)$/);
-  const paths = short
-    ? { direct: 'straight', around: 'around', through_slot: 'slot', over: 'over', rrt: 'search', detour: 'detour' }
-    : { direct: 'straight across', around: 'around the wall', through_slot: 'through the slot', over: 'over the wall',
-        rrt: 'free-space search', detour: 'detour' };
-  const path = paths[p[0]] || s;
-  let mode = '';
-  if (mm) {
-    const a = Math.round(Math.abs(parseFloat(mm[2])));
-    mode = a >= 80 ? (short ? 'on side' : `on its side (${a}°)`) : (short ? `${a}°` : `tilted ${a}°`);
-  } else if (last === 'upright' || p[0] === 'around' || p[0] === 'direct' || p[0] === 'over') {
-    mode = 'upright';
-  }
-  const txt = path + (mode && !transit ? ', ' + mode : '');
-  return (obj ? obj + ': ' : '') + (transit ? (short ? 'empty, ' : 'empty gripper, ') + path : txt);
 }
 
 export function Route({ raw, short = false }) {
@@ -294,7 +266,7 @@ function TeleopCard({ ctx, onDone }) {
     ${err ? html`<div class="err">${err}</div>` : ''}
     <div class="row" style="margin-top:10px">
       <button class="btn primary" onClick=${async () => { ctx.viewer.current?.endLive(); await ctx.action('teleop', () => api.post('teleop/finish')); onDone(); }}>Use as the demonstration</button>
-      <button class="btn ghost" onClick=${async () => { ctx.viewer.current?.endLive(); await api.post('teleop/cancel'); onDone(); const pl = await api.getRollout('demo'); ctx.viewer.current?.loadRollout(pl, { sceneState: ctx.snap.demo?.scene }); }}>Cancel</button>
+      <button class="btn ghost" onClick=${async () => { ctx.viewer.current?.endLive(); await api.post('teleop/cancel'); onDone(); const pl = await api.getRollout('demo', rolloutCacheKey(ctx.snap, 'demo')); ctx.viewer.current?.loadRollout(pl, { sceneState: ctx.snap.demo?.scene }); }}>Cancel</button>
     </div></div>`;
 }
 
@@ -305,15 +277,14 @@ function WatchPanel({ ctx }) {
   const [teleop, setTeleop] = useState(false);
   const d = snap.demo;
   const vd = snap.video_demo && snap.demo && snap.video_demo.trace_source === snap.demo.source ? snap.video_demo : null;
-  const sources = { teleop_scripted: 'Scripted teleoperation in simulation', teleop_keyboard: 'Keyboard teleoperation in simulation',
-    replay: 'Replayed trace', video_grounded: 'Video, reconstructed onto simulator objects' };
+
   return html`
     <div class="sec">
       <${Head} n="1" kicker="Watch me" title="The demonstration"
-        lede=${vd ? 'A demonstration video: the objects are tracked in the pixels, reconstructed on the table, and replayed in 3D beside the video.'
+        lede=${vd ? (videoMediaKind(snap) === 'rendered_simulation' ? 'A demonstration video rendered from the simulator: the objects are tracked in its pixels, reconstructed on the table, and replayed in 3D beside the video.' : 'A demonstration video: the objects are tracked in its pixels, reconstructed on the table, and replayed in 3D beside the video.')
           : 'An operator packs the cup, the block and the marker into the tray, carrying everything around the wall.'} />
       ${d ? html`
-        <dl class="kv"><dt>Input</dt><dd>${sources[d.source] || d.source}</dd>
+        <dl class="kv"><dt>Input</dt><dd>${demoSource(snap).short}</dd>
           <dt>Duration</dt><dd class="num">${fmtT(d.duration)}</dd>
           <dt>Layout</dt><dd>${sceneLabel(d.scene_id)}</dd></dl>
         ${vd ? html`<p class="faint" style="font-size:12px;margin-top:8px">The 3D replay is reconstructed from the video${vd.views.side ? ' (top view for positions, side view for tilt)' : ' (top view)'}: object poses come from the tracked masks, not from the simulator.${vd.fixture ? ' Fixture data.' : ''}</p>
@@ -1026,7 +997,7 @@ export function StoryBar({ ctx }) {
   const order = STEPS.map((x) => x.key);
   const ix = order.indexOf(ctx.step);
   const st = ctx.step === 'watch' && ctx.snap.video_demo && ctx.snap.demo?.source === 'video_grounded'
-    ? { title: 'Watch me', text: 'A demonstration video: SAM 3.1 tracks the objects, the trace is reconstructed on the table, and Muse Spark describes what it sees.' }
+    ? { title: 'Watch me', text: (videoMediaKind(ctx.snap) === 'rendered_simulation' ? 'A demonstration video rendered from the simulator' : 'A demonstration video') + ': SAM 3.1 tracks the objects, the trace is reconstructed on the table, and Muse Spark describes what it sees.' }
     : STORY[ctx.step];
   const act = storyAction(ctx);
   const busy = act?.busy && ctx.busy[act.busy];
@@ -1052,8 +1023,7 @@ export function AboutPanel({ ctx, onClose }) {
   const interp = spec?.interpreter || 'not yet interpreted';
   const isOffline = /offline|rules/.test(interp);
   const ev = snap.evaluation;
-  const sources = { teleop_scripted: 'a scripted teleoperation of the simulated gripper', teleop_keyboard: 'keyboard teleoperation of the simulated gripper',
-    replay: 'a replayed trace', video_grounded: 'human video grounded to simulator objects' };
+
   useEffect(() => {
     const k = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', k);
@@ -1065,7 +1035,7 @@ export function AboutPanel({ ctx, onClose }) {
       <li><b>Simulation only.</b> Everything runs in MuJoCo. Nothing here was executed on a physical robot or shows simulation-to-reality transfer.</li>
       <li><b>The robot is a free-flying gripper.</b> Six position-controlled axes and two fingers; no arm is modelled. Objects move only through actuators and contact physics.</li>
       <li><b>Privileged state.</b> Planning and checking read simulator state (poses, contacts, bead positions). It is not visual perception.</li>
-      <li><b>The demonstration</b> is ${sources[snap.demo?.source] || 'a recorded trace'}, not a video of a person.</li>
+      <li><b>The demonstration</b> is ${demoSource(snap).long}.</li>
       <li><b>The specification</b> was produced by <span class="num">${interp}</span>${isOffline ? ', the rule-based interpreter that needs no model' : ''}${spec?.history?.find((h) => h.model)?.model ? `; corrections compiled by ${spec.history.find((h) => h.model).model}` : ''}. ${snap.llm_mode === 'replay' ? ' Model responses are replayed from recordings made with that model; nothing calls a model while you browse.' : ''}${(snap.fallbacks || []).length ? ` These steps used the offline interpreter instead: ${snap.fallbacks.map((f) => f.step).join(', ')}.` : ''}${snap.llm?.mode === 'live' ? ` Live model requests (${snap.llm.model}) are limited to ${snap.llm.calls_per_session} per visitor and ${snap.llm.calls_per_hour} per hour for the server${snap.llm.calls_remaining_session != null ? `; ${snap.llm.calls_remaining_session} left in this session` : ''}. Past that, or if the model fails, the offline interpreter is used and the step says so.` : ''} Model output is validated against a schema before planning and never judges success.</li>
       <li><b>Success is measured</b> by an independent checker from the physics log at every step: placement, tilt per phase, bead retention, contacts.</li>
       <li><b>Evidence:</b> ${ev ? ({ final: 'the pre-registered evaluation, loaded unchanged from the evaluation output.',
