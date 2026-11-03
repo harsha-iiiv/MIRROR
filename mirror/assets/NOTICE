@@ -1,0 +1,23 @@
+Third-party robot models in this directory
+==========================================
+
+universal_robots_ur10e/ur10e.xml, universal_robots_ur5e/ur5e.xml
+
+  Source: MuJoCo Menagerie (https://github.com/google-deepmind/mujoco_menagerie),
+  directories universal_robots_ur10e and universal_robots_ur5e at commit
+  98a70c569c4c1b6da467a20012f766ee1f8dc521. Menagerie derived these models from the
+  ROS-Industrial ur_e_description URDF
+  (https://github.com/ros-industrial/universal_robot).
+
+  Copyright 2018 ROS Industrial Consortium.
+  License: BSD-3-Clause. The full licence text is in the LICENSE file next to each
+  model and must be kept with any redistribution.
+
+  Modifications made here: the visual mesh assets and the display-only mesh geoms
+  that referenced them were removed. Kinematics, inertias, joint ranges, collision
+  geometry, actuators and keyframes are unchanged. MIRROR composes these models with
+  its own scene, gripper and actuators at load time (mirror/arm/model.py); that
+  composition is not part of the vendored files.
+
+  "Universal Robots", "UR5e" and "UR10e" are trademarks of Universal Robots A/S. Their
+  use here identifies the kinematic model only and implies no endorsement.
