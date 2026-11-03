@@ -5,6 +5,11 @@ import shutil
 import numpy as np
 import pytest
 
+try:  # the phone-capture tests need the optional `capture` extra (OpenCV)
+    import cv2  # noqa: F401
+except ImportError:
+    collect_ignore_glob = ["test_[!c]*.py"]   # keeps test_capture_extra.py, which reports the skip
+
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "slow: long-running test (deselect with -m 'not slow')")
