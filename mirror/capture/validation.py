@@ -60,7 +60,11 @@ class ClipLabels(_M):
 
 
 def _pct(x, q):
-    return None if not len(x) else float(np.percentile(x, q))
+    """Empirical quantile (no interpolation, so missing = inf stays inf); inf is reported as None (= missing)."""
+    if not len(x):
+        return None
+    v = float(np.percentile(np.asarray(x, float), q, method="inverted_cdf"))
+    return None if np.isinf(v) else v
 
 
 def _nearest(times: np.ndarray, t: float, tol: float) -> Optional[int]:
@@ -127,10 +131,12 @@ def score_clip(s: CaptureSession, labels: ClipLabels, *, design: Optional[dict] 
         r = np.array(rest_err) * 100
         out["rest_position_error_cm"] = {"n": len(r), "missing": int(np.isinf(r).sum()), "median": _pct(r, 50), "p90": _pct(r, 90),
                                          "max": float(r.max()), "values": [None if np.isinf(v) else round(float(v), 3) for v in r]}
-        check("rest_position_error_median_cm", out["rest_position_error_cm"]["median"], T["rest_position_error_median_cm"],
-              bool(out["rest_position_error_cm"]["median"] <= T["rest_position_error_median_cm"]))
-        check("rest_position_error_p90_cm", out["rest_position_error_cm"]["p90"], T["rest_position_error_p90_cm"],
-              bool(out["rest_position_error_cm"]["p90"] <= T["rest_position_error_p90_cm"]))
+        med, p90 = out["rest_position_error_cm"]["median"], out["rest_position_error_cm"]["p90"]
+        out["rest_position_error_cm"]["max"] = None if np.isinf(r.max()) else float(r.max())
+        check("rest_position_error_median_cm", med, T["rest_position_error_median_cm"], med is not None and med <= T["rest_position_error_median_cm"],
+              "" if med is not None else "missing estimates: counted as beyond the threshold")
+        check("rest_position_error_p90_cm", p90, T["rest_position_error_p90_cm"], p90 is not None and p90 <= T["rest_position_error_p90_cm"],
+              "" if p90 is not None else "missing estimates: counted as beyond the threshold")
     # keyframes: unconditional distributions
     errs, cond, statuses, ident = [], [], [], 0
     for obj, kf in labels.keyframes.items():
@@ -158,7 +164,7 @@ def score_clip(s: CaptureSession, labels: ClipLabels, *, design: Optional[dict] 
             "reference": labels.keyframe_reference, "n": n, "missing": int(np.isinf(e).sum()),
             "status_counts": {k: statuses.count(k) for k in sorted(set(statuses))},
             "unconditional_cm": {"median": _pct(e, 50), "p75": _pct(e, 75), "p90": _pct(e, 90), "p95": _pct(e, 95),
-                                 "note": "missing estimates count as larger than every threshold"},
+                                 "note": "missing estimates count as larger than every threshold (None = the quantile falls on a missing estimate)"},
             "conditional_found_only_cm": {"n": len(cond), "median": _pct(np.array(cond) * 100, 50), "p90": _pct(np.array(cond) * 100, 90),
                                           "note": "conditional on an estimate existing; not overall accuracy"},
             "outlier_rate": outl, "identity_errors": ident,

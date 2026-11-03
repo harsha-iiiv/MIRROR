@@ -45,3 +45,9 @@ def test_ingest_init_template_and_refusals(tmp_path):
     assert I.main(["init", str(tmp_path)]) == 1          # never overwrites
     with pytest.raises(SystemExit, match="measure the printed"):
         I.main(["run", str(tmp_path)])
+
+
+def test_unconditional_quantiles_keep_missing_as_missing():
+    import numpy as np
+    assert V._pct(np.array([1.0, 2.0, np.inf, np.inf]), 50) == 2.0
+    assert V._pct(np.array([1.0, np.inf, np.inf]), 90) is None
