@@ -13,6 +13,7 @@ import { demoSource } from './provenance.js';
 import { interpretationOutcome } from './outcomes.js';
 import { ProvChip, PlanOutcome } from './bits.js';
 import * as C from './challenge_state.js';
+import { ManualEditor } from './manual.js';
 
 const html = htm.bind(h);
 const short = (s, n = 10) => (s ? String(s).slice(0, n) : '–');
@@ -253,6 +254,14 @@ function ChallengeBuilder({ ctx }) {
   const copy = async () => {
     try { await navigator.clipboard.writeText(share.url); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch (_) { setCopied(false); }
   };
+  const submitManual = async (ops, form) => {
+    const mine = run.current;
+    setProposal(null);
+    const res = await ctx.action('challengeCorrect', () => api.post(`challenge/${encodeURIComponent(cid)}/manual`, { ops, form }));
+    if (mine !== run.current || !res) return;
+    setProposal(res.proposal || res);
+  };
+  const manual = study?.condition === 'manual';
   const pickOption = (o) => { setSpoken(null); if (o.answer != null) submit(o.answer); else setText(o.text); };
   const busy = (k) => ctx.busy[k];
   const JobNote = ({ k }) => (busy(k) ? html`<div class="job" role="status" aria-live="polite">${(busy(k).message || 'Working').split('\n')[0]}…
@@ -310,7 +319,13 @@ function ChallengeBuilder({ ctx }) {
       ${ch ? html`<div style="margin-top:10px"><${RunResult} label="Current rules on this layout" st=${ch.before} expectFresh=${true} />
         <p class="faint num">scene ${ch.scene?.scene_id || ''} · ${short(ch.scene?.content_sha256)} · spec ${ch.base_spec_version_id || '–'}</p></div>` : ''}
     </div>
-    ${ch ? html`<div class="sec">
+    ${ch && manual ? html`<div class="sec">
+      <p class="ov-k">4 · Change one rule directly</p>
+      <p class="muted">Pick the rule, the object and when it applies. MIRROR validates the change exactly like a spoken or typed correction.</p>
+      ${ch.after ? '' : html`<${ManualEditor} spec=${(ctx.snap.specs || [])[ctx.snap.specs.length - 1]} disabled=${!!busy('challengeCorrect')} onSubmit=${submitManual} />`}
+      <${JobNote} k="challengeCorrect" />
+    </div>` : ''}
+    ${ch && !manual ? html`<div class="sec">
       <p class="ov-k">4 · Correct one thing, in your own words</p>
       <label class="sr-only" for="ch-corr">Correction</label>
       <textarea id="ch-corr" class="corr" maxlength=${options.correction?.max_chars || 600} placeholder="Say what was wrong about the behaviour"

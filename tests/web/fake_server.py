@@ -300,6 +300,15 @@ def make_handler(studio: FakeStudio):
                 cid, act = parts[1], parts[2]
                 if act == "correction":
                     return self._json(*studio.correction(cid, body))
+                if act == "manual":
+                    ch = studio.challenges[cid]
+                    prop = {"text": None, "input": "manual_form", "changed": bool(body.get("ops")), "ops": body.get("ops", []),
+                            "scope": {"objects": ["cup_0"], "phases": [body.get("form", {}).get("phase")], "items": [o.get("target_id") for o in body.get("ops", [])]},
+                            "diff": {"added": [], "changed": [o.get("target_id") for o in body.get("ops", [])], "removed": []},
+                            "outcome": "apply", "reason_code": "manual", "provenance": "manual",
+                            "step_provenance": _sp("manual_edit", interpreter="manual form")}
+                    ch["proposal"], ch["state"] = prop, "proposed"
+                    return self._json(200, studio.job("challenge_manual", {"proposal": prop}))
                 if act == "review":
                     return self._json(*studio.review(cid, body))
                 if act == "execute":

@@ -105,6 +105,16 @@ function StaticNote({ ctx }) {
 
 function Chip({ status, children }) { return html`<span class=${'chip ' + (status || '')}>${children || status}</span>`; }
 
+const VERDICT = { satisfied: 'held', violated: 'broken', unknown: 'unknown', not_applicable: 'not applicable', not_evaluated: 'not checked' };
+// Per-rule verdicts from the independent checker (enforced rules first).
+export function RuleResults({ rr }) {
+  if (!rr || !rr.length) return null;
+  const rows = [...rr].sort((a, b) => (b.enforced - a.enforced));
+  return html`<details class="ov-details"><summary>Per-rule verdicts (${rows.filter((x) => x.enforced).length} enforced)</summary>
+    <ul class="rr">${rows.map((x) => html`<li><span class=${'v ' + x.verdict}>${VERDICT[x.verdict] || x.verdict}</span>
+      <span class="num">${x.rule_id}</span><span class="muted">${x.enforced ? '' : '(not enforced)'} ${x.detail || ''}</span></li>`)}</ul></details>`;
+}
+
 export function ReportView({ r, compact = false }) {
   if (!r) return null;
   const rep = r.report;
@@ -127,6 +137,8 @@ export function ReportView({ r, compact = false }) {
       <b>${v.constraint_id}</b> violated by ${v.object_id}: peak ${fmtNum(v.peak)}${v.constraint_id.includes('clear') ? ' m' : '°'},
       ${fmtT(v.t_start)}–${fmtT(v.t_end)}${v.detail ? html`<div class="muted">${v.detail}</div>` : ''}</div>`)}
     ${(rep.forbidden_contacts || []).length ? html`<div class="callout bad" style="margin-top:8px">${rep.forbidden_contacts.length} forbidden contact event(s).</div>` : ''}
+    ${rep.status === 'unverified' ? html`<div class="callout" style="margin-top:8px"><b>Not verified.</b> Every rule the checker could decide held, but at least one enforced rule could not be settled from the evidence, so this is not counted as success.</div>` : ''}
+    <${RuleResults} rr=${rep.rule_results} />
     ${!compact && plan ? html`<${RoutesView} plan=${plan} />` : ''}
     ${!compact ? html`<dl class="kv" style="margin-top:10px">
       <dt>Routes</dt><dd>${routesText(r) || '–'}</dd>

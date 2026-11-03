@@ -498,3 +498,11 @@ ul.plain { padding-left: 18px; margin: 4px 0; font-size: 13px; }
 .consent input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; flex: none; }
 .transfer-list { list-style: none; margin: 6px 0 0; padding: 0; font-size: var(--fs-sm); }
 .transfer-list li { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.chip.unverified, .chip.unknown { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent); background: var(--warn-soft); }
+.rr { list-style: none; padding: 0; margin: 8px 0 0; font-size: var(--fs-sm); }
+.rr li { display: flex; gap: 8px; align-items: baseline; padding: 3px 0; border-bottom: 1px dashed var(--line); }
+.rr .v { font-size: 11px; padding: 0 6px; border-radius: var(--r-pill); border: 1px solid var(--line-strong); white-space: nowrap; }
+.rr .v.satisfied { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, transparent); }
+.rr .v.violated { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 45%, transparent); }
+.rr .v.unknown { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
+.manual { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s3); }

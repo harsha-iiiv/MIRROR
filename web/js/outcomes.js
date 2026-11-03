@@ -82,6 +82,7 @@ export const STEP_KIND = {
   recorded_playback: { label: 'Recorded simulation playback', tone: 'recorded', group: 'sim' },
   new_check: { label: 'Checked now from the recorded step log', tone: 'live', group: 'check' },
   fixture: { label: 'Interface fixture (no physics, no model)', tone: 'offline', group: 'fixture' },
+  manual_edit: { label: 'Manual edit (no model)', tone: 'recorded', group: 'model' },
 };
 // Older single-word provenance values map onto the step kinds.
 const LEGACY = { fresh_model_call: 'fresh_model', offline_interpreter: 'offline_fallback', replayed_cassette: 'replayed_cassette',

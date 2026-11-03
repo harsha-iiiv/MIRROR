@@ -218,3 +218,33 @@ def test_outcome_wording_never_claims_more_than_the_evidence(tmp_path):
     assert o["cfg"]["label"] == "Offline-rule interpreter" and not o["cfg"]["fellBack"]
     assert o["fresh"]["label"] == "Fresh model inference" and "muse-spark-1.3" in o["fresh"]["detail"] and "2.31 s" in o["fresh"]["detail"]
     assert o["later"] == "recorded_playback" and o["legacy"] == "new_simulation" and o["none"] is None
+
+
+MANUAL = r"""
+import { manualOps } from '@JS@/manual_ops.js';
+const spec = DATA.spec;
+console.log(JSON.stringify({
+  confirm: manualOps(spec, { type: 'upright', who: 'cup', phase: 'transport', max_tilt_deg: 15, status: 'confirmed' }),
+  tighten: manualOps(spec, { type: 'upright', who: 'cup', phase: 'transport', max_tilt_deg: 10, status: 'confirmed' }),
+  add: manualOps(spec, { type: 'keep_clearance', who: 'all', phase: 'transport', min_m: 0.03, status: 'confirmed' }),
+  bad: manualOps(spec, { type: 'keep_clearance', who: 'cup', phase: 'transport', min_m: 0, status: 'confirmed' }),
+  order: manualOps(spec, { type: 'ordering', before: 'marker', after: 'cup', status: 'confirmed' }),
+  same: manualOps(spec, { type: 'ordering', before: 'cup', after: 'cup' }),
+  noop: manualOps(spec, { type: 'upright', who: 'cup', phase: 'final', max_tilt_deg: 15, status: 'confirmed' }),
+}));
+"""
+
+
+def test_manual_form_produces_spec_ops(tmp_path):
+    spec = {"version": 2, "ordering": [], "constraints": [
+        {"id": "c_upright_transport_cup", "type": "upright", "phase": "transport", "status": "proposed", "params": {"max_tilt_deg": 15}, "applies_to": {"kind": "cup"}},
+        {"id": "c_upright_final_cup", "type": "upright", "phase": "final", "status": "confirmed", "params": {"max_tilt_deg": 15}, "applies_to": {"kind": "cup"}}]}
+    o = run_js(tmp_path, MANUAL, {"spec": spec})
+    assert o["confirm"]["ops"] == [{"op": "set_status", "target_id": "c_upright_transport_cup", "value": {"status": "confirmed"}, "rationale": "manual edit"}]
+    assert [x["op"] for x in o["tighten"]["ops"]] == ["modify_constraint", "set_status"]
+    add = o["add"]["ops"][0]
+    assert add["op"] == "add_constraint" and add["value"]["applies_to"] == {"kind": None, "role": None, "ids": None}
+    assert add["value"]["params"] == {"min_m": 0.03} and add["value"]["provenance"]["source"] == "manual"
+    assert o["bad"]["ops"] == [] and o["bad"]["error"]
+    assert o["order"]["ops"][0]["op"] == "add_ordering" and o["order"]["ops"][0]["value"]["before"]["kind"] == "marker"
+    assert o["same"]["error"] and o["noop"]["error"] == "The specification already says this."

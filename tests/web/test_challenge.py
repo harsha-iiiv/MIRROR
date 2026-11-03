@@ -272,3 +272,19 @@ def test_study_without_server_support_records_nothing(fixture_data, browser):
         page.wait_for_selector("text=Nothing from this session is recorded", timeout=10_000)
         assert srv.studio.study_events == []
         ctx.close()
+
+
+def test_manual_condition_edits_rules_directly(fixture_data, browser):
+    with FakeServer(fixture_data) as srv:
+        ctx, page, errors = _page(browser, srv.url + "?step=challenge&study=P03&condition=manual")
+        page.wait_for_selector("text=Before you start", timeout=30_000)
+        page.get_by_role("button", name="Continue without recording").click()
+        _build(page)
+        page.wait_for_selector("text=Change one rule directly", timeout=15_000)
+        assert page.locator("#ch-corr").count() == 0
+        page.locator(".manual input.num-in").fill("10")      # a tighter limit than any fixture rule
+        page.get_by_role("button", name="Propose this change").click()
+        page.wait_for_selector("text=Accept and re-check", timeout=15_000)
+        assert "Manual edit (no model)" in page.locator(".ch-scope").text_content()
+        assert not errors, errors
+        ctx.close()

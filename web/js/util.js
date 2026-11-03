@@ -19,6 +19,7 @@ export function fmtNum(v, d = 1) {
 export const STATUS_LABEL = {
   success: 'Success', task_incomplete: 'Task incomplete', constraint_violated: 'Rule violated',
   planning_failed: 'No plan', execution_failed: 'Execution failed', timeout: 'Timed out',
+  unverified: 'Not verified', unknown: 'Unknown',
 };
 
 export function statusLabel(report) {
