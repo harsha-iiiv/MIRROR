@@ -6,7 +6,9 @@ dry-run on development cases only. Nothing here is frozen. No held-out case
 exists yet, no independent author has been recruited, and no number from this
 protocol is an evaluation result.
 
-Its separate **language-understanding track** (fresh independent corrections on
+The [test matrix](v3_test_matrix.md) lists the kinds of correction both tracks
+must cover, with development and independent coverage kept apart. Its separate
+**language-understanding track** (fresh independent corrections on
 varied bases, scored by independent adjudicators, no execution) is described in
 [v3_language.md](v3_language.md).
 

@@ -77,9 +77,13 @@ not cover keep their freedom. Evaluation numbers are in
   claimed. **PENDING (track `reanalysis`):** a timeline from file, cassette, ledger
   and commit times, with linked code, model and prompt versions.
 * **No fresh authoring evaluation and no user study has been run.** The v3
-  protocol ([protocols/v3_authoring.md](protocols/v3_authoring.md)) and the
-  impact study kit (`study/`) are prepared and tested only on development and
-  clearly synthetic fixtures.
+  protocol ([protocols/v3_authoring.md](protocols/v3_authoring.md), with its
+  [test matrix](protocols/v3_test_matrix.md)), the impact study kit (`study/`)
+  and a 3-5 person usability pilot (`study/pilot/`) are prepared, not run, and
+  tested only on development and clearly synthetic fixtures. The builder's own
+  testing is a developer smoke test, not independent user validation; a 3-5
+  person pilot, when run, is preliminary usability evidence only, not proof of
+  demand or of a general productivity gain.
 
 ## What it does not claim
 

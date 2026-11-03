@@ -639,7 +639,8 @@
     "multi_turn",
     "scope",
     "new_rule",
-    "object:block"
+    "object:block",
+    "type:keep_clearance"
    ],
    "scene": {
     "kind": "layout",
@@ -709,6 +710,120 @@
     }
    ],
    "expect_execution": "not_executed"
+  },
+  {
+   "id": "L15",
+   "category": "ambiguous",
+   "track": "language",
+   "author_id": "team-dev",
+   "scope_tags": [
+    "vague"
+   ],
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "base": "reference_reviewed",
+   "turns": [
+    {
+     "text": "Be careful with the cup.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": null
+     }
+    }
+   ],
+   "expect_execution": "not_executed",
+   "notes": "Vague: the right answer asks which measurable requirement matters; silently adding an upright rule is a false accept."
+  },
+  {
+   "id": "L16",
+   "category": "ambiguous",
+   "track": "language",
+   "author_id": "team-dev",
+   "scope_tags": [
+    "alias"
+   ],
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "base": "reference_reviewed",
+   "turns": [
+    {
+     "text": "Don't tip the coffee.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": null
+     }
+    }
+   ],
+   "expect_execution": "not_executed",
+   "notes": "Alias versus absent object: 'coffee' may mean the cup's contents, but only explicit context or a clarification may establish that."
+  },
+  {
+   "id": "L17",
+   "category": "ambiguous",
+   "track": "language",
+   "author_id": "team-dev",
+   "scope_tags": [
+    "absent_object",
+    "absent:unseen"
+   ],
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "base": "reference_reviewed",
+   "turns": [
+    {
+     "text": "Keep the thermos upright while it's carried.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": null
+     }
+    }
+   ],
+   "expect_execution": "not_executed",
+   "notes": "'thermos' is outside the compiler and validation lexicons (checked by matrix.absent_term_status), so the validation layer cannot catch it."
+  },
+  {
+   "id": "L18",
+   "category": "ambiguous",
+   "track": "language",
+   "author_id": "team-dev",
+   "scope_tags": [
+    "absent_object",
+    "absent:regression"
+   ],
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "base": "reference_reviewed",
+   "turns": [
+    {
+     "text": "Keep the jar upright while it's carried.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": null
+     }
+    }
+   ],
+   "expect_execution": "not_executed",
+   "notes": "Regression case only: 'jar' appeared in development failures and shaped the validation layer. Not generalisation evidence."
   }
  ]
 }
