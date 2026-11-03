@@ -10,7 +10,8 @@ Reply = Union[dict, str, tuple, Callable[[dict], Any]]
 
 
 class FakeAPI:
-    def __init__(self, replies: list[Reply], model: str = "fake-model-2026"):
+    def __init__(self, replies: list[Reply], model: str = "fake-model-2026", usage: dict | None = None):
+        self.usage = dict(usage or {"prompt_tokens": 100, "completion_tokens": 50})
         self.replies = list(replies)
         self.requests: list[dict] = []
         self.model = model
@@ -34,4 +35,4 @@ class FakeAPI:
             "id": "x", "object": "chat.completion", "model": self.model,
             "choices": [{"index": 0, "message": {"role": "assistant", "content": content},
                          "finish_reason": "stop"}],
-            "usage": {"prompt_tokens": 100, "completion_tokens": 50, "total_tokens": 150}})
+            "usage": {**self.usage, "total_tokens": sum(self.usage.values())}})

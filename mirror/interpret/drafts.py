@@ -129,6 +129,7 @@ def check_proposal(d: ProposalDraft, summary: DemoSummary) -> list[str]:
                     shown.append(s.end_tilt_deg)
                 if r.phase == "always":
                     shown.append(s.start_tilt_deg)
+                shown = [x for x in shown if x is not None]   # None: tilt not observed (e.g. top-only video)
                 if shown and max(shown) > tol:
                     errs.append(f"{where}: the demonstration itself violates this rule "
                                 f"({r.object_kind} reached {max(shown):g} degrees > {tol:g})")
