@@ -344,7 +344,7 @@ def social_shots(ctx):
             if inf.beads:
                 k, n = inf.beads
                 chip(d, (t[0] + 820, t[1] + 16), f"beads {k}/{n}", font("medium", 32), bg=RED if k < n else CHIP)
-        chip(d, (20, 1180), SIM_LABEL + " · 6× speed", font("medium", 30))
+        chip(d, (20, 650), SIM_LABEL + " · 6× speed", font("medium", 30))
     recs.append(run_grid(ctx, L, cut, "s4_new_layouts", shots, tiles, d4,
                          dict(src=[src_rec(ctx, n, t=[0, 39], speed=6.0) for n in names]), 6.5))
 
