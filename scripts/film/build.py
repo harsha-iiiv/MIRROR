@@ -826,9 +826,12 @@ def assemble(ctx, cut, recs):
                                  ("source", "requested_model", "correction_text", "offline_agrees")},
                 registered=dict(REGISTERED, check=check_registered()),
                 audio="synthesized pad (music_bed in scripts/film/build.py); no voice, captions only",
-                build_commit=_git("rev-parse", "HEAD"))
+                build_commit=BUILD_COMMIT or _git("rev-parse", "HEAD"))
     (ctx.out / f"timeline_{cut}.json").write_text(json.dumps(meta, indent=1, default=str))
     return final
+
+
+BUILD_COMMIT = None   # set at start, so commits made while a render runs are not misreported
 
 
 def _git(*a):
@@ -865,6 +868,8 @@ def main(argv=None):
     ap.add_argument("--max-frames", type=int, default=0, help="smoke test: render at most N frames per shot")
     ap.add_argument("--sample", default="", help="review: comma list of shot fractions to render (e.g. 0.1,0.5,0.95)")
     a = ap.parse_args(argv)
+    global BUILD_COMMIT
+    BUILD_COMMIT = _git("rev-parse", "HEAD")
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     if a.fetch:
