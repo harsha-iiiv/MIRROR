@@ -48,7 +48,8 @@ EVENT_FIELDS = {
     "facilitator_note": {"kind"},
     "session_end": set(),
 }
-PROVENANCE = {"recorded", "fresh model call", "offline interpreter", "replayed cassette"}
+# Provenance values exactly as the studio API (CHALLENGE_API section 3) emits them.
+PROVENANCE = {"recorded", "fresh_model_call", "offline_interpreter", "replayed_cassette", "fixture", "simulated"}
 SYNTHETIC_BANNER = "SYNTHETIC FIXTURE DATA: NOT STUDY RESULTS. No participant took part."
 
 

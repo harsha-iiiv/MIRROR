@@ -224,7 +224,7 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/INSTALL.md](doc
 | `data/` | Reference demonstration and recorded model responses |
 | `results/` | Evaluation reports |
 | `mirror/evaluate/protocol_v3`, `docs/protocols/` | Fresh authoring evaluation protocol and harness (prepared, not run) |
-| `study/` | Impact study kit (prepared, not run; fixtures are synthetic) |
+| `study/` | Impact study kit and a 3-5 person usability pilot (both prepared, not run; fixtures are synthetic) |
 
 ## License
 

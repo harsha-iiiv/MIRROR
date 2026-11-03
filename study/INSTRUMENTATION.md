@@ -25,7 +25,7 @@ the studio). `tools/studykit.py validate` checks a log against this schema.
 | `session_start` | `app_commit`, `task_packet_sha256`, `consent` {`text`, `audio`, `quote`} |
 | `task_start` | `scene_key`, `spec_version_id`, `spec_state` |
 | `correction_submitted` | `input` (`text`\|`speech`), `chars`, `text` (only if consent.text) |
-| `interpretation_returned` | `outcome` (`apply`\|`asks`\|`rejects`\|`error`), `provenance` (`recorded`\|`fresh model call`\|`offline interpreter`\|`replayed cassette`), `latency_s` |
+| `interpretation_returned` | `outcome` (`apply`\|`asks`\|`rejects`\|`error`), `provenance` (studio values: `recorded`\|`fresh_model_call`\|`offline_interpreter`\|`replayed_cassette`\|`fixture`\|`simulated`), `fallback_reason`, `latency_s` |
 | `clarification_shown` | `question_chars` |
 | `clarification_answered` | `chars` |
 | `manual_edit_saved` | `valid` (bool), `errors` (int) |

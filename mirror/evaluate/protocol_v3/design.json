@@ -216,5 +216,12 @@
       "tools": "python -m mirror.evaluate.protocol_v3 adjudication-agreement | adjudication-pack | adjudication-unblind"
     },
     "analysis": "per phenomenon and per base: exact rate per condition with Wilson intervals; paired exact McNemar per turn (mirror_model vs offline_rules, mirror_model vs manual_structured); no thresholds pre-stated beyond the authoring track's false-accept and wrong-scope checks"
+  },
+  "test_matrix": {
+    "doc": "docs/protocols/v3_test_matrix.md",
+    "rows": "mirror/evaluate/protocol_v3/matrix.py ROWS",
+    "separation": "development (developer-written) and independent (held-out) coverage reported separately, never pooled",
+    "absent_terms": "jar and bowl are regression only; fresh terms must have absent_term_status == 'unseen' at freeze",
+    "minimum_independent_per_row": 10
   }
 }

@@ -62,7 +62,7 @@ def session(pid: str, plan: list[tuple[str, str, str]]) -> list[dict]:
             if cond == "mirror":
                 put("correction_submitted", task=task, condition=cond, input="text", chars=58)
                 put("interpretation_returned", task=task, condition=cond, outcome="apply",
-                    provenance="offline interpreter", latency_s=0.01)
+                    provenance="offline_interpreter", latency_s=0.01)
             else:
                 put("manual_edit_saved", task=task, condition=cond, valid=True, errors=0)
         if beh == "time_limit":
