@@ -65,7 +65,7 @@ def _beads_in_cup(log, scene):
             for k in steps]
 
 
-def test_short_rollout_log_matches_recorded_golden(record_property):
+def test_short_rollout_log_matches_recorded_golden():
     """Golden file recorded with the original bookkeeping (same controller and
     physics), see tests/sim/data. Floating-point physics differs between CPU
     architectures (arm64 vs x86_64), so bit-level equality is checked only on the
@@ -89,7 +89,6 @@ def test_short_rollout_log_matches_recorded_golden(record_property):
     dev = {name: float(np.max(np.abs(np.asarray(getattr(log, name)) - np.asarray(getattr(gold, name)))))
            for name in POSE_FIELDS}
     dev["beads"] = float(np.max(np.abs(log.beads["cup_0"] - gold.beads["cup_0"])))
-    record_property("max_deviation_from_golden", json.dumps(dev))
     print("max deviation from golden:", dev)
     RolloutFrame.model_validate(res.frames[0].model_dump())   # frames are ordinary contract objects
     if not on_golden_platform():
@@ -111,7 +110,7 @@ def test_short_rollout_log_matches_recorded_golden(record_property):
             np.testing.assert_allclose(pose.pos, g.bodies[name].pos, atol=1e-7)
 
 
-def test_outcome_level_comparison_runs_off_the_golden_platform(monkeypatch, record_property):
+def test_outcome_level_comparison_runs_off_the_golden_platform(monkeypatch):
     import tests.sim.test_bookkeeping as me
     monkeypatch.setattr(me, "on_golden_platform", lambda: False)
-    me.test_short_rollout_log_matches_recorded_golden(record_property)
+    me.test_short_rollout_log_matches_recorded_golden()

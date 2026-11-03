@@ -2,9 +2,10 @@
 
 ## Requirements
 
-* Linux x86_64 (tested on Ubuntu 24.04) with Python 3.11. macOS works for the
-  command line and the studio with MuJoCo's default renderer; headless
-  rendering below is Linux-specific.
+* Linux x86_64 (tested on Ubuntu 24.04) with Python 3.11, or macOS on Apple
+  silicon (fast suite tested on macOS 26.6 arm64, Python 3.12, with
+  `requirements-lock.txt`: 781 passed, 1 skipped). Registered evaluations were
+  run on Linux only; see "Platforms" below.
 * System packages: `libosmesa6` (headless MuJoCo rendering), `libgl1`, and
   `ffmpeg` (with `ffprobe`; the studio probes uploaded videos and converts audio
   with it, and the video tools encode with it).
@@ -31,10 +32,30 @@ export MUJOCO_GL=osmesa            # software rendering, no display or GPU
 export PYOPENGL_PLATFORM=osmesa
 ```
 
-With a GPU and EGL drivers, `MUJOCO_GL=egl` is faster. Without either variable
-MuJoCo tries a windowed context and fails on a server. Rendering is used for
+With a GPU and EGL drivers, `MUJOCO_GL=egl` is faster. On macOS the default is
+`MUJOCO_GL=cgl` (built in; OSMesa and EGL do not exist there), chosen
+automatically when MUJOCO_GL is unset (`mirror/glbackend.py`). On Linux without
+a display the default is `osmesa`. `mirror doctor` reports the backend in use and
+whether an offscreen context could be created. An explicit MUJOCO_GL always wins. Rendering is used for
 videos and the studio's camera views; planning, simulation and checking do not
 need it.
+
+## Platforms
+
+Results reproduce at the outcome level across platforms, not bit-exactly:
+
+* **Physics.** Floating-point results differ between CPU architectures. The sim
+  golden test compares bit-level (1e-7) only on the platform the golden was
+  recorded on (`tests/sim/data/golden_short_rollout_platform.json`: Linux
+  x86_64); elsewhere it requires the same status, steps, events, phases, holding,
+  contact pairs and beads in the cup, and prints the largest deviation (macOS
+  arm64: 8.4e-5 m object position, 3.3 mm bead position).
+* **Recorded model requests** are keyed on the exact bytes sent. Images encoded
+  at run time can differ in bytes but not pixels (Pillow wheels ship zlib or
+  zlib-ng), so a request that sends a freshly encoded PNG may not replay on
+  another platform. Tests that replay such a request pass the stored image.
+* **Video tools** set the output frame rate explicitly, so slowed clips have the
+  same frames and duration with ffmpeg 6 and 7.
 
 ## Replay without a key
 
