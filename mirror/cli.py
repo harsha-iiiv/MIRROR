@@ -282,8 +282,43 @@ def _spec_for_run(args, out: Out):
     return session
 
 
+def _run_with_backend(args, session, out: Out) -> int:
+    """``run --backend arm``: same spec, scene, planner and checker, executed by
+    the selected backend (mirror.backends)."""
+    from types import SimpleNamespace
+
+    from mirror.backends import get_backend
+    from mirror.evaluate.trial import execute_trial
+    from mirror.scenes import reference_scene
+    backend = get_backend(args.backend)
+    spec = session.spec_version(None)
+    scene = reference_scene(args.scene)
+    out(f"Backend: {backend.label}")
+    rollout, log, plan = execute_trial(scene, spec, condition=args.scene, planner=backend.plan,
+                                       env_factory=backend.env, frame_hz=args.frame_hz)
+    entry = SimpleNamespace(rollout=rollout, plan=plan, log=log)
+    if args.json:
+        out(rollout.report.model_dump_json(indent=1))
+    else:
+        print_rollout(entry, out)
+        if log is not None and "arm_joint_log" in log.meta:
+            out(f"  arm: peak TCP tracking error {log.meta['arm_joint_log']['peak_tcp_tracking_error_mm']:.1f} mm")
+    if args.out:
+        d = Path(args.out)
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "rollout.json").write_text(rollout.model_dump_json())
+        (d / "plan.json").write_text(plan.model_dump_json(indent=1))
+        (d / "spec.json").write_text(spec.model_dump_json(indent=1))
+        if log is not None:
+            log.save(d / "steplog.npz")
+        out(f"Exported to {d}")
+    return 0 if rollout.report.status in ("success", "constraint_violated", "planning_failed") else 1
+
+
 def cmd_run(args, out: Out) -> int:
     session = _spec_for_run(args, out)
+    if getattr(args, "backend", "gripper") != "gripper":
+        return _run_with_backend(args, session, out)
     session.set_scene(args.scene)
     entry = session.run(condition=args.scene, frame_hz=args.frame_hz)
     if args.json:
@@ -544,6 +579,9 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--out", help="export the session to this directory")
     r.add_argument("--frame-hz", type=float, default=30.0)
     r.add_argument("--json", action="store_true", help="print the rollout report as JSON")
+    r.add_argument("--backend", choices=["gripper", "arm"], default="gripper",
+                   help="who executes the plan: gripper (default; baseline free-flying gripper) or arm "
+                        "(UR10e arm carrying the same gripper)")
     r.set_defaults(func=cmd_run)
 
     s = sub.add_parser("story", help="the full reference narrative")
