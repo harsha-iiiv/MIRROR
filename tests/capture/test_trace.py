@@ -47,6 +47,7 @@ def test_demo_trace_marks_unobserved_values_and_human_events():
     assert ev.kind == "unverified_video_reconstruction"
     assert any(r.code == "synthetic_capture" for r in ev.review)
     assert all(sp.status == "unobserved" for sp in ev.gripper_position + ev.gripper_width)
+    assert ev.calibration == [] or {c.intrinsics_source for c in ev.calibration} <= {"charuco_board", "user_supplied"}
     cup = ev.objects["cup_0"]
     assert all(sp.status == "unobserved" for sp in cup.tilt)
     assert {"grasp", "release"} == {e.type for e in tr.events}
@@ -67,3 +68,32 @@ def test_offline_proposal_refused_until_reviewed_and_never_asserts_unobserved_ti
     summary = out["summary"]
     text = " ".join(str(x) for x in getattr(summary, "regularities", []))
     assert "stayed within 0 degrees" not in text and "ended upright (0 degrees" not in text
+
+
+def test_demo_trace_records_charuco_board_intrinsics():
+    pytest.importorskip("mirror.observability")
+    from mirror.contracts import DemoTrace
+    if "evidence" not in DemoTrace.model_fields:
+        pytest.skip("observability not integrated")
+    from mirror.capture import trace as TR
+    from mirror.capture.calibrate import Intrinsics, TablePose
+    s = _session()
+    s.intrinsics = {"top": Intrinsics(K=np.eye(3).tolist(), dist=[0.0] * 5, image_size=(960, 540), source="charuco_calibration",
+                                      accepted=True, square_mm=30.0)}
+    s.poses = {"top": MODELS["top"].pose}
+    cal = TR.to_demo_trace(s).evidence.calibration
+    assert [c.intrinsics_source for c in cal] == ["charuco_board"]
+    assert not any("checkerboard" in a for a in cal[0].assumptions)
+
+
+def test_session_json_carries_fidelity_statement_and_ignores_stored_copies():
+    import json
+    s = _session()
+    d = json.loads(s.model_dump_json())
+    m = next(x for x in d["mappings"] if x["track_label"] == "mug")
+    assert m["fidelity_statement"] == MUG.fidelity_statement()
+    assert "not measured physical accuracy" in m["fidelity_statement"]
+    m["fidelity_statement"] = "measured to the millimetre"          # a tampered copy is not trusted
+    back = SE.CaptureSession.model_validate(d)
+    assert back.mappings[0].fidelity_statement() == MUG.fidelity_statement()
+    assert json.loads(back.model_dump_json())["mappings"][0]["fidelity_statement"] == MUG.fidelity_statement()
