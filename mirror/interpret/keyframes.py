@@ -73,12 +73,11 @@ def render_keyframes(trace: DemoTrace, n: int = 4, width: int = 480, height: int
     import os
     import sys
     if "mujoco" not in sys.modules:  # the backend must be chosen before mujoco is imported
-        os.environ.setdefault("MUJOCO_GL", "osmesa")
-        if os.environ["MUJOCO_GL"] == "osmesa":
-            os.environ.setdefault("PYOPENGL_PLATFORM", "osmesa")
-    elif not os.environ.get("MUJOCO_GL"):
+        from mirror import glbackend
+        glbackend.apply(glbackend.offscreen_backend())
+    elif not os.environ.get("MUJOCO_GL") and sys.platform != "darwin":
         raise RuntimeError("mujoco was imported without an offscreen backend; set MUJOCO_GL=osmesa "
-                           "(or egl) in the environment before starting")
+                           "(or egl, or cgl on macOS) in the environment before starting")
     from mirror.contracts import VisualScene
     from mirror.sim.env import visual_scene
     from mirror.sim.model import build_model

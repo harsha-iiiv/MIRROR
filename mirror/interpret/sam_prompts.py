@@ -123,8 +123,14 @@ def _outlined(frame: bytes, choices: list[PromptChoice]) -> bytes:
     return buf.getvalue()
 
 
-def verify_boxes(client, model: str, frame: bytes, choices: list[PromptChoice]) -> list[PromptChoice]:
-    """One model call: is each numbered SAM box mainly the kind it was meant to be?"""
+def verify_boxes(client, model: str, frame: bytes, choices: list[PromptChoice],
+                 outlined: Optional[bytes] = None) -> list[PromptChoice]:
+    """One model call: is each numbered SAM box mainly the kind it was meant to be?
+
+    ``outlined`` is the annotated PNG to send instead of drawing it here. PNG
+    bytes depend on the zlib build (identical pixels encode differently, e.g.
+    zlib vs zlib-ng), and recordings are keyed on the exact bytes sent, so
+    replay on another platform can pass the stored image (tests do)."""
     from mirror.meta import image_part, text_part
     cand = [c for c in choices if c.ok and c.box]
     if not cand:
@@ -132,7 +138,7 @@ def verify_boxes(client, model: str, frame: bytes, choices: list[PromptChoice]) 
     listing = "; ".join(f"{i}: {c.kind}" for i, c in enumerate(cand, start=1))
     res = client.responses(model, [text_part("Each numbered magenta rectangle should outline one thing: " + listing
                                              + ". For each number, say whether the outlined region is mainly that "
-                                             "thing."), image_part(_outlined(frame, cand), "image/png")],
+                                             "thing."), image_part(outlined or _outlined(frame, cand), "image/png")],
                            schema=strict_schema(BoxChecks), schema_name="box_checks", name="verify_prompts")
     by = {k.index: k for k in BoxChecks.model_validate(res.json()).checks}
     out = []
@@ -146,7 +152,8 @@ def verify_boxes(client, model: str, frame: bytes, choices: list[PromptChoice]) 
 
 
 def choose_prompts(media: Union[str, Path, bytes], model: str = "muse-spark-1.3", client=None, *,
-                   kinds: tuple[str, ...] = DEFAULT_KINDS, retry: bool = True, verify: bool = False) -> PromptSet:
+                   kinds: tuple[str, ...] = DEFAULT_KINDS, retry: bool = True, verify: bool = False,
+                   verify_image: Optional[bytes] = None) -> PromptSet:
     """Ask ``model`` for SAM phrases for ``kinds``, validate each with SAM
     (exactly one match on the first frame) and, with ``verify``, ask the model
     once whether each SAM box really is that kind (exactly one match is
@@ -183,6 +190,6 @@ def choose_prompts(media: Union[str, Path, bytes], model: str = "muse-spark-1.3"
         choices = [by_kind.get(c.kind, c) if not c.ok and by_kind.get(c.kind) and
                    (by_kind[c.kind].ok or not c.ok) else c for c in choices]
     if verify:
-        choices = verify_boxes(client, model, frame, choices)
+        choices = verify_boxes(client, model, frame, choices, outlined=verify_image)
     return PromptSet(model=res.model, choices=choices, frame_sha256=hashlib.sha256(frame).hexdigest(),
                      attempts=attempts, latency_s=latency)

@@ -11,7 +11,8 @@ Options: named camera presets, a trail of each carried object's path
 coloured by its tilt, high-visibility beads and a small caption overlay.
 
 Needs an offscreen OpenGL backend: MUJOCO_GL=osmesa (software; needs the
-system OSMesa library) or MUJOCO_GL=egl (GPU). Encoding uses imageio with
+system OSMesa library), MUJOCO_GL=egl (GPU) or, on macOS, cgl (the default
+there; see mirror/glbackend.py). Encoding uses imageio with
 its ffmpeg plugin.
 """
 from __future__ import annotations
@@ -23,9 +24,9 @@ from typing import Iterable, Optional, Sequence, Union
 
 import numpy as np
 
-os.environ.setdefault("MUJOCO_GL", "osmesa")
-if os.environ["MUJOCO_GL"] == "osmesa":
-    os.environ.setdefault("PYOPENGL_PLATFORM", "osmesa")
+from mirror import glbackend as _gl  # noqa: E402
+
+_gl.apply(_gl.offscreen_backend())  # osmesa, or cgl on macOS; MUJOCO_GL wins
 
 import mujoco  # noqa: E402  (backend must be chosen first)
 

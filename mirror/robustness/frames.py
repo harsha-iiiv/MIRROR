@@ -22,9 +22,9 @@ from typing import Optional, Sequence
 
 import numpy as np
 
-os.environ.setdefault("MUJOCO_GL", "osmesa")
-if os.environ["MUJOCO_GL"] == "osmesa":
-    os.environ.setdefault("PYOPENGL_PLATFORM", "osmesa")
+from mirror import glbackend as _gl  # noqa: E402
+
+_gl.apply(_gl.offscreen_backend())  # osmesa, or cgl on macOS; MUJOCO_GL wins
 
 from scipy import ndimage  # noqa: E402
 
