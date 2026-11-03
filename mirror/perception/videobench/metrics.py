@@ -69,6 +69,7 @@ def tilt(gt: dict, est_tilt: Callable[[float], Optional[float]], cup_id: str) ->
             if f.get("held") == cup_id and f.get("cup_tilt_deg", {}).get(cup_id) is not None]
     n = len(rows)
     ans, errs, false_up, missed_tilt, truly_tilted = 0, [], 0, 0, 0
+    tilted_within = 0
     est_vals, true_vals = [], []
     for t, true in rows:
         e = est_tilt(t)
@@ -83,6 +84,8 @@ def tilt(gt: dict, est_tilt: Callable[[float], Optional[float]], cup_id: str) ->
         errs.append(abs(e - true))
         if tilted and e <= UPRIGHT_TOL:
             false_up += 1
+        if tilted and abs(e - true) <= 5:
+            tilted_within += 1
     true_max = max(true_vals) if true_vals else None
     # the specification-relevant decision: was the cup carried upright (max tilt <= tolerance)?
     if not rows:
@@ -95,7 +98,9 @@ def tilt(gt: dict, est_tilt: Callable[[float], Optional[float]], cup_id: str) ->
     return dict(carry_frames=n, answered=ans, coverage=round(ans / n, 4) if n else None,
                 error_deg_answered=_q(errs),
                 within_5deg_of_carry=round(sum(1 for x in errs if x <= 5) / n, 4) if n else None,
-                truly_tilted_frames=truly_tilted, false_upright_frames=false_up, abstained_on_tilted_frames=missed_tilt,
+                truly_tilted_frames=truly_tilted,
+                within_5deg_of_tilted=round(tilted_within / truly_tilted, 4) if truly_tilted else None,
+                false_upright_frames=false_up, abstained_on_tilted_frames=missed_tilt,
                 true_max_deg=round(true_max, 2) if true_max is not None else None,
                 est_max_deg=round(max(est_vals), 2) if est_vals else None,
                 upright_decision=decision, upright_truth=truth,

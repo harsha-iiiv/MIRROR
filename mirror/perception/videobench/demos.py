@@ -25,7 +25,7 @@ from mirror.sim.demo import (CARRY_Z, GRASP_OFFSET, OPERATOR_SLOW, PACK_ORDER, P
 TILT_AXES = ("roll", "pitch")
 
 
-def record_tilted_demo(scene: SceneState, tilt_deg: float, *, axis: str = "roll", hold_s: float = 2.0,
+def record_tilted_demo(scene: SceneState, tilt_deg: float, *, axis: str = "roll", hold_s: float = 4.0,
                        at_fraction: float = 0.5) -> DemoTrace:
     """Pack every object into the first tray; while carrying the cup, tilt the
     wrist by ``tilt_deg`` about ``axis`` at ``at_fraction`` of the way to the
@@ -96,7 +96,7 @@ def true_cup_carry_tilt(trace: DemoTrace) -> dict:
 
 
 def render_tilted_demo(seed: int, split: str, tilt_deg: float, out_dir, *, axis: str = "roll", fps: float = 15.0,
-                       width: int = 960, height: int = 540, cams=("top", "side")):
+                       width: int = 960, height: int = 540, cams=("top", "side"), hold_s: float = 4.0):
     """Render a tilted-carry demonstration with the standard renderer (same
     cameras, materials and ground truth as the registered rendered clips)."""
     import contextlib
@@ -106,7 +106,7 @@ def render_tilted_demo(seed: int, split: str, tilt_deg: float, out_dir, *, axis:
     def record(source, split_=None):
         scene = sample_layout(seed, split)
         with video._capture_teleop() as box:
-            trace = record_tilted_demo(scene, tilt_deg, axis=axis)
+            trace = record_tilted_demo(scene, tilt_deg, axis=axis, hold_s=hold_s)
         tele = box["tele"]
         return scene, trace, tele.rollout_frames(), tele.visual_scene()
 

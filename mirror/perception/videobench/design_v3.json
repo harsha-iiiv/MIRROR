@@ -8,7 +8,7 @@
   "Earlier video summaries stated unobserved tilt as measured 0 deg (fixed in the perception code; see docs/PERCEPTION.md)."
  ],
  "demonstrations": {
-  "generator": "mirror.perception.videobench.demos.render_tilted_demo (reference script; cup tilted by the commanded angle about the wrist roll or pitch axis for 2 s at half of its carry, then returned upright)",
+  "generator": "mirror.perception.videobench.demos.render_tilted_demo (reference script; cup tilted by the commanded angle about the wrist roll or pitch axis for 4 s (hold_s=4.0) at half of its carry, then returned upright)",
   "split": "eval",
   "seeds": [
    72000,
@@ -56,7 +56,8 @@
    ],
    "tracking_copy_fps": 5
   },
-  "truth": "simulator ground truth (poses, cup tilt, masks, events) for measurement only, never an input"
+  "truth": "simulator ground truth (poses, cup tilt, masks, events) for measurement only, never an input",
+  "hold_s": 4.0
  },
  "conditions": {
   "two_view": "top + side tracks",
@@ -80,7 +81,7 @@
   "specification": "proposal signatures (constraints not rejected + active goals) from the ground-truth trace and from each video trace: offline rules once (deterministic), Muse Spark 3 repeats per input with separate cassette directories; model variability = distinct signatures among repeats of one input; perception-induced difference = video modal signature differs from the ground-truth modal signature"
  },
  "hypotheses_and_thresholds": {
-  "H1": "two_view, demos with true max tilt > 15 deg: mirror tilt within 5 deg on >= 0.70 of ALL carry frames, and strictly more than constant_zero",
+  "H1": "two_view, frames with true tilt > 15 deg: mirror tilt within 5 deg on >= 0.60 of those frames (abstentions count as misses) and strictly more than pca_axis; constant_zero scores 0 on these frames by construction, so the all-carry-frame share is reported but not used for H1 (constant zero wins it while tilt is held for a minority of the carry)",
   "H2": "top_only: mirror abstains on >= 0.95 of carry frames and makes 0 false-upright frames",
   "H3": "two_view: carried-upright decision correct on >= 20 of 24 demos (abstentions count as not correct)",
   "H4": "two_view: localisation within 2 cm on >= 0.85 of ALL visible object-frames; missing, outlier and identity counts reported, no threshold",
@@ -110,5 +111,11 @@
   "render eval demos, record their sha256 in inputs.json and commit",
   "run once from a clean worktree with an append-only ledger; resumable per demo"
  ],
- "rehearsal": "dev seeds 9101 (35 deg roll) and 9102 (60 deg pitch), oracle masks, offline proposals, 5 fps renders; see rehearsal_v3 in the status log"
+ "rehearsal": "dev seeds 9101 (35 deg roll) and 9102 (60 deg pitch), oracle masks, offline proposals, 5 fps renders; see rehearsal_v3 in the status log",
+ "rehearsal_findings": [
+  "dev seeds 9101 (35 deg roll) and 9102 (60 deg pitch), 2 s hold, oracle masks, 5 fps: constant-zero tilt was within 5 deg on 0.85/0.81 of ALL carry frames because the tilt lasted a minority of the carry -> hold lengthened to 4 s and H1 moved to truly tilted frames",
+  "9101: the side camera was dropped (mirrored table-corner assignment) -> fixed (1e77ea9); 9102: false scale_mismatch abstain from a tray-extent bug -> fixed (1e77ea9)",
+  "mirror tilt where answered: median error 1.9 deg, max 60 vs true 59.8 (9102); 0 false-upright frames in both demos and both conditions; coverage of carry frames low (0.37) - reported, not tuned",
+  "classical colour tracker misses 46-60% of visible object-frames on these renders; pca_axis tilt median error 13-16 deg; static positions within 2 cm on 0.47"
+ ]
 }

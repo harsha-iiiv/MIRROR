@@ -21,7 +21,7 @@ baselines and tilted-demonstration generator are in
 
 24 new layouts (eval seeds 72000-72023, never sampled before). The reference
 operator carries the cup and, halfway, tilts it by 0, 10, 20, 35, 50 or 60
-degrees (four layouts each, alternating roll and pitch) for two seconds before
+degrees (four layouts each, alternating roll and pitch) for four seconds before
 returning upright. The true tilt is what the physics produced, read from the
 simulator. Rendered top and side views, 960 x 540 at 15 fps, tracked at 5 fps.
 
@@ -50,6 +50,22 @@ correct answer is to abstain).
   (separate recordings per repeat). Differences among repeats of the same input
   are model variability; a video input whose most common proposal differs from
   the ground truth's most common proposal is a perception-induced difference.
+
+## Rehearsal (development seeds, ground-truth masks)
+
+Two development demonstrations (35 degrees roll, 60 degrees pitch, two-second
+hold) were rendered locally and scored with simulator masks, without model
+calls. Findings that changed the design or the code before freezing:
+
+- With a two-second hold, constant-zero tilt was within 5 degrees on 85% and
+  81% of all carry frames, because the cup was tilted for a minority of the
+  carry. The hold is now four seconds, and the tilt check is scored on frames
+  that are truly tilted.
+- One demo lost its side camera to the table outline's mirror symmetry, and one
+  raised a false scale warning; both fixed in the perception code.
+- Where MIRROR answered, its tilt error was small (median 1.9 degrees; 60
+  measured against 59.8 true), with no false-upright frames, but it answered on
+  few carry frames. That is reported, not tuned.
 
 ## Pre-stated checks
 
