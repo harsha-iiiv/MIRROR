@@ -43,7 +43,7 @@ CODE_FILES = ("mirror/evaluate/objective/__init__.py", "mirror/evaluate/objectiv
               "mirror/evaluate/objective/conditions.py", "mirror/evaluate/objective/design.py",
               "mirror/evaluate/objective/run.py", "mirror/evaluate/objective/report.py",
               "mirror/evaluate/objective/calibrate.py", "mirror/evaluate/objective/sweep.py",
-              "scripts/run_objective_eval.py")
+              "scripts/run_objective_eval.py", "docs/protocols/objective_v1.md")
 
 HYPOTHESES = [
     "H1: the original specification planned with the calibrated rotation price carries the cup on a tilted "

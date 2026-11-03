@@ -174,7 +174,7 @@ def markdown(manifest: dict, meta: dict, res: dict, conclusions: str = "") -> st
     L = [f"# Registration objective_v1: planner objective and baselines ({meta['attempt']})", ""]
     if conclusions:
         L += [conclusions.strip(), ""]
-    L += [f"Frozen {manifest['created_at']} (commit of `freeze.json` precedes every layout); run from "
+    L += [f"Frozen {manifest.get('created_at', '–')} (commit of `freeze.json` precedes every layout); run from "
           f"`{meta.get('git_head', '')[:12]}`, attempt `{meta['attempt']}`, status {meta['status']}.",
           f"Calibrated rotation price (objective of record): **{manifest['calibrated_rotation_penalty']} m/rad** "
           f"(from development layouts only; see calibration/calibration.json).", ""]
