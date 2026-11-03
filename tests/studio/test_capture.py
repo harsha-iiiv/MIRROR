@@ -281,3 +281,113 @@ def test_synthetic_label_is_one_way(api):
     r = api.post(f"/api/capture/{cap['id']}/inputs", json={"synthetic": True}).json()
     assert r["synthetic"] and r["label"].startswith("SYNTHETIC")
     assert api.post(f"/api/capture/{cap['id']}/inputs", json={"synthetic": False}).status_code == 422
+
+
+
+def _proposed_capture(c, clip, monkeypatch, synthetic=True):
+    calls = []
+    monkeypatch.setattr(CP, "build", fake_build(calls))
+    from mirror.capture import trace as TRC
+    from mirror.studio.fixtures import FixtureSession
+    monkeypatch.setattr(TRC, "to_demo_trace", lambda s, demo_id=None: FixtureSession().record_demo())
+    cap = c.post("/api/capture", json={"mode": "single_view", "synthetic": synthetic, "print_check": PC,
+                                        "objects": [MUG]}).json()
+    t = upload(c, clip, "take_top")
+    c.post(f"/api/capture/{cap['id']}/clips", json={"clips": {"take_top": t}})
+    c.post(f"/api/capture/{cap['id']}/prompts", json={"prompts": [{"camera": "top", "label": "mug", "frame": 0, "box": [10, 10, 40, 40]}]})
+    wait(c, c.post(f"/api/capture/{cap['id']}/run").json())
+    r = c.post(f"/api/capture/{cap['id']}/review", json={"objects": [{"track_label": "mug", "confirmed_by_person": True}],
+                                                        "identity_confirmations": [{"object": "mug", "seconds_spent": 2}]}).json()
+    wait(c, r["job"])
+    j = wait(c, c.post(f"/api/capture/{cap['id']}/propose").json())
+    assert j["status"] == "done", j["error"]
+    return cap["id"], j
+
+
+def test_synthetic_capture_provenance_reaches_every_view(api, clip, monkeypatch, tmp_path):
+    c = api
+    monkeypatch.setenv("MIRROR_TRIAL_STORE", str(tmp_path / "trials"))
+    cid, j = _proposed_capture(c, clip, monkeypatch, synthetic=True)
+    assert j["result"]["synthetic_capture"] is True and j["result"]["input_evidence"] == "synthetic_capture"
+    st = c.get("/api/state").json()
+    g = st["generation"]
+    assert g["synthetic_capture"] and g["synthetic"] and g["evidence_label"].startswith("SYNTHETIC")
+    assert st["demo"]["synthetic_capture"] and all(s["synthetic_capture"] for s in st["specs"])
+    assert st["models"][-1]["synthetic_capture"] is True
+    run = wait(c, c.post("/api/run", json={}).json())
+    assert run["result"]["synthetic_capture"] is True
+    st = c.get("/api/state").json()
+    ro = st["rollouts"][-1]
+    assert ro["synthetic_capture"] and ro["input_evidence"] == "synthetic_capture"
+    assert c.get(f"/api/rollouts/{ro['id']}").json()["synthetic_capture"] is True
+    assert c.get("/api/rollouts/demo").json()["synthetic_capture"] is True
+    # a re-interpretation (new generation) keeps the label; it can never be dropped
+    wait(c, c.post("/api/interpret").json())
+    st = c.get("/api/state").json()
+    assert st["generation"]["synthetic_capture"] and st["generation"]["reason"] == "reinterpreted"
+    # the trial export carries it
+    c.post("/api/study/start", json={"participant": "DEV", "consent": {"recorded": True}})
+    ch = wait(c, c.post("/api/challenge", json={"family": "reference", "preset": "shortcut"}).json())["result"]["challenge_id"]
+    wait(c, c.post(f"/api/challenge/{ch}/correction", json={"text": "keep the cup upright"}).json())
+    from mirror.studio.trials import load_trials
+    rec = load_trials(tmp_path / "trials", "dev_smoke")[-1]
+    assert rec["lineage"]["synthetic_capture"] is True and rec["lineage"]["input_evidence"] == "synthetic_capture"
+    assert c.get("/api/state").json()["challenges"][-1]["synthetic_capture"] is True
+
+
+def test_real_phone_capture_is_labelled_as_such(api, clip, monkeypatch):
+    c = api
+    cid, j = _proposed_capture(c, clip, monkeypatch, synthetic=False)
+    g = c.get("/api/state").json()["generation"]
+    assert g["input_evidence"] == "phone_capture" and g["synthetic_capture"] is False and g["evidence_label"] is None
+
+
+def test_lineage_keeps_the_synthetic_label_across_save_and_load(tmp_path):
+    from mirror.studio.fixtures import FixtureSession
+    s = FixtureSession()
+    s.set_demo(s.record_demo(), reason="phone_capture", input_evidence="synthetic_capture", synthetic=True)
+    s.interpret()
+    s.save_state(tmp_path)
+    s2 = FixtureSession.load_state(tmp_path)
+    assert s2.generation.synthetic and s2.generation.evidence()["synthetic_capture"]
+
+
+def test_capture_options_and_review_shorthands(api, clip, monkeypatch):
+    c = api
+    o = c.get("/api/capture/options").json()
+    assert o["available"] and o["roles"]["two_view"] == ["take_top", "take_side", "lens_top", "lens_side"]
+    assert o["proxies"]["cup"]["proxy_dims_m"] and o["print_rule"]["bar_tolerance_mm"] == 1.0
+    calls = []
+    monkeypatch.setattr(CP, "build", fake_build(calls))
+    cid = ready_capture(c, clip)["id"]
+    wait(c, c.post(f"/api/capture/{cid}/run").json())
+    r = c.post(f"/api/capture/{cid}/review", json={"identity": [{"object": "mug", "confirmed": True, "seconds_spent": 3}]}).json()
+    assert r["recorded"][0]["kind"] == "identity" and r["recorded"][0]["target"] == "top:mug@0"
+    assert c.post(f"/api/capture/{cid}/review", json={"events": [{"id": "nope", "status": "confirmed"}]}).status_code == 422
+
+
+
+def test_tray_review_items_carry_the_right_action(api, clip, monkeypatch):
+    from mirror.capture import events as EV
+    from mirror.capture.session import CaptureSession, tray_review
+
+    def build(cap, paths):
+        region = EV.TrayRegion(center_xy=(0.1, 0.1), inner_half=(0.5, 0.1), footprint_source="assumed_proxy")
+        s = CaptureSession(synthetic=True, review=tray_review(None, []) + tray_review(region, []))
+        s.finalise_kind()
+        return s
+    monkeypatch.setattr(CP, "build", build)
+    c = api
+    cid = ready_capture(c, clip)["id"]
+    wait(c, c.post(f"/api/capture/{cid}/track").json())
+    items = {x["code"]: x for x in c.get(f"/api/capture/{cid}").json()["report"]["review"]}
+    assert set(items) == {"tray_not_mapped", "tray_size_unsupported", "tray_footprint_assumed"}
+    for code in ("tray_not_mapped", "tray_size_unsupported"):
+        assert items[code]["blocking"] and not items[code]["needs_new_input"] and items[code]["how_to_resolve"]
+    assert items["tray_not_mapped"]["action"]["via"] == ["inputs", "prompts"]
+    assert items["tray_size_unsupported"]["action"]["via"] == ["inputs"]
+    fa = items["tray_footprint_assumed"]
+    assert not fa["blocking"] and fa["action"]["optional"] and "ruler" in fa["how_to_resolve"]
+    assert c.post(f"/api/capture/{cid}/propose").status_code == 409
+    o = c.get("/api/capture/options").json()
+    assert "tray_not_mapped" in o["review"]["how_to_resolve"] and "tray_not_mapped" in o["review"]["actions"]

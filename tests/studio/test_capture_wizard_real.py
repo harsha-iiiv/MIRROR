@@ -117,7 +117,8 @@ def test_wizard_upload_calibrate_track_review_propose(demo, tmp_path):
             # Whatever still blocks needs an explicit person action the wizard does not offer yet.
             assert requests.post(f"{base}/api/capture/{cid}/propose", headers=h, timeout=10).status_code == (409 if left else 200)
             if left:
-                body = {"identity_confirmations": [["top", x["object"], 0] for x in left if x["code"] == "identity_uncertain"],
+                body = {"identity_confirmations": [{"object": x["object"], "seconds_spent": 1.0}
+                                                   for x in left if x["code"] == "identity_uncertain"],
                         "corrections": [{"target": x["event"], "field": "confirm", "seconds_spent": 1.0}
                                         for x in left if x["code"] == "ambiguous_event_interval"]}
                 assert {x["code"] for x in left} <= {"identity_uncertain", "ambiguous_event_interval"}, left
@@ -142,6 +143,8 @@ def test_wizard_upload_calibrate_track_review_propose(demo, tmp_path):
             st = requests.get(base + "/api/state", headers=h, timeout=10).json()
             assert st["generation"]["reason"] == "phone_capture" and st["specs"]
             assert st["generation"]["calibration"]["synthetic"] is True
+            assert st["generation"]["synthetic_capture"] is True and st["generation"]["evidence_label"].startswith("SYNTHETIC")
+            assert all(s["synthetic_capture"] for s in st["specs"]) and st["demo"]["synthetic_capture"] is True
             cap = requests.get(f"{base}/api/capture/{cid}", headers=h, timeout=10).json()
             assert cap["state"] == "proposed" and cap["effort"]["actions"] >= 2
             print("E2E", json.dumps({"blocking_initial": sorted(blocking0), "left_after_wizard_review": [x["code"] for x in left],

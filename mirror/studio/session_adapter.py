@@ -708,6 +708,9 @@ class StudioService:
                 result = fn(job)
                 if job.stale:                         # abandoned by the watchdog meanwhile
                     raise RuntimeError("finished after it was abandoned; result discarded")
+                if isinstance(result, dict) and job.generation_id:
+                    for k, v in self._ev(job.generation_id).items():
+                        result.setdefault(k, v)
                 job.result = result
                 job.status = "done"
                 job.progress = 1.0
@@ -1011,7 +1014,7 @@ class StudioService:
         entry = {"artifact": artifact, "role": role, "model": model or "unknown",
                  "latency_s": round(float(latency_s), 3) if latency_s is not None else None,
                  "source": source, "provenance": provenance_of(source), "at": time.time(),
-                 "generation_id": self.generation_id,
+                 "generation_id": self.generation_id, **self.session.generation.evidence(),
                  **{k: v for k, v in extra.items() if v is not None}}
         self.model_log.append(entry)
         return entry
@@ -1269,7 +1272,8 @@ class StudioService:
                 self._guard(job)
                 trace = per["trace"]
                 self.session.set_demo(trace, reason="video_processed", source_media=media,
-                                      calibration=_dump(per.get("calibration")) if per.get("calibration") else None)
+                                      calibration=_dump(per.get("calibration")) if per.get("calibration") else None,
+                                      input_evidence="rendered_video" if top == "bundled" else "uploaded_video")
                 job.generation_id = self.generation_id
                 self.tags.clear()
                 self.rechecks = []
@@ -2135,7 +2139,8 @@ class StudioService:
             "scene": {**ch.origin, "scene": ch.scene.model_dump(mode="json")},
             "generation": {"id": gen.id, "demo": {"demo_id": gen.demo_id, "content_sha256": gen.demo_sha256,
                                                   "source": gen.demo_source},
-                           "source_media": gen.source_media, "calibration": gen.calibration},
+                           "source_media": gen.source_media, "calibration": gen.calibration, **gen.evidence()},
+            **gen.evidence(),
             "preparation": ch.preparation,
             "spec_versions": {
                 "base": {"version_id": ch.base_spec_version_id, "content_sha256": sha256_of(base),
@@ -2252,8 +2257,11 @@ class StudioService:
 
     def _study_lineage(self, base_vid: Optional[str], revised_vid: Optional[str] = None) -> dict:
         g = self.session.generation
+        ev = g.evidence()
         return {"generation_id": g.id, "demo_id": g.demo_id, "demo_sha256": g.demo_sha256,
-                "base_spec_version_id": base_vid, "revised_spec_version_id": revised_vid}
+                "base_spec_version_id": base_vid, "revised_spec_version_id": revised_vid,
+                "input_evidence": ev["input_evidence"], "synthetic_capture": ev["synthetic_capture"],
+                "synthetic": ev["synthetic"]}
 
     # ------------------------------------------------------------ manual form
     def manual_edit(self, edits: list, note: str = "") -> dict:
@@ -2531,7 +2539,9 @@ class StudioService:
                 self._guard(job)
                 media = [{**clip, "role": role} for role, clip in c.clips.items()]
                 self.session.set_demo(trace, reason="phone_capture", source_media=media,
-                                      calibration=calibration_summary(c))
+                                      calibration=calibration_summary(c),
+                                      input_evidence="synthetic_capture" if c.synthetic else "phone_capture",
+                                      synthetic=c.synthetic)
                 job.generation_id = self.generation_id
                 for clip in c.clips.values():
                     self.media.release(clip["id"], self.generation_id)
@@ -2736,6 +2746,13 @@ class StudioService:
             return self.snapshot()
 
     # ---------------------------------------------------------- output
+    def _ev(self, gid: Optional[str]) -> dict:
+        """Evidence provenance inherited from a generation (synthetic capture, phone capture, ...)."""
+        g = self.session.generation_by_id(gid) if gid else None
+        if g is None:
+            return {"input_evidence": None, "synthetic": False, "synthetic_capture": False, "evidence_label": None}
+        return g.evidence()
+
     def rollout_payload(self, rollout_id: str) -> dict:
         """Playback payload. Ids are immutable, so a cached payload never goes stale;
         "demo" is an alias of the current generation's demonstration playback id."""
@@ -2756,14 +2773,14 @@ class StudioService:
                 gen = next((g for g in self.session.all_generations() if g.demo_playback_id == rollout_id), None)
                 extra = {"beads_hidden": self.mode == "live", "kind": "demonstration", "alias": "demo",
                          "generation_id": gen.id if gen else None,
-                         "demo_sha256": gen.demo_sha256 if gen else None}
+                         "demo_sha256": gen.demo_sha256 if gen else None, **(gen.evidence() if gen else {})}
                 payload = compact_rollout(self.demo_rollouts[rollout_id], extra=extra, digits=self.payload_digits)
                 payload["id"] = rollout_id
             else:
                 e, owner = self.session.find_rollout(rollout_id)
                 payload = compact_rollout(e.rollout, digits=self.payload_digits, extra={
                     "kind": "rollout", "scene": e.scene.model_dump(mode="json"),
-                    "plan": _plan_summary(e.plan), **e.lineage(),
+                    "plan": _plan_summary(e.plan), **e.lineage(), **self._ev(e.generation_id),
                     "provenance": "fixture" if self.mode == "fixture" else "simulated"})
                 if payload.get("visual") is None:
                     payload["visual"] = self.visual_for(e.scene)
@@ -2793,6 +2810,7 @@ class StudioService:
                                  "plan": _plan_summary(e.plan), "tags": self.tags.get(rid, []),
                                  "has_frames": bool(e.rollout.frames), "trace": self.trace_cache[rid],
                                  **{k: v for k, v in e.lineage().items() if k != "rollout_id"},
+                                 **self._ev(e.generation_id),
                                  "provenance": "fixture" if self.mode == "fixture" else "simulated"})
             for rid, e in self.eval_entries.items():
                 if rid not in self.trace_cache:
@@ -2814,7 +2832,7 @@ class StudioService:
                         "events": [e.model_dump(mode="json") for e in d.events],
                         "video_path": d.video_path, "rollout_id": "demo",
                         "playback_id": self.demo_playback_id, "content_sha256": s.generation.demo_sha256,
-                        "evidence": _dump(getattr(d, "evidence", None)),
+                        "evidence": _dump(getattr(d, "evidence", None)), **s.generation.evidence(),
                         "scene": d.scene.model_dump(mode="json")}
             scene = s.scene.model_dump(mode="json") if s.scene is not None else None
             return {
@@ -2831,11 +2849,13 @@ class StudioService:
                 "generation": s.generation.public(),
                 "archive": [a.public() for a in s.archive][-10:],
                 "specs": [{**sp.model_dump(mode="json"), "version_id": s.spec_version_id(sp),
-                           "content_sha256": sha256_of(sp), "generation_id": s.generation.id} for sp in s.specs],
+                           "content_sha256": sha256_of(sp), "generation_id": s.generation.id,
+                           **s.generation.evidence()} for sp in s.specs],
                 "rollouts": rollouts,
-                "rechecks": [r for r in self.rechecks if r.get("generation_id", s.generation.id) == s.generation.id
-                             or r["rollout_id"] in s.rollouts],
-                "challenges": [self.challenges[c].public() for c in self.challenge_order[-5:] if c in self.challenges],
+                "rechecks": [{**r, **self._ev(r.get("generation_id", s.generation.id))} for r in self.rechecks
+                             if r.get("generation_id", s.generation.id) == s.generation.id or r["rollout_id"] in s.rollouts],
+                "challenges": [{**self.challenges[c].public(), **self._ev(self.challenges[c].generation_id)}
+                               for c in self.challenge_order[-5:] if c in self.challenges],
                 "study": self.study.public() if self.study is not None else None,
                 "captures": [c.public() for c in self.captures.values()],
                 "clarification": self.clarification,

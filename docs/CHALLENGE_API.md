@@ -100,6 +100,17 @@ or the model error). Latency is `measured_now` only for work done now; replayed 
 latency recorded with the cassette or null. `cost_usd` is null unless `MIRROR_LLM_USD_PER_1K_TOKENS` is
 set (then labelled an estimate). Static exports and the tour are `recorded_model` / `recorded_playback`.
 
+### Evidence provenance (what the demonstration came from)
+
+Every generation records `input_evidence` (`simulator_trace | rendered_video | uploaded_video |
+video_reconstruction | phone_capture | synthetic_capture | fixture`) and `synthetic`. Everything derived
+from it inherits these fields together with `synthetic_capture` and `evidence_label` ("SYNTHETIC capture
+(rendered test clips): not real footage" when synthetic): `generation`, `archive[]`, `demo`, `specs[]`,
+`rollouts[]`, rollout payloads (including the demo playback), `rechecks[]`, `models[]`, `challenges[]`,
+every job result, shared challenge records, and trial records (`lineage.input_evidence`,
+`lineage.synthetic_capture`, `lineage.synthetic`). The label survives re-interpretation, archiving and
+save/load, and cannot be removed. A synthetic capture is never real footage, in any view or count.
+
 ## 4. Challenge mode
 
 Challenge scenes come only from development scene families: seeds 0-9999 that no frozen evaluation names
@@ -233,6 +244,15 @@ the last run predates the current inputs; `missing` lists what tracking still ne
   mappings (+ fidelity_statement), tray, objects {label: proxy, coverage {measured, inferred,
   interpolated, unobserved}, tilt_observed}, events, review [..., blocking, how_to_resolve,
   needs_new_input], gate_open, track_sources, model_calls}`. `GET .../session` returns the same session.
+* `GET /api/capture/options` → proxy catalogue (`proxies`, `proxy_choices`, `dimension_sources`), clip
+  `roles` per mode, `target` geometry and PDFs, `print_rule`, review guidance, capture upload `limits`.
+* Each `report.review[]` item has `blocking`, `how_to_resolve`, `needs_new_input` (new clips or
+  measurements) and `action {via [review|inputs|prompts], fields, optional?}`. Tray items:
+  `tray_not_mapped` (blocking: map an object as proxy `tray` with measured inside width/depth and draw its
+  box, or enter `tray {center_xy, inner_half}`), `tray_size_unsupported` (blocking: re-measure, 6-60 cm
+  per side), `tray_footprint_assumed` (not blocking: catalogue size used until measured).
+* `report.reacquisitions [{object, t_start, t_end, reference_camera}]`: where a track was lost and found
+  again, for the identity question.
 * `POST /api/capture/{cid}/review` records each action with the time spent (`review_log`, `effort`) and
   starts a re-run; returns `{capture, recorded, job}`. Canonical body: `objects [{track_label,
   confirmed_by_person, proxy?, ..., seconds_spent}]`, `identity_confirmations [{camera, label, from_frame,
@@ -241,8 +261,11 @@ the last run predates the current inputs; `missing` lists what tracking still ne
   confirms each object; `events [{track_id, type, t_start, t_end, status}]` matched to the pipeline's
   events by object, kind and order (`confirmed` confirms a bracketed moment, `edited` sets its time,
   `rejected` rejects it, `uncertain` changes nothing). Identity confirmations have no equivalent there.
-  The studio never marks a review item resolved itself.
-* `POST /api/capture/{cid}/propose` → job, refused (409) unless the last run used the current inputs and
+  Shorthands: `identity_confirmations [{object, seconds_spent}]` (or the wizard's `identity [{object,
+  confirmed}]`) confirms that object's whole track in every take clip; wizard `events` items may carry
+  the event `id` instead of being matched by order. The studio never marks a review item resolved itself.
+* `POST /api/capture/{cid}/propose` (allowed for synthetic captures; the result carries
+  `synthetic_capture`) → job, refused (409) unless the last run used the current inputs and
   every blocking item is resolved. Builds the DemoTrace (`mirror.capture.trace.to_demo_trace`, human-hand
   events labelled inferred), starts a new generation (`reason: phone_capture`, source media with roles
   and hashes, `calibration` = capture summary incl. effort and `synthetic`) and proposes a specification.

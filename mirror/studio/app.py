@@ -168,6 +168,7 @@ class CaptureReviewIn(BaseModel):
     corrections: list[dict[str, Any]] = []
     correspondence: list[dict[str, Any]] = []       # the wizard's shape (translated, see capture.translate_review)
     events: list[dict[str, Any]] = []
+    identity: list[dict[str, Any]] = []             # wizard: [{object, confirmed, seconds_spent}]
 
 
 class ManualEditIn(BaseModel):
@@ -570,6 +571,11 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
             return fn(*a, **k)
         except CaptureError as exc:
             raise StudioError(422, "invalid_capture", str(exc))
+
+    @app.get("/api/capture/options")
+    def capture_options(svc: StudioService = Depends(session)):
+        from .capture import options
+        return options(svc.capture_limits.public())
 
     @app.post("/api/capture")
     def capture_create(body: CaptureIn, svc: StudioService = Depends(session)):
