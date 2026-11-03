@@ -5,7 +5,7 @@ Two cuts are built from recorded MuJoCo rollouts; no frame is animated by hand, 
 | Cut | Size | Length | Purpose |
 |---|---|---|---|
 | social | 1080x1920 | about 33 s | phone feed; text kept between y 290 and 1240 |
-| judging | 1920x1080 | about 2 min 10 s | submission video |
+| judging | 1920x1080 | about 2 min 15 s | submission video |
 
 Headline: corrections you can check. A correction is one sentence that becomes a scoped rule change, checked three
 ways: the old run is re-judged from its recorded physics log; the corrected rule is planned and run on new layouts;
@@ -26,6 +26,9 @@ when no compliant route exists, the planner refuses with a proof instead of spil
   interpreter, development layouts). They are demonstrations, not an evaluation.
 - The specification pair is built by replaying the recorded Muse Spark responses (`data/cassettes_muse`); the
   offline interpreter produces the same enforced rules. No model is called while building the films.
+- One judging shot shows the studio's Test flow (recorded tour v1: the typed correction, its scope, and the old run
+  re-checked from its physics log). That tour was recorded at 0.05 m/rad and the shot says so. Screenshots are taken
+  from the web app served locally with the recorded session; `build.py --app <dir>` adds them.
 - No narration and no human voice: captions only, over a quiet synthesized pad written by `build.py`.
 
 ## Rebuilding
