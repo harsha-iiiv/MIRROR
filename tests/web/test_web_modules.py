@@ -136,29 +136,41 @@ def test_cache_keys_never_collide_across_demonstrations(tmp_path):
 
 
 PROV = r"""
-import { demoSource, videoMediaKind, provenanceText } from '@JS@/provenance.js';
-console.log(JSON.stringify(DATA.cases.map((s) => ({ kind: videoMediaKind(s), ...demoSource(s) }))
-  .concat([{ p: provenanceText('offline_interpreter') }, { p: provenanceText('recorded') }])));
+import { demoSource, videoMediaKind, provenanceText, evidenceKind, tiltStatusAt, reviewItems } from '@JS@/provenance.js';
+const ev = { kind: 'rendered_video_reconstruction', objects: { cup_0: { tilt: [{ status: 'measured', start: 0, end: 9 }, { status: 'unobserved', start: 10, end: 20 }] } },
+  review: [{ code: 'calibration_assumed', severity: 'abstain', message: 'Camera calibration was assumed.' }] };
+console.log(JSON.stringify({
+  cases: DATA.cases.map((s) => ({ kind: evidenceKind(s), media: videoMediaKind(s), ...demoSource(s) })),
+  p: [provenanceText('offline_interpreter'), provenanceText('recorded'), provenanceText('recorded_replay')],
+  tilt: [tiltStatusAt(ev, 'cup_0', 3), tiltStatusAt(ev, 'cup_0', 15), tiltStatusAt(ev, 'cup_0', 40), tiltStatusAt(ev, 'block_0', 3)],
+  review: reviewItems({ demo: { evidence: ev } }).map((r) => r.severity),
+}));
 """
 
 
 def test_demonstration_wording_matches_what_the_video_is(tmp_path):
     cases = [
-        {"demo": {"source": "video_grounded"}, "video_demo": {"bundled": True}},
+        {"demo": {"source": "video_grounded"}, "video_demo": {"bundled": True}},          # recorded export, no evidence field
         {"demo": {"source": "video_grounded"}, "video_demo": {"bundled": False}},
-        {"demo": {"source": "video_grounded"}, "video_demo": {"media": {"kind": "camera"}}},
-        {"demo": {"source": "video_grounded", "provenance": {"label": "Phone video of a person", "description": "phone footage of a person, calibrated"}}},
+        {"demo": {"source": "video_grounded", "evidence": {"kind": "rendered_video_reconstruction"}}},
+        {"demo": {"source": "video_grounded", "evidence": {"kind": "unverified_video_reconstruction"}}},
         {"demo": {"source": "teleop_scripted"}},
+        {"mode": "fixture", "demo": {"source": "video_grounded"}},
     ]
     out = run_js(tmp_path, PROV, {"cases": cases})
-    rendered, upload, camera, supplied, teleop = out[:5]
-    assert rendered["kind"] == "rendered_simulation" and "not footage of a person" in rendered["long"]
-    assert "rendered from the simulator" in rendered["long"]
-    assert "person" not in upload["long"] and upload["kind"] == "upload"
-    assert camera["kind"] == "camera" and "person" not in camera["long"]
-    assert supplied["long"] == "phone footage of a person, calibrated"
-    assert "not a video of a person" in teleop["long"]
-    for c in out[:5]:
+    legacy_bundled, legacy_upload, rendered, unverified, teleop, fixture = out["cases"]
+    assert legacy_bundled["media"] == "rendered_simulation"
+    assert "Simulator-rendered video" in legacy_bundled["long"] and "Not footage of a person" in legacy_bundled["long"]
+    assert "tilt values in it are not evidence" in legacy_bundled["long"]
+    assert legacy_upload["kind"] == "legacy_video_unannotated" and "person" not in legacy_upload["long"]
+    assert rendered["kind"] == "rendered_video_reconstruction" and "Not footage of a person" in rendered["long"]
+    assert "unverified" in unverified["long"] and "person" not in unverified["long"]
+    assert teleop["kind"] == "simulator_ground_truth" and "Not video, and not a person" in teleop["long"]
+    assert fixture["kind"] == "interface_fixture"
+    for c in out["cases"]:
         # The old wording joined "human video" with "not a video of a person".
         assert "human video" not in c["long"]
-    assert out[5]["p"].startswith("offline interpreter") and out[6]["p"].startswith("recorded")
+    assert out["p"][0].startswith("offline interpreter") and out["p"][1].startswith("recorded")
+    assert out["p"][2] == "recorded model output (replayed, no network)"
+    assert out["tilt"] == ["measured", "unobserved", "unobserved", None]
+    assert out["review"] == ["abstain"]

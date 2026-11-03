@@ -412,9 +412,11 @@ export class Viewer {
   }
 
   // ---------------------------------------------------------- playback
-  loadRollout(payload, { ghost = null, traceObject = null, sceneState = null, keepTime = false } = {}) {
+  loadRollout(payload, { ghost = null, traceObject = null, sceneState = null, keepTime = false, tiltStatus = null } = {}) {
     if (this.live) return;
     this.payload = payload;
+    // (frame index) -> 'measured' | 'unobserved' | ...; unobserved tilt is drawn neutral, never as upright.
+    this.tiltStatus = tiltStatus;
     this.ghost = ghost;
     this.sceneState = sceneState || payload.scene || this.sceneState;
     this.traceObject = traceObject || this._pickTraceObject(payload);
@@ -496,7 +498,11 @@ export class Viewer {
       const tl = tiltDeg(s.slice(3));
       pos.push(s[0], s[1], s[2]);
       tilts.push(tl);
-      if (opts.ghost) {
+      const unobserved = !opts.ghost && payload === this.payload && this.tiltStatus && this.tiltStatus(i) === 'unobserved';
+      if (unobserved) {
+        c.set(cssVar('--faint') || '#999');
+        this.hasUnobservedTilt = true;
+      } else if (opts.ghost) {
         if (tl > this.tol) tiltColor(90, this.tol, c); else c.set(cssVar('--faint') || '#999');
       } else tiltColor(tl, this.tol, c);
       col.push(c.r, c.g, c.b);
@@ -521,6 +527,7 @@ export class Viewer {
 
   _buildTraces() {
     this._clearOverlay();
+    this.hasUnobservedTilt = false;
     if (!this.payload || !this.traceObject) return;
     const cur = this._traceData(this.payload, this.traceObject);
     if (cur) {

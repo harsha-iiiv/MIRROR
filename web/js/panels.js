@@ -8,7 +8,8 @@ import { MiniMap } from './minimap.js';
 import { fmtT, fmtNum, statusLabel, constraintText, selectorText, provText, sceneLabel, latest, cupOutcome, cap, isAux, isBlockedScene, humanRoute } from './util.js';
 export { humanRoute };
 import { rolloutCacheKey } from './identity.js';
-import { demoSource, videoMediaKind } from './provenance.js';
+import { useDialog } from './a11y.js';
+import { demoSource, videoMediaKind, reviewItems } from './provenance.js';
 
 const html = htm.bind(h);
 const TOL = 15;
@@ -82,6 +83,19 @@ function FallbackNote({ snap, steps }) {
 
 function Head({ n, kicker, title, lede }) {
   return html`<div><p class="kicker">${n} · ${kicker}</p><h2>${title}</h2>${lede ? html`<p class="lede">${lede}</p>` : ''}</div>`;
+}
+
+// Perception review items: `abstain` blocks a proposal, `review` sits next to it.
+export function ReviewNotice({ snap }) {
+  const items = reviewItems(snap);
+  if (!items.length) return null;
+  const abstain = items.filter((r) => r.severity === 'abstain');
+  const rest = items.filter((r) => r.severity !== 'abstain');
+  return html`<div>
+    ${abstain.length ? html`<div class="callout bad" role="alert" style="margin:8px 0"><b>Needs your review before MIRROR proposes rules.</b>
+      <ul class="plain">${abstain.map((r) => html`<li>${r.message}${r.object_id ? html` <span class="faint">(${r.object_id})</span>` : ''}</li>`)}</ul></div>` : ''}
+    ${rest.length ? html`<ul class="plain muted" style="font-size:12px">${rest.map((r) => html`<li>${r.message}</li>`)}</ul>` : ''}
+  </div>`;
 }
 
 function StaticNote({ ctx }) {
@@ -284,6 +298,7 @@ function WatchPanel({ ctx }) {
         lede=${vd ? (videoMediaKind(snap) === 'rendered_simulation' ? 'A demonstration video rendered from the simulator: the objects are tracked in its pixels, reconstructed on the table, and replayed in 3D beside the video.' : 'A demonstration video: the objects are tracked in its pixels, reconstructed on the table, and replayed in 3D beside the video.')
           : 'An operator packs the cup, the block and the marker into the tray, carrying everything around the wall.'} />
       ${d ? html`
+        <${ReviewNotice} snap=${snap} />
         <dl class="kv"><dt>Input</dt><dd>${demoSource(snap).short}</dd>
           <dt>Duration</dt><dd class="num">${fmtT(d.duration)}</dd>
           <dt>Layout</dt><dd>${sceneLabel(d.scene_id)}</dd></dl>
@@ -357,6 +372,7 @@ function InterpretPanel({ ctx }) {
   return html`
     <div class="sec">
       <${Head} n="2" kicker="Interpret" title="What MIRROR thinks matters" lede=${spec.summary} />
+      <${ReviewNotice} snap=${snap} />
       <div class="row">
         ${snap.specs.length > 1 ? html`<div class="seg" role="group" aria-label="Specification version">${snap.specs.map((sp) => html`
           <button class="c" aria-pressed=${sp.version === spec.version} onClick=${() => setVer(sp.version)}>v${sp.version}</button>`)}</div>`
@@ -1024,18 +1040,14 @@ export function AboutPanel({ ctx, onClose }) {
   const isOffline = /offline|rules/.test(interp);
   const ev = snap.evaluation;
 
-  useEffect(() => {
-    const k = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', k);
-    return () => window.removeEventListener('keydown', k);
-  }, []);
-  return html`<div class="about" role="dialog" aria-label="What you are looking at">
+  const dref = useDialog(onClose);
+  return html`<div class="about" role="dialog" aria-modal="false" aria-label="What you are looking at" ref=${dref} tabindex="-1">
     <div class="about-h"><b>What you are looking at</b><button class="iconbtn" onClick=${onClose} aria-label="Close">✕</button></div>
     <ul>
       <li><b>Simulation only.</b> Everything runs in MuJoCo. Nothing here was executed on a physical robot or shows simulation-to-reality transfer.</li>
       <li><b>The robot is a free-flying gripper.</b> Six position-controlled axes and two fingers; no arm is modelled. Objects move only through actuators and contact physics.</li>
       <li><b>Privileged state.</b> Planning and checking read simulator state (poses, contacts, bead positions). It is not visual perception.</li>
-      <li><b>The demonstration</b> is ${demoSource(snap).long}.</li>
+      <li><b>The demonstration.</b> ${demoSource(snap).long}</li>
       <li><b>The specification</b> was produced by <span class="num">${interp}</span>${isOffline ? ', the rule-based interpreter that needs no model' : ''}${spec?.history?.find((h) => h.model)?.model ? `; corrections compiled by ${spec.history.find((h) => h.model).model}` : ''}. ${snap.llm_mode === 'replay' ? ' Model responses are replayed from recordings made with that model; nothing calls a model while you browse.' : ''}${(snap.fallbacks || []).length ? ` These steps used the offline interpreter instead: ${snap.fallbacks.map((f) => f.step).join(', ')}.` : ''}${snap.llm?.mode === 'live' ? ` Live model requests (${snap.llm.model}) are limited to ${snap.llm.calls_per_session} per visitor and ${snap.llm.calls_per_hour} per hour for the server${snap.llm.calls_remaining_session != null ? `; ${snap.llm.calls_remaining_session} left in this session` : ''}. Past that, or if the model fails, the offline interpreter is used and the step says so.` : ''} Model output is validated against a schema before planning and never judges success.</li>
       <li><b>Success is measured</b> by an independent checker from the physics log at every step: placement, tilt per phase, bead retention, contacts.</li>
       <li><b>Evidence:</b> ${ev ? ({ final: 'the pre-registered evaluation, loaded unchanged from the evaluation output.',

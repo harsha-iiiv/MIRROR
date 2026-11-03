@@ -9,7 +9,7 @@ import { PANELS, STEPS, stepState, correctionVersion, StoryBar, AboutPanel } fro
 import { VideoPane, ModelsPanel } from './media.js';
 import { OverviewPanel } from './overview.js';
 import { correctionStory } from './story.js';
-import { demoSource, videoMediaKind } from './provenance.js';
+import { demoSource, videoMediaKind, demoEvidence, tiltStatusAt } from './provenance.js';
 import { generationId, rolloutCacheKey, isStale, latestOnly, DROPPED } from './identity.js';
 
 const html = htm.bind(h);
@@ -393,7 +393,10 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
           setDur(0); setT(0);
           return;
         }
-        v.loadRollout(p, { ghost: g, sceneState: p.scene || (display.kind === 'demo' ? snap.demo?.scene : null) });
+        const ev = display.kind === 'demo' ? demoEvidence(snap) : null;
+        const hz = snap.demo?.sample_hz || 0;
+        const tiltStatus = ev && hz && p.t ? (i) => tiltStatusAt(ev, v.traceObject || '', Math.round(p.t[i] * hz)) : null;
+        v.loadRollout(p, { ghost: g, sceneState: p.scene || (display.kind === 'demo' ? snap.demo?.scene : null), tiltStatus });
         setPayload(p);
         setDur(v.duration());
         v.setTime(0);
@@ -448,6 +451,7 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
           <div class="progress"><div style=${`width:${loading.total ? (100 * loading.got) / loading.total : 30}%`}></div></div></div>` : ''}
         ${payload?.t?.length ? html`<div class="v-legend">
           <span><i class="grad"></i><span class="long">container path by tilt: within ${15}° → over</span><span class="short">cup path by tilt</span></span>
+          ${viewerRef.current?.hasUnobservedTilt ? html`<span><i style="background:var(--faint)"></i>tilt not observed</span>` : ''}
           ${ghostOn && opts.ghost ? html`<span><i style="background:var(--faint)"></i><span class="long">${ghostText(snap, display.ghost)}</span><span class="short">before (v${(snap.rollouts || []).find((r) => r.id === display.ghost)?.spec_version ?? '?'})</span></span>` : ''}
           ${payload.beads_hidden ? html`<span>beads not recorded in demo trace</span>`
             : html`<span><i style="background:#ff2bd6;border-radius:50%;width:8px;height:8px"></i><span class="long">beads, drawn enlarged at their true positions</span><span class="short">beads (enlarged)</span>${(() => {
