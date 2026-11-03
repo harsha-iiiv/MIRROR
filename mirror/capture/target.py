@@ -42,6 +42,8 @@ class TargetSpec(BaseModel):
     scale_bar_mm: float = 50.0
     sync_marker_id: int = 90
     sync_marker_mm: float = 80.0
+    tag_ids: list[int] = Field(default_factory=lambda: [95, 96, 97])
+    tag_mm: float = 20.0
     board_top_mm: float = 22.0         # distance from the top paper edge to the board
     papers: list[str] = Field(default_factory=lambda: ["A4", "Letter"])
     notes: str = ("Board frame: origin at the board's outer top-left corner as printed, x along the 5-square "
@@ -236,6 +238,16 @@ def target_pages(spec: TargetSpec = DEFAULT_TARGET, paper: str = "A4") -> list[_
     for r, c0, n in _runs(cells_m):
         q.rect(mx + c0 * cs, my + r * cs, n * cs, cs, tag="sync_marker")
     _scale_bar(q, mx - 20, my + m + 15.0, spec.scale_bar_mm)
+    # optional object tags (ids 95-97, 20 mm): tape one upright on the mug, printed 'up' towards its opening
+    ty = my + m + 32.0
+    q.text(mx - 20, ty, "Optional object tags (20 mm). Tape flat and upright: the arrow points to the mug's opening.", size=7.5)
+    for k, tid in enumerate(spec.tag_ids):
+        cells_t = marker_cells(spec, tid, spec.tag_mm)
+        ct = spec.tag_mm / cells_t.shape[0]
+        tx = mx - 20 + k * 40.0
+        for r, c0, n in _runs(cells_t):
+            q.rect(tx + c0 * ct, ty + 6.0 + r * ct, n * ct, ct, tag="object_tag")
+        q.text(tx, ty + 6.0 + spec.tag_mm + 5.0, f"tag {tid}  ^ up", size=7)
     return [p, q]
 
 
@@ -243,6 +255,12 @@ def write_pdf(path, spec: TargetSpec = DEFAULT_TARGET, paper: str = "A4") -> Pat
     path = Path(path)
     _write_pdf(target_pages(spec, paper), path, f"{spec.name} ({paper})")
     return path
+
+
+def _pdf_bytes(spec: TargetSpec = DEFAULT_TARGET, paper: str = "A4") -> bytes:
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        return write_pdf(Path(td) / "t.pdf", spec, paper).read_bytes()
 
 
 def write_png(path, spec: TargetSpec = DEFAULT_TARGET, dpi: int = 300, paper: str = "A4") -> Path:

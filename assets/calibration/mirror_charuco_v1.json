@@ -30,6 +30,12 @@
   "scale_bar_mm": 50.0,
   "sync_marker_id": 90,
   "sync_marker_mm": 80.0,
+  "tag_ids": [
+    95,
+    96,
+    97
+  ],
+  "tag_mm": 20.0,
   "board_top_mm": 22.0,
   "papers": [
     "A4",

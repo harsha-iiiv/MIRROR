@@ -35,8 +35,8 @@ TRACK_THRESHOLDS = {
     "elongation_for_axis": 1.6,     # principal axis only reported when major/minor >= this
 }
 
-TAG_IDS = {95: "tag_a", 96: "tag_b", 97: "tag_c"}
-TAG_SIZE_MM = 20.0
+TAG_IDS = {95: "tag_a", 96: "tag_b", 97: "tag_c"}   # must match TargetSpec.tag_ids
+TAG_SIZE_MM = 20.0                                 # must match TargetSpec.tag_mm
 
 
 class _M(BaseModel):

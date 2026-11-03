@@ -57,7 +57,7 @@ THRESHOLDS = {
     "pose_max_lift_error_mm": 10.0,          # camera-centre spread (0.5 px corner noise) projected to an object 20 cm above the table
     "pose_lift_reference_m": 0.20,              # board corners held out of the pose fit, error on the table plane
     "recal_max_rms_px": 2.0,                 # stored intrinsics re-used on a new take's board view
-    "recal_max_focal_change_rel": 0.03,      # oblique-view focal re-estimate
+    "recal_max_focal_change_rel": 0.06,      # oblique-view focal re-estimate (single-view noise ~3 %; phone zoom steps are >= 10 %)
     "recal_focal_check_min_angle_deg": 25.0,
     "motion_max_shift_px": 2.0,              # camera bump during a take (at processing resolution)
     "drift_max_translation_mm": 5.0,         # board re-observed at the end of a take
@@ -391,9 +391,10 @@ def recalibration_reasons(intr: Intrinsics, fingerprint: Optional[CaptureFingerp
         K0 = intr.Km.copy()
         flags = (cv2.CALIB_USE_INTRINSIC_GUESS | cv2.CALIB_FIX_PRINCIPAL_POINT | cv2.CALIB_FIX_ASPECT_RATIO |
                  cv2.CALIB_FIX_K1 | cv2.CALIB_FIX_K2 | cv2.CALIB_FIX_K3 | cv2.CALIB_ZERO_TANGENT_DIST)
+        f0 = float(intr.Km[0, 0])
         _, K1, *_ = cv2.calibrateCamera([obj.astype(np.float32)], [img.astype(np.float32).reshape(-1, 1, 2)],
                                         tuple(intr.image_size), K0, intr.dm.copy(), flags=flags)
-        rel = abs(K1[0, 0] / K0[0, 0] - 1.0)
+        rel = abs(float(K1[0, 0]) / f0 - 1.0)   # K0 is updated in place by OpenCV; compare with the stored value
         ok = rel <= T["recal_max_focal_change_rel"]
         checks.append(Check(name="recal_focal_change_rel", value=round(float(rel), 4), threshold=T["recal_max_focal_change_rel"], passed=ok,
                             note=f"oblique board view ({angle:.0f} deg)"))

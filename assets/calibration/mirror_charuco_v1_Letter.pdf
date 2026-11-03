@@ -1760,7 +1760,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612.0000 792.0000] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
 endobj
 8 0 obj
-<< /Length 1410 >>
+<< /Length 3829 >>
 stream
 BT /F2 11 Tf 135.921 735.307 Td (MIRROR sync card \(marker 90\)) Tj ET
 BT /F1 8 Tf 135.921 715.465 Td (Hold it where BOTH phones see it, then turn it face down quickly.) Tj ET
@@ -1808,6 +1808,96 @@ BT /F1 8 Tf 135.921 702.709 Td (Do this at the start and again at the end of eve
 277.2283 395.1496 0.8504 8.5039 re f
 %scale_tick
 BT /F1 8 Tf 286.157 389.480 Td (50 mm: measure this bar) Tj ET
+BT /F1 7.5 Tf 135.921 346.961 Td (Optional object tags \(20 mm\). Tape flat and upright: the arrow points to the mug's opening.) Tj ET
+135.9213 321.8538 56.6929 8.0990 re f
+%object_tag
+135.9213 313.7548 32.3960 8.0990 re f
+%object_tag
+176.4162 313.7548 16.1980 8.0990 re f
+%object_tag
+135.9213 305.6558 8.0990 8.0990 re f
+%object_tag
+168.3172 305.6558 8.0990 8.0990 re f
+%object_tag
+184.5152 305.6558 8.0990 8.0990 re f
+%object_tag
+135.9213 297.5568 24.2970 8.0990 re f
+%object_tag
+184.5152 297.5568 8.0990 8.0990 re f
+%object_tag
+135.9213 289.4578 16.1980 8.0990 re f
+%object_tag
+168.3172 289.4578 24.2970 8.0990 re f
+%object_tag
+135.9213 281.3588 16.1980 8.0990 re f
+%object_tag
+168.3172 281.3588 8.0990 8.0990 re f
+%object_tag
+184.5152 281.3588 8.0990 8.0990 re f
+%object_tag
+135.9213 273.2598 56.6929 8.0990 re f
+%object_tag
+BT /F1 7 Tf 135.921 259.087 Td (tag 95  ^ up) Tj ET
+249.3071 321.8538 56.6929 8.0990 re f
+%object_tag
+249.3071 313.7548 32.3960 8.0990 re f
+%object_tag
+289.8020 313.7548 16.1980 8.0990 re f
+%object_tag
+249.3071 305.6558 16.1980 8.0990 re f
+%object_tag
+297.9010 305.6558 8.0990 8.0990 re f
+%object_tag
+249.3071 297.5568 8.0990 8.0990 re f
+%object_tag
+265.5051 297.5568 24.2970 8.0990 re f
+%object_tag
+297.9010 297.5568 8.0990 8.0990 re f
+%object_tag
+249.3071 289.4578 16.1980 8.0990 re f
+%object_tag
+273.6040 289.4578 8.0990 8.0990 re f
+%object_tag
+297.9010 289.4578 8.0990 8.0990 re f
+%object_tag
+249.3071 281.3588 32.3960 8.0990 re f
+%object_tag
+289.8020 281.3588 16.1980 8.0990 re f
+%object_tag
+249.3071 273.2598 56.6929 8.0990 re f
+%object_tag
+BT /F1 7 Tf 249.307 259.087 Td (tag 96  ^ up) Tj ET
+362.6929 321.8538 56.6929 8.0990 re f
+%object_tag
+362.6929 313.7548 32.3960 8.0990 re f
+%object_tag
+411.2868 313.7548 8.0990 8.0990 re f
+%object_tag
+362.6929 305.6558 8.0990 8.0990 re f
+%object_tag
+395.0889 305.6558 8.0990 8.0990 re f
+%object_tag
+411.2868 305.6558 8.0990 8.0990 re f
+%object_tag
+362.6929 297.5568 8.0990 8.0990 re f
+%object_tag
+411.2868 297.5568 8.0990 8.0990 re f
+%object_tag
+362.6929 289.4578 16.1980 8.0990 re f
+%object_tag
+411.2868 289.4578 8.0990 8.0990 re f
+%object_tag
+362.6929 281.3588 8.0990 8.0990 re f
+%object_tag
+378.8909 281.3588 8.0990 8.0990 re f
+%object_tag
+395.0889 281.3588 8.0990 8.0990 re f
+%object_tag
+411.2868 281.3588 8.0990 8.0990 re f
+%object_tag
+362.6929 273.2598 56.6929 8.0990 re f
+%object_tag
+BT /F1 7 Tf 362.693 259.087 Td (tag 97  ^ up) Tj ET
 endstream
 endobj
 xref
@@ -1824,5 +1914,5 @@ xref
 trailer
 << /Size 9 /Root 1 0 R /Info << /Title (mirror_charuco_v1 \(Letter\)) >> >>
 startxref
-41761
+44180
 %%EOF
