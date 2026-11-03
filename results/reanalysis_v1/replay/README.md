@@ -21,9 +21,9 @@ kept and route labels). Both conditions of a seed must match.
 The one difference is the same in both eval_muse replays: shortcut seed 60002, original specification (the
 cup is tilted through the slot and spills in every run): the stored report keeps 6 of 8 beads, both replays
 keep 2 of 8. Status, completion and every violation agree. The replay at the frozen code is identical to the
-replay at today's code, so the difference is not a code change: the stored run was made on a different
-machine (see `results/eval_muse/RUN_NOTES.md`, attempt 2), and bead spill after a tilt is sensitive to
-floating-point differences between machines. The evaluation therefore reproduces at the outcome level
+replay at today's code, so the difference is not a code change. The stored run was made on a different machine
+(`results/eval_muse/RUN_NOTES.md`, attempt 2); the most likely cause is that bead spill after a tilt is
+sensitive to floating-point differences between machines. This is not proven here. The evaluation therefore reproduces at the outcome level
 (every scene, status and violation-free verdict), not bit-for-bit in bead counts.
 
 The blocked reference case gives the same statuses as stored (original succeeds, corrected is refused by the
