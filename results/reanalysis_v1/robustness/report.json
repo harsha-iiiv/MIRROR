@@ -1,0 +1,800 @@
+{
+ "cup": {
+  "A": {
+   "edited_rows": 87,
+   "edited_rows_cup_found": 7,
+   "edited_rows_cup_matched": 0,
+   "frames": {
+    "eval80000_top_carry": {
+     "centroid_err_px_original": null,
+     "edits": 10,
+     "found_on_edits": 0,
+     "found_original": false,
+     "gt_pixels": 4238,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": null
+    },
+    "eval80001_oblique_carry": {
+     "centroid_err_px_original": null,
+     "edits": 11,
+     "found_on_edits": 0,
+     "found_original": false,
+     "gt_pixels": 3510,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": null
+    },
+    "eval80002_top_carry": {
+     "centroid_err_px_original": null,
+     "edits": 11,
+     "found_on_edits": 0,
+     "found_original": false,
+     "gt_pixels": 432,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": null
+    },
+    "eval80003_oblique_carry": {
+     "centroid_err_px_original": null,
+     "edits": 11,
+     "found_on_edits": 0,
+     "found_original": false,
+     "gt_pixels": 1918,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": null
+    },
+    "eval80004_top_carry": {
+     "centroid_err_px_original": 164.62,
+     "edits": 11,
+     "found_on_edits": 7,
+     "found_original": true,
+     "gt_pixels": 925,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": "tan cube"
+    },
+    "eval80005_oblique_carry": {
+     "centroid_err_px_original": null,
+     "edits": 11,
+     "found_on_edits": 0,
+     "found_original": false,
+     "gt_pixels": 5143,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": null
+    },
+    "eval80006_top_carry": {
+     "centroid_err_px_original": null,
+     "edits": 11,
+     "found_on_edits": 0,
+     "found_original": false,
+     "gt_pixels": 4793,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": null
+    },
+    "eval80007_oblique_carry": {
+     "centroid_err_px_original": null,
+     "edits": 11,
+     "found_on_edits": 0,
+     "found_original": false,
+     "gt_pixels": 6368,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": null
+    }
+   },
+   "frames_cup_found_original": 1,
+   "frames_cup_matched_original": 0,
+   "frames_cup_prompted": 1
+  },
+  "B": {
+   "edited_rows": 87,
+   "edited_rows_cup_found": 40,
+   "edited_rows_cup_matched": 0,
+   "frames": {
+    "eval80000_top_carry": {
+     "centroid_err_px_original": null,
+     "edits": 10,
+     "found_on_edits": 2,
+     "found_original": false,
+     "gt_pixels": 4238,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": "open box"
+    },
+    "eval80001_oblique_carry": {
+     "centroid_err_px_original": 187.09,
+     "edits": 11,
+     "found_on_edits": 11,
+     "found_original": true,
+     "gt_pixels": 3510,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": "open box"
+    },
+    "eval80002_top_carry": {
+     "centroid_err_px_original": null,
+     "edits": 11,
+     "found_on_edits": 2,
+     "found_original": false,
+     "gt_pixels": 432,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0002,
+     "prompt": "open box"
+    },
+    "eval80003_oblique_carry": {
+     "centroid_err_px_original": 193.25,
+     "edits": 11,
+     "found_on_edits": 9,
+     "found_original": true,
+     "gt_pixels": 1918,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": "open box"
+    },
+    "eval80004_top_carry": {
+     "centroid_err_px_original": null,
+     "edits": 11,
+     "found_on_edits": 1,
+     "found_original": false,
+     "gt_pixels": 925,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": "open box"
+    },
+    "eval80005_oblique_carry": {
+     "centroid_err_px_original": 253.85,
+     "edits": 11,
+     "found_on_edits": 6,
+     "found_original": true,
+     "gt_pixels": 5143,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": "open box"
+    },
+    "eval80006_top_carry": {
+     "centroid_err_px_original": null,
+     "edits": 11,
+     "found_on_edits": 0,
+     "found_original": false,
+     "gt_pixels": 4793,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": "open box"
+    },
+    "eval80007_oblique_carry": {
+     "centroid_err_px_original": 214.98,
+     "edits": 11,
+     "found_on_edits": 9,
+     "found_original": true,
+     "gt_pixels": 6368,
+     "iou_best_original": 0.0,
+     "iou_original": 0.0,
+     "matched_on_edits": 0,
+     "max_iou_on_edits": 0.0,
+     "prompt": "open box"
+    }
+   },
+   "frames_cup_found_original": 4,
+   "frames_cup_matched_original": 0,
+   "frames_cup_prompted": 8
+  }
+ },
+ "edits": {
+  "local_edits": 24,
+  "model_edit_geometry_verdicts": {
+   "changed": 25,
+   "preserved": 36,
+   "reframed": 2,
+   "refused": 1
+  },
+  "model_edit_status": {
+   "ok": 63,
+   "refused": 1
+  },
+  "model_edits": 64
+ },
+ "frames": [
+  "eval80000_top_carry",
+  "eval80001_oblique_carry",
+  "eval80002_top_carry",
+  "eval80003_oblique_carry",
+  "eval80004_top_carry",
+  "eval80005_oblique_carry",
+  "eval80006_top_carry",
+  "eval80007_oblique_carry"
+ ],
+ "groups": {
+  "A/corrected": {
+   "all_objects_unconditional": {
+    "definition": "every geometry-kept row incl. never-prompted objects; never-prompted counts as not found",
+    "found_rate": {
+     "den": 218,
+     "num": 103,
+     "rate": 0.4725
+    }
+   },
+   "by_class": {
+    "block": {
+     "kept_found": 60,
+     "kept_found_both": 60,
+     "kept_found_but_iou_zero": 0,
+     "kept_matched": 60,
+     "kept_prompted": 60,
+     "kept_rows": 68,
+     "prompted_iou_delta_median": -0.0368,
+     "states": {
+      "found_both": 60,
+      "never_prompted": 8
+     }
+    },
+    "cup": {
+     "kept_found": 6,
+     "kept_found_both": 6,
+     "kept_found_but_iou_zero": 6,
+     "kept_matched": 0,
+     "kept_prompted": 10,
+     "kept_rows": 75,
+     "prompted_iou_delta_median": 0.0,
+     "states": {
+      "found_both": 6,
+      "lost_after_edit": 4,
+      "never_prompted": 65
+     }
+    },
+    "marker": {
+     "kept_found": 37,
+     "kept_found_both": 37,
+     "kept_found_but_iou_zero": 0,
+     "kept_matched": 37,
+     "kept_prompted": 58,
+     "kept_rows": 75,
+     "prompted_iou_delta_median": -0.0648,
+     "states": {
+      "found_both": 37,
+      "lost_after_edit": 21,
+      "never_prompted": 17
+     }
+    }
+   },
+   "correct_detection": {
+    "definition": "a row counts as detected only if SAM's top mask has IoU >= 0.5 with the object",
+    "iou_delta_given_matched_original": {
+     "definition": "rows matched on the original frame; an edit that loses the object counts its full IoU drop",
+     "mean": -0.2107,
+     "median": -0.045,
+     "n": 118
+    },
+    "kept_found_but_iou_zero": 6,
+    "kept_matched_rate": {
+     "den": 218,
+     "num": 97,
+     "rate": 0.445
+    },
+    "kept_matched_rate_original": {
+     "den": 218,
+     "num": 118,
+     "rate": 0.5413
+    },
+    "kept_matched_rate_prompted": {
+     "den": 128,
+     "num": 97,
+     "rate": 0.7578
+    },
+    "kept_states": {
+     "lost_after_edit": 21,
+     "matched_both": 97,
+     "never_prompted": 90,
+     "unmatched_both": 10
+    }
+   },
+   "detection_conditional": {
+    "centroid_err_px_median": 0.67,
+    "definition": "geometry-kept rows found on both the original and the edited frame",
+    "iou_delta_mean": -0.0422,
+    "iou_delta_median": -0.0316,
+    "n": 103
+   },
+   "geometry": {
+    "kept": 146,
+    "missing": 3,
+    "moved": 33,
+    "preserved": 72,
+    "reframed": 6,
+    "weakened": 1
+   },
+   "geometry_changed_rows": 42,
+   "geometry_kept_rows": 218,
+   "geometry_kept_rows_prompted": 128,
+   "kept_detection_states": {
+    "found_both": 103,
+    "lost_after_edit": 25,
+    "never_prompted": 90
+   },
+   "kept_rows_with_iou_zero_before_and_after": 100,
+   "object_rows": 261,
+   "object_rows_never_prompted": 109,
+   "object_rows_prompted": 152,
+   "prompted_unconditional": {
+    "definition": "geometry-kept rows whose object was prompted; misses count as IoU 0",
+    "found_rate": {
+     "den": 128,
+     "num": 103,
+     "rate": 0.8047
+    },
+    "found_rate_original": {
+     "den": 128,
+     "num": 128,
+     "rate": 1.0
+    },
+    "iou_delta_mean": -0.1943,
+    "iou_delta_median": -0.0391,
+    "iou_delta_p10": -0.9755
+   },
+   "registered_headline": {
+    "definition": "median IoU change over every geometry-kept row (as registered)",
+    "kept_found_rate": {
+     "den": 218,
+     "num": 103,
+     "rate": 0.4725
+    },
+    "kept_iou_delta_median": -0.0001
+   }
+  },
+  "A/uncorrected": {
+   "all_objects_unconditional": {
+    "definition": "every geometry-kept row incl. never-prompted objects; never-prompted counts as not found",
+    "found_rate": {
+     "den": 218,
+     "num": 105,
+     "rate": 0.4817
+    }
+   },
+   "by_class": {
+    "block": {
+     "kept_found": 60,
+     "kept_found_both": 60,
+     "kept_found_but_iou_zero": 0,
+     "kept_matched": 60,
+     "kept_prompted": 60,
+     "kept_rows": 68,
+     "prompted_iou_delta_median": -0.0604,
+     "states": {
+      "found_both": 60,
+      "never_prompted": 8
+     }
+    },
+    "cup": {
+     "kept_found": 6,
+     "kept_found_both": 6,
+     "kept_found_but_iou_zero": 6,
+     "kept_matched": 0,
+     "kept_prompted": 10,
+     "kept_rows": 75,
+     "prompted_iou_delta_median": 0.0,
+     "states": {
+      "found_both": 6,
+      "lost_after_edit": 4,
+      "never_prompted": 65
+     }
+    },
+    "marker": {
+     "kept_found": 39,
+     "kept_found_both": 39,
+     "kept_found_but_iou_zero": 0,
+     "kept_matched": 30,
+     "kept_prompted": 58,
+     "kept_rows": 75,
+     "prompted_iou_delta_median": -0.4525,
+     "states": {
+      "found_both": 39,
+      "lost_after_edit": 19,
+      "never_prompted": 17
+     }
+    }
+   },
+   "correct_detection": {
+    "definition": "a row counts as detected only if SAM's top mask has IoU >= 0.5 with the object",
+    "iou_delta_given_matched_original": {
+     "definition": "rows matched on the original frame; an edit that loses the object counts its full IoU drop",
+     "mean": -0.3055,
+     "median": -0.1609,
+     "n": 118
+    },
+    "kept_found_but_iou_zero": 6,
+    "kept_matched_rate": {
+     "den": 218,
+     "num": 90,
+     "rate": 0.4128
+    },
+    "kept_matched_rate_original": {
+     "den": 218,
+     "num": 118,
+     "rate": 0.5413
+    },
+    "kept_matched_rate_prompted": {
+     "den": 128,
+     "num": 90,
+     "rate": 0.7031
+    },
+    "kept_states": {
+     "lost_after_edit": 28,
+     "matched_both": 90,
+     "never_prompted": 90,
+     "unmatched_both": 10
+    }
+   },
+   "detection_conditional": {
+    "centroid_err_px_median": 1.93,
+    "definition": "geometry-kept rows found on both the original and the edited frame",
+    "iou_delta_mean": -0.1666,
+    "iou_delta_median": -0.0881,
+    "n": 105
+   },
+   "geometry": {
+    "kept": 146,
+    "missing": 3,
+    "moved": 33,
+    "preserved": 72,
+    "reframed": 6,
+    "weakened": 1
+   },
+   "geometry_changed_rows": 42,
+   "geometry_kept_rows": 218,
+   "geometry_kept_rows_prompted": 128,
+   "kept_detection_states": {
+    "found_both": 105,
+    "lost_after_edit": 23,
+    "never_prompted": 90
+   },
+   "kept_rows_with_iou_zero_before_and_after": 100,
+   "object_rows": 261,
+   "object_rows_never_prompted": 109,
+   "object_rows_prompted": 152,
+   "prompted_unconditional": {
+    "definition": "geometry-kept rows whose object was prompted; misses count as IoU 0",
+    "found_rate": {
+     "den": 128,
+     "num": 105,
+     "rate": 0.8203
+    },
+    "found_rate_original": {
+     "den": 128,
+     "num": 128,
+     "rate": 1.0
+    },
+    "iou_delta_mean": -0.2817,
+    "iou_delta_median": -0.121,
+    "iou_delta_p10": -0.9755
+   },
+   "registered_headline": {
+    "definition": "median IoU change over every geometry-kept row (as registered)",
+    "kept_found_rate": {
+     "den": 218,
+     "num": 105,
+     "rate": 0.4817
+    },
+    "kept_iou_delta_median": -0.0007
+   }
+  },
+  "B/corrected": {
+   "all_objects_unconditional": {
+    "definition": "every geometry-kept row incl. never-prompted objects; never-prompted counts as not found",
+    "found_rate": {
+     "den": 218,
+     "num": 132,
+     "rate": 0.6055
+    }
+   },
+   "by_class": {
+    "block": {
+     "kept_found": 68,
+     "kept_found_both": 68,
+     "kept_found_but_iou_zero": 13,
+     "kept_matched": 55,
+     "kept_prompted": 68,
+     "kept_rows": 68,
+     "prompted_iou_delta_median": -0.0354,
+     "states": {
+      "found_both": 68
+     }
+    },
+    "cup": {
+     "kept_found": 36,
+     "kept_found_both": 31,
+     "kept_found_but_iou_zero": 35,
+     "kept_matched": 0,
+     "kept_prompted": 75,
+     "kept_rows": 75,
+     "prompted_iou_delta_median": 0.0,
+     "states": {
+      "found_both": 31,
+      "gained_after_edit": 5,
+      "lost_after_edit": 7,
+      "missed_both": 32
+     }
+    },
+    "marker": {
+     "kept_found": 28,
+     "kept_found_both": 23,
+     "kept_found_but_iou_zero": 2,
+     "kept_matched": 26,
+     "kept_prompted": 75,
+     "kept_rows": 75,
+     "prompted_iou_delta_median": 0.0,
+     "states": {
+      "found_both": 23,
+      "gained_after_edit": 5,
+      "lost_after_edit": 15,
+      "missed_both": 32
+     }
+    }
+   },
+   "correct_detection": {
+    "definition": "a row counts as detected only if SAM's top mask has IoU >= 0.5 with the object",
+    "iou_delta_given_matched_original": {
+     "definition": "rows matched on the original frame; an edit that loses the object counts its full IoU drop",
+     "mean": -0.2734,
+     "median": -0.0517,
+     "n": 98
+    },
+    "kept_found_but_iou_zero": 50,
+    "kept_matched_rate": {
+     "den": 218,
+     "num": 81,
+     "rate": 0.3716
+    },
+    "kept_matched_rate_original": {
+     "den": 218,
+     "num": 98,
+     "rate": 0.4495
+    },
+    "kept_matched_rate_prompted": {
+     "den": 218,
+     "num": 81,
+     "rate": 0.3716
+    },
+    "kept_states": {
+     "gained_after_edit": 7,
+     "lost_after_edit": 24,
+     "matched_both": 74,
+     "unmatched_both": 113
+    }
+   },
+   "detection_conditional": {
+    "centroid_err_px_median": 1.495,
+    "definition": "geometry-kept rows found on both the original and the edited frame",
+    "iou_delta_mean": -0.084,
+    "iou_delta_median": -0.0181,
+    "n": 122
+   },
+   "geometry": {
+    "kept": 146,
+    "missing": 3,
+    "moved": 33,
+    "preserved": 72,
+    "reframed": 6,
+    "weakened": 1
+   },
+   "geometry_changed_rows": 42,
+   "geometry_kept_rows": 218,
+   "geometry_kept_rows_prompted": 218,
+   "kept_detection_states": {
+    "found_both": 122,
+    "gained_after_edit": 10,
+    "lost_after_edit": 22,
+    "missed_both": 64
+   },
+   "kept_rows_with_iou_zero_before_and_after": 112,
+   "object_rows": 261,
+   "object_rows_never_prompted": 0,
+   "object_rows_prompted": 261,
+   "prompted_unconditional": {
+    "definition": "geometry-kept rows whose object was prompted; misses count as IoU 0",
+    "found_rate": {
+     "den": 218,
+     "num": 132,
+     "rate": 0.6055
+    },
+    "found_rate_original": {
+     "den": 218,
+     "num": 144,
+     "rate": 0.6606
+    },
+    "iou_delta_mean": -0.0927,
+    "iou_delta_median": 0.0,
+    "iou_delta_p10": -0.9745
+   },
+   "registered_headline": {
+    "definition": "median IoU change over every geometry-kept row (as registered)",
+    "kept_found_rate": {
+     "den": 218,
+     "num": 132,
+     "rate": 0.6055
+    },
+    "kept_iou_delta_median": 0.0
+   }
+  }
+ },
+ "match_iou": 0.5,
+ "originals": {
+  "A": {
+   "by_class": {
+    "block": {
+     "found": 7,
+     "iou_mean": 0.8589,
+     "matched": 7,
+     "n": 8,
+     "prompted": 7
+    },
+    "cup": {
+     "found": 1,
+     "iou_mean": 0.0,
+     "matched": 0,
+     "n": 8,
+     "prompted": 1
+    },
+    "marker": {
+     "found": 6,
+     "iou_mean": 0.7332,
+     "matched": 6,
+     "n": 8,
+     "prompted": 6
+    }
+   },
+   "found": 14,
+   "found_rate_all": {
+    "den": 24,
+    "num": 14,
+    "rate": 0.5833
+   },
+   "found_rate_prompted": {
+    "den": 14,
+    "num": 14,
+    "rate": 1.0
+   },
+   "matched_rate_all": {
+    "den": 24,
+    "num": 13,
+    "rate": 0.5417
+   },
+   "object_rows": 24,
+   "prompted": 14
+  },
+  "B": {
+   "by_class": {
+    "block": {
+     "found": 8,
+     "iou_mean": 0.8579,
+     "matched": 7,
+     "n": 8,
+     "prompted": 8
+    },
+    "cup": {
+     "found": 4,
+     "iou_mean": 0.0,
+     "matched": 0,
+     "n": 8,
+     "prompted": 8
+    },
+    "marker": {
+     "found": 4,
+     "iou_mean": 0.4891,
+     "matched": 4,
+     "n": 8,
+     "prompted": 8
+    }
+   },
+   "found": 16,
+   "found_rate_all": {
+    "den": 24,
+    "num": 16,
+    "rate": 0.6667
+   },
+   "found_rate_prompted": {
+    "den": 24,
+    "num": 16,
+    "rate": 0.6667
+   },
+   "matched_rate_all": {
+    "den": 24,
+    "num": 11,
+    "rate": 0.4583
+   },
+   "object_rows": 24,
+   "prompted": 24
+  }
+ },
+ "registered_threshold_checks": {
+  "A/corrected": {
+   "found rate >= 0.9 (geometry kept)": false,
+   "median IoU change >= -0.05 (geometry kept)": true,
+   "median centroid error <= 4.0 px (geometry kept)": true
+  },
+  "B/corrected": {
+   "found rate >= 0.9 (geometry kept)": false,
+   "median IoU change >= -0.05 (geometry kept)": true,
+   "median centroid error <= 4.0 px (geometry kept)": true
+  }
+ },
+ "reproduces_stored_summary": {
+  "A/corrected": {
+   "kept_found_rate": [
+    0.4725,
+    0.4725
+   ],
+   "kept_iou_delta_median": [
+    -0.0001,
+    -0.0001
+   ],
+   "n_geometry_kept": [
+    218,
+    218
+   ]
+  },
+  "A/uncorrected": {
+   "kept_found_rate": [
+    0.4817,
+    0.4817
+   ],
+   "kept_iou_delta_median": [
+    -0.0007,
+    -0.0007
+   ],
+   "n_geometry_kept": [
+    218,
+    218
+   ]
+  },
+  "B/corrected": {
+   "kept_found_rate": [
+    0.6055,
+    0.6055
+   ],
+   "kept_iou_delta_median": [
+    0.0,
+    0.0
+   ],
+   "n_geometry_kept": [
+    218,
+    218
+   ]
+  }
+ },
+ "rows": 879,
+ "source": "results/eval_robustness/plan_report/report.json",
+ "version": "reanalysis_v1/robustness"
+}

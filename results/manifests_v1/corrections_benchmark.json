@@ -1,0 +1,598 @@
+{
+ "built_from_commit": "f19abfe3038120afed5649b40ea8b929192b7c3d",
+ "manifest_version": "manifests_v1",
+ "recorded_responses": {
+  "data/cassettes/corrections_benchmark": {
+   "digest": "e04abacb376a46fcf7bd8e218e3073037d90bccfddb5cc2c548cae8bb90e8e21",
+   "files": 216,
+   "note": "each file name is the hash key of its exact request (prompt included)"
+  },
+  "data/cassettes/corrections_benchmark/prompt_v1": {
+   "digest": "7ef2aac6bc9eea820d870ef45e766f45a097fd6015e5fcc3f89a7b6675f4151f",
+   "files": 72,
+   "note": "each file name is the hash key of its exact request (prompt included)"
+  },
+  "data/cassettes/corrections_benchmark/prompt_v2": {
+   "digest": "28440c10be67c61d433ea67a5b251830862a0329073465aaaf0085cbeff68e3f",
+   "files": 72,
+   "note": "each file name is the hash key of its exact request (prompt included)"
+  },
+  "data/cassettes_meta": {
+   "digest": "16bb7e0fabddfef8615a8743fbb24c8da1359d60203f29e7f277df4c59ee98c5",
+   "files": 1461
+  },
+  "data/cassettes_muse": {
+   "digest": "a0a30d05b851888db4a654cedf34db5419d07037595228d961f34518578909a1",
+   "files": 247
+  }
+ },
+ "results": {
+  "corrections_benchmark.json": {
+   "cases_file": "cases.json",
+   "cases_sha256": "4eaa228264add77bfae084d9654ca35aa92ec335cdcc225aabd4b2f80032c532",
+   "chronology": {
+    "cases_file": "cases.json",
+    "cases_sha256_at_run": "4eaa228264add77bfae084d9654ca35aa92ec335cdcc225aabd4b2f80032c532",
+    "cases_sha256_matches_committed": true,
+    "exact": [
+     "38/44",
+     "42/44"
+    ],
+    "first_commit": {
+     "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+     "committed_at": "2026-10-31T06:32:34-07:00"
+    },
+    "generated_at": "2026-10-31T11:22:31Z",
+    "generated_at_meaning": "run start (UTC), set after the case file was read and hashed",
+    "generated_at_pdt": "2026-10-31T04:22:31-07:00",
+    "gold_in_result_equals_committed_cases": true,
+    "interpreters": [
+     "offline-rules (offline)",
+     "gpt-5.5 (record)"
+    ],
+    "rescore_fields_added_by_later_scorer": [
+     "non_overlap_cases",
+     "non_overlap_exact",
+     "overlap_cases",
+     "overlap_exact"
+    ],
+    "rescore_with_committed_scorer_reproduces_summary": true,
+    "tag": null
+   },
+   "file": "results/corrections_benchmark.json",
+   "first_commit": {
+    "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+    "committed_at": "2026-10-31T06:32:34-07:00"
+   },
+   "generated_at": "2026-10-31T11:22:31Z",
+   "prompts": {
+    "prompt_file_sha256": {
+     "mirror/interpret/prompts.py": "8649271f6a1b7c9a66248d8d72f0339d4bbc743d519a1deb49d140c207885b2a"
+    },
+    "prompt_revision": "3"
+   },
+   "runs": [
+    {
+     "cases_digest": "fe93996ff3371398c6e9679ae58116dc0a4539c97b4d00a9aa872e77f978c161",
+     "exact": "38/44",
+     "interpreter": "offline-rules",
+     "mode": "offline",
+     "models_returned": [
+      "offline-rules"
+     ],
+     "prompt_revision": null
+    },
+    {
+     "cases_digest": "9c8fc6757f5304a90f3ef1e250222d1ac08339239c4d3afcff431b4e5a50065f",
+     "exact": "42/44",
+     "interpreter": "gpt-5.5",
+     "mode": "record",
+     "models_returned": [
+      "gpt-5.5-2026-04-23"
+     ],
+     "prompt_revision": null
+    }
+   ],
+   "sha256": "ac36f72220f430afb93ec1f110f2a7df4eaa65a1509a7b3bdc59496db85db090",
+   "tag": null
+  },
+  "corrections_benchmark_after_fixes.json": {
+   "cases_file": "cases.json",
+   "cases_sha256": "4eaa228264add77bfae084d9654ca35aa92ec335cdcc225aabd4b2f80032c532",
+   "chronology": {
+    "cases_file": "cases.json",
+    "cases_sha256_at_run": "4eaa228264add77bfae084d9654ca35aa92ec335cdcc225aabd4b2f80032c532",
+    "cases_sha256_matches_committed": true,
+    "exact": [
+     "44/44",
+     "42/44"
+    ],
+    "first_commit": {
+     "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+     "committed_at": "2026-10-31T06:32:34-07:00"
+    },
+    "generated_at": "2026-10-31T11:27:47Z",
+    "generated_at_meaning": "run start (UTC), set after the case file was read and hashed",
+    "generated_at_pdt": "2026-10-31T04:27:47-07:00",
+    "gold_in_result_equals_committed_cases": true,
+    "interpreters": [
+     "offline-rules (offline)",
+     "gpt-5.5 (replay)"
+    ],
+    "rescore_fields_added_by_later_scorer": [
+     "non_overlap_cases",
+     "non_overlap_exact",
+     "overlap_cases",
+     "overlap_exact"
+    ],
+    "rescore_with_committed_scorer_reproduces_summary": true,
+    "tag": "after_fixes"
+   },
+   "file": "results/corrections_benchmark_after_fixes.json",
+   "first_commit": {
+    "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+    "committed_at": "2026-10-31T06:32:34-07:00"
+   },
+   "generated_at": "2026-10-31T11:27:47Z",
+   "prompts": {
+    "prompt_file_sha256": {
+     "mirror/interpret/prompts.py": "8649271f6a1b7c9a66248d8d72f0339d4bbc743d519a1deb49d140c207885b2a"
+    },
+    "prompt_revision": "3"
+   },
+   "runs": [
+    {
+     "cases_digest": "e52212eb9ea8e866778c303f868800b3fdb80f730578fe686e54ee8392fd824e",
+     "exact": "44/44",
+     "interpreter": "offline-rules",
+     "mode": "offline",
+     "models_returned": [
+      "offline-rules"
+     ],
+     "prompt_revision": null
+    },
+    {
+     "cases_digest": "5185b56324fa4e2a6649ae454a0118598bec3ab8a2aac08eda700a4f9a01dd81",
+     "exact": "42/44",
+     "interpreter": "gpt-5.5",
+     "mode": "replay",
+     "models_returned": [
+      "gpt-5.5-2026-04-23"
+     ],
+     "prompt_revision": null
+    }
+   ],
+   "sha256": "214845705cb8f7b77dbf5ebf1b8466692baf39b51bea24d1282b782f919a65d1",
+   "tag": "after_fixes"
+  },
+  "corrections_benchmark_after_prompt_revision.json": {
+   "cases_file": "cases.json",
+   "cases_sha256": "4eaa228264add77bfae084d9654ca35aa92ec335cdcc225aabd4b2f80032c532",
+   "chronology": {
+    "cases_file": "cases.json",
+    "cases_sha256_at_run": "4eaa228264add77bfae084d9654ca35aa92ec335cdcc225aabd4b2f80032c532",
+    "cases_sha256_matches_committed": true,
+    "exact": [
+     "44/44",
+     "42/44"
+    ],
+    "first_commit": {
+     "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+     "committed_at": "2026-10-31T06:32:34-07:00"
+    },
+    "generated_at": "2026-10-31T11:55:21Z",
+    "generated_at_meaning": "run start (UTC), set after the case file was read and hashed",
+    "generated_at_pdt": "2026-10-31T04:55:21-07:00",
+    "gold_in_result_equals_committed_cases": true,
+    "interpreters": [
+     "offline-rules (offline)",
+     "gpt-5.5 (record)"
+    ],
+    "rescore_fields_added_by_later_scorer": [],
+    "rescore_with_committed_scorer_reproduces_summary": true,
+    "tag": "after_prompt_revision"
+   },
+   "file": "results/corrections_benchmark_after_prompt_revision.json",
+   "first_commit": {
+    "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+    "committed_at": "2026-10-31T06:32:34-07:00"
+   },
+   "generated_at": "2026-10-31T11:55:21Z",
+   "prompts": {
+    "prompt_file_sha256": {
+     "mirror/interpret/prompts.py": "8649271f6a1b7c9a66248d8d72f0339d4bbc743d519a1deb49d140c207885b2a"
+    },
+    "prompt_revision": "3"
+   },
+   "runs": [
+    {
+     "cases_digest": "70bdcd8539b090a436238b3f8e3f4eb8076870184930c5d73ea9e637e4ce0e51",
+     "exact": "44/44",
+     "interpreter": "offline-rules",
+     "mode": "offline",
+     "models_returned": [
+      "offline-rules"
+     ],
+     "prompt_revision": "3"
+    },
+    {
+     "cases_digest": "70e98f35d16de982d0f41f9c2ef0b7c035f62a1bbd5ed16dca509eba9beb5294",
+     "exact": "42/44",
+     "interpreter": "gpt-5.5",
+     "mode": "record",
+     "models_returned": [
+      "gpt-5.5-2026-04-23"
+     ],
+     "prompt_revision": "3"
+    }
+   ],
+   "sha256": "31d0662b090150a3a5b9e477a642d66e7a6c5763de860479e90a838f9f5a6a33",
+   "tag": "after_prompt_revision"
+  },
+  "corrections_benchmark_holdout.json": {
+   "cases_file": "cases_holdout.json",
+   "cases_sha256": "37d903dd470fc45ac32b0a8592d2d5f987ddce6426ab4fb0d257c355f1f3d7f8",
+   "chronology": {
+    "cases_file": "cases_holdout.json",
+    "cases_sha256_at_run": "37d903dd470fc45ac32b0a8592d2d5f987ddce6426ab4fb0d257c355f1f3d7f8",
+    "cases_sha256_matches_committed": true,
+    "exact": [
+     "21/28",
+     "27/28"
+    ],
+    "first_commit": {
+     "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+     "committed_at": "2026-10-31T06:32:34-07:00"
+    },
+    "generated_at": "2026-10-31T11:27:50Z",
+    "generated_at_meaning": "run start (UTC), set after the case file was read and hashed",
+    "generated_at_pdt": "2026-10-31T04:27:50-07:00",
+    "gold_in_result_equals_committed_cases": true,
+    "interpreters": [
+     "offline-rules (offline)",
+     "gpt-5.5 (record)"
+    ],
+    "rescore_fields_added_by_later_scorer": [
+     "non_overlap_cases",
+     "non_overlap_exact",
+     "overlap_cases",
+     "overlap_exact"
+    ],
+    "rescore_with_committed_scorer_reproduces_summary": true,
+    "tag": "holdout"
+   },
+   "file": "results/corrections_benchmark_holdout.json",
+   "first_commit": {
+    "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+    "committed_at": "2026-10-31T06:32:34-07:00"
+   },
+   "generated_at": "2026-10-31T11:27:50Z",
+   "prompts": {
+    "prompt_file_sha256": {
+     "mirror/interpret/prompts.py": "8649271f6a1b7c9a66248d8d72f0339d4bbc743d519a1deb49d140c207885b2a"
+    },
+    "prompt_revision": "3"
+   },
+   "runs": [
+    {
+     "cases_digest": "fbb68e82e9a5bcdd33c7f657770bc921d2f8c7958046003ffa881d27c8676b4a",
+     "exact": "21/28",
+     "interpreter": "offline-rules",
+     "mode": "offline",
+     "models_returned": [
+      "offline-rules"
+     ],
+     "prompt_revision": null
+    },
+    {
+     "cases_digest": "5167f5ffb6e3e2a36f67f561589f4eb4edd4f031b6448ceef2663b85ebddf4cb",
+     "exact": "27/28",
+     "interpreter": "gpt-5.5",
+     "mode": "record",
+     "models_returned": [
+      "gpt-5.5-2026-04-23"
+     ],
+     "prompt_revision": null
+    }
+   ],
+   "sha256": "201a8902465f5d2671964e7e405c7d7014a6a8f27036e1386dabf03871d5fed0",
+   "tag": "holdout"
+  },
+  "corrections_benchmark_holdout_after_prompt_revision.json": {
+   "cases_file": "cases_holdout.json",
+   "cases_sha256": "37d903dd470fc45ac32b0a8592d2d5f987ddce6426ab4fb0d257c355f1f3d7f8",
+   "chronology": {
+    "cases_file": "cases_holdout.json",
+    "cases_sha256_at_run": "37d903dd470fc45ac32b0a8592d2d5f987ddce6426ab4fb0d257c355f1f3d7f8",
+    "cases_sha256_matches_committed": true,
+    "exact": [
+     "22/28",
+     "26/28"
+    ],
+    "first_commit": {
+     "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+     "committed_at": "2026-10-31T06:32:34-07:00"
+    },
+    "generated_at": "2026-10-31T11:59:27Z",
+    "generated_at_meaning": "run start (UTC), set after the case file was read and hashed",
+    "generated_at_pdt": "2026-10-31T04:59:27-07:00",
+    "gold_in_result_equals_committed_cases": true,
+    "interpreters": [
+     "offline-rules (offline)",
+     "gpt-5.5 (record)"
+    ],
+    "rescore_fields_added_by_later_scorer": [],
+    "rescore_with_committed_scorer_reproduces_summary": true,
+    "tag": "holdout_after_prompt_revision"
+   },
+   "file": "results/corrections_benchmark_holdout_after_prompt_revision.json",
+   "first_commit": {
+    "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+    "committed_at": "2026-10-31T06:32:34-07:00"
+   },
+   "generated_at": "2026-10-31T11:59:27Z",
+   "prompts": {
+    "prompt_file_sha256": {
+     "mirror/interpret/prompts.py": "8649271f6a1b7c9a66248d8d72f0339d4bbc743d519a1deb49d140c207885b2a"
+    },
+    "prompt_revision": "3"
+   },
+   "runs": [
+    {
+     "cases_digest": "866bf21d65206fd01daf3cccb6914eb24de6b61d5d4c55471dcd619a573cb041",
+     "exact": "22/28",
+     "interpreter": "offline-rules",
+     "mode": "offline",
+     "models_returned": [
+      "offline-rules"
+     ],
+     "prompt_revision": "3"
+    },
+    {
+     "cases_digest": "145311d4b6e4d11e04430f4158a28ec4447e895de7a42fe26863533cb0b4d4bf",
+     "exact": "26/28",
+     "interpreter": "gpt-5.5",
+     "mode": "record",
+     "models_returned": [
+      "gpt-5.5-2026-04-23"
+     ],
+     "prompt_revision": "3"
+    }
+   ],
+   "sha256": "f8aed2f3801efccf35fec6bb9af59583bb6941a9d808c0e543761841eca6cbed",
+   "tag": "holdout_after_prompt_revision"
+  },
+  "corrections_benchmark_holdout_muse.json": {
+   "cases_file": "cases_holdout.json",
+   "cases_sha256": "37d903dd470fc45ac32b0a8592d2d5f987ddce6426ab4fb0d257c355f1f3d7f8",
+   "chronology": {
+    "cases_file": "cases_holdout.json",
+    "cases_sha256_at_run": "37d903dd470fc45ac32b0a8592d2d5f987ddce6426ab4fb0d257c355f1f3d7f8",
+    "cases_sha256_matches_committed": true,
+    "exact": [
+     "27/28"
+    ],
+    "first_commit": {
+     "commit": "753ec7c3ba7d8d9613341ca3c6b42f5d00ab61f8",
+     "committed_at": "2026-10-31T09:19:51-07:00"
+    },
+    "generated_at": "2026-10-31T16:09:39Z",
+    "generated_at_meaning": "run start (UTC), set after the case file was read and hashed",
+    "generated_at_pdt": "2026-10-31T09:09:39-07:00",
+    "gold_in_result_equals_committed_cases": true,
+    "interpreters": [
+     "muse-spark-1.3 (record)"
+    ],
+    "rescore_fields_added_by_later_scorer": [],
+    "rescore_with_committed_scorer_reproduces_summary": true,
+    "tag": "holdout_muse"
+   },
+   "file": "results/corrections_benchmark_holdout_muse.json",
+   "first_commit": {
+    "commit": "753ec7c3ba7d8d9613341ca3c6b42f5d00ab61f8",
+    "committed_at": "2026-10-31T09:19:51-07:00"
+   },
+   "generated_at": "2026-10-31T16:09:39Z",
+   "prompts": {
+    "prompt_file_sha256": {
+     "mirror/interpret/prompts.py": "8649271f6a1b7c9a66248d8d72f0339d4bbc743d519a1deb49d140c207885b2a"
+    },
+    "prompt_revision": "3"
+   },
+   "runs": [
+    {
+     "cases_digest": "d0d19714f3e8fba4e0da0597c1d83272db1b20acd0ca505bf55d67395ce90479",
+     "exact": "27/28",
+     "interpreter": "muse-spark-1.3",
+     "mode": "record",
+     "models_returned": [
+      "muse-spark-1.3"
+     ],
+     "prompt_revision": "3"
+    }
+   ],
+   "sha256": "02357bc2c87bf7d815e77e4566e944e4a3911873683cdfbca67c94c46ef6155a",
+   "tag": "holdout_muse"
+  },
+  "corrections_benchmark_holdout_prompt_rev2.json": {
+   "cases_file": "cases_holdout.json",
+   "cases_sha256": "37d903dd470fc45ac32b0a8592d2d5f987ddce6426ab4fb0d257c355f1f3d7f8",
+   "chronology": {
+    "cases_file": "cases_holdout.json",
+    "cases_sha256_at_run": "37d903dd470fc45ac32b0a8592d2d5f987ddce6426ab4fb0d257c355f1f3d7f8",
+    "cases_sha256_matches_committed": true,
+    "exact": [
+     "22/28",
+     "26/28"
+    ],
+    "first_commit": {
+     "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+     "committed_at": "2026-10-31T06:32:34-07:00"
+    },
+    "generated_at": "2026-10-31T11:51:10Z",
+    "generated_at_meaning": "run start (UTC), set after the case file was read and hashed",
+    "generated_at_pdt": "2026-10-31T04:51:10-07:00",
+    "gold_in_result_equals_committed_cases": true,
+    "interpreters": [
+     "offline-rules (offline)",
+     "gpt-5.5 (record)"
+    ],
+    "rescore_fields_added_by_later_scorer": [],
+    "rescore_with_committed_scorer_reproduces_summary": true,
+    "tag": "holdout_after_prompt_revision"
+   },
+   "file": "results/corrections_benchmark_holdout_prompt_rev2.json",
+   "first_commit": {
+    "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+    "committed_at": "2026-10-31T06:32:34-07:00"
+   },
+   "generated_at": "2026-10-31T11:51:10Z",
+   "prompts": {
+    "prompt_file_sha256": {
+     "mirror/interpret/prompts.py": "8649271f6a1b7c9a66248d8d72f0339d4bbc743d519a1deb49d140c207885b2a"
+    },
+    "prompt_revision": "3"
+   },
+   "runs": [
+    {
+     "cases_digest": "6a0966593c9036054be57b5d7bf9999ff30d988ab9d5af31e51cb65b3f57a77d",
+     "exact": "22/28",
+     "interpreter": "offline-rules",
+     "mode": "offline",
+     "models_returned": [
+      "offline-rules"
+     ],
+     "prompt_revision": "2"
+    },
+    {
+     "cases_digest": "2c00105421522584a67dcb03af43bd05219fb1cb2bd4498d865849d5516eb541",
+     "exact": "26/28",
+     "interpreter": "gpt-5.5",
+     "mode": "record",
+     "models_returned": [
+      "gpt-5.5-2026-04-23"
+     ],
+     "prompt_revision": "2"
+    }
+   ],
+   "sha256": "cb5b42b104f85c540857ee3c7e037ea2659e8b001d094863b9811a43a6f0e6f0",
+   "tag": "holdout_after_prompt_revision"
+  },
+  "corrections_benchmark_muse.json": {
+   "cases_file": "cases.json",
+   "cases_sha256": "4eaa228264add77bfae084d9654ca35aa92ec335cdcc225aabd4b2f80032c532",
+   "chronology": {
+    "cases_file": "cases.json",
+    "cases_sha256_at_run": "4eaa228264add77bfae084d9654ca35aa92ec335cdcc225aabd4b2f80032c532",
+    "cases_sha256_matches_committed": true,
+    "exact": [
+     "44/44"
+    ],
+    "first_commit": {
+     "commit": "753ec7c3ba7d8d9613341ca3c6b42f5d00ab61f8",
+     "committed_at": "2026-10-31T09:19:51-07:00"
+    },
+    "generated_at": "2026-10-31T16:03:13Z",
+    "generated_at_meaning": "run start (UTC), set after the case file was read and hashed",
+    "generated_at_pdt": "2026-10-31T09:03:13-07:00",
+    "gold_in_result_equals_committed_cases": true,
+    "interpreters": [
+     "muse-spark-1.3 (record)"
+    ],
+    "rescore_fields_added_by_later_scorer": [],
+    "rescore_with_committed_scorer_reproduces_summary": true,
+    "tag": "muse"
+   },
+   "file": "results/corrections_benchmark_muse.json",
+   "first_commit": {
+    "commit": "753ec7c3ba7d8d9613341ca3c6b42f5d00ab61f8",
+    "committed_at": "2026-10-31T09:19:51-07:00"
+   },
+   "generated_at": "2026-10-31T16:03:13Z",
+   "prompts": {
+    "prompt_file_sha256": {
+     "mirror/interpret/prompts.py": "8649271f6a1b7c9a66248d8d72f0339d4bbc743d519a1deb49d140c207885b2a"
+    },
+    "prompt_revision": "3"
+   },
+   "runs": [
+    {
+     "cases_digest": "71b3ff7609cf8b9495fa24320fae73300867b76111eca11201242c22ec94ab66",
+     "exact": "44/44",
+     "interpreter": "muse-spark-1.3",
+     "mode": "record",
+     "models_returned": [
+      "muse-spark-1.3"
+     ],
+     "prompt_revision": "3"
+    }
+   ],
+   "sha256": "42f5da2caf5cf4ae363a1df6b8d09f5883ec16bc41906602ce9bad9688b2a54f",
+   "tag": "muse"
+  },
+  "corrections_benchmark_prompt_rev2.json": {
+   "cases_file": "cases.json",
+   "cases_sha256": "4eaa228264add77bfae084d9654ca35aa92ec335cdcc225aabd4b2f80032c532",
+   "chronology": {
+    "cases_file": "cases.json",
+    "cases_sha256_at_run": "4eaa228264add77bfae084d9654ca35aa92ec335cdcc225aabd4b2f80032c532",
+    "cases_sha256_matches_committed": true,
+    "exact": [
+     "44/44",
+     "42/44"
+    ],
+    "first_commit": {
+     "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+     "committed_at": "2026-10-31T06:32:34-07:00"
+    },
+    "generated_at": "2026-10-31T11:47:58Z",
+    "generated_at_meaning": "run start (UTC), set after the case file was read and hashed",
+    "generated_at_pdt": "2026-10-31T04:47:58-07:00",
+    "gold_in_result_equals_committed_cases": true,
+    "interpreters": [
+     "offline-rules (offline)",
+     "gpt-5.5 (record)"
+    ],
+    "rescore_fields_added_by_later_scorer": [],
+    "rescore_with_committed_scorer_reproduces_summary": true,
+    "tag": "after_prompt_revision"
+   },
+   "file": "results/corrections_benchmark_prompt_rev2.json",
+   "first_commit": {
+    "commit": "9637c2e57798f3518784adc79980252e96c7e4d0",
+    "committed_at": "2026-10-31T06:32:34-07:00"
+   },
+   "generated_at": "2026-10-31T11:47:58Z",
+   "prompts": {
+    "prompt_file_sha256": {
+     "mirror/interpret/prompts.py": "8649271f6a1b7c9a66248d8d72f0339d4bbc743d519a1deb49d140c207885b2a"
+    },
+    "prompt_revision": "3"
+   },
+   "runs": [
+    {
+     "cases_digest": "0f9522c74ba85b1a771e98b278d886ac104d722e39f55618ec43fd1165f8e0a3",
+     "exact": "44/44",
+     "interpreter": "offline-rules",
+     "mode": "offline",
+     "models_returned": [
+      "offline-rules"
+     ],
+     "prompt_revision": "2"
+    },
+    {
+     "cases_digest": "076a1163456cfb99dd8a342c4e70c03d86ec8bcdb70c586d12d5e162a68a9623",
+     "exact": "42/44",
+     "interpreter": "gpt-5.5",
+     "mode": "record",
+     "models_returned": [
+      "gpt-5.5-2026-04-23"
+     ],
+     "prompt_revision": "2"
+    }
+   ],
+   "sha256": "858363e52c7a5f041bacb2223bde1dd404e7dcd009e1beda6e4d05b71182f477",
+   "tag": "after_prompt_revision"
+  }
+ }
+}

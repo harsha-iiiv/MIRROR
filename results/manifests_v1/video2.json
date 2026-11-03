@@ -1,0 +1,169 @@
+{
+ "built_from_commit": "f19abfe3038120afed5649b40ea8b929192b7c3d",
+ "code": {
+  "code_scope": "import closure of mirror.evaluate.prereg, mirror.evaluate.bench_video, mirror.evaluate.costs, mirror.perception, mirror.perception.track, mirror.perception.reconstruct, mirror.interpret.video_observe, mirror.interpret, mirror.meta, mirror.contracts",
+  "freeze_commit_tree": {
+   "code_files": 69,
+   "code_sha256": "f174076be48d0b845fbbbd3848ba22c8198f548587fa7407fb8ebd36ba1c56c7",
+   "file_hashes": {
+    "cassettes": {
+     "files": 238,
+     "path": "data/cassettes",
+     "sha256": "cc02ce78ccfad0b3da412dc1d3f635377f6ee90b3aec7d1c613e7d5f45f378a9"
+    },
+    "cassettes_muse": {
+     "files": 247,
+     "path": "data/cassettes_muse",
+     "sha256": "7cce5dfba440b8350b44ec42f6a7f564dc18a60fc8e5881125c910b3c3df1d9e"
+    },
+    "demos": {
+     "files": 23,
+     "path": "data/demos",
+     "sha256": "305153e4043efb4b7dc55b10c57a21fc1a9298270395884b6fd779e91b9d4812"
+    },
+    "scripts": {
+     "files": 3,
+     "path": "scripts",
+     "sha256": "c47dd5e7c7cc05e176927dbb36dddaf2abbb45db413671998bc166963c5106e0"
+    }
+   }
+  },
+  "freeze_commit_tree_matches": true,
+  "frozen_code_files": 69,
+  "frozen_code_sha256": "f174076be48d0b845fbbbd3848ba22c8198f548587fa7407fb8ebd36ba1c56c7",
+  "frozen_file_hashes": {
+   "cassettes": {
+    "files": 238,
+    "path": "data/cassettes",
+    "sha256": "cc02ce78ccfad0b3da412dc1d3f635377f6ee90b3aec7d1c613e7d5f45f378a9"
+   },
+   "cassettes_muse": {
+    "files": 247,
+    "path": "data/cassettes_muse",
+    "sha256": "7cce5dfba440b8350b44ec42f6a7f564dc18a60fc8e5881125c910b3c3df1d9e"
+   },
+   "demos": {
+    "files": 23,
+    "path": "data/demos",
+    "sha256": "305153e4043efb4b7dc55b10c57a21fc1a9298270395884b6fd779e91b9d4812"
+   },
+   "scripts": {
+    "files": 3,
+    "path": "scripts",
+    "sha256": "c47dd5e7c7cc05e176927dbb36dddaf2abbb45db413671998bc166963c5106e0"
+   }
+  },
+  "frozen_versions": {
+   "mujoco": "3.17.0",
+   "numpy": "2.4.6",
+   "python": "3.11.18",
+   "scipy": "1.17.1"
+  },
+  "report_freeze_code_sha256": "f174076be48d0b845fbbbd3848ba22c8198f548587fa7407fb8ebd36ba1c56c7"
+ },
+ "directory": "results/eval_video2",
+ "freeze": {
+  "amendments": {},
+  "created_at": "2026-11-01T06:27:46.020116+00:00",
+  "design_file_sha256": "a41be6f9737fe0b369ded76ae9857fba8cfd9bd6a07703f12cfa8d0caae8c452",
+  "design_matches": true,
+  "design_sha256": "a41be6f9737fe0b369ded76ae9857fba8cfd9bd6a07703f12cfa8d0caae8c452",
+  "file": "results/eval_video2/freeze.json",
+  "first_commit": {
+   "commit": "80750a4a2d17348a075118f23c931ad840706b74",
+   "committed_at": "2026-10-31T23:30:06-07:00"
+  },
+  "inputs_file_sha256": "b0794e98b4eef7166bbdbfd17fca5c241144ba2d0db97b539d489eb9cc40dbfc",
+  "inputs_matches": true,
+  "inputs_sha256": "b0794e98b4eef7166bbdbfd17fca5c241144ba2d0db97b539d489eb9cc40dbfc",
+  "sha256": "bdbc9dd86e2b668a9dc12bd1f148f1a885c01909e7e2c57be4f5d5b996447bf2"
+ },
+ "inputs": {
+  "digest": "1ae10c82ba58954e7cfae0bb055c6c54dd396f0ef573bbade5ef7fde9dae5a7d",
+  "files": 160
+ },
+ "kind": "prereg",
+ "manifest_version": "manifests_v1",
+ "models": {
+  "design": {
+   "observations": [
+    "muse-wonder-1.0",
+    "muse-spark-1.3"
+   ],
+   "specification": "muse-spark-1.3",
+   "tracking": "sam-3.1"
+  },
+  "usage": {
+   "files": {
+    "calls": 94,
+    "from_cassette": 0,
+    "reported_models": []
+   },
+   "muse-spark-1.3": {
+    "calls": 172,
+    "from_cassette": 0,
+    "reported_models": []
+   },
+   "muse-wonder-1.0": {
+    "calls": 16,
+    "from_cassette": 0,
+    "reported_models": []
+   },
+   "sam-3.1": {
+    "calls": 94,
+    "from_cassette": 0,
+    "reported_models": []
+   }
+  }
+ },
+ "ordering": {
+  "freeze_commit_before_first_model_call": true,
+  "freeze_commit_before_run_start": true,
+  "freeze_created_before_commit": true,
+  "note": "commit times are the committer's clock, not an external timestamp"
+ },
+ "outputs": {
+  "report.json": "238af916ca1be84ce25dc694b156a0880759a7bfb61828d9a404a2b9e2968453",
+  "seeds": {
+   "digest": "142dee7a5a52c34db33e8a9f4de018db7f816c1feb2885c9da0cc863761dee76",
+   "files": 16
+  },
+  "tracks": {
+   "digest": "37193213b404040960cb5d6fde2d12abac8ed56fad070c78c9fcf2373aad24ba",
+   "files": 16
+  }
+ },
+ "prompts": {
+  "prompt_file_sha256": {
+   "mirror/interpret/prompts.py": "7cc1ebcceaccafa74dd20c22c9aba870f262d88de49e91bd066c22bdc9a96187",
+   "mirror/interpret/sam_prompts.py": "54252f8f63c4029e93c69820f56d8d11144e39c7e19febf34e0af6399d59b26e",
+   "mirror/interpret/video_observe.py": "aff286c87e55dcd13a4d610b136ceed73010397fe8d9f06aed7a369b0a04bcc3",
+   "mirror/interpret/voice.py": "b5195c4d064d19af30195bd5955eb1126fbafba38f27a7a1667a079a6057bd8d",
+   "mirror/perception/track.py": "3fa24c08654c6011a0cb41ba891bd4eeb2b5011ee1a258c4de430864a84375d4"
+  },
+  "prompt_revision": "3"
+ },
+ "recorded_responses": {
+  "cassettes_llm": {
+   "digest": "7ff41113ccba5d058d8499f0e4ae1f400db38b77675a62390f3db51562cc32ec",
+   "files": 32
+  },
+  "cassettes_meta": {
+   "digest": "7b2bb3fa2f3ff5b398b27075762e193e40e8a5f0c25da32d8f676c54392714ad",
+   "files": 328
+  }
+ },
+ "registration": "video2",
+ "run": {
+  "first_model_call": "2026-11-01T06:30:55.413000+00:00",
+  "last_model_call": "2026-11-01T07:07:26.237000+00:00",
+  "ledger_sha256": "60f205b746e02b45f976d0d93d9f79d2703693cf118fc4591e7c6de7f27c7458",
+  "model_calls": 376,
+  "results_first_commit": {
+   "commit": "bb5eb64a04ee357c73fa7e6e2d6a220c8e9e1bb3",
+   "committed_at": "2026-11-01T00:11:05-07:00"
+  },
+  "started_at": "2026-11-01T06:30:38.914864+00:00"
+ },
+ "status": "stopped early: spend cap $14.00: $8.50 spent and $6.80 reserved by running seeds before seed 71016; a seed is projected at $0.66 (reservation x1.5)"
+}

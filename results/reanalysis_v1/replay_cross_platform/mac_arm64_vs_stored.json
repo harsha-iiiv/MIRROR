@@ -1,0 +1,406 @@
+{
+ "comparison": {
+  "bead_differences": [
+   {
+    "first": 3,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 50000,
+    "side": "a",
+    "stratum": "blocked"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 6,
+    "seed": 50001,
+    "side": "a",
+    "stratum": "blocked"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 2,
+    "seed": 50002,
+    "side": "a",
+    "stratum": "blocked"
+   },
+   {
+    "first": 3,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 50003,
+    "side": "a",
+    "stratum": "blocked"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 6,
+    "seed": 50006,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 5,
+    "seed": 50008,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 5,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 50012,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 6,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 50013,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 5,
+    "seed": 50014,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 5,
+    "object": "cup_0",
+    "second": 6,
+    "seed": 50015,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 5,
+    "object": "cup_0",
+    "second": 3,
+    "seed": 50020,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 5,
+    "object": "cup_0",
+    "second": 3,
+    "seed": 50022,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 5,
+    "seed": 50031,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 3,
+    "seed": 50034,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 3,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 50035,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 3,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 50037,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 6,
+    "seed": 50041,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 3,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 50044,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 5,
+    "object": "cup_0",
+    "second": 3,
+    "seed": 50046,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 3,
+    "seed": 50049,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 6,
+    "object": "cup_0",
+    "second": 5,
+    "seed": 50051,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 5,
+    "seed": 50054,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 5,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 50055,
+    "side": "a",
+    "stratum": "primary"
+   },
+   {
+    "first": 3,
+    "object": "cup_0",
+    "second": 5,
+    "seed": 60000,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 3,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 60001,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 6,
+    "seed": 60002,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 3,
+    "seed": 60003,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 3,
+    "object": "cup_0",
+    "second": 5,
+    "seed": 60005,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 5,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 60008,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 3,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 60009,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 5,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 60011,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 3,
+    "object": "cup_0",
+    "second": 5,
+    "seed": 60012,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 6,
+    "seed": 60017,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 3,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 60019,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 5,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 60020,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 5,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 60021,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 6,
+    "object": "cup_0",
+    "second": 5,
+    "seed": 60022,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 5,
+    "seed": 60024,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 5,
+    "seed": 60025,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 5,
+    "object": "cup_0",
+    "second": 4,
+    "seed": 60026,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 3,
+    "object": "cup_0",
+    "second": 5,
+    "seed": 60027,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 3,
+    "seed": 60028,
+    "side": "a",
+    "stratum": "shortcut"
+   },
+   {
+    "first": 4,
+    "object": "cup_0",
+    "second": 3,
+    "seed": 60029,
+    "side": "a",
+    "stratum": "shortcut"
+   }
+  ],
+  "beads_equal": 52,
+  "detail_equal": 52,
+  "max_abs_bead_difference": 2,
+  "max_abs_execution_time_s": 0.832,
+  "max_abs_final_tilt_deg": 0.048264,
+  "max_abs_max_transport_tilt_deg": 0.225527,
+  "max_abs_physics_steps": 208,
+  "only_in_first": 0,
+  "only_in_second": 0,
+  "outcome_equal": 95,
+  "routes_equal": 95,
+  "trials_compared": 95
+ },
+ "first": {
+  "code_identical_to_freeze": false,
+  "code_state_label": "mac-arm64",
+  "kind": "replay",
+  "network_calls_refused": 0,
+  "outcome_counts": {
+   "blocked": 5,
+   "primary": 60,
+   "shortcut": 30
+  },
+  "platform": {
+   "machine": "arm64",
+   "system": "Darwin"
+  },
+  "replay_code_sha256": "77f8e0c66cb36ab894a33e0f98da2279a67bcaa8390695260b4743737303ae39",
+  "runtime": {
+   "mujoco": "3.17.0",
+   "numpy": "2.5.4",
+   "python": "3.12.11",
+   "scipy": "1.18.1"
+  },
+  "scene_counts": {
+   "blocked": 0,
+   "primary": 0,
+   "shortcut": 0
+  },
+  "source": "eval_muse_mac_arm64.json",
+  "spec_pair_identical": {
+   "a": true,
+   "b": true
+  }
+ },
+ "purpose": "development check, not a registered result",
+ "second": {
+  "kind": "stored",
+  "manifest_versions": {
+   "mujoco": "3.17.0",
+   "numpy": "2.4.6",
+   "python": "3.11.18",
+   "scipy": "1.17.1"
+  },
+  "source": "report.json"
+ },
+ "version": "reanalysis_v1/cross_platform"
+}
