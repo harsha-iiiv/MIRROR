@@ -48,7 +48,7 @@ _PLACED_ORDER_RE = re.compile(r"\b(in the tray before|into the tray before|is pl
 _ORDER_RE = re.compile(r"\b(order|first|before|after|last|sequence|start with|then)\b")
 _GOAL_RE = re.compile(r"\b(pack|packed|packing|go in the tray|goes in the tray|go into the tray|"
                       r"in the tray|into the tray|leave|left out|put .* in the tray)\b")
-_NEG_RE = re.compile(r"(\bnot\b|n't\b|\bnever\b|\bno need\b|\bwithout\b|\bavoid\b|\bcannot\b|\bnor\b|\bno\b)")
+_NEG_RE = re.compile(r"(\bnot\b|n't\b|\bnever\b|\bno need\b|\bwithout\b|\bavoid\b|\bcannot\b|\bnor\b|\bno\b|\bnothing\b)")
 _PERMIT_RE = re.compile(r"\b(can|may|allowed|fine|ok|okay|free to|is acceptable|doesn't matter|does not matter|"
                         r"irrelevant|optional|either way)\b")
 _MATTERS_RE = re.compile(r"\b(matters|counts|is important|is what matters|care about)\b")
@@ -336,13 +336,19 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
                     + ", ".join(f"the {b}" for b in bound) + "?",
                     [f"The {b}" for b in bound], reason=f"{k} not in scene")
 
+    from mirror.interpret.guard import unknown_object_question
+    q, alias = unknown_object_question(text, spec, context.get("scene") if isinstance(context.get("scene"), SceneState) else None,
+                                       focus_kind=context.get("focus_kind"))
+    if q is not None:
+        raise q
+    alias_note = (f"\"the {alias['word']}\" taken as the {alias['resolved_to']} ({alias['source']})" if alias else "")
     if not text_prop and _CARE_RE.search(t):
         kinds = [k for c in clauses for k in c.kinds] or ([context.get("focus_kind")] if context.get("focus_kind") else [])
         who = f"the {kinds[0]}" if kinds else "it"
         raise NeedsClarification(
-            f"What should change for {who}? I can keep it upright (while carried, once placed, or always), keep "
-            f"it a set distance from the wall and other obstacles, stop it touching obstacles, or change the "
-            f"packing order.",
+            f"I can keep {who} upright (while carried, once placed, or always), keep it a set distance from the "
+            f"wall and other obstacles, stop it touching obstacles, or change the packing order. Which of these "
+            f"matters for {who}?",
             ["Keep it upright while carried", "Keep it away from obstacles (say how far)",
              "Do not let it touch obstacles", "Pack it first"],
             reason="vague instruction: no supported rule named")
@@ -467,6 +473,8 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
     interp = "; ".join(_describe_op(o) for o in ops)
     if notes:
         interp += ". " + " ".join(dict.fromkeys(notes))
+    if alias_note:
+        interp += f" ({alias_note})"
     ops = [o if isinstance(o, DraftOpV4) else DraftOpV4(**o.model_dump(), order_event=None) for o in ops]
     return CorrectionDraftV4(outcome="apply", interpretation=interp, question=None, options=[], ops=ops)
 

@@ -106,9 +106,13 @@ def _validation_layer(spec: TaskSpec, text: str, context: Optional[dict[str, Any
     """Deterministic checks after the interpreter, before anything is applied."""
     if context and context.get("validation_layer") is False:
         return
-    from mirror.interpret.guard import absent_object_question
+    from mirror.interpret.guard import absent_object_question, unknown_object_question
     scene = (context or {}).get("scene")
     q = absent_object_question(text, spec, scene if isinstance(scene, SceneState) else None)
+    if q is not None:
+        raise q
+    q, _ = unknown_object_question(text, spec, scene if isinstance(scene, SceneState) else None,
+                                   focus_kind=(context or {}).get("focus_kind"))
     if q is not None:
         raise q
 

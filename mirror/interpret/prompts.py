@@ -231,7 +231,10 @@ CORRECT_SYSTEM_V4 = CORRECT_SYSTEM.replace(VOCABULARY, VOCABULARY_V4).replace(
     "11. If the request needs something the rule types cannot express (a distance from another\n"
     "    object, a clearance with no distance, no table contact while carrying), use outcome\n"
     "    \"clarify\" and ask for a supported alternative; never approximate it silently.\n"
-    "12. order_event is null for every action except require_order.")
+    "12. order_event is null for every action except require_order.\n"
+    "13. A word that is not an object kind in the scene (\"the coffee\", \"the thermos\") names an object\n"
+    "    only if context.focus_kind says which object the person selected; otherwise use outcome\n"
+    "    \"clarify\" and ask which object they mean or whether it is absent. Never substitute silently.")
 PROMPT_REVISION_V4 = "4"
 
 

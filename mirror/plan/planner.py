@@ -224,11 +224,17 @@ def build_core(spec: TaskSpec, scene: SceneState, cfg: PlannerConfig = DEFAULT_C
             need = max(float(c.params.get("min_m", 0.0)) for c in start_rules)
             if d0 < need - CLEARANCE_TOL:
                 rule = max(start_rules, key=lambda c: float(c.params.get("min_m", 0.0)))
-                proof = {"proven": True, "kind": "clearance_at_start", "object": oid, "rule": rule.id,
+                stmt = (f"{oid} rests {d0:.3f} m from {near}. The {rule.phase} phase begins when it is grasped "
+                        f"at that resting pose, so a clearance of {need:g} m cannot hold.")
+                proof = {"proven": True, "scope": "any_motion", "kind": "clearance_at_start", "object_id": oid,
+                         "object": oid, "constraint_ids": [rule.id], "rule": rule.id,
                          "distance_m": round(d0, 5), "required_m": need, "nearest_obstacle": near,
-                         "argument": (f"{oid} rests {d0:.3f} m from {near}. The {rule.phase} phase begins "
-                                      f"when it is grasped at that resting pose (only top grasps of resting "
-                                      f"objects are supported), so a clearance of {need:g} m cannot hold.")}
+                         "statement": stmt, "argument": stmt,
+                         "assumptions": ["objects are picked up only by top grasps at their resting pose",
+                                         "object and obstacle dimensions from the scene description",
+                                         "clearance is the distance between solid shapes (box; capsule for the marker)"],
+                         "not_covered": ["pushing or sliding the object before grasping it", "other grasp types"],
+                         "method": "exact distance at the start pose (mirror/plan/planner.py)"}
                 op = ObjectPlan(obj, gm, 0.0, np.zeros(3), np.zeros(3), None, [], [], banned, allowed,
                                 failure=f"{oid} starts {d0:.3f} m from {near}, closer than the {need:g} m "
                                         f"required by {rule.id}", infeasibility=proof)

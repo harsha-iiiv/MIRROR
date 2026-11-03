@@ -97,6 +97,64 @@ clearance without a distance is also answered with a question, never a default.
   contact rules are `unknown`. Re-checking all 266 stored eval rollouts that have frames under their own
   rules reproduces every recorded status.
 
+## Understanding test matrix (M2)
+
+Interpretation goes through `mirror.interpret.outcome.interpret(versions, text, client, context)`, which returns
+an `InterpretationOutcome` (plain JSON for the studio and web): `outcome` (apply, clarify, refuse, revert),
+`reason_code`, `message` (the question, refusal or interpretation), `options`, `supported_changes` (on refusals
+and vague requests), `ops` and `diff`, `alias` (when a word was resolved through the selected object),
+`interpreter`, `provenance` (offline interpreter, fresh model call, replayed cassette, no model call, decided from
+the client's actual call records), `prompt_revision`, `latency_s`, `model_calls`.
+Planning results are described with `mirror.plan.outcome.planning_outcome(plan)`: "Proven infeasible under these
+stated assumptions" only with a valid certificate (listing its assumptions and what it does not cover); otherwise
+"Planner found no compliant route", which is not a proof. Neither is a physical-safety guarantee.
+
+Rules the matrix tests:
+- Vague requests ("be careful", "gently") get a question naming the measurable requirements; nothing is assumed.
+- Absent objects: words in the absent-object lexicon get "there is no X". Words outside every lexicon used as
+  object nouns ("the thermos") get "I don't recognise the X". "jar" and "bowl" informed the lexicon during
+  development and are regression cases only. "thermos", "goblet" and "coffee" are in no lexicon (a test checks).
+- Aliases: an unknown word is resolved to an object only through explicit context (the object selected in the
+  interface, `context.focus_kind`), and the outcome records that resolution. Without it, a question. Fixed
+  aliases are only the listed synonyms (cup: mug, glass, container, beads, contents, ...).
+- Unsupported requests are refused with the list of supported changes, or answered with a question offering a
+  supported alternative (distance from another object; no table contact while carrying).
+
+All cases below were written by the developer of the offline rules: development evidence, not an independent or
+held-out measurement. Tests: tests/interpret/test_understanding.py (offline rules; prompt revision 4 with fake
+model clients for the model path).
+
+| Category | Input | Context | Expected outcome |
+|---|---|---|---|
+| paraphrase | Make sure nothing spills out of the cup on the way over. | - | apply: requires c_upright_transport_cup |
+| paraphrase | No tipping the cup while the robot carries it. | - | apply: requires c_upright_transport_cup |
+| scope | Only the cup must stay upright while carried; the block can tilt. | - | apply: requires c_upright_transport_cup; not c_upright_transport_block |
+| scope | Every object must stay upright while it is carried. | - | apply: requires c_upright_transport_all |
+| phase | The cup only needs to be upright once it is in the tray; it may tilt while moving. | - | apply: requires c_upright_final_cup; not c_upright_transport_cup |
+| phase | The marker has to stand upright once it is placed. | - | apply: requires c_upright_final_marker |
+| ordering | Pack the block before the cup. | - | apply: order o_block_before_cup placement_complete/grasp_start |
+| ordering | Pick up the marker before you pick up the block. | - | apply: order o_marker_started_before_block grasp_start/grasp_start |
+| clearance | Keep the block at least 4 cm away from the wall. | - | apply: requires c_keep_clearance_transport_block |
+| clearance | Keep the cup away from the wall. | - | clarify (needs_value) |
+| multi_turn | after: The cup can tilt up to 20 degrees while it moves, no more.; make that 30 degrees | - | apply: requires c_upright_transport_cup |
+| multi_turn | after: Keep the cup at least 5 cm away from the wall.; Undo that. | - | revert: not c_keep_clearance_transport_cup |
+| multi_turn | after: Pack the block before the cup. / Keep the cup at least 5 cm away from the wall.; Go back to version 1. | - | revert: not o_block_before_cup |
+| vague | Be careful with the cup. | - | clarify (vague) |
+| vague | Handle the marker gently. | - | clarify (vague) |
+| absent (regression) | Put the jar in the tray. | - | clarify (absent_object) |
+| absent (regression) | Keep the bowl upright. | - | clarify (absent_object) |
+| absent | Keep the thermos upright while carrying it. | - | clarify (unknown_object) |
+| absent | Don't let the goblet hit the wall. | - | clarify (unknown_object) |
+| alias | Don't tip the coffee. | - | clarify (unknown_object) |
+| alias | Don't tip the coffee. | selected: cup | apply: requires c_upright_transport_cup; alias to cup |
+| alias | Keep the mug level while you carry it. | - | apply: requires c_upright_transport_cup |
+| unsupported | Move faster. | - | refuse (not_supported) |
+| unsupported | Keep the cup 5 cm away from the marker. | - | clarify (unsupported_rule) |
+| unsupported | Do not let the cup touch the table while you carry it. | - | clarify (unsupported_rule) |
+| infeasible | Keep the cup at least 30 cm away from the wall. (scene demo) | - | planner: proven_infeasible |
+| infeasible | Keep the cup upright the whole time it is carried. (scene blocked) | - | planner: proven_infeasible |
+| infeasible | Once placed, the cup must stay at least 30 cm from the wall. (scene demo) | - | planner: no_route_found |
+
 ## Support matrix
 
 | Rule | Phase | Variant | Compiler | Planner | Checker | Notes |
