@@ -140,7 +140,15 @@ def replay(reg_dir: Path, repo: Path, workers: int = 2, strata=None) -> dict:
                                      for k in r[x]["detail"] if r[x]["detail"].get(k) != s[x]["detail"].get(k)}
                                  for x in ("a", "b")}))
         comp[name] = res
+    import platform
+    try:
+        from mirror.evaluate.paired import runtime_versions
+        runtime = runtime_versions()
+    except ImportError:
+        runtime = {}
     return dict(version="reanalysis_v1/replay", registration=str(reg_dir.name),
+                runtime=runtime, platform=dict(machine=platform.machine(), system=platform.system()),
+                frozen_versions=man.get("versions"),
                 frozen_code_sha256=man.get("code_sha256"), replay_code_sha256=digest,
                 code_identical_to_freeze=digest == man.get("code_sha256"),
                 spec_pair_identical=spec_ok, network_calls_refused=net["n"],
