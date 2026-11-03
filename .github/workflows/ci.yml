@@ -65,6 +65,8 @@ jobs:
           test -s "$RUNNER_TEMP/v3/report.md"
       - name: published numbers and historical evidence
         run: python -m pytest -q tests/release
+      - name: wheel ships vendored robot models, licences, NOTICE and runtime data
+        run: python -m pytest -q -m slow tests/release/test_wheel.py
 
   release-scan:
     name: secrets and personal data

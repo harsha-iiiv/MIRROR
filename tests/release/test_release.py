@@ -85,3 +85,12 @@ def test_scanner_masks_values(tmp_path):
     rep = release_scan.scan(tmp_path, tracked=False)
     assert rep["counts"]["high"] >= 1
     assert all(fake not in f["preview"] for f in rep["findings"])
+
+
+def test_arm_backend_documented_with_licence_and_scope():
+    readme = (ROOT / "README.md").read_text()
+    arch = (ROOT / "docs" / "ARCHITECTURE.md").read_text()
+    assert "## Arm backend (optional)" in readme and "BSD-3-Clause" in readme and "mirror/assets/NOTICE" in readme
+    assert "gripper baseline only" in readme and "100-107" in readme and "Darwin arm64" in readme
+    assert "### Arm backend (optional)" in arch
+    assert (ROOT / "mirror" / "assets" / "NOTICE").is_file()

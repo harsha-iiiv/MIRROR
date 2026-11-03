@@ -35,6 +35,12 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["mirror*"]
 
+[tool.setuptools.package-data]
+# Vendored robot models with their BSD-3-Clause licences and NOTICE must ship in
+# every wheel; the JSON case files and designs are read at run time.
+mirror = ["assets/NOTICE", "assets/**/*"]
+"*" = ["*.json", "*.md"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
