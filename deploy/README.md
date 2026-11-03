@@ -126,6 +126,10 @@ server do is bounded per client address and globally (docs/CHALLENGE_API.md sect
 | `MIRROR_UPLOAD_DECODE_S` | 60 | Wall time for the full decode check |
 | `MIRROR_UPLOAD_MEM_MB` | 1536 | Address-space limit of ffprobe/ffmpeg |
 | `MIRROR_UPLOAD_TTL_S` | 1800 | An upload not used by a demonstration expires |
+| `MIRROR_CAPTURE_UPLOAD_MAX_MB` | 300 | One phone-capture clip (original phone files) |
+| `MIRROR_CAPTURE_UPLOAD_SESSION_MB` | 900 | All capture media one session holds (the global limit still applies) |
+| `MIRROR_CAPTURE_UPLOAD_MAX_S` | 120 | Longest capture clip |
+| `MIRROR_CAPTURE_UPLOAD_MAX_SIDE` | 3840 | Largest capture clip width or height |
 | `MIRROR_STUDY_AUDIO_RETENTION_DAYS` | 0 | Consented study audio is kept only when > 0 (then deleted after that many days) |
 
 The tunnel forwards every visitor from `127.0.0.1`. Set `MIRROR_TRUST_PROXY=1` only if the tunnel

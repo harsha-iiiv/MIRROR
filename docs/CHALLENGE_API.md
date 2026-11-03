@@ -194,26 +194,50 @@ success, after success 8/8).
   `remove_rule`, `add_ordering`, `remove_ordering`; see mirror/studio/manual.py) → one new version,
   `step_provenance.kind = manual`; invalid edits answer 409 and are recorded as `outcome: error`.
 
-## 6. Real-phone capture
+## 6. Real-phone capture (offline phone pipeline, mirror.capture)
 
-Uploads accept `view` = `top | side | calibration | single` (same validation as section 7).
+Procedure and thresholds: docs/CAMERA_CAPTURE.md. Tested on synthetic renders only; no real footage has
+been validated. Every step runs offline (person-drawn boxes + classical tracking): no model calls.
 
-* `POST /api/capture {mode two_view|single_view, notes}` → capture (`observability` states what a single
-  view cannot observe).
-* `POST /api/capture/{cid}/clips {clips {role: upload id}, sync {method clap|flash|visual_marker|manual,
-  top_t, side_t}}`: two_view needs top + side + calibration and a declared sync event inside both clips;
-  clips whose lengths differ by more than 3 s (beyond the sync offset) are refused as separate takes.
-  `sync.status` is `declared`; the studio never calls it verified.
-* `POST /api/capture/{cid}/calibrate`, `/track` → jobs calling `mirror.perception.phone.calibrate` /
-  `.track` (phone track). A failed calibration returns the capture to `clips_ready` with the reason.
-  Missing module → 409 "not available on this server".
-* `POST /api/capture/{cid}/review {correspondence [{track_id, proxy cup|block|marker|null, label,
-  dimensions_m, dimensions_source, unsupported_features, assumed {mass_kg, friction, contents}}],
-  events [{track_id, type grasp|release|carry_start|carry_end|place, t_start, t_end, status
-  confirmed|rejected|uncertain|edited}]}`: append-only history; events are labelled human-hand
-  inferred intervals, not robot contact.
-* `POST /api/capture/{cid}/propose` → job: `reconstruct(capture, review)` → new generation
-  (`reason: phone_capture`, source media with roles and hashes, calibration attached) → proposal.
+Uploads: `view` = `take_top | take_side | lens_top | lens_side` (aliases: `top`/`single` → take_top,
+`side` → take_side, `calibration` → lens_top). Capture clips are validated like every upload (probe +
+full decode) under capture limits (original phone files: 300 MB per file, 900 MB per session, 120 s,
+up to 3840 px, 60 fps; `MIRROR_CAPTURE_UPLOAD_*`).
+
+* `POST /api/capture {mode two_view|single_view, notes, synthetic, print_check?, objects?, tags?, tray?}`.
+  `synthetic: true` marks rendered test clips (label "SYNTHETIC test render: not real footage").
+* `POST /api/capture/{cid}/clips {clips {role: upload id}, sync?}`: the pipeline finds the sync events
+  itself; a declared `sync` is kept only as the person's note (`declared_sync.status: declared`).
+* `POST /api/capture/{cid}/inputs {print_check {measured_bar_mm, measured_square_mm}, objects
+  [ObjectMapping: track_label, real_identity, proxy cup|block|marker|tray|wall|ignore, real_dims,
+  unsupported_features, assumptions, real_contents, confirmed_by_person], tags {number: label}, tray
+  {center_xy, inner_half}}` (validated with the pipeline's own models).
+* `GET /api/capture/{cid}/frame/{role}/{index}` → PNG, for drawing boxes.
+* `POST /api/capture/{cid}/prompts {prompts [{camera top|side, label, frame, box [x, y, w, h]}]}`.
+* `POST /api/capture/{cid}/run` → job: `mirror.capture.session.build_session` on the stored inputs. If the
+  pipeline fails, nothing is reconstructed and the error is listed in `errors`.
+* `GET /api/capture/{cid}` → `{state awaiting_clips|inputs_needed|ready_to_run|running|processed|
+  needs_rerun|proposed, label, clips, inputs, missing, stale, summary_lines, report, gate_open, blocking,
+  effort, review_log, proposal, errors, provenance}`. `report` = `{evidence_kind, synthetic, mode,
+  calibration {camera: accepted, rms_px, n_views, checks}, poses {camera: accepted, rms_px, holdout_mm,
+  distance_m, checks}, recalibration, camera_shift_px, sync (pipeline result: method, ok, offset_s,
+  uncertainty_s, reasons), mappings (+ fidelity_statement), tray, objects {label: proxy, coverage
+  {measured, inferred, interpolated, unobserved}, tilt_observed}, events, review [code, severity,
+  message, object, event, camera, blocking, how_to_resolve, needs_new_input], gate_open, track_sources,
+  model_calls}`. `GET /api/capture/{cid}/session` returns the full CaptureSession JSON.
+* `POST /api/capture/{cid}/review {objects [{track_label, confirmed_by_person, proxy?, ..., seconds_spent}],
+  identity_confirmations [{camera, label, from_frame, seconds_spent} | [camera, label, frame]],
+  corrections [{target event id, field t|t_lo|t_hi|reject|object|confirm, before, after, seconds_spent}]}`
+  → records each action with the time spent (`review_log`, `effort`) and starts a re-run; returns
+  `{capture, recorded, job}`. The studio never marks a review item resolved itself: blocking items clear
+  only when the re-run pipeline no longer raises them. Items with `needs_new_input` (print check,
+  lens calibration, recalibration, pose, camera moved, sync refused, views disagree, multiple trays)
+  need new clips or measurements.
+* `POST /api/capture/{cid}/propose` → job, refused (409) unless the last run used the current inputs and
+  every blocking item is resolved. Builds the DemoTrace (`mirror.capture.trace.to_demo_trace`, human-hand
+  events labelled inferred), starts a new generation (`reason: phone_capture`, source media with roles
+  and hashes, `calibration` = capture summary incl. effort) and proposes a specification. An interpreter
+  refusal is reported (`proposal.error`), never replaced.
 
 ## 7. Upload bounds (defaults; environment variables in deploy/mirror.env.example)
 

@@ -87,6 +87,25 @@ class UploadLimits:
                    mem_bytes=int(_env_num("MIRROR_UPLOAD_MEM_MB", 1536) * mb),
                    ttl_s=_env_num("MIRROR_UPLOAD_TTL_S", 1800.0))
 
+    @classmethod
+    def capture_from_env(cls) -> "UploadLimits":
+        """Phone-capture clips (original phone files: larger, longer, up to 4K). MIRROR_CAPTURE_UPLOAD_*."""
+        mb = 2**20
+        base = cls.from_env()
+        return cls(max_file_bytes=int(_env_num("MIRROR_CAPTURE_UPLOAD_MAX_MB", 300) * mb),
+                   max_session_bytes=int(_env_num("MIRROR_CAPTURE_UPLOAD_SESSION_MB", 900) * mb),
+                   max_global_bytes=base.max_global_bytes,
+                   max_session_files=int(_env_num("MIRROR_CAPTURE_UPLOAD_SESSION_FILES", 6)),
+                   max_duration_s=_env_num("MIRROR_CAPTURE_UPLOAD_MAX_S", 120.0),
+                   max_side=int(_env_num("MIRROR_CAPTURE_UPLOAD_MAX_SIDE", 3840)),
+                   max_pixels=int(_env_num("MIRROR_CAPTURE_UPLOAD_MAX_PIXELS", 3840 * 2160)),
+                   max_fps=_env_num("MIRROR_CAPTURE_UPLOAD_MAX_FPS", 60.0),
+                   max_frames=int(_env_num("MIRROR_CAPTURE_UPLOAD_MAX_FRAMES", 7200)),
+                   probe_timeout_s=base.probe_timeout_s,
+                   decode_timeout_s=_env_num("MIRROR_CAPTURE_UPLOAD_DECODE_S", 300.0),
+                   mem_bytes=int(_env_num("MIRROR_CAPTURE_UPLOAD_MEM_MB", 3072) * mb),
+                   ttl_s=_env_num("MIRROR_CAPTURE_UPLOAD_TTL_S", 7200.0))
+
     def public(self) -> dict:
         mb = 2**20
         return {"max_file_mb": round(self.max_file_bytes / mb, 1), "max_session_mb": round(self.max_session_bytes / mb, 1),
@@ -300,18 +319,20 @@ class SessionMedia:
                 return 0
             return max(0, min(self.limits.max_file_bytes, self.limits.max_session_bytes - self.held_bytes()))
 
-    def admit(self, nbytes: int) -> None:
-        """Reserve room for a file of ``nbytes`` (call before writing it) or raise UploadRejected."""
+    def admit(self, nbytes: int, limits: Optional["UploadLimits"] = None) -> None:
+        """Reserve room for a file of ``nbytes`` (call before writing it) or raise UploadRejected.
+        ``limits`` overrides the per-file/session limits (phone-capture clips); the global quota is shared."""
+        lim = limits or self.limits
         with self._lock:
             self.sweep()
-            if nbytes > self.limits.max_file_bytes:
-                raise UploadRejected(f"upload larger than {self.limits.max_file_bytes // 2**20} MB",
+            if nbytes > lim.max_file_bytes:
+                raise UploadRejected(f"upload larger than {lim.max_file_bytes // 2**20} MB",
                                      code="too_large", status=413)
-            if len(self.entries) >= self.limits.max_session_files:
+            if len(self.entries) >= max(lim.max_session_files, self.limits.max_session_files):
                 raise UploadRejected(f"this session already holds {len(self.entries)} videos (the limit); "
                                      "start again with a new demonstration", code="too_large", status=413)
-            if self.held_bytes() + nbytes > self.limits.max_session_bytes:
-                raise UploadRejected(f"this session's media would exceed {self.limits.max_session_bytes // 2**20} MB",
+            if self.held_bytes() + nbytes > lim.max_session_bytes:
+                raise UploadRejected(f"this session's media would exceed {lim.max_session_bytes // 2**20} MB",
                                      code="too_large", status=413)
             if self.quota is not None and not self.quota.reserve(nbytes):
                 raise UploadRejected("the server's upload storage is full; try again later or use the recordings",

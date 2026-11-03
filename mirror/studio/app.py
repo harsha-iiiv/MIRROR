@@ -136,8 +136,13 @@ class ClarificationRatingIn(BaseModel):
 
 
 class CaptureIn(BaseModel):
-    mode: str
+    mode: str = "two_view"
     notes: str = ""
+    synthetic: bool = False                 # rendered test clips only; labelled everywhere
+    print_check: Optional[dict[str, Any]] = None
+    objects: Optional[list[dict[str, Any]]] = None
+    tags: Optional[dict[str, str]] = None
+    tray: Optional[dict[str, Any]] = None
 
 
 class CaptureClipsIn(BaseModel):
@@ -145,9 +150,21 @@ class CaptureClipsIn(BaseModel):
     sync: Optional[dict[str, Any]] = None
 
 
+class CaptureInputsIn(BaseModel):
+    print_check: Optional[dict[str, Any]] = None
+    objects: Optional[list[dict[str, Any]]] = None
+    tags: Optional[dict[str, str]] = None
+    tray: Optional[dict[str, Any]] = None
+
+
+class CapturePromptsIn(BaseModel):
+    prompts: list[dict[str, Any]]
+
+
 class CaptureReviewIn(BaseModel):
-    correspondence: list[dict[str, Any]] = []
-    events: list[dict[str, Any]] = []
+    objects: list[dict[str, Any]] = []
+    identity_confirmations: list[Any] = []
+    corrections: list[dict[str, Any]] = []
 
 
 class ManualEditIn(BaseModel):
@@ -425,7 +442,7 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
         if n is None or not n.isdigit():
             raise StudioError(411, "length_required", "send the upload with a Content-Length header")
         nbytes = int(n)
-        guard(svc.admit_upload, nbytes)
+        guard(svc.admit_upload, nbytes, view)
         import uuid as _uuid
         tmp = svc.upload_dir() / f".incoming-{_uuid.uuid4().hex[:8]}"
         got = 0
@@ -543,7 +560,7 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
             raise StudioError(409, "conflict", "interpret the demonstration first")
         return guard(svc.manual_edit, body.edits, body.note)
 
-    # ------------------------------------------------------------ real-phone capture
+    # ------------------------------------------------------------ real-phone capture (mirror.capture)
     def capture_guard(fn, *a, **k):
         from .capture import CaptureError
         try:
@@ -553,23 +570,39 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
 
     @app.post("/api/capture")
     def capture_create(body: CaptureIn, svc: StudioService = Depends(session)):
-        return guard(capture_guard, svc.capture_create, body.mode, body.notes)
+        return guard(capture_guard, svc.capture_create, body.mode, body.notes, body.synthetic,
+                     {k: v for k, v in body.model_dump().items() if k in ("print_check", "objects", "tags", "tray")
+                      and v is not None} or None)
 
     @app.get("/api/capture/{cid}")
     def capture_get(cid: str, svc: StudioService = Depends(session)):
         return guard(svc.capture_public, cid)
 
+    @app.get("/api/capture/{cid}/session")
+    def capture_session(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.capture_session_json, cid)
+
     @app.post("/api/capture/{cid}/clips")
     def capture_clips(cid: str, body: CaptureClipsIn, svc: StudioService = Depends(session)):
         return guard(capture_guard, svc.capture_clips, cid, body.clips, body.sync)
 
-    @app.post("/api/capture/{cid}/calibrate")
-    def capture_calibrate(cid: str, svc: StudioService = Depends(session)):
-        return guard(svc.capture_step, cid, "calibrate").public()
+    @app.post("/api/capture/{cid}/inputs")
+    def capture_inputs(cid: str, body: CaptureInputsIn, svc: StudioService = Depends(session)):
+        return guard(capture_guard, svc.capture_inputs, cid, body.model_dump(exclude_unset=True))
 
-    @app.post("/api/capture/{cid}/track")
-    def capture_track(cid: str, svc: StudioService = Depends(session)):
-        return guard(svc.capture_step, cid, "track").public()
+    @app.post("/api/capture/{cid}/prompts")
+    def capture_prompts(cid: str, body: CapturePromptsIn, svc: StudioService = Depends(session)):
+        return guard(capture_guard, svc.capture_prompts, cid, body.prompts)
+
+    @app.get("/api/capture/{cid}/frame/{role}/{index}")
+    def capture_frame(cid: str, role: str, index: int, svc: StudioService = Depends(session)):
+        from fastapi import Response
+        png = guard(capture_guard, svc.capture_frame, cid, role, index)
+        return Response(content=png, media_type="image/png", headers={"Cache-Control": "private, max-age=3600"})
+
+    @app.post("/api/capture/{cid}/run")
+    def capture_run(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.capture_run, cid).public()
 
     @app.post("/api/capture/{cid}/review")
     def capture_review(cid: str, body: CaptureReviewIn, svc: StudioService = Depends(session)):
