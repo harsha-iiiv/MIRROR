@@ -432,6 +432,8 @@ def judging_shots(ctx):
                     "Correct one of them in a sentence. Then check what the correction did.", font("regular", 30))
         col(d, 640, "Goal here: cup, block and marker into the tray. The cup holds 8 beads.", font("regular", 28),
             fill=MUTED)
+        col(d, 760, "The reference demonstration is a scripted simulator trace, not a recording of a person.",
+            font("regular", 24), fill=MUTED)
     ov = dict(lookat=(0.02, -0.02, 0.06), distance=1.18, azimuth=-58.0, elevation=-34.0)
     shot = SimShot(demo_old, t_start=0.0, duration=8.5, speed=6.0, move=Move(dict(ov)))
     recs.append(run_sim(ctx, L, cut, "j02_what", shot, j2, dict(src=demo_rec(ctx, "ordering", "old", speed=6.0))))
