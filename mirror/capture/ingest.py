@@ -43,11 +43,16 @@ TEMPLATE = {
          "confirmed_by_person": False},
         {"track_label": "box", "real_identity": None, "proxy": "block", "real_dims": {}, "confirmed_by_person": False},
         {"track_label": "pen", "real_identity": None, "proxy": "marker", "real_dims": {}, "confirmed_by_person": False},
-        {"track_label": "tray", "real_identity": None, "proxy": "tray", "real_dims": {}, "confirmed_by_person": False},
+        {"track_label": "tray", "real_identity": None, "proxy": "tray",
+         "real_dims": {"width": {"value_m": None, "source": "measured_ruler"}, "depth": {"value_m": None, "source": "measured_ruler"}},
+         "confirmed_by_person": False},
         {"track_label": "book", "real_identity": None, "proxy": "wall", "real_dims": {}, "confirmed_by_person": False},
     ],
     "prompts": [],
     "tags": {},
+    "about_tray": "The tray is the destination and is required. Either confirm the 'tray' object above (a box on it in each "
+                  "camera, inside width and depth measured), or set 'tray' to {\"center_xy\": [x, y], \"inner_half\": [w/2, d/2]} "
+                  "in metres on the board (origin at its printed top-left corner).",
     "tray": None,
     "identity_confirmations": [],
     "corrections": [],
@@ -185,7 +190,8 @@ def cmd_demo(d: Path) -> int:
     cfg["prompts"] = [S.truth_prompt(truth, c, "mug", p0, (0.04, 0.04, 0.0475)).model_dump() for c in ("top", "side")]
     cfg["tags"] = {"95": "mug"}
     tray_xy = S.truth_table_xyz([*S.TRAY["center"], 0.0], truth)[:2]
-    cfg["tray"] = {"center_xy": [float(tray_xy[0]), float(tray_xy[1])], "inner_half": list(S.TRAY["inner_half"]), "source": "person_supplied"}
+    cfg["tray"] = {"center_xy": [float(tray_xy[0]), float(tray_xy[1])], "inner_half": list(S.TRAY["inner_half"]),
+                   "source": "person_supplied", "footprint_source": "person_supplied"}   # render geometry (SYNTHETIC)
     cfg["identity_confirmations"] = [["top", "mug", 0], ["side", "mug", 0]]
     (d / "capture.json").write_text(json.dumps(cfg, indent=2) + "\n")
     from mirror.capture import session as SE
@@ -198,6 +204,9 @@ def cmd_demo(d: Path) -> int:
     (d / "score_synthetic.json").write_text(json.dumps(row, indent=1, default=float))
     lines = SE.summary_lines(s)
     (d / "review.md").write_text("# Capture review (SYNTHETIC demo)\n\n" + "\n".join(lines) + "\n")
+    from mirror.capture import trace as TRC
+    scene = TRC.to_scene(s)             # proxies at their start rest positions, tray with its footprint
+    (d / "scene.json").write_text(scene.model_dump_json(indent=1) + "\n")
     print("\n".join(lines))
     for c in row["checks"]:
         print(f"  {'PASS' if c['passed'] else ('n/a ' if c['passed'] is None else 'FAIL')} {c['name']} = {c['value']} (threshold {c['threshold']})"

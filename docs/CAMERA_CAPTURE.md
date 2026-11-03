@@ -19,7 +19,7 @@ the object's own motion and says so.
 | Mug with dry rice or plastic beads | Not hot drinks. The simulator replaces the contents with simulated beads; real spills are not measured. |
 | Small box | Roughly 4 to 6 cm, a solid colour. |
 | Pen or marker | A solid colour that differs from the mug and box. |
-| Tray | Shallow, about 25 x 20 cm, walls a few cm high. |
+| Tray | Shallow, inside 6 to 60 cm per side (about 25 x 20 cm works well), walls a few cm high. Required: it is the task's destination. |
 | Book standing upright | The obstacle. Make sure it is stable. |
 | Two phones (one is enough for single-view mode) | Any recent phone; a stand or tripod for each. |
 | Printed calibration target | `assets/calibration/mirror_charuco_v1_A4.pdf` or `_Letter.pdf`, page 1 (board) and page 2 (sync card, optional object tags). |
@@ -80,9 +80,11 @@ Redo it after: changing resolution, frame rate mode, lens or zoom, or phone.
 
 ## 4. Record a take
 
-1. Place the objects at their start positions. Measure where each one stands
-   with the ruler relative to the board's printed top-left corner if you are
-   recording an evaluation clip (see `docs/REAL_FOOTAGE.md`).
+1. Place the objects at their start positions and the tray where it will stay,
+   fully in view of both phones, its sides roughly parallel to the board's
+   edges. Measure the tray's **inside width and depth** with the ruler. Measure
+   where each object stands relative to the board's printed top-left corner if
+   you are recording an evaluation clip (see `docs/REAL_FOOTAGE.md`).
 2. Start recording on **both** phones.
 3. Lay the board **flat on the table** in the middle of the work area, film it
    for 3 seconds without moving, then take it away. This measures where each
@@ -141,9 +143,30 @@ python -m mirror.capture.ingest frames my_take       # images of the first frame
 python -m mirror.capture.ingest run    my_take       # writes session.json and review.md
 ```
 
+### Map the tray (required)
+
+The tray is the destination of the task. Without it there is nothing to pack
+into, so MIRROR stops early with the review item "Map the tray" and proposes
+nothing. Map it in one of two ways:
+
+- **Tracked:** draw a box on the tray in each camera (label `tray`), confirm
+  the `tray` object and enter its measured inside `width` and `depth`. MIRROR
+  takes the tray's centre from where it rests in the footage and assumes its
+  sides are parallel to the board.
+- **Entered:** set `"tray": {"center_xy": [x, y], "inner_half": [w/2, d/2]}`
+  in metres in the table frame: origin at the board's printed top-left corner,
+  x to the right along the 5-square edge, y toward the top of the page, so a
+  point below the board's top edge has a negative y. The tracked way avoids
+  this measurement and is easier.
+
+The simulated tray takes that centre and inside footprint; its walls are the
+catalogue tray's. If the inside size was not measured, MIRROR uses the
+catalogue size and says so. Exactly one tray is supported.
+
 `review.md` lists what MIRROR measured, inferred and could not observe, and
 every item you must resolve before it proposes a task specification:
 
+- map the tray (above);
 - confirm what each tracked object is and which proxy stands in for it
   (`objects[].confirmed_by_person`);
 - confirm a track that was lost and found again is the same object
@@ -165,8 +188,8 @@ Run `python -m mirror.capture.ingest demo DIR` to see the whole flow on a
   (filled across a short gap) or **unobserved** (no value; never a default).
 - Pick-up and put-down are **inferred from object motion** with a time
   bracket. They are never robot contact events.
-- The simulator uses **proxies**: catalogue cup, block, marker, tray and wall
-  geometry, simulated beads and assumed mass and friction. A mug handle, the
+- The simulator uses **proxies**: catalogue cup, block, marker and wall
+  geometry, a tray with your measured inside footprint and catalogue walls, simulated beads and assumed mass and friction. A mug handle, the
   real contents and the real mass are not modelled. Proxy fidelity is not
   measured physical accuracy.
 - Bead or rice retention in MIRROR is simulated. Real spills are not measured

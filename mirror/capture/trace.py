@@ -40,6 +40,10 @@ def _start_rest(tr) -> Optional[np.ndarray]:
     return np.median(np.array([tr.pos[k] for k in first]), 0)
 
 
+class TrayNotMapped(ValueError):
+    """The capture has no destination tray (no confirmed tray mapping located at rest, no tray region)."""
+
+
 def to_scene(session: CaptureSession):
     from mirror.contracts import SceneState
     from mirror.scenes.objects import make_block, make_cup, make_marker, make_tray, make_wall
@@ -53,8 +57,8 @@ def to_scene(session: CaptureSession):
             continue
         tr = session.reconstruction.objects.get(m.track_label)
         p = _start_rest(tr) if tr is not None else None
-        if m.proxy == "tray" and session.tray is not None:
-            p = np.array([*session.tray.center_xy, 0.0])
+        if m.proxy == "tray":
+            continue   # the destination comes from session.tray below (region and measured footprint)
         if p is None:
             notes.append(f"{m.track_label}: never located; left out of the scene")
             continue
@@ -63,8 +67,6 @@ def to_scene(session: CaptureSession):
         counts[m.proxy] = k + 1
         if m.proxy in PROXY_KINDS:
             objs.append({"cup": make_cup, "block": make_block, "marker": make_marker}[m.proxy](f"{m.proxy}_{k}", float(q[0]), float(q[1])))
-        elif m.proxy == "tray":
-            trays.append(make_tray(f"tray_{k}", float(q[0]), float(q[1]), session.placement.yaw_deg * np.pi / 180.0))
         elif m.proxy == "wall":
             w = m.real_dims.get("width")
             h = m.real_dims.get("height")
@@ -73,6 +75,14 @@ def to_scene(session: CaptureSession):
             if h is not None:
                 wall = wall.model_copy(update={"height": float(h.value_m)})
             obstacles.append(wall)
+    if session.tray is None:
+        raise TrayNotMapped("map the tray: the capture has no destination tray, so there is no packing task")
+    t = session.tray
+    q = _to_sim(session, np.array([*t.center_xy, 0.0]))
+    tray = make_tray("tray_0", float(q[0]), float(q[1]), (session.placement.yaw_deg + t.yaw_deg) * np.pi / 180.0)
+    trays.append(tray.model_copy(update={"inner_half": (float(t.inner_half[0]), float(t.inner_half[1]))}))
+    notes.append(f"tray: inside {2 * t.inner_half[0] * 100:.1f} x {2 * t.inner_half[1] * 100:.1f} cm "
+                 f"({t.footprint_source.replace('_', ' ')}), centre {t.source.replace('_', ' ')}; walls are the catalogue tray's")
     return SceneState(scene_id=f"phone_{session.session_id}", split="custom", objects=objs, trays=trays, obstacles=obstacles,
                       workspace=default_workspace(), gripper_start=default_gripper_start(),
                       notes="scene of simulation proxies placed from a phone capture; not measured physical models. "
