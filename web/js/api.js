@@ -307,6 +307,7 @@ export function getRecordRollout(record, rolloutId, sha = '') {
   const key = `record|${record.record_id || 'tour'}|${rolloutId}|${sha}`;
   if (rolloutCache.has(key)) return rolloutCache.get(key);
   const url = record.__tour && isStatic ? `${base}tour/rollouts/${encodeURIComponent(rolloutId)}.json`
+    : record.__tour ? apiUrl(config, `tour/rollouts/${encodeURIComponent(rolloutId)}`)
     : isStatic ? `${base}records/${encodeURIComponent(record.record_id)}/rollouts/${encodeURIComponent(rolloutId)}.json`
       : apiUrl(config, `records/${encodeURIComponent(record.record_id)}/rollouts/${encodeURIComponent(rolloutId)}`);
   const p = getJSON(url).catch((e) => { rolloutCache.delete(key); throw e; });

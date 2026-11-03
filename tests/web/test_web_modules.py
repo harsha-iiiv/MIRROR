@@ -174,3 +174,47 @@ def test_demonstration_wording_matches_what_the_video_is(tmp_path):
     assert out["p"][2] == "recorded model output (replayed, no network)"
     assert out["tilt"] == ["measured", "unobserved", "unobserved", None]
     assert out["review"] == ["abstain"]
+
+
+OUTC = r"""
+import { planningOutcome, interpretationOutcome, stepProvenance, certificateIsValid } from '@JS@/outcomes.js';
+const cert = { proven: true, kind: 'separating_wall_slot_clearance', statement: 'No motion keeps it upright.', assumptions: ['rigid top grasp'] };
+console.log(JSON.stringify({
+  valid: certificateIsValid(cert), noAssump: certificateIsValid({ ...cert, assumptions: [] }), badKind: certificateIsValid({ ...cert, kind: 'heuristic' }),
+  proven: planningOutcome({ plan: { status: 'no_plan', infeasibility: cert } }),
+  heuristic: planningOutcome({ plan: { status: 'no_plan', infeasibility: { proven: false, statement: 'probably blocked' } } }),
+  claim: planningOutcome({ report: { status: 'planning_failed', plan_status: 'no_plan' }, outcome: { kind: 'proven_infeasible', certificate: { proven: true } } }),
+  serverProven: planningOutcome({ outcome: { kind: 'proven_infeasible', detail: 'x', certificate: cert, assumptions: cert.assumptions } }),
+  planned: planningOutcome({ report: { status: 'success', plan_status: 'ok' } }).kind,
+  vague: interpretationOutcome({ outcome: 'clarify', reason_code: 'vague', question: 'Which?', options: ['upright while carried'] }),
+  legacyQ: interpretationOutcome({ question: 'Which?', options: [] }).kind,
+  legacyRej: interpretationOutcome({ rejected: 'the correction did not change the specification' }),
+  apply: interpretationOutcome({ changed: true, ops: [{ op: 'set_status' }] }).acceptable,
+  fb: stepProvenance({ kind: 'offline_fallback', interpreter: 'offline-rules', latency_s: 0.004, fallback_reason: 'model call failed: timeout' }),
+  cfg: stepProvenance({ kind: 'offline_fallback', fallback_reason: 'the server is configured to use the offline rule-based interpreter' }),
+  fresh: stepProvenance({ kind: 'fresh_model', model: 'muse-spark-1.3', latency_s: 2.31, request_status: 'ok' }),
+  later: stepProvenance({ kind: 'new_simulation' }, null, { recordedView: true }).kind,
+  legacy: stepProvenance(null, 'simulated').kind,
+  none: stepProvenance(null, null),
+}));
+"""
+
+
+def test_outcome_wording_never_claims_more_than_the_evidence(tmp_path):
+    o = run_js(tmp_path, OUTC)
+    assert o["valid"] and not o["noAssump"] and not o["badKind"]
+    assert o["proven"]["headline"] == "Proven infeasible under these stated assumptions"
+    assert "not a guarantee about physical safety" in o["proven"]["detail"]
+    assert o["heuristic"]["headline"] == "Planner found no compliant route" and "not a proof" in o["heuristic"]["detail"]
+    assert o["claim"]["kind"] == "no_route_found", "a 'proven' claim without a valid certificate is not repeated"
+    assert o["serverProven"]["kind"] == "proven_infeasible" and "physical safety" in o["serverProven"]["detail"]
+    assert o["planned"] == "planned"
+    assert o["vague"]["title"] == "Which measurable requirement matters?" and o["vague"]["options"][0]["text"] == "upright while carried"
+    assert o["legacyQ"] == "clarify"
+    assert o["legacyRej"]["code"] == "unchanged" and o["legacyRej"]["title"] == "That did not change the specification"
+    assert o["apply"] is True
+    assert o["fb"]["label"] == "Offline-rule interpreter (fallback)" and o["fb"]["tone"] == "warn"
+    assert "offline-rules" in o["fb"]["detail"] and o["fb"]["fallback"].startswith("model call failed")
+    assert o["cfg"]["label"] == "Offline-rule interpreter" and not o["cfg"]["fellBack"]
+    assert o["fresh"]["label"] == "Fresh model inference" and "muse-spark-1.3" in o["fresh"]["detail"] and "2.31 s" in o["fresh"]["detail"]
+    assert o["later"] == "recorded_playback" and o["legacy"] == "new_simulation" and o["none"] is None

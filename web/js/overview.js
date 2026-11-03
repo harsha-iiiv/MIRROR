@@ -65,7 +65,7 @@ export function OverviewPanel({ ctx }) {
       <div class="ov-next">
         <button class="btn primary" onClick=${() => ctx.setStep('watch')}>Walk through it step by step</button>
         ${snap.evaluation ? html`<button class="btn" onClick=${() => ctx.setStep('evidence')}>Layouts it never saw</button>` : ''}
-        ${ctx.openChallenge ? html`<button class="btn" onClick=${() => ctx.openChallenge()}>${ctx.challengeLive ? 'Try your own challenge' : 'Challenge tour (recorded)'}</button>` : ''}
+        ${ctx.openChallenge ? html`<button class="btn" onClick=${() => ctx.openChallenge()}>${ctx.challengeLive ? 'Test it yourself' : 'Recorded test tour'}</button>` : ''}
       </div>
       <details class="ov-details">
         <summary>Technical detail</summary>

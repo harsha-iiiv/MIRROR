@@ -9,6 +9,7 @@ import { fmtT, fmtNum, statusLabel, constraintText, selectorText, provText, scen
 export { humanRoute };
 import { rolloutCacheKey } from './identity.js';
 import { useDialog } from './a11y.js';
+import { PlanOutcome } from './bits.js';
 import { demoSource, videoMediaKind, reviewItems } from './provenance.js';
 
 const html = htm.bind(h);
@@ -168,16 +169,10 @@ function routesText(r) {
 
 function NoPlan({ rep, plan }) {
   const inf = plan?.infeasibility;
-  const proven = !!(inf && (inf.proven === true || inf.certificate));
   const reason = rep.plan_reason || plan?.reason || '';
-  const head = reason.split(/\s\[|;\s/)[0];
-  return html`<div class="callout" style="margin-bottom:8px">
-    <b>${proven ? 'No valid plan exists (proven).' : 'The planner found no valid plan.'}</b>
-    ${inf?.statement ? html`<div style="margin-top:4px">${inf.statement}</div>` : html`<div style="margin-top:4px">${head}</div>`}
-    ${!proven ? html`<div class="muted" style="margin-top:4px">This is not a proof that the layout is impossible.</div>` : ''}
-    ${inf?.assumptions?.length ? html`<div class="muted" style="margin-top:6px">Assumes: ${inf.assumptions.join('; ')}.</div>` : ''}
-    ${inf?.not_covered?.length ? html`<div class="muted" style="margin-top:2px">Not covered: ${inf.not_covered.join('; ')}.</div>` : ''}
-    <div class="muted" style="margin-top:6px">The robot did not move: nothing was executed rather than breaking the rule.</div>
+  return html`<div style="margin-bottom:8px">
+    <${PlanOutcome} plan=${plan ? { status: plan.status || 'no_plan', reason, infeasibility: inf } : null} report=${rep} outcome=${rep.planning_outcome || plan?.outcome || null} />
+    <div class="muted" style="margin:6px 0 0">The robot did not move: nothing was executed rather than breaking the rule.</div>
     <details style="margin-top:6px"><summary class="muted" style="cursor:pointer">Planner detail</summary>
       <div style="margin-top:4px;font-size:12px">${reason}</div>
       ${inf ? html`<pre class="num" style="white-space:pre-wrap;font-size:11px;margin:6px 0 0">${JSON.stringify(inf.quantities || inf, null, 1)}</pre>` : ''}
@@ -841,7 +836,7 @@ function EvidencePanel({ ctx }) {
               <div class="m"><${Chip} status=${rep?.status}>${statusLabel(rep)}<//>
                 ${cup ? html`<span class="num muted">${fmtNum(cup.max_transport_tilt_deg, 0)}° · ${cup.beads_in_container}/${cup.beads_total}</span>` : ''}
                 ${broke ? html`<span class="bad-t">breaks v${vb}</span>` : ''}
-                ${cell?.trial?.feasibility === 'proven_infeasible' ? html`<span class="ok-t">proven impossible</span>` : ''}
+                ${cell?.trial?.feasibility === 'proven_infeasible' ? html`<span class="ok-t" title="under the stated assumptions">proven infeasible</span>` : ''}
                 ${carriedRoutes(rep).length ? html`<span class="ev-route" title=${carriedRoutes(rep).join('\n')}>${[...new Set(carriedRoutes(rep).map((x) => humanRoute(x, true)))].join(' · ')}</span>` : ''}
 </div>
             </button>`;
@@ -899,9 +894,10 @@ function LedgerNote({ raw }) {
 function BlockedProofs({ raw }) {
   const strat = raw.strata?.blocked;
   const proven = strat ? strat.trials.filter((t) => t.b.feasibility === 'proven_infeasible').length : null;
-  return html`<p class="kicker">Blocked layouts: stop, with proof</p>
-    ${strat ? html`<p><span class="num">${proven}/${strat.trials.length}</span> blocked layouts: the corrected specification found no plan,
-      and an independent argument proves no motion can keep the cup upright there. The original specification still plans (it may tilt).</p>` : ''}
+  return html`<p class="kicker">Blocked layouts: it stops instead of breaking the rule</p>
+    ${strat ? html`<p><span class="num">${proven}/${strat.trials.length}</span> blocked layouts were proven infeasible under these stated assumptions:
+      the corrected specification found no plan, and an independent argument shows no motion of the modelled gripper can keep the cup upright there. The original specification still plans (it may tilt).</p>
+      <p class="faint">A statement about the simulated task model under its assumptions, not a guarantee about physical safety.</p>` : ''}
     ${raw.blocked_reference.map((b) => html`<div class=${'callout' + (b.failure_class === 'proven_infeasible' ? ' ok' : '')} style="margin-top:6px">
       <b>${b.scene_id} · ${b.condition}:</b> ${statusLabel({ status: b.status, plan_status: b.status === 'planning_failed' ? 'no_plan' : '' })}
       ${b.independent?.verdict === 'proven_infeasible' ? html`<div style="margin-top:4px">${b.independent.detail?.argument || ''}</div>
@@ -995,7 +991,7 @@ function StoryResult({ raw }) {
     if (role === 'blocked') {
       const n = (rep.trials || []).length;
       const k = (rep.trials || []).filter((t) => t.b?.feasibility === 'proven_infeasible').length;
-      if (n) parts.push(html`<span>blocked layouts: <b class="num">${k}/${n}</b> stopped with proof</span>`);
+      if (n) parts.push(html`<span>blocked layouts: <b class="num">${k}/${n}</b> proven infeasible under stated assumptions</span>`);
       continue;
     }
     const m = rep.metrics || {};

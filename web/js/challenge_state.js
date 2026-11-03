@@ -10,10 +10,11 @@ export const DEFAULT_SUPPORTED = [
 export function supportedRules(options) {
   const raw = options && options.correction && options.correction.supported;
   if (!Array.isArray(raw) || !raw.length || raw.every((x) => typeof x === 'string' && x.startsWith('...'))) return DEFAULT_SUPPORTED;
-  return raw.map((x) => (typeof x === 'string' ? { kind: x } : x)).filter((x) => x && x.kind);
+  return raw.map((x) => (typeof x === 'string' ? { kind: x } : { ...x, kind: x.kind || x.type })).filter((x) => x && x.kind);
 }
 
 const KIND_TEXT = {
+  status: 'say a proposed rule is required, or not required',
   upright: 'keep an object upright (while carried, when placed, or always)',
   keep_clearance: 'keep a distance from obstacles',
   forbidden_contact: 'do not touch something',

@@ -21,6 +21,18 @@ from tests.web.harness import WEB, free_port
 FENCED = set(range(30000, 30100)) | set(range(50000, 50100)) | {1234}   # 1234: a synthetic fenced seed inside the dev range
 
 
+def _sp(kind, **kw):
+    """Synthetic per-step provenance in the shape of mirror/studio/provenance.py."""
+    base = {"kind": kind, "model": None, "interpreter": None, "request_status": "ok", "latency_s": 0.01,
+            "latency_source": "measured_now", "cost_usd": None, "fallback_reason": None}
+    base.update(kw)
+    return base
+
+
+CERT = {"proven": True, "kind": "separating_wall_slot_clearance", "statement": "No motion keeps the cup upright through this wall (synthetic).",
+        "assumptions": ["rigid top grasp (synthetic)"], "not_covered": ["side grasps"]}
+
+
 def _h(*parts) -> str:
     return hashlib.sha256("|".join(map(str, parts)).encode()).hexdigest()
 
@@ -37,6 +49,8 @@ class FakeStudio:
         self.payload_generation_override: dict[str, str] = {}   # rollout id -> generation to report
         self.seq = 0
         self.stale_challenge_payloads = False
+        self.study_enabled = False
+        self.study_events: list[dict] = []
         self.lock = threading.Lock()
         rs = {r["id"]: r for r in self.base["rollouts"]}
         tags = lambda t: next(r for r in self.base["rollouts"] if t in r["tags"])  # noqa: E731
@@ -106,11 +120,25 @@ class FakeStudio:
             cid = f"ch{self.seq:04d}"
         n = len(self.challenges) + 1
         before = f"{self.generation}.v1.s{seed or 0}.r{n:03d}.{_h(cid)[:8]}"
+        blocked = body.get("family") == "blocked"
+        brief = {"rollout_id": before, "status": "success", "violations": [], "step_provenance": _sp("fixture"),
+                 "beads": [{"object_id": "cup_0", "beads_total": 8, "beads_in_container": 4}]}
+        if blocked:
+            # Even seeds carry a valid certificate; odd seeds claim "proven" without one (must not be shown as proven).
+            outcome = ({"kind": "proven_infeasible", "headline": "Proven infeasible under these stated assumptions",
+                        "detail": CERT["statement"], "assumptions": CERT["assumptions"], "not_covered": [], "certificate": CERT}
+                       if seed % 2 == 0 else {"kind": "proven_infeasible", "headline": "Proven", "certificate": {"proven": True}})
+            brief.update(status="planning_failed", plan_status="no_plan", plan_reason="no feasible route (synthetic)",
+                         planning_outcome=outcome, beads=[])
         self.challenges[cid] = {"id": cid, "state": "scene_ready", "generation_id": self.generation,
                                 "scene": {"family": body.get("family"), "split": "dev", "seed": seed, "edits": body.get("edits", []),
                                           "scene_id": f"dev_{seed}", "content_sha256": _h("scene", seed, json.dumps(body.get("edits", [])))},
                                 "base_spec_version_id": f"{self.generation}.v1",
-                                "before": {"rollout_id": before, "status": "success", "violations": []},
+                                "before": brief,
+                                "preparation": [{"step": "demonstration loaded", "provenance": "recorded"},
+                                                {"step": "demonstration interpreted", "provenance": "offline_interpreter",
+                                                 "step_provenance": _sp("offline_fallback", interpreter="offline-rules",
+                                                                        fallback_reason="the server is configured to use the offline rule-based interpreter")}],
                                 "proposal": None, "revised_spec_version_id": None, "rechecks": [], "after": None, "record_id": None}
         return 200, self.job("challenge", {"challenge_id": cid, "before_rollout_id": before, "status": "success"})
 
@@ -119,14 +147,23 @@ class FakeStudio:
         t = (body.get("text") or "").lower()
         prop = {"text": body.get("text"), "input": "typed", "changed": False, "ops": [], "scope": None,
                 "diff": {"added": [], "changed": [], "removed": []}, "question": None, "options": [], "rejected": None,
-                "provenance": "offline_interpreter", "fallback_reason": None}
+                "provenance": "offline_interpreter", "fallback_reason": "model unavailable (synthetic)",
+                "step_provenance": _sp("offline_fallback", interpreter="offline-rules", latency_s=0.004,
+                                       fallback_reason="model unavailable (synthetic)")}
         if "fly" in t:
-            prop["rejected"] = "Flying is not a supported rule (fixture)."
+            prop.update(rejected="Flying is not a supported rule (fixture).", outcome="refuse", reason_code="not_supported",
+                        supported_changes=["keep an object upright", "keep a distance from obstacles"])
+        elif "jar" in t and not body.get("answer"):
+            prop.update(question="There is no jar in this layout. Which object do you mean?", outcome="clarify", reason_code="absent_object",
+                        options=[{"label": "the cup (cup_0)", "answer": "cup_0"}, {"label": "the block (block_0)", "answer": "block_0"}])
         elif "careful" in t:
             prop["question"] = "Careful how: keep the cup upright while carried, or only when placed?"
             prop["options"] = ["Keep the cup upright while carrying it.", "Keep the cup upright when placed."]
-        elif "upright" in t:
-            prop.update(changed=True, ops=[{"op": "set_status", "target_id": "c_upright_transport_cup", "value": {"status": "confirmed"}}],
+            prop.update(outcome="clarify", reason_code="vague")
+        elif "upright" in t or body.get("answer") == "cup_0":
+            if body.get("answer"):
+                prop["alias"] = {"word": "jar", "object_id": "cup_0", "basis": "chosen by you"}
+            prop.update(changed=True, outcome="apply", reason_code="correction", ops=[{"op": "set_status", "target_id": "c_upright_transport_cup", "value": {"status": "confirmed"}}],
                         scope={"objects": ["cup_0"], "phases": ["transport"], "items": ["c_upright_transport_cup"], "kinds": ["constraint"]},
                         diff={"added": [], "changed": ["c_upright_transport_cup"], "removed": []})
         ch["proposal"] = prop
@@ -140,7 +177,8 @@ class FakeStudio:
             return 200, {"discarded": True}
         ch["revised_spec_version_id"] = f"{self.generation}.v2"
         ch["state"] = "reviewed"
-        ch["rechecks"] = [{"rollout_id": ch["before"]["rollout_id"], "status": "constraint_violated",
+        ch["rechecks"] = [{"rollout_id": ch["before"]["rollout_id"], "status": "constraint_violated", "was": "success", "is_before": True,
+                           "step_provenance": _sp("new_check", checker="checker (synthetic)"),
                            "violations": [{"constraint_id": "c_upright_transport_cup", "object_id": "cup_0", "peak": 90.0, "t_start": 6.0, "t_end": 10.0}]}]
         return 200, {"revised_spec_version_id": ch["revised_spec_version_id"], "rechecks": ch["rechecks"]}
 
@@ -149,7 +187,8 @@ class FakeStudio:
         after = ch["before"]["rollout_id"].replace(".v1.", ".v2.").replace(".r", ".c")
 
         def done():
-            ch["after"] = {"rollout_id": after, "status": "success", "violations": []}
+            ch["after"] = {"rollout_id": after, "status": "success", "violations": [], "step_provenance": _sp("fixture"),
+                           "beads": [{"object_id": "cup_0", "beads_total": 8, "beads_in_container": 8}]}
             ch["state"] = "executed"
             return {"after_rollout_id": after, "status": "success"}
         return 200, self.job("challenge_execute", done)
@@ -267,6 +306,11 @@ def make_handler(studio: FakeStudio):
                     return self._json(*studio.execute(cid))
                 if act == "publish":
                     return self._json(*studio.publish(cid))
+            if p in ("study/consent", "study/event"):
+                if not studio.study_enabled:
+                    return self._json(404, {"error": "not_found", "detail": "study mode is off"})
+                studio.study_events.append({"path": p, **body})
+                return self._json(200, {"ok": True})
             if p == "_test/bump_generation":
                 studio.generation = "g18f3aa02" + "0002"
                 return self._json(200, {"generation": studio.generation})

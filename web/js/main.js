@@ -117,6 +117,7 @@ function App() {
     if (!snap || step) return;
     const asked = new URLSearchParams(location.search).get('step');
     if (recordIdFromUrl(location.search)) { setStep('challenge'); return; }
+    if (asked === 'test') { setStep('challenge'); return; }
     if (asked && (asked === 'overview' || asked === 'challenge' || STEPS.some((s) => s.key === asked))) { setStep(asked); return; }
     if (correctionStory(snap)) { setStep('overview'); return; }
     if (api.isStatic) { setStep('watch'); return; }
@@ -192,7 +193,7 @@ function App() {
               disabled=${!sstate[s.key]?.enabled} onClick=${() => ctx.setStep(s.key)}
               title=${s.title} aria-label=${`Step ${i + 1}: ${s.short}`}><span class="ix" aria-hidden="true">${i + 1}</span><span class="lbl">${s.short}</span></button>`)}
           <button aria-current=${cur === 'challenge' ? 'step' : null} class="challenge" onClick=${() => ctx.openChallenge()}
-            title=${api.isStatic ? 'A recorded challenge, step by step' : 'Change a layout and correct a rule yourself'} aria-label="Challenge"><span class="ix" aria-hidden="true">⚑</span><span class="lbl">Challenge</span></button>
+            title=${api.isStatic ? 'A recorded test, step by step' : 'Change a layout and correct a rule yourself'} aria-label="Test MIRROR"><span class="ix" aria-hidden="true">⚑</span><span class="lbl">Test MIRROR</span></button>
         </nav>
         <div class="top-right">
           <${LiveSwitch} status=${liveStatus} />
