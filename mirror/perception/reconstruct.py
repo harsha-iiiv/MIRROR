@@ -49,6 +49,7 @@ CARRY_MAX_XY = 0.08        # m: gripper-object table-plane distance during a car
 TABLE_FIT_MAX_PX = 10.0     # a table outline fitting worse than this (RMS px) is not used for calibration
 MOVE_SPEED = 0.04          # m/s: an object moving faster than this (smoothed) is being carried
 SMOOTH_S = 0.4
+SCALE_TOL = 0.25           # reconstructed tray extent may differ from the kit by this fraction
 GRASP_LOOKBACK_S = 2.5     # s: window before motion onset searched for the gripper's lowest point
 
 
@@ -896,6 +897,12 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
                                   table_size_source=tsize, residual_px=round(float(calib[c].residual), 2),
                                   valid=bool(calib[c].residual <= TABLE_FIT_MAX_PX) if ext != "scene_geometry" else True,
                                   assumptions=assume))
+    bad = [r_ for r_ in calib_records if r_.get("camera") in calib and not r_.get("valid", True)]
+    if bad:
+        review.append(dict(code="calibration_invalid", severity="abstain",
+                           message=("Camera calibration did not fit (" + ", ".join(
+                               f"{r_['camera']}: {r_.get('residual_px')} px" for r_ in bad)
+                                    + "); positions and sizes from this camera are not reliable.")))
     if intrinsics_source == "assumed_rendered_model":
         review.append(dict(code="calibration_assumed", severity="abstain",
                            message=("Camera intrinsics, table size and object sizes were taken from the simulated "
@@ -1029,6 +1036,16 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
                                          size=max(3, int(2 * tracks.fps) | 1), mode="nearest")
             tilt[lab] = np.where(ok, filt, np.nan)
     tray_poly = _tray_polygon(tracks, calib, top)
+    if tray_poly is not None and len(tray_poly) >= 3:
+        P_ = np.asarray(tray_poly) - np.mean(tray_poly, 0)
+        w_, V_ = np.linalg.eigh(np.cov(P_.T))
+        ext = sorted(float(np.ptp(P_ @ V_[:, k])) for k in range(2))
+        ref = sorted([2 * (TRAY.inner_half[0] + TRAY.wall_thickness), 2 * (TRAY.inner_half[1] + TRAY.wall_thickness)])
+        ratio = [e / r for e, r in zip(ext, ref)]
+        if any(abs(x - 1) > SCALE_TOL for x in ratio):
+            review.append(dict(code="scale_mismatch", severity="abstain",
+                               message=(f"The tray measures {ext[1]:.2f} x {ext[0]:.2f} m in the reconstruction but "
+                                        f"{ref[1]:.2f} x {ref[0]:.2f} m in the kit: calibration or tray identity is wrong.")))
     idx = np.arange(n)
     G = grip.copy()
     gok = ~np.isnan(G[:, 0])

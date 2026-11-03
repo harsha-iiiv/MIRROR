@@ -102,3 +102,21 @@ def test_model_outputs_read_from_saved_tracks_are_recordings():
     assert any(x["model"] == "sam-3.1" for x in m)
     oracle = Tracks(fps=5.0, n_frames=1, size={}, masks={}, source="ground-truth masks (oracle)")
     assert models_from_tracks(oracle)[0]["origin"] == "oracle_ground_truth"
+
+
+def test_failed_calibration_abstains_instead_of_placing_objects():
+    """Seed 71010: grounding boxed the wall over the whole top image; the table fit is
+    off and every position was more than 5 cm wrong (found rate 0 in the frozen run).
+    Reconstruction must say so rather than hand on a confident trace."""
+    from mirror.perception import load_demo_video
+    from mirror.perception.reconstruct import estimate
+    from mirror.perception.track import load_tracks
+    p = REPO / "results" / "eval_video2" / "tracks" / "71010.json.gz"
+    if not p.exists():
+        pytest.skip("recorded tracks not present")
+    root = REPO / "results" / "eval_video2" / "inputs" / "seed71010" / "demo_eval_71010_reference"
+    dv, _ = load_demo_video(root / "video.json")
+    est = estimate(load_tracks(p), {c: ci.K for c, ci in dv.cameras.items()}, tilt_every=10 ** 6,
+                   intrinsics_source="rendered_camera_model")
+    codes = {r["code"] for r in est.review if r["severity"] == "abstain"}
+    assert {"calibration_invalid", "scale_mismatch"} <= codes
