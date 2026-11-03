@@ -22,7 +22,11 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_serializer
+
+# --- perception track: observability/provenance (additive; see mirror/observability.py) ---
+from mirror.observability import TraceEvidence  # noqa: E402
+# --- end perception block ---
 
 CONTRACT_VERSION = "1.1"
 
@@ -161,6 +165,21 @@ class DemoTrace(_Model):
     frames: list[TraceFrame]
     events: list[TraceEvent] = Field(default_factory=list)
     video_path: Optional[str] = None
+    # --- perception track: observability/provenance (additive) ---
+    # How every stored value was obtained (measured / inferred / interpolated /
+    # unobserved) and where the trace came from. Absent on traces written before
+    # this field existed: mirror.observability.resolve_evidence() derives what may
+    # honestly be assumed (simulator sources: ground truth; video: not evidence).
+    evidence: Optional[TraceEvidence] = None
+
+    @model_serializer(mode="wrap")
+    def _omit_absent_evidence(self, handler):
+        # traces without evidence serialise exactly as before the field existed
+        data = handler(self)
+        if isinstance(data, dict) and data.get("evidence", 0) is None:
+            data.pop("evidence")
+        return data
+    # --- end perception block ---
 
 
 # --------------------------------------------------------------------------
