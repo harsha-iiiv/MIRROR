@@ -320,6 +320,7 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
     clauses = [_analyze(p) for p in _split(t)]
     text_prop = next((c.prop for c in clauses if c.prop), None)
     universal = bool(_UNIVERSAL_RE.search(t))
+    text_dists = sorted({c.dist for c in clauses if c.dist is not None})
 
     for c in clauses:
         if c.unknown and not c.kinds:
@@ -416,6 +417,8 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
                 continue
             rtype = {"upright": "upright", "contact": "forbidden_contact", "clearance": "keep_clearance"}[prop]
             phases = list(c.phases)
+            if rtype == "keep_clearance" and c.dist is None and len(text_dists) == 1:
+                c.dist = text_dists[0]   # "While carrying the cup, keep it 3 cm from the wall"
             if rtype == "keep_clearance" and c.positive:
                 _clearance_questions(c, k)
             if c.positive:
@@ -454,6 +457,7 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
                                    goal_kind=None, rationale=f"User said only the {', '.join(only_kinds)} matters",
                                    rule=DraftRuleSpec(type=rtype, object_kind=k, phase=None, max_tilt_deg=None,
                                                       contact_with=None, min_clearance_m=None)))
+    ops = _merge_requirements(ops)
     if not ops:
         ops = _follow_up_ops(spec, t, clauses)
     if not ops:
@@ -465,6 +469,37 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
         interp += ". " + " ".join(dict.fromkeys(notes))
     ops = [o if isinstance(o, DraftOpV4) else DraftOpV4(**o.model_dump(), order_event=None) for o in ops]
     return CorrectionDraftV4(outcome="apply", interpretation=interp, question=None, options=[], ops=ops)
+
+
+def _merge_requirements(ops: list[DraftOp]) -> list[DraftOp]:
+    """One require_rule per (type, phase, object): clauses that restate the same
+    rule are merged, an explicit parameter beating an unstated one. Two
+    different explicit values are a contradiction and get a question."""
+    out: list[DraftOp] = []
+    seen: dict[tuple, int] = {}
+    for op in ops:
+        r = op.rule
+        if op.action != "require_rule" or r is None:
+            out.append(op)
+            continue
+        key = (r.type, r.phase, r.object_kind)
+        if key not in seen:
+            seen[key] = len(out)
+            out.append(op)
+            continue
+        prev = out[seen[key]].rule
+        merged = {}
+        for f in ("max_tilt_deg", "min_clearance_m"):
+            a, b = getattr(prev, f), getattr(r, f)
+            if a is not None and b is not None and a != b:
+                raise NeedsClarification(
+                    f"You gave two different values for the same rule ({a:g} and {b:g}). Which one should hold?",
+                    [f"{a:g}", f"{b:g}"], reason="contradictory values")
+            merged[f] = a if a is not None else b
+        if prev.type == "forbidden_contact":
+            merged["contact_with"] = sorted(set((prev.contact_with or []) + (r.contact_with or []))) or None
+        out[seen[key]] = out[seen[key]].model_copy(update={"rule": prev.model_copy(update=merged)})
+    return out
 
 
 def _clearance_questions(c: _Clause, k: Optional[str]) -> None:

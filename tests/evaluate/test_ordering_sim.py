@@ -26,3 +26,21 @@ def test_confirmed_order_is_planned_executed_and_verified():
     assert ro.report.status == "success", ro.report.notes
     r = [x for x in ro.report.rule_results if x.rule_id == "o_marker_before_cup"][0]
     assert r.verdict == "satisfied" and r.enforced
+
+
+@pytest.mark.slow
+def test_clearance_rule_planner_and_checker_agree_on_dev_9605():
+    """Regression (protocol v3 dry run, case d12): with checker 1 the planner's route was flagged by the
+    bounding-sphere clearance estimate. The exact distance agrees with the planner."""
+    from mirror.contracts import Constraint
+    from mirror.scenes import sample_layout
+    _, corr = reference_specs()
+    spec = corr.model_copy(deep=True)
+    spec.version += 1
+    spec.constraints.append(Constraint(id="c_keep_clearance_transport_cup", type="keep_clearance",
+                                       applies_to=ObjectSelector(kind="cup"), phase="transport",
+                                       params={"min_m": 0.03}, status=Status.confirmed,
+                                       provenance=Provenance(source="user_correction")))
+    ro, _, plan = execute_trial(sample_layout(9605, "dev"), spec, condition="clearance")
+    assert plan.status == "ok"
+    assert ro.report.status == "success", [v.detail for v in ro.report.violations]

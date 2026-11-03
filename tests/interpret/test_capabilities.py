@@ -211,3 +211,16 @@ def test_revision_3_messages_are_unchanged_by_default(tmp_path):
     body = api.requests[0]["body"]
     assert body["messages"][0]["content"] == CORRECT_SYSTEM
     assert "order_event" not in json.dumps(body)
+
+
+def test_phase_clause_and_distance_clause_make_one_clearance_rule():
+    """Regression (protocol v3 dry run): two require ops for one sentence gave a duplicate id."""
+    kind, new = run_sentence("While carrying the cup, keep it at least 3 cm away from the wall.")
+    assert kind == "apply"
+    rules = [c for c in new.constraints if c.type == "keep_clearance"]
+    assert [(c.id, c.params) for c in rules] == [("c_keep_clearance_transport_cup", {"min_m": 0.03})]
+
+
+def test_two_different_values_for_one_rule_get_a_question():
+    kind, q = run_sentence("While carrying the cup keep it 3 cm from the wall, keep the cup 5 cm from the wall.")
+    assert kind == "clarify"
