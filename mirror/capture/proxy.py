@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
 from mirror.geometry import BLOCK, CUP, MARKER, TRAY
 
@@ -62,6 +62,21 @@ class ObjectMapping(_M):
     contents_observable: bool = False        # can the footage measure the contents? (almost never)
     confirmed_by_person: bool = False
     notes: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _drop_derived(cls, data):
+        # fidelity_statement is derived from the fields above; a stored copy is ignored and recomputed
+        if isinstance(data, dict) and "fidelity_statement" in data:
+            data = {k: v for k, v in data.items() if k != "fidelity_statement"}
+        return data
+
+    @model_serializer(mode="wrap")
+    def _with_statement(self, handler):
+        out = handler(self)
+        if isinstance(out, dict):
+            out["fidelity_statement"] = self.fidelity_statement()
+        return out
 
     def height_m(self) -> tuple[Optional[float], Optional[DimSource]]:
         d = self.real_dims.get("height")

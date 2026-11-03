@@ -13,7 +13,6 @@ place events are inferred carry intervals, never measured robot contact.
 """
 from __future__ import annotations
 
-import typing
 from typing import Optional
 
 import numpy as np
@@ -141,16 +140,14 @@ def to_demo_trace(session: CaptureSession, *, demo_id: Optional[str] = None):
                                                                   "unobserved": "not seen: placeholder value"}),
             tilt=O.spans_from_statuses(tr.tilt_status, basis={"measured": "printed tag (full) or side silhouette (lower bound); magnitude only",
                                                                "unobserved": "not observed: placeholder upright value is not evidence"}))
-    intr_allowed = typing.get_args(O.IntrinsicsSource)
     calib = []
     for cam, intr in session.intrinsics.items():
-        src = "user_supplied" if intr.source == "user_supplied" else ("charuco_board" if "charuco_board" in intr_allowed else "checkerboard")
+        src = "user_supplied" if intr.source == "user_supplied" else "charuco_board"
         pose = session.poses.get(cam)
         calib.append(O.CalibrationRecord(camera=cam, intrinsics_source=src, extrinsics_source="calibration_board",
                                          table_size_source="not_used", residual_px=None if pose is None else pose.rms_px,
                                          valid=bool(intr.accepted and pose is not None and pose.accepted),
-                                         assumptions=(["ChArUco board (checkerboard with markers)"] if src == "checkerboard" else []) +
-                                         [f"metric scale from the person's measured square ({intr.square_mm} mm)"]))
+                                         assumptions=[f"metric scale from the person's measured square ({intr.square_mm} mm)"]))
     ok, blocking = session.gate()
     if session.synthetic:
         kind = "unverified_video_reconstruction"
