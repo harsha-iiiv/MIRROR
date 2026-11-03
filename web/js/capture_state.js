@@ -140,3 +140,44 @@ export function reviewPayload(s, resolutions = {}, times = {}) {
   });
   return { correspondence, events };
 }
+
+// Form rows → ObjectMapping list (mirror/capture/proxy.py) or an error message.
+export function objectsPayload(rows) {
+  const labels = rows.map((r) => r.track_label.trim());
+  if (!rows.length) return { error: 'Add the objects in the take.' };
+  if (labels.some((l) => !/^[a-z0-9_-]{1,24}$/i.test(l))) return { error: 'Each object needs a short name (letters, digits, - or _).' };
+  if (new Set(labels).size !== labels.length) return { error: 'Object names must differ.' };
+  if (rows.filter((r) => r.proxy === 'tray').length > 1) return { error: 'Only one tray is supported.' };
+  if (!rows.some((r) => r.proxy === 'tray')) return { error: 'Map the tray too, or the proposal has no destination.' };
+  if (!rows.some((r) => ['cup', 'block', 'marker'].includes(r.proxy))) return { error: 'Map at least one object that is carried.' };
+  if (rows.some((r) => !r.real_identity.trim())) return { error: 'Say what each object really is.' };
+  const out = [];
+  for (const r of rows) {
+    const real_dims = {};
+    for (const k of ['height', 'width', 'depth']) {
+      const v = r.dims[k];
+      if (v === '' || v == null) continue;
+      const m = Number(v) / 100;
+      if (!(m >= 0.005 && m <= 0.6)) return { error: `${r.track_label}: ${k} must be between 0.5 and 60 cm.` };
+      real_dims[k] = { value_m: +m.toFixed(4), source: r.dimSrc };
+    }
+    const o = { track_label: r.track_label.trim(), real_identity: r.real_identity.trim(), proxy: r.proxy, real_dims,
+      unsupported_features: r.unsupported.split(',').map((x) => x.trim()).filter(Boolean).slice(0, 5), confirmed_by_person: !!r.confirmed };
+    if (r.proxy === 'cup' && r.contents.trim()) o.real_contents = r.contents.trim();
+    out.push(o);
+  }
+  return { objects: out, error: null };
+}
+
+
+// Optional tray region measured from the board's origin (cm) → TrayRegion, or null / an error.
+export function trayPayload(t) {
+  const vals = [t.cx, t.cy, t.w, t.d];
+  if (vals.every((v) => v === '' || v == null)) return { tray: null, error: null };
+  if (vals.some((v) => v === '' || v == null || !Number.isFinite(Number(v)))) return { tray: null, error: 'Give all four tray numbers, or none.' };
+  const [cx, cy, w, d] = vals.map(Number);
+  if (!(w >= 5 && w <= 80 && d >= 5 && d <= 80)) return { tray: null, error: 'The tray inside size must be 5 to 80 cm.' };
+  if (Math.abs(cx) > 150 || Math.abs(cy) > 150) return { tray: null, error: 'The tray centre must be within 1.5 m of the board origin.' };
+  return { tray: { center_xy: [cx / 100, cy / 100], inner_half: [w / 200, d / 200], yaw_deg: 0, source: 'person_supplied' }, error: null };
+}
+

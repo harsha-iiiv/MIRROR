@@ -61,7 +61,21 @@ export function videoMediaKind(snap) {
   return k && k.includes('video') ? 'upload' : null;
 }
 
+// A demonstration rebuilt from rendered test clips (phone-capture path) carries SYNTHETIC everywhere.
+export function isSyntheticDemo(snap) {
+  const g = snap && snap.generation;
+  return !!((g && g.calibration && g.calibration.synthetic) || (snap && snap.demo && snap.demo.synthetic)
+    || (snap && snap.demo && snap.demo.evidence && snap.demo.evidence.synthetic));
+}
+export const SYNTHETIC_DEMO_TEXT = 'SYNTHETIC test render: this demonstration was reconstructed from rendered clips, not real footage.';
+
 export function demoSource(snap) {
+  const out = demoSource0(snap);
+  if (!isSyntheticDemo(snap)) return out;
+  return { ...out, synthetic: true, short: 'SYNTHETIC · ' + (out.short || 'phone-capture reconstruction'), long: SYNTHETIC_DEMO_TEXT + ' ' + (out.long || '') };
+}
+
+function demoSource0(snap) {
   const d = snap && snap.demo;
   if (!d) return { short: '', long: 'No demonstration loaded.', kind: null };
   const kind = evidenceKind(snap);

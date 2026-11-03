@@ -240,6 +240,12 @@ export function videoUrl(v) {
     + (token ? '&token=' + encodeURIComponent(token) : '');
 }
 
+// One frame of a capture clip as PNG (for drawing object boxes); authenticated through the query string.
+export function captureFrameUrl(cid, role, index) {
+  return apiUrl(config, `capture/${encodeURIComponent(cid)}/frame/${encodeURIComponent(role)}/${Number(index) | 0}`)
+    + '?session=' + encodeURIComponent(session || '') + (token ? '&token=' + encodeURIComponent(token) : '');
+}
+
 // A recorded audio file (static site only).
 export function mediaUrl(file) { return file ? base + 'media/' + file : ''; }
 

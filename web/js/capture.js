@@ -2,10 +2,11 @@
 // review of a processed capture before MIRROR may propose rules from it. Content and thresholds
 // come from the phone track (docs/CAMERA_CAPTURE.md); endpoints from docs/CHALLENGE_API.md §6.
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import htm from 'htm';
 import * as api from './api.js';
 import * as K from './capture_state.js';
+import { objectsPayload, trayPayload } from './capture_state.js';
 
 const html = htm.bind(h);
 const pct = (x) => `${Math.round(100 * x)}%`;
@@ -127,24 +128,29 @@ function Checks({ rows }) {
       <td>${r.passed === true ? html`<span class="ok-t">pass</span>` : r.passed === false ? html`<span class="err">rejected</span>` : html`<span class="faint">n/a</span>`}</td></tr>`)}</tbody></table></div>`;
 }
 
-export function SessionReview({ session: s, live = false, busy = false, onSubmit = null, onPropose = null }) {
+// live: {pending, add(kind, item, key), canPropose, onPropose, busy, proposeNote} | null (static sample)
+export function SessionReview({ session: s, report = null, live = null }) {
   const [res, setRes] = useState({});
   const [times, setTimes] = useState({});
   const [draft, setDraft] = useState({});
-  const st = K.reviewState(s, res);
+  const st = K.reviewState(s, live ? {} : res);
   const badge = K.evidenceBadge(s);
   const sync = K.syncText(s);
   const rows = K.calibrationRows(s);
   const rejected = rows.filter((r) => r.passed === false);
   const objs = s.reconstruction?.objects || {};
-  const resolve = (r, text) => setRes({ ...res, [K.itemKey(r)]: text });
+  const how = Object.fromEntries((report?.review || []).map((r) => [K.itemKey(r), r.how_to_resolve]));
+  const pend = (key) => live && live.pending[key];
+  const resolveLocal = (r, text) => setRes({ ...res, [K.itemKey(r)]: text });
   const setTime = (e) => {
     const t = Number(draft[e.id] ?? e.t);
+    if (live) { live.add('corrections', { target: e.id, field: 't', before: String(e.t), after: t.toFixed(3) }, 'ev:' + e.id); return; }
     setTimes({ ...times, [e.id]: t });
     const next = { ...res };
     for (const r of s.review || []) if (r.event === e.id) next[K.itemKey(r)] = `set to ${t.toFixed(2)} s by the person`;
     setRes(next);
   };
+  const takeCams = Object.keys(s.poses || s.intrinsics || {}).length ? Object.keys(s.poses || s.intrinsics) : ['top'];
   return html`<div class="cap-review">
     <div class="sec"><div class="row"><span class=${'cap-badge ' + badge.tone}>${badge.text}</span><span class="spacer"></span><span class="faint num">${s.session_id || ''} · ${s.mode === 'two_view' ? 'two phones' : 'one phone'}</span></div>
       <p class="faint" style="margin-top:6px">${K.modelProvenance(s)}.</p></div>
@@ -158,103 +164,271 @@ export function SessionReview({ session: s, live = false, busy = false, onSubmit
     <div class="sec"><p class="ov-k">Objects and their simulation proxies</p>
       ${(s.mappings || []).map((m) => {
         const o = objs[m.track_label] || {};
+        const key = 'map:' + m.track_label;
         return html`<div class="cap-obj"><div class="row"><b>${m.real_identity}</b><span class="faint">→</span><span class="chip">${m.proxy}</span><span class="spacer"></span>
-          ${m.confirmed_by_person ? html`<span class="faint">confirmed by the person</span>` : html`<span class="err">not confirmed</span>`}</div>
+          ${m.confirmed_by_person ? html`<span class="faint">confirmed by the person</span>` : pend(key) ? html`<span class="ok-t">confirmation pending: save the review</span>`
+            : live ? html`<button class="btn small" onClick=${() => live.add('objects', { track_label: m.track_label, confirmed_by_person: true }, key)}>Confirm: this is the ${m.proxy}</button>`
+            : html`<span class="err">not confirmed</span>`}</div>
           <p class="muted">${K.fidelityStatement(m)}</p>
-          <${Cover} statuses=${o.pos_status} label="Position" /><${Cover} statuses=${o.tilt_status} label="Tilt" />
+          ${m.proxy !== 'tray' && m.proxy !== 'wall' ? html`<${Cover} statuses=${o.pos_status} label="Position" /><${Cover} statuses=${o.tilt_status} label="Tilt" />` : ''}
         </div>`;
       })}
       ${!(s.mappings || []).length ? html`<p class="err">No object mapping yet.</p>` : ''}</div>
     <div class="sec"><p class="ov-k">Pick-up and put-down</p>
+      ${(s.events || []).length ? '' : html`<p class="muted">No pick-up or put-down was found.</p>`}
       ${(s.events || []).map((e) => {
         const w = (e.t_hi ?? e.t) - (e.t_lo ?? e.t);
         const set = times[e.id];
-        return html`<div class="cap-event"><div><b>${K.eventText(e)}</b>${e.placed_in ? html` <span class="faint">in the ${e.placed_in}</span>` : ''}</div>
+        const p = pend('ev:' + e.id);
+        return html`<div class="cap-event"><div><b>${K.eventText(e)}</b>${e.placed_in ? html` <span class="faint">in the ${e.placed_in}</span>` : ''}${e.status && e.status !== 'inferred' ? html` <span class="chip">${e.status.replace('_', ' ')}</span>` : ''}</div>
           <div class="faint">${K.EVENT_LABEL}${e.occluded_frames ? ` · ${e.occluded_frames} frames hidden` : ''}</div>
           ${w > 0.05 ? html`<div class="row cap-scrub"><label class="sr-only" for=${'t-' + e.id}>Time for ${e.id}</label>
             <input id=${'t-' + e.id} type="range" min=${e.t_lo} max=${e.t_hi} step="0.05" value=${draft[e.id] ?? set ?? e.t} onInput=${(ev) => setDraft({ ...draft, [e.id]: ev.target.value })} />
-            <span class="num">${Number(draft[e.id] ?? set ?? e.t).toFixed(2)} s</span><button class="btn small" onClick=${() => setTime(e)}>Set time</button></div>` : ''}
-          ${set != null ? html`<div class="ok-t">Set to ${set.toFixed(2)} s by you.</div>` : ''}</div>`;
+            <span class="num">${Number(draft[e.id] ?? set ?? e.t).toFixed(2)} s</span><button class="btn small" onClick=${() => setTime(e)}>Set time</button>
+            ${live ? html`<button class="btn small" onClick=${() => live.add('corrections', { target: e.id, field: 'confirm' }, 'ev:' + e.id)}>Confirm the bracket</button>` : ''}</div>` : ''}
+          ${live ? html`<div class="row" style="margin-top:4px"><button class="btn ghost small" onClick=${() => live.add('corrections', { target: e.id, field: 'reject' }, 'ev:' + e.id)}>Not a real ${e.type === 'pick' ? 'pick-up' : 'put-down'}</button></div>` : ''}
+          ${set != null ? html`<div class="ok-t">Set to ${set.toFixed(2)} s by you.</div>` : ''}
+          ${p ? html`<div class="ok-t">${p}: save the review to apply.</div>` : ''}</div>`;
       })}</div>
     <div class="sec"><p class="ov-k">Needs your review</p>
       ${st.items.length ? '' : html`<p class="ok-t">Nothing to review.</p>`}
-      ${st.items.map((r) => html`<div class=${'callout ' + (r.severity === 'abstain' && !r.resolved ? 'bad cap-block' : '')} role=${r.severity === 'abstain' && !r.resolved ? 'alert' : null}>
+      ${st.items.map((r) => {
+        const idKey = 'id:' + (r.object || '');
+        return html`<div class=${'callout ' + (r.severity === 'abstain' && !r.resolved ? 'bad cap-block' : '')} role=${r.severity === 'abstain' && !r.resolved ? 'alert' : null}>
         ${r.severity === 'abstain' && !r.resolved ? html`<div class="faint">Needs your review before MIRROR proposes rules</div>` : ''}
         <b>${r.title}</b>${r.object ? html` <span class="faint">· ${r.object}</span>` : ''}<div>${r.message}</div>
         ${r.resolved ? html`<div class="ok-t">Resolved${r.resolution ? `: ${r.resolution}` : ''}.</div>`
           : K.NEEDS_NEW_TAKE[r.code] ? html`<div class="muted">${K.NEEDS_NEW_TAKE[r.code]}</div>`
-          : r.code === 'ambiguous_event_interval' ? html`<div class="muted">Set the time on the event above.</div>`
-          : K.RESOLVABLE.has(r.code) ? html`<div class="row" style="margin-top:6px"><button class="btn small" onClick=${() => resolve(r, 'checked by the person')}>I checked this</button></div>` : ''}
-      </div>`)}
+          : r.code === 'ambiguous_event_interval' ? html`<div class="muted">Set the time or confirm the bracket on the event above.</div>`
+          : r.code === 'mapping_unconfirmed' && live ? html`<div class="muted">Confirm the object above.</div>`
+          : r.code === 'identity_uncertain' && live ? (pend(idKey) ? html`<div class="ok-t">${pend(idKey)}: save the review to apply.</div>`
+            : html`<div class="row" style="margin-top:6px"><button class="btn small" onClick=${() => takeCams.forEach((cam, k) => live.add('identity_confirmations', { camera: cam, label: r.object, from_frame: 0 }, k ? idKey + ':' + cam : idKey))}>Same object, I checked the video</button></div>`)
+          : K.RESOLVABLE.has(r.code) && !live ? html`<div class="row" style="margin-top:6px"><button class="btn small" onClick=${() => resolveLocal(r, 'checked by the person')}>I checked this</button></div>` : ''}
+        ${how[K.itemKey(r)] && live ? html`<div class="faint">${how[K.itemKey(r)]}</div>` : ''}
+      </div>`;
+      })}
       <div class="row" style="margin-top:10px">
         ${st.ready ? html`<span class="ok-t">Ready: nothing blocks a proposal.</span>` : html`<span class="err">${st.blocking.length} item${st.blocking.length === 1 ? '' : 's'} must be resolved first.</span>`}
         <span class="spacer"></span>
-        ${live && onSubmit ? html`<button class="btn" disabled=${busy} onClick=${() => onSubmit(K.reviewPayload(s, res, times))}>Save review</button>` : ''}
-        <button class="btn primary" disabled=${!st.ready || !live || busy || badge.tone === 'synthetic'} onClick=${() => onPropose && onPropose()}>Propose rules from this capture</button></div>
-      ${badge.tone === 'synthetic' ? html`<p class="faint">Synthetic sample: shown to explain the review. Nothing is proposed from it.</p>` : !live ? html`<p class="faint">Proposing needs the live studio.</p>` : ''}
+        ${live ? html`<button class="btn" disabled=${live.busy || !Object.keys(live.pending).length} onClick=${live.save}>Save review${Object.keys(live.pending).length ? ` (${Object.keys(live.pending).length})` : ''}</button>` : ''}
+        <button class="btn primary" disabled=${!live || !live.canPropose || live.busy} onClick=${() => live && live.onPropose()}>Propose rules from this capture</button></div>
+      ${live && live.proposeNote ? html`<p class="faint">${live.proposeNote}</p>` : ''}
+      ${!live && badge.tone === 'synthetic' ? html`<p class="faint">Sample shown to explain the review; it is not connected to a server, so nothing is proposed from it here.</p>` : !live ? html`<p class="faint">Proposing needs the live studio.</p>` : ''}
     </div>
   </div>`;
 }
 
-// ------------------------------------------------------------------ upload (live studio only)
-const ROLES = { two_view: ['top', 'side', 'calibration'], single_view: ['single', 'calibration'] };
+// ------------------------------------------------------------------ live wizard pieces
+const DIM_SRC = { measured_ruler: 'measured with a ruler', supplied_manually: 'estimated by me' };
+const PROXIES = { cup: 'cup (simulated beads)', block: 'block', marker: 'marker', tray: 'tray (destination)', wall: 'wall (obstacle)', ignore: 'ignore (not part of the task)' };
+const blankObj = (label, proxy) => ({ track_label: label, real_identity: '', proxy, dims: { height: '', width: '', depth: '' }, dimSrc: 'measured_ruler',
+  unsupported: '', contents: '', confirmed: false });
+
+function ObjectsForm({ rows, setRows, tray, setTray, onSave, busy }) {
+  const upd = (i, patch) => setRows(rows.map((r, k) => (k === i ? { ...r, ...patch } : r)));
+  const { error: e1 } = objectsPayload(rows);
+  const { error: e2 } = trayPayload(tray);
+  const error = e1 || e2;
+  return html`<div class="cap-objects">
+    ${rows.map((r, i) => html`<fieldset class="cap-objrow"><legend>Object ${i + 1}</legend>
+      <div class="ch-form">
+        <label>Name<input value=${r.track_label} onInput=${(e) => upd(i, { track_label: e.target.value })} aria-label=${`Object ${i + 1} name`} /></label>
+        <label>What it really is<input value=${r.real_identity} placeholder="e.g. white mug with dry rice" onInput=${(e) => upd(i, { real_identity: e.target.value })} aria-label=${`Object ${i + 1} real identity`} /></label>
+        <label>Simulation proxy<select value=${r.proxy} onChange=${(e) => upd(i, { proxy: e.target.value })} aria-label=${`Object ${i + 1} proxy`}>
+          ${Object.entries(PROXIES).map(([k, t]) => html`<option value=${k}>${t}</option>`)}</select></label>
+      </div>
+      <div class="ch-form">
+        ${['height', 'width', 'depth'].map((k) => html`<label>${k} (cm)<input class="num-in" type="number" step="0.1" inputmode="decimal" value=${r.dims[k]}
+          onInput=${(e) => upd(i, { dims: { ...r.dims, [k]: e.target.value } })} aria-label=${`Object ${i + 1} ${k} in centimetres`} /></label>`)}
+        <label>Sizes are<select value=${r.dimSrc} onChange=${(e) => upd(i, { dimSrc: e.target.value })} aria-label=${`Object ${i + 1} size source`}>
+          ${Object.entries(DIM_SRC).map(([k, t]) => html`<option value=${k}>${t}</option>`)}</select></label>
+      </div>
+      <div class="ch-form">
+        <label>Not modelled (comma separated)<input value=${r.unsupported} placeholder=${r.proxy === 'cup' ? 'e.g. handle' : 'e.g. lid'} onInput=${(e) => upd(i, { unsupported: e.target.value })} aria-label=${`Object ${i + 1} unsupported features`} /></label>
+        ${r.proxy === 'cup' ? html`<label>Real contents<input value=${r.contents} placeholder="e.g. dry rice" onInput=${(e) => upd(i, { contents: e.target.value })} aria-label=${`Object ${i + 1} contents`} /></label>` : ''}
+      </div>
+      <label class="cap-check"><input type="checkbox" checked=${r.confirmed} onChange=${(e) => upd(i, { confirmed: e.target.checked })} /> I checked that this object and its proxy are right</label>
+      <div class="row"><span class="spacer"></span><button class="btn ghost small" onClick=${() => setRows(rows.filter((_, k) => k !== i))} aria-label=${`Remove object ${i + 1}`}>Remove</button></div>
+    </fieldset>`)}
+    <p class="faint">Sizes you leave empty use the proxy's default and are labelled as such. Proxies are not measured physical models.</p>
+    ${rows.some((r) => r.proxy === 'tray') ? html`<details class="ov-details" open=${tray.cx !== ''}><summary>Optional: where the tray is, measured from the board's origin</summary>
+      <div class="ch-form">${[['cx', 'Tray centre x (cm)'], ['cy', 'Tray centre y (cm)'], ['w', 'Tray inside width (cm)'], ['d', 'Tray inside depth (cm)']].map(([k, t]) => html`
+        <label>${t}<input class="num-in" type="number" step="0.1" inputmode="decimal" value=${tray[k]} onInput=${(e) => setTray({ ...tray, [k]: e.target.value })} /></label>`)}</div>
+      <p class="faint">Without these, box the tray in each view and confirm it; MIRROR then locates it from the video.</p></details>` : ''}
+    <div class="row"><button class="btn small" disabled=${rows.length >= 8} onClick=${() => setRows([...rows, blankObj('object' + (rows.length + 1), 'block')])}>Add an object</button>
+      <span class="spacer"></span><button class="btn primary" disabled=${busy || !!error} onClick=${onSave}>Save objects</button></div>
+    ${error ? html`<p class="muted" role="status">${error}</p>` : ''}
+  </div>`;
+}
+
+// Draw one box per object on a frame of each take clip (pointer events: mouse, pen and touch).
+function BoxTool({ cap, cam, labels, boxes, setBoxes }) {
+  const role = 'take_' + cam;
+  const frames = Number(cap.clips?.[role]?.frames || 0);
+  const [frame, setFrame] = useState(0);
+  const [label, setLabel] = useState(labels[0] || '');
+  const [drag, setDrag] = useState(null);
+  const [nat, setNat] = useState(null);
+  const ref = useRef(null);
+  useEffect(() => { if (!labels.includes(label)) setLabel(labels[0] || ''); }, [labels.join('|')]);
+  const toImg = (ev) => {
+    const r = ref.current.getBoundingClientRect();
+    const sx = nat.w / r.width, sy = nat.h / r.height;
+    return [Math.max(0, Math.min(nat.w, (ev.clientX - r.left) * sx)), Math.max(0, Math.min(nat.h, (ev.clientY - r.top) * sy))];
+  };
+  const down = (ev) => { if (!nat || !label) return; ev.preventDefault(); try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (_) { /* synthetic pointer */ } const p = toImg(ev); setDrag({ a: p, b: p }); };
+  const move = (ev) => { if (drag) setDrag({ ...drag, b: toImg(ev) }); };
+  const up = () => {
+    if (!drag) return;
+    const x = Math.min(drag.a[0], drag.b[0]), y = Math.min(drag.a[1], drag.b[1]);
+    const w = Math.abs(drag.a[0] - drag.b[0]), h = Math.abs(drag.a[1] - drag.b[1]);
+    setDrag(null);
+    if (w < 4 || h < 4) return;
+    setBoxes([...boxes.filter((b) => !(b.camera === cam && b.label === label)), { camera: cam, label, frame, box: [Math.round(x), Math.round(y), Math.round(w), Math.round(h)] }]);
+  };
+  const mine = boxes.filter((b) => b.camera === cam);
+  const pct = (b) => nat ? `left:${100 * b[0] / nat.w}%;top:${100 * b[1] / nat.h}%;width:${100 * b[2] / nat.w}%;height:${100 * b[3] / nat.h}%` : 'display:none';
+  const live = drag ? [Math.min(drag.a[0], drag.b[0]), Math.min(drag.a[1], drag.b[1]), Math.abs(drag.a[0] - drag.b[0]), Math.abs(drag.a[1] - drag.b[1])] : null;
+  const numEdit = (b, k, v) => setBoxes(boxes.map((x) => (x === b ? { ...x, box: x.box.map((q, j) => (j === k ? Math.max(0, Math.round(Number(v) || 0)) : q)) } : x)));
+  return html`<div class="cap-boxtool">
+    <div class="ch-form">
+      <label>${cam === 'top' ? 'Top' : 'Side'} frame<input class="num-in" type="number" min="0" max=${Math.max(0, frames - 1)} value=${frame}
+        onInput=${(e) => setFrame(Math.max(0, Math.min(Math.max(0, frames - 1), Number(e.target.value) || 0)))} aria-label=${`${cam} frame index`} /></label>
+      <label>Box for<select value=${label} onChange=${(e) => setLabel(e.target.value)} aria-label=${`Object to box in the ${cam} view`}>${labels.map((l) => html`<option value=${l}>${l}</option>`)}</select></label>
+    </div>
+    <div class="cap-frame" ref=${ref} onPointerDown=${down} onPointerMove=${move} onPointerUp=${up} onPointerCancel=${() => setDrag(null)}
+      role="application" aria-label=${`${cam} camera frame ${frame}: drag to draw a box around the ${label}`}>
+      <img src=${api.captureFrameUrl(cap.id, role, frame)} alt=${`${cam} camera, frame ${frame}`} draggable="false"
+        onLoad=${(e) => setNat({ w: e.target.naturalWidth, h: e.target.naturalHeight })} />
+      ${mine.map((b) => html`<div class="cap-box" style=${pct(b.box)}><span>${b.label}${b.frame !== frame ? ` @${b.frame}` : ''}</span></div>`)}
+      ${live ? html`<div class="cap-box drawing" style=${pct(live)}></div>` : ''}
+    </div>
+    <p class="faint">Drag on the frame to box the ${label || 'object'}; drawing again replaces its box. ${frames ? `${frames} frames.` : ''}</p>
+    ${mine.length ? html`<ul class="plain cap-boxlist">${mine.map((b) => html`<li><b>${b.label}</b> · frame ${b.frame}
+      <details><summary>Edit numbers</summary><div class="ch-form">${['x', 'y', 'width', 'height'].map((n, k) => html`<label>${n}<input class="num-in" type="number" value=${b.box[k]} onInput=${(e) => numEdit(b, k, e.target.value)} aria-label=${`${b.label} box ${n}`} /></label>`)}</div></details>
+      <button class="btn ghost small" onClick=${() => setBoxes(boxes.filter((x) => x !== b))} aria-label=${`Remove the ${b.label} box in the ${cam} view`}>Remove</button></li>`)}</ul>` : ''}
+  </div>`;
+}
+
+// ------------------------------------------------------------------ upload and process (live studio only)
+const ROLES = { two_view: ['take_top', 'take_side', 'lens_top', 'lens_side'], single_view: ['take_top', 'lens_top'] };
+const ROLE_LABEL = { two_view: { take_top: 'Top take', take_side: 'Side take', lens_top: 'Top lens clip', lens_side: 'Side lens clip' },
+  single_view: { take_top: 'Take', lens_top: 'Lens calibration clip' } };
+
 function Upload({ ctx, pc }) {
   const [mode, setMode] = useState('two_view');
+  const [synthetic, setSynthetic] = useState(false);
   const [files, setFiles] = useState({});
   const [sync, setSync] = useState({ method: 'visual_marker', top_t: '', side_t: '' });
   const [cap, setCap] = useState(null);
   const [msg, setMsg] = useState(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(null);
+  const [rows, setRows] = useState([blankObj('mug', 'cup'), blankObj('tray', 'tray')]);
+  const [tray, setTray] = useState({ cx: '', cy: '', w: '', d: '' });
+  const [boxes, setBoxes] = useState([]);
+  const [pending, setPending] = useState({});
+  const [actions, setActions] = useState({ objects: [], identity_confirmations: [], corrections: [] });
+  const since = useRef(Date.now());
   const printOk = !K.printCheck(pc.bar, pc.square).length;
   const roles = ROLES[mode];
-  const ready = printOk && roles.every((r) => files[r]) && (mode === 'single_view' || (sync.top_t !== '' && sync.side_t !== ''));
+  const ready = printOk && roles.every((r) => files[r]);
   const run = async (label, fn) => {
-    setBusy(true); setMsg(null);
-    try { await fn(); } catch (e) { setMsg(`${label}: ${e.message || e}`); } finally { setBusy(false); }
+    setBusy(label); setMsg(null);
+    try { await fn(); } catch (e) { setMsg(`${label}: ${e.message || e}`); } finally { setBusy(null); }
   };
-  const refresh = async (id) => setCap(await api.getJSONApi(`capture/${encodeURIComponent(id)}`));
+  const refresh = async (id) => { const c = await api.getJSONApi(`capture/${encodeURIComponent(id || cap.id)}`); setCap(c); return c; };
+  const waitFor = async (j) => { if (j && j.id && (j.status === 'queued' || j.status === 'running')) await api.waitJob(j); };
   const send = () => run('Upload', async () => {
-    const c = await api.post('capture', { mode, notes: '', print_check: { measured_bar_mm: Number(pc.bar), measured_square_mm: Number(pc.square), measured_by: 'person' } });
+    const c = await api.post('capture', { mode, notes: '', synthetic, print_check: { measured_bar_mm: Number(pc.bar), measured_square_mm: Number(pc.square) } });
     const clips = {};
     for (const r of roles) {
       const up = await api.postBinary(`video/upload?view=${r}`, files[r], files[r].type || 'video/mp4');
       clips[r] = up.id || up.video_id;
     }
-    await api.post(`capture/${encodeURIComponent(c.id)}/clips`, { clips, sync: mode === 'two_view' ? { ...sync, top_t: Number(sync.top_t), side_t: Number(sync.side_t) } : null });
+    const body = { clips };
+    if (mode === 'two_view' && sync.top_t !== '' && sync.side_t !== '') body.sync = { method: sync.method, top_t: Number(sync.top_t), side_t: Number(sync.side_t) };
+    await api.post(`capture/${encodeURIComponent(c.id)}/clips`, body);
     await refresh(c.id);
   });
-  const step = (s) => run(s === 'calibrate' ? 'Calibration' : s === 'track' ? 'Tracking' : 'Proposal', async () => {
-    const j = await api.post(`capture/${encodeURIComponent(cap.id)}/${s}`, {});
-    if (j && j.status && j.id) await api.waitJob(j);
-    await refresh(cap.id);
+  const step = (name, path) => run(name, async () => { await waitFor(await api.post(`capture/${encodeURIComponent(cap.id)}/${path}`, {})); await refresh(); });
+  const saveObjects = () => run('Objects', async () => {
+    const p = objectsPayload(rows); if (p.error) throw new Error(p.error);
+    const t = trayPayload(tray); if (t.error) throw new Error(t.error);
+    await api.post(`capture/${encodeURIComponent(cap.id)}/inputs`, t.tray ? { objects: p.objects, tray: t.tray } : { objects: p.objects }); await refresh(); });
+  const saveBoxes = () => run('Boxes', async () => { await api.post(`capture/${encodeURIComponent(cap.id)}/prompts`, { prompts: boxes }); await refresh(); });
+  const add = (kind, item, key) => {
+    const secs = Math.min(3600, Math.round((Date.now() - since.current) / 100) / 10);
+    since.current = Date.now();
+    setActions((a) => ({ ...a, [kind]: [...a[kind].filter((x) => !(key && x.__key === key)), { ...item, seconds_spent: secs, __key: key }] }));
+    const label = kind === 'objects' ? 'Confirmed' : kind === 'identity_confirmations' ? 'Same object confirmed'
+      : item.field === 'confirm' ? 'Bracket confirmed' : item.field === 'reject' ? 'Marked not real' : `Time set to ${Number(item.after).toFixed(2)} s`;
+    setPending((p) => ({ ...p, [key]: label }));
+  };
+  const saveReview = () => run('Review', async () => {
+    const strip = (l) => l.map(({ __key, ...x }) => x);
+    const out = await api.post(`capture/${encodeURIComponent(cap.id)}/review`,
+      { objects: strip(actions.objects), identity_confirmations: strip(actions.identity_confirmations), corrections: strip(actions.corrections) });
+    setActions({ objects: [], identity_confirmations: [], corrections: [] }); setPending({});
+    await waitFor(out.job); await refresh();
   });
-  const review = (body) => run('Review', async () => { await api.post(`capture/${encodeURIComponent(cap.id)}/review`, body); await refresh(cap.id); });
-  const hooks = cap?.hooks || {};
+  const propose = () => run('Proposal', async () => {
+    await waitFor(await api.post(`capture/${encodeURIComponent(cap.id)}/propose`, {})); await refresh(); await ctx.refresh?.();
+  });
+  const labels = rows.map((r) => r.track_label.trim()).filter((l, i) => l && rows[i].proxy !== 'ignore');
+  const cams = mode === 'two_view' ? ['top', 'side'] : ['top'];
+  const boxesComplete = cap && cams.every((cam) => labels.every((l) => boxes.some((b) => b.camera === cam && b.label === l)));
+  const st = cap?.state || '';
+  const after = (s) => ['clips_ready', 'calibrated', 'tracked', 'reviewed', 'proposed'].indexOf(st) >= ['clips_ready', 'calibrated', 'tracked', 'reviewed', 'proposed'].indexOf(s);
+  const gateOpen = !!cap?.gate_open && !cap?.stale && ['tracked', 'reviewed'].includes(st);
+  const Busy = () => (busy ? html`<p class="job" role="status" aria-live="polite">${busy}: working…</p>` : '');
   return html`<div>
+    <p class="ov-k">1 · Clips</p>
     ${!printOk ? html`<p class="callout">Check the print scale first (guide step 2).</p>` : ''}
     <div class="ch-form">
-      <label>Phones<select value=${mode} onChange=${(e) => { setMode(e.target.value); setFiles({}); }}>
+      <label>Phones<select value=${mode} disabled=${!!cap} onChange=${(e) => { setMode(e.target.value); setFiles({}); }}>
         <option value="two_view">Two phones (top and side)</option><option value="single_view">One phone (reduced results)</option></select></label>
-      ${roles.map((r) => html`<label>${{ top: 'Top take', side: 'Side take', single: 'Take', calibration: 'Lens calibration clip' }[r]}
-        <input type="file" accept="video/*" onChange=${(e) => setFiles({ ...files, [r]: e.target.files[0] })} /></label>`)}
+      ${roles.map((r) => html`<label>${ROLE_LABEL[mode][r]}<input type="file" accept="video/*" disabled=${!!cap} onChange=${(e) => setFiles({ ...files, [r]: e.target.files[0] })} /></label>`)}
     </div>
-    ${mode === 'two_view' ? html`<div class="ch-form">
-      <label>Sync event<select value=${sync.method} onChange=${(e) => setSync({ ...sync, method: e.target.value })}>
-        <option value="visual_marker">sync card</option><option value="clap">clap</option><option value="flash">flash</option><option value="manual">manual</option></select></label>
-      <label>First sync in top clip (s)<input class="num-in" type="number" step="0.01" value=${sync.top_t} onInput=${(e) => setSync({ ...sync, top_t: e.target.value })} /></label>
-      <label>First sync in side clip (s)<input class="num-in" type="number" step="0.01" value=${sync.side_t} onInput=${(e) => setSync({ ...sync, side_t: e.target.value })} /></label></div>
-      <p class="faint">The studio records the sync you declare and never calls it verified; clips that do not look like one take are refused.</p>` : html`<p class="faint">One phone: depth along the camera axis and tilt about it are not observed.</p>`}
-    <div class="row"><span class="spacer"></span><button class="btn primary" disabled=${!ready || busy} onClick=${send}>Upload and check clips</button></div>
+    <label class="cap-check"><input type="checkbox" checked=${synthetic} disabled=${!!cap} onChange=${(e) => setSynthetic(e.target.checked)} /> These clips are SYNTHETIC test renders, not real footage</label>
+    ${mode === 'two_view' ? html`<details class="ov-details"><summary>Optional: note when the sync card first appears</summary><div class="ch-form">
+      <label>In the top clip (s)<input class="num-in" type="number" step="0.01" value=${sync.top_t} onInput=${(e) => setSync({ ...sync, top_t: e.target.value })} /></label>
+      <label>In the side clip (s)<input class="num-in" type="number" step="0.01" value=${sync.side_t} onInput=${(e) => setSync({ ...sync, side_t: e.target.value })} /></label></div>
+      <p class="faint">MIRROR finds the sync events itself; your note is kept as a declaration, never as proof.</p></details>`
+      : html`<p class="faint">One phone: depth along the camera axis and tilt about it are not observed.</p>`}
+    ${!cap ? html`<div class="row"><span class="spacer"></span><button class="btn primary" disabled=${!ready || !!busy} onClick=${send}>Upload and check clips</button></div>` : ''}
     ${msg ? html`<p class="err" role="alert">${msg}</p>` : ''}
-    ${cap ? html`<div class="sec"><p class="faint num">capture ${cap.id} · ${cap.state}${cap.sync ? ` · sync ${cap.sync.method}, offset ${cap.sync.offset_s} s (${cap.sync.status})` : ''}</p>
+    <${Busy} />
+    ${cap ? html`
+      <p class="faint num">capture ${cap.id} · ${st}${cap.stale ? ' · out of date: run again' : ''}${cap.synthetic || cap.label ? ` · ${cap.label || 'SYNTHETIC'}` : ''}</p>
       ${(cap.errors || []).map((e) => html`<p class="err">${e}</p>`)}
-      <div class="row">
-        <button class="btn small" disabled=${busy || !hooks.calibrate} onClick=${() => step('calibrate')}>Calibrate</button>
-        <button class="btn small" disabled=${busy || !hooks.track || !['calibrated', 'tracked', 'reviewed'].includes(cap.state)} onClick=${() => step('track')}>Track</button></div>
-      ${!hooks.calibrate || !hooks.track ? html`<p class="muted">Processing is not available on this server yet (${['calibrate', 'track', 'reconstruct'].filter((x) => !hooks[x]).join(', ')} missing). Use the command-line path in the guide.</p>` : ''}
-      ${cap.calibration ? html`<p>${cap.calibration.ok ? html`<span class="ok-t">Calibration accepted.</span>` : html`<span class="err">Calibration rejected: ${(cap.calibration.errors || []).join('; ')}</span>`}</p>` : ''}
-      ${cap.session ? html`<${SessionReview} session=${cap.session} live=${true} busy=${busy} onSubmit=${review} onPropose=${() => step('propose')} />` : ''}
-    </div>` : ''}
+      <p class="ov-k">2 · Calibrate</p>
+      <div class="row"><button class="btn small" disabled=${!!busy || !cap.hooks?.calibrate} onClick=${() => step('Calibration', 'calibrate')}>Calibrate</button></div>
+      ${cap.hooks && !cap.hooks.calibrate ? html`<p class="muted">Processing is not available on this server yet. Use the command-line path in the guide.</p>` : ''}
+      ${cap.calibration ? html`<div>${cap.calibration.ok ? html`<p class="ok-t">Calibration accepted.</p>` : html`<p class="err" role="alert">Calibration rejected: ${(cap.calibration.errors || []).join('; ') || 'see the checks'}</p>`}
+        <div class="cap-table-wrap"><table class="cap-table"><thead><tr><th>Camera</th><th>Lens</th><th>Reprojection</th><th>Views</th><th>Table pose</th></tr></thead><tbody>
+          ${Object.entries(cap.calibration.cameras || {}).map(([cam, x]) => html`<tr class=${x.ok === false ? 'fail' : ''}><td>${cam}</td><td>${x.lens_accepted ? 'accepted' : 'rejected'}</td>
+            <td class="num">${x.rms_px != null ? x.rms_px.toFixed(2) + ' px' : '–'}</td><td class="num">${x.n_views ?? '–'}</td>
+            <td>${x.pose_accepted ? `accepted${x.pose_rms_px != null ? ` (${x.pose_rms_px.toFixed(2)} px)` : ''}` : 'rejected'}</td></tr>`)}</tbody></table></div>
+        ${cap.sync ? html`<p class=${cap.sync.status === 'refused' ? 'err' : ''}>${cap.sync.status === 'refused' ? 'Not combining the two views: ' + ((cap.sync.reasons || []).join('; ') || 'the sync events did not match') : cap.sync.status === 'detected' ? `Synchronised: offset ${Number(cap.sync.offset_s).toFixed(3)} s${cap.sync.uncertainty_s != null ? `, uncertainty ${Math.round(1000 * cap.sync.uncertainty_s)} ms` : ''}.` : `Sync declared by you (offset ${cap.sync.offset_s} s), not verified.`}</p>` : ''}</div>` : ''}
+      ${after('calibrated') && cap.calibration?.ok ? html`
+        <p class="ov-k">3 · What each object is</p>
+        <${ObjectsForm} rows=${rows} setRows=${setRows} tray=${tray} setTray=${setTray} onSave=${saveObjects} busy=${!!busy} />
+        ${(cap.inputs?.objects || []).length ? html`<p class="ok-t">${cap.inputs.objects.length} objects saved.</p>` : ''}
+        <p class="ov-k">4 · Box each object once</p>
+        ${cams.map((cam) => html`<${BoxTool} cap=${cap} cam=${cam} labels=${labels} boxes=${boxes} setBoxes=${setBoxes} />`)}
+        <div class="row"><span class="faint">${boxesComplete ? 'Every object has a box in every view.' : 'Box every carried object in every view (the tray too, unless you gave its position).'}</span><span class="spacer"></span>
+          <button class="btn primary" disabled=${!!busy || !boxes.length} onClick=${saveBoxes}>Save boxes</button></div>
+        ${(cap.inputs?.prompts || []).length ? html`<p class="ok-t">${cap.inputs.prompts.length} boxes saved.</p>` : ''}
+        <p class="ov-k">5 · Track and reconstruct</p>
+        ${(cap.missing || []).length ? html`<p class="muted">Still needed: ${cap.missing.join('; ')}.</p>` : ''}
+        <div class="row"><button class="btn primary" disabled=${!!busy || (cap.missing || []).length > 0} onClick=${() => step('Tracking', 'track')}>${cap.session ? 'Run again' : 'Track'}</button></div>` : ''}
+      ${cap.session ? html`<p class="ov-k">6 · Review</p><${SessionReview} session=${cap.session} report=${cap.report}
+        live=${{ pending, add, save: saveReview, busy: !!busy, canPropose: gateOpen, onPropose: propose,
+          proposeNote: cap.stale ? 'Your last changes have not been run yet.' : !cap.gate_open ? 'Resolve the blocking items, save the review; MIRROR runs again.' : (cap.synthetic ? 'This capture is SYNTHETIC: the demonstration and rules proposed from it carry that label everywhere.' : '') }} />` : ''}
+      ${st === 'proposed' ? html`<div class="callout ok" role="status"><b>Proposed.</b> MIRROR rebuilt the demonstration from this capture and proposed rules in a new generation${cap.synthetic ? html` <span class="cap-badge synthetic">SYNTHETIC</span>` : ''}.
+        ${cap.proposal?.error ? html`<div class="err">The interpreter refused: ${cap.proposal.error}</div>` : ''}
+        <div class="row" style="margin-top:6px"><button class="btn small" onClick=${() => ctx.setStep('interpret')}>Review the proposed rules</button><button class="btn small" onClick=${() => ctx.setStep('watch')}>Watch the reconstruction</button></div></div>` : ''}
+    ` : ''}
   </div>`;
 }
 

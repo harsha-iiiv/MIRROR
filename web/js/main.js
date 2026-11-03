@@ -12,7 +12,7 @@ import { ChallengePanel } from './challenge.js';
 import { CapturePanel } from './capture.js';
 import { recordIdFromUrl } from './challenge_state.js';
 import { correctionStory } from './story.js';
-import { demoSource, videoMediaKind, demoEvidence, tiltStatusAt } from './provenance.js';
+import { demoSource, videoMediaKind, demoEvidence, tiltStatusAt, isSyntheticDemo, SYNTHETIC_DEMO_TEXT } from './provenance.js';
 import { generationId, rolloutCacheKey, isStale, latestOnly, DROPPED } from './identity.js';
 
 const html = htm.bind(h);
@@ -178,7 +178,7 @@ function App() {
     tool, setTool, viewer: viewerRef, display, isStatic: api.isStatic, error, setError, story, toggleStory,
     setStageOverride, setEditHandler: (fn) => { editHandler.current = fn; }, editHandler,
     openChallenge: () => { setStep('challenge'); setPick(null); setTool(null); },
-    challengeLive: !api.isStatic,
+    challengeLive: !api.isStatic, refresh,
   };
   const Panel = cur === 'overview' ? OverviewPanel : cur === 'challenge' ? ChallengePanel : cur === 'capture' ? CapturePanel : PANELS[cur];
   const hasStory = !!correctionStory(snap);
@@ -210,7 +210,7 @@ function App() {
           <button class="iconbtn" onClick=${toggleTheme} aria-label=${'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme'}>${theme === 'dark' ? Icon.sun : Icon.moon}</button>
         </div>
       </header>
-      <div class="banner" role="status">${snap.mode === 'fixture' ? html`<b>Fixture data.</b> ${(snap.missing_packages || []).length
+      <div class="banner" role="status">${isSyntheticDemo(snap) ? html`<div class="synthetic-banner"><b>SYNTHETIC.</b> ${SYNTHETIC_DEMO_TEXT.replace(/^SYNTHETIC test render: /, '')} Everything computed from it inherits that label.</div>` : ''}${snap.mode === 'fixture' ? html`<b>Fixture data.</b> ${(snap.missing_packages || []).length
         ? `The simulator packages are not available (${snap.missing_packages.slice(0, 3).join(', ')}${snap.missing_packages.length > 3 ? ', …' : ''}), so`
         : 'The studio was started on fixtures, so'} motion here is key-framed for interface development. It is not evidence.` : ''}
         ${!noteHidden ? html`<${LiveNote} status=${liveStatus} onClose=${() => setNoteHidden(true)} />` : ''}</div>
