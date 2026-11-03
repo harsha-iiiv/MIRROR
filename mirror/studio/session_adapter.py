@@ -325,7 +325,8 @@ class Job:
 
 
 # Jobs that run the simulator (the expensive part); they share the server's job gate.
-SIM_JOB_KINDS = {"run", "clarify", "evaluate", "video", "challenge", "challenge_execute"}
+SIM_JOB_KINDS = {"run", "clarify", "evaluate", "video", "challenge", "challenge_execute", "capture"}
+UPLOAD_VIEWS = ("top", "side", "calibration", "single")
 
 TOUR_DIR = REPO_ROOT / "data" / "challenge_tour"
 
@@ -483,6 +484,7 @@ class StudioService:
         self.challenges: dict = {}
         self.challenge_order: list[str] = []
         self.study = None                       # StudyRecorder when a facilitator started study mode
+        self.captures: dict = {}                # real-phone capture sessions (capture.py)
         self._seen_generation = self.session.generation.id
         if self.mode == "live" and (gate is not None or budget is not None):
             from .sessions import make_client
@@ -1079,8 +1081,8 @@ class StudioService:
         and their reservation is given back; accepted ones are registered and expire if unused."""
         path = Path(path)
         try:
-            if view not in ("top", "side"):
-                raise UploadRejected("view must be top or side")
+            if view not in UPLOAD_VIEWS:
+                raise UploadRejected(f"view must be one of {list(UPLOAD_VIEWS)}")
             size = path.stat().st_size
             if size != nbytes:
                 raise UploadRejected("upload size does not match what was announced")
@@ -1101,8 +1103,8 @@ class StudioService:
 
     def upload_video(self, data: bytes, view: str = "top") -> dict:
         """Bytes in memory (tests, small clients): admit, write, validate."""
-        if view not in ("top", "side"):
-            raise UploadRejected("view must be top or side")
+        if view not in UPLOAD_VIEWS:
+            raise UploadRejected(f"view must be one of {list(UPLOAD_VIEWS)}")
         self.admit_upload(len(data))
         tmp = self.upload_dir() / f".incoming-{uuid.uuid4().hex[:8]}"
         try:
@@ -2078,6 +2080,130 @@ class StudioService:
                                         "interpreter": "manual-form", "request_status": "ok", "latency_s": None,
                                         "cost_usd": None, "fallback_reason": None}}
 
+    # ------------------------------------------------------------ real-phone capture
+    def _capture(self, cid: str):
+        c = self.captures.get(cid)
+        if c is None:
+            raise KeyError(f"capture {cid}")
+        return c
+
+    def capture_create(self, mode: str, notes: str = "") -> dict:
+        from .capture import Capture
+        if len(self.captures) >= 5:
+            oldest = min(self.captures.values(), key=lambda c: c.created_at)
+            self.captures.pop(oldest.id)
+        c = Capture(mode, notes)
+        self.captures[c.id] = c
+        self._changed()
+        return c.public()
+
+    def capture_clips(self, cid: str, clips: dict, sync: Optional[dict] = None) -> dict:
+        from .capture import set_clips
+        c = self._capture(cid)
+        ups = {}
+        for role, vid in (clips or {}).items():
+            e = self.media.get(vid)
+            if e.view != role:
+                raise ValueError(f"upload {vid} was sent as view {e.view!r}, not {role!r}")
+            ups[role] = {**e.public(), "path": e.path}
+        set_clips(c, ups, sync or {})
+        self._changed()
+        return c.public()
+
+    def _capture_payload(self, c) -> dict:
+        d = c.to_state()
+        d["paths"] = {role: self.media.get(clip["id"]).path for role, clip in c.clips.items()}
+        return d
+
+    def capture_step(self, cid: str, step: str) -> Job:
+        """calibrate | track: run the phone module's hook as a job."""
+        from .capture import hook
+        c = self._capture(cid)
+        want = {"calibrate": ("clips_ready", "calibrated", "tracked", "reviewed"),
+                "track": ("calibrated", "tracked", "reviewed")}
+        if step not in want:
+            raise ValueError("step is calibrate or track")
+        if c.state not in want[step]:
+            raise RuntimeError(f"{step} needs the capture in state {want[step][0]} (now {c.state})")
+        fn = hook(step)
+        if fn is None:
+            raise RuntimeError(f"phone {step} is not available on this server (mirror.perception.phone.{step} missing)")
+        ids = [clip["id"] for clip in c.clips.values()]
+
+        def work(job):
+            for vid in ids:
+                self.media.acquire(vid)
+            try:
+                self._progress(job, 0.05, "Calibrating the cameras" if step == "calibrate" else "Tracking the objects")
+                t0 = time.time()
+                out = _dump(fn(self._capture_payload(c)))
+                wall = round(time.time() - t0, 3)
+            finally:
+                for vid in ids:
+                    self.media.release(vid)
+            with self.lock:
+                if step == "calibrate":
+                    ok = bool(out.get("ok"))
+                    c.calibration = {**out, "wall_s": wall, "at": time.time()}
+                    c.state = "calibrated" if ok else "clips_ready"
+                    if not ok:
+                        c.errors.append("calibration rejected: " + "; ".join(out.get("errors") or ["insufficient quality"]))
+                    c.tracking, c.reviews = (None, []) if ok else (c.tracking, c.reviews)
+                else:
+                    c.tracking = {**out, "wall_s": wall, "at": time.time()}
+                    c.state = "tracked"
+                self._changed()
+            return {"capture_id": c.id, "state": c.state, "step": step, "wall_s": wall}
+        return self.submit("capture", {"capture_id": cid, "step": step}, work)
+
+    def capture_review(self, cid: str, review: dict) -> dict:
+        from .capture import check_review
+        c = self._capture(cid)
+        with self.lock:
+            c.reviews.append(check_review(c, review or {}))
+            c.state = "reviewed"
+            self._changed()
+            return c.public()
+
+    def capture_propose(self, cid: str) -> Job:
+        """Reconstruct an object-centric demonstration from the reviewed capture, start a new
+        generation with it (source media and calibration attached) and propose a specification."""
+        from .capture import hook
+        c = self._capture(cid)
+        if c.state != "reviewed":
+            raise RuntimeError("review the correspondences and events before proposing a task")
+        fn = hook("reconstruct")
+        if fn is None:
+            raise RuntimeError("phone reconstruction is not available on this server (mirror.perception.phone.reconstruct missing)")
+
+        def work(job):
+            self._progress(job, 0.1, "Rebuilding the demonstration from the reviewed capture")
+            trace = fn(self._capture_payload(c), c.reviews[-1])
+            with self.lock:
+                self._guard(job)
+                media = [{**clip, "role": role} for role, clip in c.clips.items()]
+                self.session.set_demo(trace, reason="phone_capture", source_media=media, calibration=c.calibration)
+                job.generation_id = self.generation_id
+                for clip in c.clips.values():
+                    self.media.release(clip["id"], self.generation_id)
+                self.demo_rollout = self._make_demo_rollout()
+                self.video_demo = None
+                t0, mark = time.time(), self._llm_mark()
+                spec, fb = self._with_fallback(self.session.interpret, job)
+                sp = self._model_prov(fb, mark, t0, spec.interpreter)
+                lat, tok = self._llm_latency(mark, t0)
+                self._log_model(f"specification v{spec.version}", "proposes the task from the reviewed phone capture",
+                                spec.interpreter, lat, self._client_source(fb), tokens=tok, step_provenance=sp)
+                c.proposal = {"generation_id": self.generation_id, "spec_version_id": self._spec_vid(spec.version),
+                              "step_provenance": sp, "evidence": _dump(getattr(trace, "evidence", None))}
+                c.state = "proposed"
+                self._changed()
+            return {"capture_id": c.id, **c.proposal}
+        return self.submit("capture", {"capture_id": cid, "step": "propose"}, work)
+
+    def capture_public(self, cid: str) -> dict:
+        return self._capture(cid).public()
+
     # ------------------------------------------------------------ persistence
     def persist(self) -> None:
         """Write this session to ``state_dir`` (restart recovery). Never raises into a request."""
@@ -2095,6 +2221,7 @@ class StudioService:
                     "transcripts": self.transcripts, "video_demo": self.video_demo, "scene_seq": self.scene_seq,
                     "uploads": [{**e.public(), "path": e.path, "info": e.info} for e in self.media.entries.values()],
                     "challenges": [self.challenges[c].to_state() for c in self.challenge_order if c in self.challenges],
+                    "captures": [c.to_state() for c in self.captures.values()],
                     "evaluation": self.evaluation if (self.evaluation or {}).get("source", {}).get("kind") != "loaded" else None,
                     "jobs": [j.public() for j in sorted(self.jobs.values(), key=lambda j: j.started)[-30:]],
                 }
@@ -2142,6 +2269,13 @@ class StudioService:
                     continue
                 self.challenges[ch.id] = ch
                 self.challenge_order.append(ch.id)
+            from .capture import Capture
+            for cd in state.get("captures") or []:
+                try:
+                    cp = Capture.from_state(cd)
+                except Exception:  # noqa: BLE001
+                    continue
+                self.captures[cp.id] = cp
             for jd in state.get("jobs") or []:
                 j = Job.interrupted(jd) if jd.get("status") in ("queued", "running") else None
                 if j is None:
@@ -2337,6 +2471,7 @@ class StudioService:
                              or r["rollout_id"] in s.rollouts],
                 "challenges": [self.challenges[c].public() for c in self.challenge_order[-5:] if c in self.challenges],
                 "study": self.study.public() if self.study is not None else None,
+                "captures": [c.public() for c in self.captures.values()],
                 "clarification": self.clarification,
                 "evaluation": self.evaluation,
                 "jobs": [j.public() for j in sorted(self.jobs.values(), key=lambda j: j.started)[-12:]],

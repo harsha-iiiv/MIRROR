@@ -127,6 +127,21 @@ class ClarificationRatingIn(BaseModel):
     useful: Optional[int] = None
 
 
+class CaptureIn(BaseModel):
+    mode: str
+    notes: str = ""
+
+
+class CaptureClipsIn(BaseModel):
+    clips: dict[str, str]
+    sync: Optional[dict[str, Any]] = None
+
+
+class CaptureReviewIn(BaseModel):
+    correspondence: list[dict[str, Any]] = []
+    events: list[dict[str, Any]] = []
+
+
 class ManualEditIn(BaseModel):
     edits: list[dict[str, Any]]
     note: str = ""
@@ -395,8 +410,9 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
     @app.post("/api/video/upload")
     async def video_upload(request: Request, view: str = "top", svc: StudioService = Depends(session)):
         """Streamed to disk inside the admitted size; validated (probe + full decode) before it counts."""
-        if view not in ("top", "side"):
-            raise StudioError(422, "invalid_video", "view must be top or side")
+        from .session_adapter import UPLOAD_VIEWS
+        if view not in UPLOAD_VIEWS:
+            raise StudioError(422, "invalid_video", f"view must be one of {list(UPLOAD_VIEWS)}")
         n = request.headers.get("content-length")
         if n is None or not n.isdigit():
             raise StudioError(411, "length_required", "send the upload with a Content-Length header")
@@ -513,6 +529,42 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
         if not svc.session.specs:
             raise StudioError(409, "conflict", "interpret the demonstration first")
         return guard(svc.manual_edit, body.edits, body.note)
+
+    # ------------------------------------------------------------ real-phone capture
+    def capture_guard(fn, *a, **k):
+        from .capture import CaptureError
+        try:
+            return fn(*a, **k)
+        except CaptureError as exc:
+            raise StudioError(422, "invalid_capture", str(exc))
+
+    @app.post("/api/capture")
+    def capture_create(body: CaptureIn, svc: StudioService = Depends(session)):
+        return guard(capture_guard, svc.capture_create, body.mode, body.notes)
+
+    @app.get("/api/capture/{cid}")
+    def capture_get(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.capture_public, cid)
+
+    @app.post("/api/capture/{cid}/clips")
+    def capture_clips(cid: str, body: CaptureClipsIn, svc: StudioService = Depends(session)):
+        return guard(capture_guard, svc.capture_clips, cid, body.clips, body.sync)
+
+    @app.post("/api/capture/{cid}/calibrate")
+    def capture_calibrate(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.capture_step, cid, "calibrate").public()
+
+    @app.post("/api/capture/{cid}/track")
+    def capture_track(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.capture_step, cid, "track").public()
+
+    @app.post("/api/capture/{cid}/review")
+    def capture_review(cid: str, body: CaptureReviewIn, svc: StudioService = Depends(session)):
+        return guard(capture_guard, svc.capture_review, cid, body.model_dump())
+
+    @app.post("/api/capture/{cid}/propose")
+    def capture_propose(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.capture_propose, cid).public()
 
     # Records and the recorded tour need no session: they are immutable and public.
     @app.get("/api/records/{record_id}")
