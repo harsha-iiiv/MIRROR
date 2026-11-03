@@ -265,3 +265,25 @@ def check_segment(world: World, env: Envelope, p0, R0, p1, R1, *, margin: float,
     step = margin if step is None else step
     pos, rots = segment_samples(p0, R0, p1, R1, env.reach, step)
     return check_poses(world, env, pos, rots, margin, ground_margin)
+
+
+
+def box_distance(a: Box, b: Box, iters: int = 300) -> float:
+    """Euclidean distance between two solid oriented boxes (0 if they overlap),
+    by accelerated projected gradient on the box-constrained problem
+    min ||ca + Ra u - cb - Rb v||, |u| <= ha, |v| <= hb."""
+    d0 = np.asarray(a.c, float) - np.asarray(b.c, float)
+    Ra, Rb = np.asarray(a.R, float), np.asarray(b.R, float)
+    ha, hb = np.asarray(a.h, float), np.asarray(b.h, float)
+    u = np.clip(-Ra.T @ d0, -ha, ha)
+    v = np.clip(Rb.T @ d0, -hb, hb)
+    yu, yv, tk = u.copy(), v.copy(), 1.0
+    for _ in range(iters):
+        d = d0 + Ra @ yu - Rb @ yv
+        u1 = np.clip(yu - 0.5 * (Ra.T @ d), -ha, ha)
+        v1 = np.clip(yv + 0.5 * (Rb.T @ d), -hb, hb)
+        t1 = 0.5 * (1 + np.sqrt(1 + 4 * tk * tk))
+        yu = u1 + ((tk - 1) / t1) * (u1 - u)
+        yv = v1 + ((tk - 1) / t1) * (v1 - v)
+        u, v, tk = u1, v1, t1
+    return float(np.linalg.norm(d0 + Ra @ u - Rb @ v))

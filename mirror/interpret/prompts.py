@@ -188,3 +188,71 @@ def correct_messages(spec: TaskSpec, text: str, scene_kinds: Optional[list[str]]
     payload["correction"] = text
     return [{"role": "system", "content": CORRECT_SYSTEM},
             {"role": "user", "content": json.dumps(payload, indent=1, sort_keys=True)}]
+
+
+
+# --------------------------------------------------------------------------
+# Revision 4 (contract 1.2). Selected with prompt_revision="4" or
+# MIRROR_PROMPT_REVISION=4. Revision 3 above is unchanged, so every recorded
+# response keeps replaying; revision 4 has no recordings yet.
+# --------------------------------------------------------------------------
+
+VOCABULARY_V4 = """\
+Task family: packing a kit of rigid objects into a destination tray on a table.
+Objects: cup (open-top vessel that may hold loose beads), block, marker (standing cylinder).
+Goal type: an object ends at rest inside the destination tray.
+Rule types:
+  upright: the object's axis stays within max_tilt_deg of vertical (default 15).
+  forbidden_contact: the object must not touch contact_with groups
+    (obstacle, table_outside_tray, other_objects). Objects rest on the table until they are
+    picked up, so table_outside_tray is only possible in the final phase.
+  keep_clearance: the object stays at least min_clearance_m from obstacles (walls, boxes).
+    Distance from another object or from an area is not supported. The person must give the
+    distance; never invent one.
+Phases: final (once placed and settled), transport (from grasp until release of that object),
+  always (every moment of the task).
+Ordering: objects of one kind before objects of another, with order_event:
+  finish_before_start   the earlier kind is packed before the later kind is touched (default,
+                        e.g. "pack the marker before the cup", "do the marker first")
+  start_before_start    the earlier kind is picked up first ("start with the block",
+                        "pick up the marker before the cup")
+  placed_before_placed  the earlier kind is in the tray before the later kind is placed
+                        ("the block must be in the tray before the cup is placed")"""
+
+CORRECT_SYSTEM_V4 = CORRECT_SYSTEM.replace(VOCABULARY, VOCABULARY_V4).replace(
+    "  require_order / relax_order  before_kind must be packed before after_kind\n"
+    "                (relax_order with both kinds null relaxes every ordering).",
+    "  require_order / relax_order  before_kind before after_kind, with order_event\n"
+    "                (relax_order with both kinds null relaxes every ordering; order_event null).").replace(
+    "9. interpretation restates, in one sentence, what you understood.",
+    "9. interpretation restates, in one sentence, what you understood.\n"
+    "10. If the person asks for care without naming what should hold (\"be careful with it\"),\n"
+    "    use outcome \"clarify\" and offer the supported changes as options.\n"
+    "11. If the request needs something the rule types cannot express (a distance from another\n"
+    "    object, a clearance with no distance, no table contact while carrying), use outcome\n"
+    "    \"clarify\" and ask for a supported alternative; never approximate it silently.\n"
+    "12. order_event is null for every action except require_order.\n"
+    "13. A word that is not an object kind in the scene (\"the coffee\", \"the thermos\") names an object\n"
+    "    only if context.focus_kind says which object the person selected; otherwise use outcome\n"
+    "    \"clarify\" and ask which object they mean or whether it is absent. Never substitute silently.")
+PROMPT_REVISION_V4 = "4"
+
+
+def spec_view_v4(spec: TaskSpec) -> dict[str, Any]:
+    v = spec_view(spec)
+    v["ordering"] = [{"id": o.id, "before_kind": o.before.kind, "after_kind": o.after.kind,
+                      "before_event": o.before_event, "after_event": o.after_event,
+                      "status": o.status.value} for o in spec.ordering]
+    return v
+
+
+def correct_messages_v4(spec: TaskSpec, text: str, scene_kinds: Optional[list[str]],
+                        context: Optional[dict[str, Any]]) -> list[dict[str, str]]:
+    payload: dict[str, Any] = {"specification": spec_view_v4(spec)}
+    if scene_kinds is not None:
+        payload["objects_in_scene"] = sorted(scene_kinds)
+    if context:
+        payload["context"] = context
+    payload["correction"] = text
+    return [{"role": "system", "content": CORRECT_SYSTEM_V4},
+            {"role": "user", "content": json.dumps(payload, indent=1, sort_keys=True)}]

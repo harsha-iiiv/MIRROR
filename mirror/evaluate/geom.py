@@ -187,3 +187,78 @@ def tilt_of(quat) -> float:
     w, x, y, z = (float(c) for c in quat)
     zz = 1.0 - 2.0 * (x * x + y * y)
     return math.degrees(math.acos(max(-1.0, min(1.0, zz))))
+
+
+# ------------------------------------------------------------- distance ---
+
+def quat_to_mat(q: np.ndarray) -> np.ndarray:
+    """(..., 4) w,x,y,z -> (..., 3, 3)."""
+    q = np.asarray(q, float)
+    q = q / np.linalg.norm(q, axis=-1, keepdims=True)
+    w, x, y, z = q[..., 0], q[..., 1], q[..., 2], q[..., 3]
+    return np.stack([
+        np.stack([1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)], -1),
+        np.stack([2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)], -1),
+        np.stack([2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)], -1)], -2)
+
+
+def box_box_distance(cA: np.ndarray, RA: np.ndarray, hA, cB: np.ndarray, RB: np.ndarray, hB,
+                     iters: int = 400) -> np.ndarray:
+    """Euclidean distance between solid oriented boxes (0 when they overlap).
+
+    cA (N, 3), RA (N, 3, 3), hA (3,) or (N, 3); B likewise or a single box.
+    Solves the box-constrained convex problem
+        min ||cA + RA a - cB - RB b||  s.t. |a| <= hA, |b| <= hB
+    with accelerated projected gradient (step 1/L, L = 4), so a segment
+    (half extents (0, 0, l)) or a point works as well. Converges to the exact
+    distance; the residual after ``iters`` iterations is far below a micrometre
+    for the box sizes in this task family."""
+    cA = np.atleast_2d(np.asarray(cA, float))
+    N = cA.shape[0]
+    RA = np.broadcast_to(np.asarray(RA, float), (N, 3, 3))
+    cB = np.broadcast_to(np.asarray(cB, float), (N, 3))
+    RB = np.broadcast_to(np.asarray(RB, float), (N, 3, 3))
+    hA = np.broadcast_to(np.asarray(hA, float), (N, 3))
+    hB = np.broadcast_to(np.asarray(hB, float), (N, 3))
+    d0 = cA - cB
+    a = np.clip(-np.einsum("nji,nj->ni", RA, d0), -hA, hA)
+    b = np.clip(np.einsum("nji,nj->ni", RB, d0), -hB, hB)
+    ya, yb, tk = a.copy(), b.copy(), 1.0
+    step = 0.25
+    for _ in range(iters):
+        d = d0 + np.einsum("nij,nj->ni", RA, ya) - np.einsum("nij,nj->ni", RB, yb)
+        ga = np.einsum("nji,nj->ni", RA, d)
+        gb = -np.einsum("nji,nj->ni", RB, d)
+        a1 = np.clip(ya - step * 2 * ga, -hA, hA)
+        b1 = np.clip(yb - step * 2 * gb, -hB, hB)
+        t1 = 0.5 * (1 + math.sqrt(1 + 4 * tk * tk))
+        ya = a1 + ((tk - 1) / t1) * (a1 - a)
+        yb = b1 + ((tk - 1) / t1) * (b1 - b)
+        a, b, tk = a1, b1, t1
+    d = d0 + np.einsum("nij,nj->ni", RA, a) - np.einsum("nij,nj->ni", RB, b)
+    return np.linalg.norm(d, axis=-1)
+
+
+def object_core(obj: ObjectSpec) -> tuple[tuple[float, float, float], float]:
+    """(core box half extents, radius): the object is the core box swept by a
+    ball of that radius. Cups and blocks are boxes (radius 0); a marker is a
+    capsule, i.e. its axis segment swept by its radius."""
+    if obj.kind == "marker":
+        return (0.0, 0.0, float(obj.size["half_length"])), float(obj.size["radius"])
+    return object_half_extents(obj), 0.0
+
+
+def object_obstacle_distance(obj: ObjectSpec, pos: np.ndarray, quat: np.ndarray, boxes: list) -> np.ndarray:
+    """Exact distance from the object's solid shape at poses (N, 3)/(N, 4) to
+    the nearest of ``boxes`` (oriented solid boxes)."""
+    pos = np.atleast_2d(np.asarray(pos, float))
+    if not boxes:
+        return np.full(pos.shape[0], np.inf)
+    core, radius = object_core(obj)
+    RA = quat_to_mat(quat)
+    out = np.full(pos.shape[0], np.inf)
+    for bx in boxes:
+        RB = quat_to_mat(np.asarray(bx.quat, float))
+        d = box_box_distance(pos, RA, core, np.asarray(bx.center, float), RB, np.asarray(bx.half, float))
+        out = np.minimum(out, d - radius)
+    return np.maximum(out, 0.0)
