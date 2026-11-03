@@ -94,6 +94,19 @@ def card_states(meta: ClipMeta, spec: TargetSpec = DEFAULT_TARGET, *, step: int 
     return ts, fs, vis
 
 
+def scan(meta: ClipMeta, spec: TargetSpec = DEFAULT_TARGET):
+    """One decoding pass: (card states, brightness series) for card_events / light_events."""
+    import cv2
+    det = cv2.aruco.ArucoDetector(spec.dictionary_obj(), cv2.aruco.DetectorParameters())
+    ts, fs, vis, br = [], [], [], []
+    for i, t, f in iter_frames(meta, gray=True):
+        _, ids, _ = det.detectMarkers(f)
+        ts.append(t); fs.append(i)
+        vis.append(ids is not None and spec.sync_marker_id in ids.ravel())
+        br.append(float(f[::4, ::4].mean()))
+    return (ts, fs, vis), (ts, fs, br)
+
+
 def card_events(meta: ClipMeta, spec: TargetSpec = DEFAULT_TARGET, *, states=None) -> list[SyncEvent]:
     ts, fs, vis = states if states is not None else card_states(meta, spec)
     return _transitions(ts, fs, vis, "card", SYNC_THRESHOLDS["min_stable_frames"])

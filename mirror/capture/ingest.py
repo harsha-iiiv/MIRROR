@@ -13,6 +13,8 @@
     objects                               one mapping per tracked object (see mirror.capture.proxy)
     prompts                               boxes [x, y, w, h] drawn on a frame of each take clip
     tags                                  {"95": "mug"} if a printed tag is taped to an object
+    tracker                               "classical" (default) or "manual" (baseline: clicked key frames only)
+    manual_keyframes                      {camera: {label: {frame: [u, v]}}} for the manual baseline
     identity_confirmations                [[camera, label, from_frame], ...] after review
     corrections                           event corrections after review
 Nothing is uploaded and no model is called. Model tracks (for example SAM)
@@ -109,7 +111,10 @@ def _load_inputs(d: Path):
         tags={int(k): v for k, v in (cfg.get("tags") or {}).items()} or None,
         tray=EV.TrayRegion(**cfg["tray"]) if cfg.get("tray") else None,
         identity_confirmations=[tuple(x) for x in cfg.get("identity_confirmations", [])],
-        corrections=[EV.Correction(**c) for c in cfg.get("corrections", [])])
+        corrections=[EV.Correction(**c) for c in cfg.get("corrections", [])],
+        tracker=cfg.get("tracker", "classical"),
+        manual_keyframes={cam: {lab: {int(k): tuple(v) for k, v in kf.items()} for lab, kf in d2.items()}
+                          for cam, d2 in (cfg.get("manual_keyframes") or {}).items()} or None)
 
 
 def cmd_run(d: Path) -> int:

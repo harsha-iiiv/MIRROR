@@ -151,7 +151,9 @@ def build_session(*, take: dict[str, str], lens: dict[str, str] | None = None, i
                   spec: TargetSpec = DEFAULT_TARGET, tags: dict[int, str] | None = None,
                   model_tracks: dict[str, TR.TrackSet] | None = None, tray: Optional[EV.TrayRegion] = None,
                   placement: Optional[PX.WorkspacePlacement] = None, synthetic: bool = False,
-                  corrections: Sequence[EV.Correction] = (), identity_confirmations: Sequence[tuple[str, str, int]] = ()) -> CaptureSession:
+                  corrections: Sequence[EV.Correction] = (), identity_confirmations: Sequence[tuple[str, str, int]] = (),
+                  manual_keyframes: dict[str, dict[str, dict[int, tuple[float, float]]]] | None = None,
+                  tracker: Literal["classical", "manual", "model"] = "classical") -> CaptureSession:
     """Offline pipeline. ``take`` maps camera name ("top", "side") to the take
     clip; ``lens`` maps camera name to its lens-calibration clip (or pass
     ``intrinsics``). ``identity_confirmations`` are (camera, label, from_frame)
@@ -221,8 +223,11 @@ def build_session(*, take: dict[str, str], lens: dict[str, str] | None = None, i
     sync = None
     if len(metas) >= 2 and "top" in metas and len(cams) >= 2:
         other = next(c for c in metas if c != "top")
-        ev_top = Y.card_events(metas["top"], spec) + Y.light_events(metas["top"])
-        ev_oth = Y.card_events(metas[other], spec) + Y.light_events(metas[other])
+        evs = {}
+        for c in ("top", other):
+            cards, light = Y.scan(metas[c], spec)
+            evs[c] = Y.card_events(metas[c], spec, states=cards) + Y.light_events(metas[c], series=light)
+        ev_top, ev_oth = evs["top"], evs[other]
         sync = Y.align(ev_top, ev_oth, top_meta=metas["top"], side_meta=metas[other])
         if not sync.ok:
             review.append(ReviewItem(code="sync_refused", severity="review",
@@ -232,13 +237,16 @@ def build_session(*, take: dict[str, str], lens: dict[str, str] | None = None, i
     tracks = {}
     for cam, m in metas.items():
         sets = []
-        if any(p.camera == cam for p in prompts):
+        if tracker == "manual":
+            if manual_keyframes and cam in manual_keyframes:
+                sets.append(TR.manual_track(m, manual_keyframes[cam], camera=cam))
+        elif tracker == "classical" and any(p.camera == cam for p in prompts):
             ts = TR.classical_track(m, prompts, camera=cam)
             for c2, lab, frm in identity_confirmations:
                 if c2 == cam and lab in ts.tracks:
                     TR.confirm_identity(ts, lab, frm)
             sets.append(ts)
-        if model_tracks and cam in model_tracks:
+        if model_tracks and cam in model_tracks and tracker in ("classical", "model"):
             sets.append(model_tracks[cam])
             if model_tracks[cam].model_origin:
                 s.model_calls.append({"camera": cam, "model": model_tracks[cam].model, "origin": model_tracks[cam].model_origin})
@@ -300,6 +308,7 @@ def build_session(*, take: dict[str, str], lens: dict[str, str] | None = None, i
         if any(tr.identity_uncertain):
             review.append(ReviewItem(code="identity_uncertain", severity="abstain", object=lab,
                                      message=f"The {lab} track was lost and found again; confirm it is the same object."))
+    s.notes.append(f"tracker: {tracker}")
     s.review = review
     s.finalise_kind()
     return s

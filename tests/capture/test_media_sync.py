@@ -49,6 +49,13 @@ def test_card_events_on_synthetic_clip(tmp_path, ffmpeg):
     assert abs(ev[1].t - 1.2) <= ev[1].uncertainty_s + 1e-3
 
 
+def test_single_pass_scan_matches_separate_detectors(tmp_path, ffmpeg):
+    m = _card_clip(tmp_path, [(0.5, 1.2)], n=24)
+    cards, light = Y.scan(m, SPEC)
+    assert Y.card_events(m, SPEC, states=cards) == Y.card_events(m, SPEC)
+    assert Y.light_events(m, series=light) == Y.light_events(m)
+
+
 def test_light_events_on_synthetic_clip(tmp_path, ffmpeg):
     times = S.frame_times(20, 10.0)
     frames = [np.full((60, 80, 3), 40 if 0.75 <= t < 1.25 else 160, np.uint8) for t in times]
