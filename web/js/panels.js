@@ -310,7 +310,7 @@ function WatchPanel({ ctx }) {
             <span>${cap(e.type)} <b>${e.object_id}</b></span></button></li>`)}</ol>
         <div class="row" style="margin-top:16px">
           ${snap.specs.length && snap.specs[0].demo_id === d.demo_id ? html`<button class=${ctx.story ? 'btn' : 'btn primary'} onClick=${() => ctx.setStep('interpret')}>See the interpretation</button>`
-            : html`<button class=${ctx.story ? 'btn' : 'btn primary'} disabled=${!!ctx.busy.interpret || ctx.isStatic}
+            : html`<button class=${ctx.story ? 'btn' : 'btn primary'} disabled=${!!ctx.busy.interpret || !!ctx.busy.demo || ctx.isStatic}
               onClick=${async () => { await ctx.action('interpret', () => api.post('interpret')); ctx.setStep('interpret'); }}>Interpret this demonstration</button>`}
         </div>
         <${JobLine} job=${ctx.busy.interpret} />
@@ -360,7 +360,7 @@ function InterpretPanel({ ctx }) {
   useEffect(() => setStaged({}), [spec?.version]);
   if (!spec) {
     return html`<div class="sec"><${Head} n="2" kicker="Interpret" title="What matters here?" lede="Interpret the demonstration to see the proposed task." />
-      <button class="btn primary" disabled=${!!ctx.busy.interpret || ctx.isStatic}
+      <button class="btn primary" disabled=${!!ctx.busy.interpret || !!ctx.demoSettling || ctx.isStatic}
         onClick=${() => ctx.action('interpret', () => api.post('interpret'))}>Interpret this demonstration</button>
       <${JobLine} job=${ctx.busy.interpret} /></div>`;
   }
@@ -939,6 +939,8 @@ function storyAction(ctx) {
   const specFresh = snap.specs.length && snap.specs[0].demo_id === snap.demo?.demo_id;
   const cv = correctionVersion(snap);
   const post = (k, path, body) => ctx.action(k, () => api.post(path, body));
+  if (ctx.demoSettling) return { label: 'Loading the demonstration…', disabled: true };
+  if (!snap.demo && step === 'watch') return { label: 'Load the reference demonstration', busy: 'demo', run: () => post('demo', 'demo/load') };
   switch (step) {
     case 'watch':
       return specFresh ? { label: nextLabel, run: go('interpret') }
@@ -1023,7 +1025,7 @@ export function StoryBar({ ctx }) {
       ${ctx.step === 'evidence' ? html`<${StoryResult} raw=${ctx.snap.evaluation} />` : ''}</div>
     <div class="story-act">
       <button class="btn ghost small" disabled=${ix === 0} onClick=${() => ctx.setStep(order[ix - 1])}>Back</button>
-      ${act ? html`<button class="btn primary" disabled=${!!busy || (act.label.startsWith('Next') && !enabled[order[ix + 1]]?.enabled)}
+      ${act ? html`<button class="btn primary" disabled=${!!act.disabled || !!busy || !!ctx.busy.demo || (act.label.startsWith('Next') && !enabled[order[ix + 1]]?.enabled)}
         onClick=${act.run}>${busy ? (busy.status === 'queued' && busy.queue_position ? `Waiting: ${ORD(busy.queue_position)} in line` : (busy.message?.split('\n')[0] || 'Working') + '…') : act.label}</button>` : ''}
       <button class="iconbtn" aria-label="Hide the guided story" title="Explore freely" onClick=${() => ctx.toggleStory(false)}>✕</button>
     </div>
