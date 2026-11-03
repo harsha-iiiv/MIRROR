@@ -213,10 +213,75 @@ def log_from_rollout_frames(rollout: Rollout, scene: SceneState) -> StateLog:
     rep = rollout.report
     status = {"execution_failed": "execution_failed", "timeout": "timeout"}.get(rep.status, "completed")
     dt = 1.0 / float(rollout.frame_hz or 30.0)
+    diffs = np.abs(np.diff(pos, axis=0))
+    nz = diffs[diffs > 1e-9]
+    quantum = float(round(np.min(nz), 6)) if nz.size else 0.0
     meta = {"status": status, "evidence_source": PLAYBACK_SOURCE, "contacts_logged": False,
+            "position_quantum_m": quantum,
+            "settle_note": "playback positions are rounded; motion of one rounding step per frame is "
+                           "treated as at rest",
             "frame_hz": rollout.frame_hz, "rollout_id": rep.rollout_id,
             "held_label": "derived from lift-off (object centre above its resting height)",
             "bodies_never_listed": [o for o in ids if o not in seen]}
     return StateLog(dt=dt, t=t, object_ids=ids, obj_pos=pos, obj_quat=quat, gripper_pos=gp,
                     gripper_quat=gq, gripper_width=gw, held=held, phase=phase, beads=beads,
                     contacts=[], meta=meta)
+
+
+def scene_from_rollout(rollout: Rollout, scene_id: Optional[str] = None) -> SceneState:
+    """Reconstruct a SceneState from a Rollout's own visual scene and first frame.
+
+    Used to re-check historical rollouts without regenerating their layouts.
+    Static geometry (tray, obstacle boxes) comes from the recorded visual
+    geoms; object poses from the first playback frame; object dimensions from
+    the standard kit geometry (the only kit the task family uses). Wall
+    segments become box obstacles, so clearance is measured to the same solid
+    geometry. The scene is labelled as reconstructed in ``notes``."""
+    from mirror.contracts import ObjectSpec, ObstacleSpec, Pose, TraySpec, Workspace
+    from mirror.geometry import BLOCK, CUP, MARKER, WORLD
+    if rollout.visual is None or not rollout.frames:
+        raise ValueError("rollout has no visual scene or frames to reconstruct from")
+    first = rollout.frames[0].bodies
+    trays, obstacles, objects = [], [], []
+    beads: dict[str, int] = {}
+    for name in first:
+        if "/bead" in name:
+            beads[name.split("/")[0]] = beads.get(name.split("/")[0], 0) + 1
+    for b in rollout.visual.bodies:
+        if b.name.startswith("tray"):
+            floor = next(g for g in b.geoms if (g.name or "").endswith("floor"))
+            xp = next((g for g in b.geoms if (g.name or "").endswith("wall_xp")), None)
+            yp = next((g for g in b.geoms if (g.name or "").endswith("wall_yp")), None)
+            cx, cy = floor.pos[0], floor.pos[1]
+            top = floor.pos[2] + floor.size[2]
+            hx = (xp.pos[0] - xp.size[0] - cx) if xp else floor.size[0]
+            hy = (yp.pos[1] - yp.size[1] - cy) if yp else floor.size[1]
+            trays.append(TraySpec(id=b.name, pose=Pose(pos=(cx, cy, top), quat=floor.quat),
+                                  inner_half=(round(hx, 6), round(hy, 6))))
+        elif b.static and b.name != "world":
+            for i, g in enumerate(b.geoms):
+                if g.type == "box":
+                    obstacles.append(ObstacleSpec(id=f"{b.name}" if len(b.geoms) == 1 else f"{b.name}#{i}",
+                                                  kind="box", pose=Pose(pos=g.pos, quat=g.quat),
+                                                  half=tuple(g.size[:3])))
+    for b in rollout.visual.bodies:
+        if b.static or b.name.startswith("gripper") or "/bead" in b.name or b.name not in first:
+            continue
+        kind = b.name.split("_")[0]
+        p = first[b.name]
+        if kind == "cup":
+            objects.append(ObjectSpec(id=b.name, kind="cup", size={"outer_half": CUP.outer_half, "wall": CUP.wall},
+                                      mass=CUP.mass, pose=p, beads=beads.get(b.name, 0)))
+        elif kind == "block":
+            objects.append(ObjectSpec(id=b.name, kind="block", size={"half": BLOCK.half}, mass=BLOCK.mass, pose=p))
+        elif kind == "marker":
+            objects.append(ObjectSpec(id=b.name, kind="marker",
+                                      size={"radius": MARKER.radius, "half_length": MARKER.half_length},
+                                      mass=MARKER.mass, pose=p))
+    g = first.get("gripper")
+    return SceneState(
+        scene_id=scene_id or rollout.report.scene_id, split="custom", objects=objects, trays=trays,
+        obstacles=obstacles,
+        workspace=Workspace(x_range=WORLD.workspace_x, y_range=WORLD.workspace_y, z_range=WORLD.workspace_z),
+        gripper_start=g if g is not None else Pose(pos=(0.0, 0.0, 0.3)),
+        notes="reconstructed from a recorded rollout (visual geoms + first playback frame; standard kit geometry)")

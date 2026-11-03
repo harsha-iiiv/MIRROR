@@ -82,7 +82,11 @@ def _speeds(log: StateLog) -> np.ndarray:
         return np.zeros((n, k))
     dt = np.diff(log.t)
     dt = np.where(dt > 0, dt, log.dt)
-    v = np.linalg.norm(np.diff(log.obj_pos, axis=0), axis=-1) / dt[:, None]
+    step = np.linalg.norm(np.diff(log.obj_pos, axis=0), axis=-1)
+    q = float(log.meta.get("position_quantum_m", 0.0) or 0.0)
+    if q > 0:   # playback positions are rounded: a step of one quantum is not resolvable motion
+        step = np.where(step <= q * np.sqrt(3) + 1e-12, 0.0, step)
+    v = step / dt[:, None]
     return np.vstack([v[:1], v])
 
 
