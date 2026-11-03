@@ -482,15 +482,20 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
 
 def _tilt_unobserved(o, phase: str) -> bool:
     """True when the evidence did not see the object's tilt in this phase:
-    an explicit end/start tilt of None, or observability coverage under 80 %
-    of the carry (perception evidence for real or rendered video)."""
+    an explicit end/start tilt of None, observability coverage under 80 %
+    of the carry, or no carry interval detected for an object that ended in
+    the tray (perception evidence for real or rendered video)."""
     if phase == "final":
         return getattr(o, "end_tilt_deg", 0.0) is None
     obs = getattr(o, "observability", None) or {}
     tilt = obs.get("tilt") if isinstance(obs, dict) else getattr(obs, "tilt", None)
     if isinstance(tilt, dict):
         frames, seen = tilt.get("carry_frames") or 0, tilt.get("carry_observed_frames") or 0
-        return frames > 0 and seen / frames < 0.8
+        if frames == 0:
+            # No carry interval was detected, yet the object ended in the tray: it was
+            # carried while the evidence did not see it, so its tilt was not observed.
+            return bool(getattr(o, "ended_in_tray", None))
+        return seen / frames < 0.8
     return False
 
 
