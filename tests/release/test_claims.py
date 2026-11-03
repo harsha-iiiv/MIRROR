@@ -94,15 +94,64 @@ def test_refusal_claim_holds_at_every_price_tested(obj):
         assert blocked[k]["completion"] == 0 and blocked[k]["planning_failures_proven"] == 10, k
 
 
-def test_single_marked_placeholder_for_ordering_and_clearance():
+DEMO = ROOT / "results" / "demos" / "corrections_calibrated_v1"
+
+
+def _demo(price: str, case: str) -> dict:
+    return json.loads((DEMO / f"price_{price}" / case / "summary.json").read_text())
+
+
+def _counts(price: str, case: str) -> tuple[int, int, int, int]:
+    tr = _demo(price, case)["transfer"]
+    return (len(tr), sum(x["old_under_new"]["status"] == "constraint_violated" for x in tr),
+            sum(x["new"]["status"] == "success" for x in tr),
+            sum(x["old"]["object_order"] != x["new"]["object_order"] for x in tr))
+
+
+def test_calibrated_demo_evidence_is_small_complete_and_labelled():
+    files = [p for p in DEMO.rglob("*") if p.is_file()]
+    assert sum(p.stat().st_size for p in files) < 3_000_000          # no rollout dumps
+    assert not any("rollout" in p.name for p in files)
+    for price in ("0.05", "0.2445"):
+        m = json.loads((DEMO / f"price_{price}" / "manifest.json").read_text())
+        assert m["commit"].startswith("09bb0a4") and m["dirty"] is False
+        assert m["split"] == "dev" and m["model_calls"] == 0 and m["platform"]["machine"] == "x86_64"
+        assert abs(m["planner_config"]["rotation_penalty"] - float(price)) < 1e-9
+        assert all(1 <= s < 9000 for _, s in m["transfer_seeds"])     # development seeds only
+    readme = (DEMO / "README.md").read_text()
+    assert "Not a frozen evaluation" in readme and "09bb0a4" in readme and "x86_64" in readme
+
+
+def test_calibrated_demo_claims_recompute_from_summaries():
+    assert _counts("0.2445", "ordering") == (6, 6, 6, 6)
+    assert _counts("0.2445", "ordering_start") == (6, 6, 6, 6)
+    assert _counts("0.2445", "clearance")[:3] == (6, 6, 6)
+    assert _counts("0.2445", "multi_turn")[:3] == (6, 6, 6)
+    assert _counts("0.2445", "object_scope")[1] == 0 and _counts("0.05", "object_scope")[1] == 5
+    assert _counts("0.2445", "phase_scope")[1] == 0
+    tr = _demo("0.2445", "clearance")["transfer"]
+    old = [x["old"]["measures"]["cup_0"]["min_transport_clearance_m"] * 100 for x in tr]
+    new = [x["new"]["measures"]["cup_0"]["min_transport_clearance_m"] * 100 for x in tr]
+    assert (round(min(old), 1), round(max(old) + 1e-9, 1)) == (3.0, 4.1)
+    assert (round(min(new), 1), round(max(new), 1)) == (8.0, 9.1)
+    blk = _demo("0.2445", "blocked_refusal")["transfer"]
+    assert len(blk) == 3 and all(x["new"]["infeasibility"]["proven"] for x in blk)
+    assert all(x["old"]["measures"]["cup_0"]["max_transport_tilt_deg"] > 85 for x in blk)
+    for price in ("0.05", "0.2445"):
+        for case in ("ambiguous", "unsupported"):
+            assert _demo(price, case)["turns"][0]["outcome"] in ("clarify", "asks"), (price, case)
+
+
+def test_calibrated_demo_statements_present_and_no_placeholder_left():
     readme = _t("README.md")
-    assert readme.count("PENDING") == 1
-    i = readme.index("PENDING")
-    assert "ordering and clearance corrections at the calibrated price" in readme[i: i + 200]
+    dev = " ".join((ROOT / "docs" / "submission" / "DEVPOST.md").read_text().split())
+    for t in (readme, dev):
+        assert "PENDING" not in t
+        assert "corrections_calibrated_v1" in t and "not a frozen evaluation" in t
+        assert "6/6" in t and "3.0 to 4.1 cm" in t and "8.0 to 9.1 cm" in t
+        assert "Tilt corrections change nothing at this price" in t and "5/6 at 0.05" in t
     for name in ("CLAIMS.md", "EVALUATION.md", "ARCHITECTURE.md"):
         assert "PENDING" not in _t(name), name
-    dev = " ".join((ROOT / "docs" / "submission" / "DEVPOST.md").read_text().split())
-    assert dev.count("PENDING") == 1 and "ordering and clearance" in dev[dev.index("PENDING"): dev.index("PENDING") + 200]
 
 
 # ---------------------------------------------------------------- video, robustness
@@ -181,10 +230,7 @@ def _published() -> dict[str, str]:
 
 @pytest.mark.parametrize("pattern,why", RETIRED)
 def test_retired_phrasings_absent(pattern, why):
-    if pattern == "PENDING":
-        docs = {k: v for k, v in _all().items() if k != "README.md"}
-    else:
-        docs = _published()
+    docs = _published()
     for name, t in docs.items():
         for m in re.finditer(pattern, t):
             ctx = t[max(0, m.start() - 60): m.end() + 60]
