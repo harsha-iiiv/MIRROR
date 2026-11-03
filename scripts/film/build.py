@@ -473,8 +473,8 @@ def judging_shots(ctx):
             text_block(d, (x0 + 90, y), GOAL_WORDS.get(rid, desc)[:80], font("regular", 28), fill=INK, max_w=900)
             stx = 1560
             if changed:
-                text_block(d, (stx - 60, y), f"was {before.get(rid)}, now", font("regular", 26), fill=A(MUTED, a))
-                text_block(d, (stx + 150, y), st, font("bold", 26), fill=A(RED, a))
+                text_block(d, (stx - 110, y), f"was {before.get(rid)}, now", font("regular", 26), fill=A(MUTED, a))
+                text_block(d, (stx + 120, y), st, font("bold", 26), fill=A(RED, a))
             else:
                 text_block(d, (stx, y), st, font("regular", 26), fill=MUTED)
             y += 62
