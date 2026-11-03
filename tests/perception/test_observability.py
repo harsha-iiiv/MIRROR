@@ -205,3 +205,14 @@ def test_charuco_board_is_an_accepted_intrinsics_source():
     import pydantic
     with pytest.raises(pydantic.ValidationError):
         O.CalibrationRecord(camera="top", intrinsics_source="charuco", extrinsics_source="calibration_board")
+
+
+def test_spec_agreement_on_identical_simulator_traces():
+    """Same trace on both sides: no questions, equal before and after (scripted) answers."""
+    from mirror.perception.analysis import spec_agreement
+    from tests.interpret.fixtures import make_demo
+    tr = make_demo()
+    r = spec_agreement(tr, tr)
+    assert r["questions"] == 0 and r["scripted_answers"] == {}
+    assert r["equal_without_answers"] and r["equal_without_answers_and_no_questions"] and r["equal_after_scripted_answers"]
+    assert r["missing_without_answers"] == [] and r["extra_after_answers"] == []
