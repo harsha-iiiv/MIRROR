@@ -153,6 +153,7 @@ def test_stale_generation_is_refused_and_page_catches_up(fixture_data, browser):
 def _with_tour(fixture_data: Path, dest: Path) -> Path:
     """Copy the fixture data and add a synthetic recorded tour (layout test data, not a recording)."""
     shutil.copytree(fixture_data, dest)
+    shutil.rmtree(dest / "tour", ignore_errors=True)        # the export may ship the recorded tour; replace it
     snap = json.loads((dest / "session.json").read_text())
     world = next(r for r in snap["rollouts"] if "world" in r["tags"])
     fixed = next(r for r in snap["rollouts"] if "corrected" in r["tags"])
@@ -194,7 +195,13 @@ def test_recorded_tour_without_a_server(tmp_path, fixture_data, browser):
 
 
 def test_static_site_without_a_tour_says_so(tmp_path, fixture_data, browser):
-    site = build_site(tmp_path / "site", fixture_data)
+    data = tmp_path / "data"
+    shutil.copytree(fixture_data, data)
+    shutil.rmtree(data / "tour", ignore_errors=True)
+    snap = json.loads((data / "session.json").read_text())
+    snap.pop("tour", None)
+    (data / "session.json").write_text(json.dumps(snap))
+    site = build_site(tmp_path / "site", data)
     with StaticServer(site) as srv:
         ctx, page, errors = _page(browser, srv.url + "?step=challenge")
         page.wait_for_selector("text=Testing runs on the live simulation", timeout=30_000)
