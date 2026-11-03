@@ -114,9 +114,10 @@ def test_live_switch_connects_and_falls_back(tmp_path):
                MIRROR_CORS_ORIGINS=f"http://127.0.0.1:{web_port}", MIRROR_REQUIRE_TOKEN="1" if tokens else "0")
     web = subprocess.Popen([sys.executable, "-m", "http.server", str(web_port), "--bind", "127.0.0.1"], cwd=out,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+    api_log = open(tmp_path / "api.log", "w")
     api = subprocess.Popen([sys.executable, "-m", "uvicorn", "mirror.studio.app:app", "--host", "127.0.0.1",
                             "--port", str(api_port)], cwd=ROOT, env=env,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+                           stdout=api_log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
     errors = []
     try:
         time.sleep(3.0)
@@ -141,7 +142,10 @@ def test_live_switch_connects_and_falls_back(tmp_path):
             try:
                 pg.get_by_text("What MIRROR thinks matters").wait_for(timeout=60_000)
             except Exception:
-                raise AssertionError("no interpretation shown; page said: " + pg.locator("body").inner_text()[:1500])
+                body = pg.locator("body").inner_text()
+                api_log.flush()
+                raise AssertionError("no interpretation shown; page said: " + body[-2500:] + "\nserver log tail: "
+                                     + (tmp_path / "api.log").read_text()[-4000:] + "\npage errors: " + repr(errors))
             api.terminate()
             api.wait(timeout=10)
             pg.reload()
