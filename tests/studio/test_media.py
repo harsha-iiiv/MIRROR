@@ -37,9 +37,11 @@ def wav_bytes(seconds=1.0, rate=16000, channels=1, width=2):
 @pytest.fixture()
 def client():
     with TestClient(create_app(fixture_manager())) as c:
-        sid = c.post("/api/session").json()["session"]
-        c.headers.update({"X-Mirror-Session": sid})
+        r = c.post("/api/session").json()
+        sid = r["session"]
+        c.headers.update({"X-Mirror-Session": sid, "X-Mirror-Token": r["token"]})
         c.sid = sid
+        c.token = r["token"]
         yield c
 
 
@@ -81,7 +83,7 @@ def test_upload_validation_and_processing(client):
     assert c.post("/api/video/upload?view=top", content=b"not a video at all, definitely").status_code == 422
     assert c.post("/api/video/upload?view=front", content=b"x" * 100).status_code in (409, 422)
     wait(c, c.post("/api/video/process", json={"top": "bundled"}).json())   # renders the fixture video
-    path = c.app.state.manager.get(c.sid).video_file("bundled-top")
+    path = c.app.state.manager.get(c.sid, c.token).video_file("bundled-top")
     r = c.post("/api/video/upload?view=top", content=open(path, "rb").read())
     assert r.status_code == 200, r.text
     vid = r.json()["id"]

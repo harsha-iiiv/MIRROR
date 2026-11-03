@@ -161,7 +161,8 @@ def available() -> dict:
 # ---------------------------------------------------------------- stages ---
 
 def perceive(top: str, side: Optional[str] = None, progress: Optional[Callable] = None,
-             ground_truth: Optional[str] = None, demo_id: Optional[str] = None, **kw) -> dict:
+             ground_truth: Optional[str] = None, demo_id: Optional[str] = None,
+             footage: Optional[str] = None, **kw) -> dict:
     """Video(s) -> reconstructed DemoTrace + per-object tracks (normalised for the overlay).
 
     ``ground_truth``: a rendered demonstration's manifest; when given, the
@@ -177,6 +178,10 @@ def perceive(top: str, side: Optional[str] = None, progress: Optional[Callable] 
     extra = {"return_details": True} if "return_details" in params else {}
     if demo_id and "demo_id" in params:
         extra["demo_id"] = demo_id       # stable id: it reaches the proposal prompt (and its recordings)
+    if "footage" in params:
+        # "rendered" only for videos rendered from the simulator; None for visitor uploads, which
+        # perception then marks unverified (assumed calibration) and asks the visitor about.
+        extra["footage"] = footage
     with capture_calls() as calls:
         res = f(top, side, **extra)
     lat = time.time() - t0

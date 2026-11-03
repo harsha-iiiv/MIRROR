@@ -1,0 +1,213 @@
+{
+ "packet": "mirror-study-tasks/1",
+ "note": "Study tasks for the impact pilot. Work orders are prose; acceptance edits are for scoring only and are never shown to participants. Transfer layouts use reserved development seeds 9700-9749.",
+ "time_limit_s": 480,
+ "tasks": [
+  {
+   "id": "T0",
+   "set": "practice",
+   "title": "Practice",
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "work_order": "The customer wants the block to end up standing upright in the tray.",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "upright",
+      "object": "block",
+      "phase": "final",
+      "max_tilt_deg": 15
+     }
+    ]
+   },
+   "transfer_seeds": []
+  },
+  {
+   "id": "T1",
+   "set": "A",
+   "title": "Loose fill",
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "shortcut",
+    "seed": 9700
+   },
+   "work_order": "Quality reports beads on the floor after the cup goes through the slot in the wall. The packaging standard says containers with loose fill must stay within 20 degrees of level whenever they are being handled. Nothing changes for the other parts.",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "upright",
+      "object": "cup",
+      "phase": "transport",
+      "max_tilt_deg": 20
+     }
+    ]
+   },
+   "transfer_seeds": [
+    9710,
+    9711,
+    9712
+   ]
+  },
+  {
+   "id": "T2",
+   "set": "A",
+   "title": "Cracked caps",
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "mixed",
+    "seed": 9701
+   },
+   "work_order": "Marker caps are cracking. Video shows the marker clipping the wall on the way to the tray. Markers must not touch fixtures while they are moved; the other parts are not affected.",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "forbidden_contact",
+      "object": "marker",
+      "phase": "transport",
+      "with_groups": [
+       "obstacle"
+      ]
+     }
+    ]
+   },
+   "transfer_seeds": [
+    9713,
+    9714,
+    9715
+   ]
+  },
+  {
+   "id": "T3",
+   "set": "A",
+   "title": "Picking order",
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "mixed",
+    "seed": 9702
+   },
+   "work_order": "The downstream picker takes the block first and the marker last, so the block has to be in the tray before the marker goes in.",
+   "acceptance": {
+    "orderings": [
+     {
+      "before": "block",
+      "after": "marker"
+     }
+    ]
+   },
+   "transfer_seeds": [
+    9716,
+    9717,
+    9718
+   ]
+  },
+  {
+   "id": "T4",
+   "set": "B",
+   "title": "Label smear",
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "shortcut",
+    "seed": 9703
+   },
+   "work_order": "An audit found smeared labels on blocks. The label smears if the block is tipped more than 30 degrees while it is carried. Only the block carries this label.",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "upright",
+      "object": "block",
+      "phase": "transport",
+      "max_tilt_deg": 30
+     }
+    ]
+   },
+   "transfer_seeds": [
+    9719,
+    9720,
+    9721
+   ]
+  },
+  {
+   "id": "T5",
+   "set": "B",
+   "title": "Scuffed cup",
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "mixed",
+    "seed": 9704
+   },
+   "work_order": "Cups arrive scuffed. The cup must keep at least 2 cm from walls and other obstacles while it is being moved. The block and marker are fine as they are.",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "keep_clearance",
+      "object": "cup",
+      "phase": "transport",
+      "min_m": 0.02
+     }
+    ]
+   },
+   "transfer_seeds": [
+    9722,
+    9723,
+    9724
+   ]
+  },
+  {
+   "id": "T6",
+   "set": "B",
+   "title": "Separate supply",
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "mixed",
+    "seed": 9705
+   },
+   "work_order": "From next week the marker is shipped separately. It should be left on the table; only the cup and the block are packed.",
+   "acceptance": {
+    "goals": [
+     {
+      "object": "marker",
+      "status": "rejected"
+     }
+    ]
+   },
+   "transfer_seeds": [
+    9725,
+    9726,
+    9727
+   ]
+  },
+  {
+   "id": "T7",
+   "set": "reteach",
+   "title": "Level cup (reteach comparison)",
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "work_order": "Beads spill from the cup on this layout. The cup must stay level (within 15 degrees) the whole time it is carried.",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "upright",
+      "object": "cup",
+      "phase": "transport",
+      "max_tilt_deg": 15
+     }
+    ]
+   },
+   "transfer_seeds": [
+    9728,
+    9729,
+    9730
+   ]
+  }
+ ]
+}

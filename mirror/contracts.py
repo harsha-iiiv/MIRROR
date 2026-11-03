@@ -20,7 +20,7 @@ Conventions (apply everywhere):
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Literal, Optional
+from typing import Any, ClassVar, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_serializer
 
@@ -28,7 +28,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_serializer
 from mirror.observability import TraceEvidence  # noqa: E402
 # --- end perception block ---
 
-CONTRACT_VERSION = "1.1"
+CONTRACT_VERSION = "1.2"
 
 Vec3 = tuple[float, float, float]
 Quat = tuple[float, float, float, float]  # (w, x, y, z)
@@ -38,6 +38,34 @@ IDENTITY_QUAT: Quat = (1.0, 0.0, 0.0, 0.0)
 
 class _Model(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=False)
+
+
+class _Additive(_Model):
+    """Model with fields added after contract 1.1.
+
+    Fields named in ``_OMIT_AT_DEFAULT`` are left out of serialized output while
+    they hold their default value, so artifacts written before the field existed
+    serialize byte-identically after a load/dump round trip (hashes of frozen
+    specifications and recorded prompts stay valid)."""
+
+    _OMIT_AT_DEFAULT: ClassVar[dict[str, Any]] = {}
+
+    @model_serializer(mode="wrap")
+    def _omit_defaults(self, handler):
+        data = handler(self)
+        if isinstance(data, dict):
+            for k, default in self._OMIT_AT_DEFAULT.items():
+                if k in data and _is_default(data[k], default):
+                    del data[k]
+        return data
+
+
+def _is_default(value: Any, default: Any) -> bool:
+    if isinstance(default, Enum):
+        default = default.value
+    if isinstance(value, Enum):
+        value = value.value
+    return value == default
 
 
 class Pose(_Model):
@@ -228,12 +256,38 @@ class Goal(_Model):
     provenance: Provenance
 
 
-class OrderingConstraint(_Model):
+OrderingEvent = Literal["grasp_start", "placement_complete"]
+"""Execution events an ordering rule can relate (contract 1.2).
+
+grasp_start: the first time the object is taken by the gripper (dense step
+  log: first step of its first carried interval, from finger contact or
+  lift-off; playback frames: first lift-off, an upper bound on the grasp).
+placement_complete: the object, after its last release, rests settled inside
+  the destination tray. If it does not end inside the tray the placement never
+  completed.
+See docs/RULES.md for the exact monitor."""
+
+
+class OrderingConstraint(_Additive):
+    """Every object matched by ``before`` reaches ``before_event`` strictly
+    before any object matched by ``after`` reaches ``after_event``.
+
+    The default (placement_complete before grasp_start) is strict sequencing:
+    the earlier objects are packed before the later ones are touched. It is
+    also what every ordering meant before contract 1.2, when the fields did not
+    exist; such specifications load with these defaults."""
+
+    _OMIT_AT_DEFAULT: ClassVar[dict[str, Any]] = {
+        "before_event": "placement_complete", "after_event": "grasp_start", "description": ""}
+
     id: str
     before: ObjectSelector
     after: ObjectSelector
     status: Status = Status.proposed
     provenance: Provenance
+    before_event: OrderingEvent = "placement_complete"
+    after_event: OrderingEvent = "grasp_start"
+    description: str = ""
 
 
 Phase = Literal["final", "transport", "always"]
@@ -277,7 +331,7 @@ class Uncertainty(_Model):
 class CorrectionRecord(_Model):
     version: int  # the spec version this correction produced
     text: str
-    kind: Literal["correction", "clarification_answer", "confirmation"]
+    kind: Literal["correction", "clarification_answer", "confirmation", "revert"]
     diff: list["SpecOp"] = Field(default_factory=list)
     model: Optional[str] = None
 
@@ -400,6 +454,35 @@ class ViolationInterval(_Model):
     detail: str = ""
 
 
+Verdict = Literal["satisfied", "violated", "unknown", "not_applicable", "not_evaluated"]
+
+
+class RuleResult(_Model):
+    """The checker's verdict on one goal, constraint or ordering rule (1.2).
+
+    verdict:
+      satisfied       the evidence shows the rule held (``detail`` says when it
+                      held vacuously, e.g. the constrained object never moved)
+      violated        the evidence shows it did not
+      unknown         the evidence cannot settle it (object missing from the
+                      log, signal not recorded, events tied within the timing
+                      resolution). Never counted as success when enforced.
+      not_applicable  the selector matches no object in this scene
+      not_evaluated   rejected rules: recorded, never checked
+    ``enforced`` is True only for confirmed constraints and orderings and for
+    active (non-rejected) goals; only enforced results affect the status."""
+
+    rule_id: str
+    kind: Literal["goal", "constraint", "ordering"]
+    type: str
+    status: Status
+    enforced: bool
+    verdict: Verdict
+    objects: list[str] = Field(default_factory=list)
+    detail: str = ""
+    evidence: dict[str, Any] = Field(default_factory=dict)
+
+
 class ObjectOutcome(_Model):
     object_id: str
     in_target: bool
@@ -411,14 +494,20 @@ class ObjectOutcome(_Model):
     beads_in_container: int = 0  # at end of rollout
 
 
-class RolloutReport(_Model):
+class RolloutReport(_Additive):
+    """``unverified`` (1.2): every enforced rule that could be decided held and
+    the task completed, but at least one enforced rule could not be verified
+    from the evidence. It is not a success."""
+
+    _OMIT_AT_DEFAULT: ClassVar[dict[str, Any]] = {"rule_results": [], "evidence_source": ""}
+
     rollout_id: str
     scene_id: str
     spec_id: str
     spec_version: int
     condition: str = ""  # e.g. "original" / "corrected"
     status: Literal["success", "task_incomplete", "constraint_violated",
-                    "planning_failed", "execution_failed", "timeout"]
+                    "planning_failed", "execution_failed", "timeout", "unverified"]
     plan_status: str = ""
     plan_reason: str = ""
     route_labels: list[str] = Field(default_factory=list)
@@ -437,6 +526,8 @@ class RolloutReport(_Model):
     checker: str = ""
     ground_truth_use: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
+    rule_results: list[RuleResult] = Field(default_factory=list)
+    evidence_source: str = ""   # "dense_state_log" | "playback_frames" (1.2)
 
 
 class Rollout(_Model):

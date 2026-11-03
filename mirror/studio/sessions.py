@@ -220,15 +220,22 @@ def budget_error_class():
 
 class BudgetedClient:
     """Wraps an interpreter client: every structured model request takes one
-    unit of budget first. Everything else is delegated unchanged."""
+    unit of budget first (and, when set, one unit of the client address's hourly
+    allowance). Everything else is delegated unchanged."""
 
-    def __init__(self, inner: Any, budget: ModelBudget, session_id: str):
+    def __init__(self, inner: Any, budget: ModelBudget, session_id: str, admit: Optional[Callable[[], None]] = None):
         self._inner = inner
         self._budget = budget
         self._sid = session_id
         self._exc = budget_error_class()
+        self.admit = admit
 
     def complete_json(self, *a, **k):
+        if self.admit is not None:
+            try:
+                self.admit()
+            except Exception as exc:  # noqa: BLE001 - surfaced as a budget refusal (offline fallback)
+                raise self._exc(str(exc))
         why = self._budget.take(self._sid)
         if why:
             raise self._exc(why)
@@ -297,44 +304,204 @@ def _default_base() -> str:
 
 
 class SessionManager:
+    """Sessions are bearer capabilities: an unguessable public id plus a secret token.
+
+    Only the token's SHA-256 is kept. With MIRROR_STUDIO_STATE set, every session is
+    persisted there and restored on first use after a server restart (same id and
+    token); an idle-expired session's state is deleted. Admission is limited per
+    client address (mirror/studio/admission.py) and globally (max sessions, job gate,
+    model budgets). A newcomer may only displace a session idle for at least
+    MIRROR_EVICT_MIN_IDLE_S seconds (default 300), never one with work in progress."""
+
     def __init__(self, factory: Optional[Callable[[str, "SessionManager"], Any]] = None, *,
                  max_sessions: Optional[int] = None, idle_s: Optional[float] = None,
                  gate: Optional[JobGate] = None, budget: Optional[ModelBudget] = None,
-                 clock: Callable[[], float] = time.monotonic):
+                 clock: Callable[[], float] = time.monotonic, admission=None, state_dir=None,
+                 records=None, media_quota=None, require_token: Optional[bool] = None,
+                 evict_min_idle_s: Optional[float] = None):
+        from pathlib import Path
+        from .admission import Admission
+        from .uploads import MediaQuota, UploadLimits
         self.max_sessions = max(1, max_sessions if max_sessions is not None else _env_int("MIRROR_MAX_SESSIONS", 6))
         self.idle_s = float(idle_s if idle_s is not None else _env_int("MIRROR_SESSION_IDLE_S", 1800))
+        self.evict_min_idle_s = float(evict_min_idle_s if evict_min_idle_s is not None
+                                      else _env_int("MIRROR_EVICT_MIN_IDLE_S", 300))
         self.gate = gate or JobGate()
         self.budget = budget or ModelBudget()
         self.meta_budgets = meta_budgets(clock)
         self.clock = clock
         self.factory = factory or _default_factory
+        self.admission = admission if admission is not None else Admission(clock=clock)
+        self.require_token = (os.environ.get("MIRROR_REQUIRE_TOKEN", "1") != "0") if require_token is None else require_token
+        raw_state = state_dir if state_dir is not None else (os.environ.get("MIRROR_STUDIO_STATE") or None)
+        self.state_dir = Path(raw_state) if raw_state else None
+        if self.state_dir is not None:
+            (self.state_dir / "sessions").mkdir(parents=True, exist_ok=True)
+        self.media_quota = media_quota or MediaQuota(UploadLimits.from_env().max_global_bytes)
+        self._records = records
         self._lock = threading.RLock()
         self._sessions: dict[str, Any] = {}
         self._last: dict[str, float] = {}
+        self._tokens: dict[str, str] = {}      # sid -> sha256(token)
+        self._addr: dict[str, str] = {}
         self.started = time.time()
+        self.restored = 0
+
+    # -- shared stores
+    @property
+    def records(self):
+        if self._records is None:
+            import tempfile
+            from pathlib import Path
+            from .records import RecordStore
+            raw = os.environ.get("MIRROR_RECORD_STORE")
+            root = Path(raw) if raw else (self.state_dir / "records" if self.state_dir is not None
+                                          else Path(tempfile.mkdtemp(prefix="mirror-records-")))
+            self._records = RecordStore(root)
+        return self._records
+
+    def _session_dir(self, sid: str):
+        return self.state_dir / "sessions" / sid if self.state_dir is not None else None
+
+    @staticmethod
+    def _hash(token: str) -> str:
+        import hashlib
+        return hashlib.sha256(token.encode()).hexdigest()
+
+    def _wire(self, sid: str, svc: Any, addr: str) -> Any:
+        """Give a service the manager's shared limits and stores (works with any factory)."""
+        for name, val in (("admission", self.admission), ("client_addr", addr), ("records", self.records)):
+            if hasattr(svc, name) or name in ("admission", "client_addr", "records"):
+                try:
+                    setattr(svc, name, val)
+                except AttributeError:
+                    pass
+        media = getattr(svc, "media", None)
+        if media is not None and getattr(media, "quota", None) is None:
+            media.quota = self.media_quota
+        client = getattr(getattr(svc, "session", None), "client", None)
+        if isinstance(client, BudgetedClient):
+            adm = self.admission
+            client.admit = lambda: adm.check("model", addr)
+        d = self._session_dir(sid)
+        if d is not None and hasattr(svc, "state_dir"):
+            svc.state_dir = d
+        return svc
 
     # -- lifecycle
-    def create(self) -> tuple[str, Any]:
+    def create(self, addr: str = "local") -> tuple:
+        """New session for a client address. Returns (sid, token, service)."""
+        import json
         with self._lock:
             self.sweep()
-            if len(self._sessions) >= self.max_sessions:
-                idle = [sid for sid in sorted(self._last, key=self._last.get) if not self._busy(sid)]
+            self.admission.check("session", addr)
+            mine = [s for s in sorted(self._last, key=self._last.get) if self._addr.get(s) == addr]
+            from .admission import LOOPBACK
+            if addr != LOOPBACK and self.admission.live_per_addr > 0 and len(mine) >= self.admission.live_per_addr:
+                idle = [s for s in mine if not self._busy(s)]
                 if not idle:
+                    self.admission.give_back("session", addr)
+                    from .admission import RateLimited
+                    raise RateLimited(f"your network already has {len(mine)} live sessions with work in progress", 60)
+                self.close(idle[0], reason="replaced by a newer session from the same network")
+            if len(self._sessions) >= self.max_sessions:
+                now = self.clock()
+                idle = [sid for sid in sorted(self._last, key=self._last.get)
+                        if not self._busy(sid) and now - self._last[sid] >= self.evict_min_idle_s]
+                if not idle:
+                    self.admission.give_back("session", addr)
                     raise ServerBusy(f"all {self.max_sessions} live sessions are in use")
                 self.close(idle[0], reason="made room for a new visitor")
             sid = secrets.token_urlsafe(18)
-            svc = self.factory(sid, self)
+            token = secrets.token_urlsafe(24)
+            svc = self._wire(sid, self.factory(sid, self), addr)
             self._sessions[sid] = svc
             self._last[sid] = self.clock()
-            return sid, svc
+            self._tokens[sid] = self._hash(token)
+            self._addr[sid] = addr
+            d = self._session_dir(sid)
+            if d is not None:
+                d.mkdir(parents=True, exist_ok=True)
+                (d / "auth.json").write_text(json.dumps({"token_sha256": self._tokens[sid], "addr": addr,
+                                                         "created": time.time(), "last_seen": time.time()}))
+            return sid, token, svc
 
-    def get(self, sid: Optional[str]) -> Any:
+    def _check_token(self, sid: str, token: Optional[str]) -> None:
+        import hmac
+        if not self.require_token:
+            return
+        if not token:
+            raise TokenRequired("this session needs its token (X-Mirror-Token)")
+        if not hmac.compare_digest(self._tokens.get(sid, ""), self._hash(token)):
+            raise TokenInvalid("wrong session token")
+
+    def _restore(self, sid: str, token: Optional[str]) -> Any:
+        """Bring back a persisted session after a restart (caller holds the lock)."""
+        import json
+        d = self._session_dir(sid)
+        if d is None or not (d / "auth.json").exists() or not (d / "service.json").exists():
+            raise SessionExpired(sid)
+        auth = json.loads((d / "auth.json").read_text())
+        self._tokens[sid] = auth.get("token_sha256", "")
+        try:
+            self._check_token(sid, token)
+        except (TokenRequired, TokenInvalid):
+            self._tokens.pop(sid, None)
+            raise
+        if time.time() - float(auth.get("last_seen") or 0) > self.idle_s:
+            self._tokens.pop(sid, None)
+            import shutil
+            shutil.rmtree(d, ignore_errors=True)
+            raise SessionExpired(sid)
+        if len(self._sessions) >= self.max_sessions:
+            now = self.clock()
+            idle = [s for s in sorted(self._last, key=self._last.get)
+                    if not self._busy(s) and now - self._last[s] >= self.evict_min_idle_s]
+            if not idle:
+                self._tokens.pop(sid, None)
+                raise ServerBusy(f"all {self.max_sessions} live sessions are in use")
+            self.close(idle[0], reason="made room for a returning visitor")
+        addr = auth.get("addr") or "unknown"
+        svc = self._wire(sid, self.factory(sid, self), addr)
+        try:
+            svc.restore(d)
+        except Exception as exc:  # noqa: BLE001 - an unreadable state cannot be trusted
+            self._tokens.pop(sid, None)
+            try:
+                svc.close("restore failed")
+            except Exception:  # noqa: BLE001
+                pass
+            raise SessionExpired(f"{sid} (could not restore: {type(exc).__name__})")
+        self._sessions[sid] = svc
+        self._last[sid] = self.clock()
+        self._addr[sid] = addr
+        self.restored += 1
+        return svc
+
+    def get(self, sid: Optional[str], token: Optional[str] = None) -> Any:
         with self._lock:
             self.sweep()
-            if not sid or sid not in self._sessions:
-                raise SessionExpired(sid or "")
+            if not sid:
+                raise SessionExpired("")
+            if sid not in self._sessions:
+                return self._restore(sid, token)
+            self._check_token(sid, token)
             self._last[sid] = self.clock()
+            self._touch_disk(sid)
             return self._sessions[sid]
+
+    def _touch_disk(self, sid: str) -> None:
+        import json
+        d = self._session_dir(sid)
+        if d is None or not (d / "auth.json").exists():
+            return
+        try:
+            auth = json.loads((d / "auth.json").read_text())
+            if time.time() - float(auth.get("last_seen") or 0) > 30:
+                auth["last_seen"] = time.time()
+                (d / "auth.json").write_text(json.dumps(auth))
+        except (OSError, ValueError):
+            pass
 
     def touch(self, sid: str) -> None:
         with self._lock:
@@ -353,26 +520,54 @@ class SessionManager:
                 if now - self._last.get(sid, now) > self.idle_s and not self._busy(sid):
                     self.close(sid, reason="idle for too long")
                     gone.append(sid)
+            for svc in self._sessions.values():
+                media = getattr(svc, "media", None)
+                if media is not None:
+                    media.sweep()
+        self.admission.sweep()
         return gone
 
-    def close(self, sid: str, reason: str = "") -> None:
+    def close(self, sid: str, reason: str = "", keep_state: bool = False) -> None:
         with self._lock:
             svc = self._sessions.pop(sid, None)
             self._last.pop(sid, None)
+            self._tokens.pop(sid, None)
+            self._addr.pop(sid, None)
         self.budget.forget(sid)
         for b in self.meta_budgets.values():
             b.forget(sid)
         if svc is not None and hasattr(svc, "close"):
-            svc.close(reason)
+            try:
+                svc.close(reason, keep_files=keep_state)
+            except TypeError:
+                svc.close(reason)
+        d = self._session_dir(sid)
+        if d is not None and not keep_state:
+            import shutil
+            shutil.rmtree(d, ignore_errors=True)
 
     def close_all(self) -> None:
+        """Server stopping: release resources but keep persisted state for a restart."""
         for sid in list(self._sessions):
-            self.close(sid, reason="server stopping")
+            svc = self._sessions.get(sid)
+            if svc is not None and hasattr(svc, "persist"):
+                svc.persist()
+            self.close(sid, reason="server stopping", keep_state=self.state_dir is not None)
 
     def stats(self) -> dict:
         with self._lock:
             return {"active": len(self._sessions), "max": self.max_sessions, "idle_expiry_s": int(self.idle_s),
-                    "busy": sum(1 for s in self._sessions if self._busy(s))}
+                    "busy": sum(1 for s in self._sessions if self._busy(s)), "restored": self.restored,
+                    "persistent": self.state_dir is not None, "tokens_required": self.require_token,
+                    "evict_min_idle_s": int(self.evict_min_idle_s)}
+
+
+class TokenRequired(PermissionError):
+    pass
+
+
+class TokenInvalid(PermissionError):
+    pass
 
 
 def _default_factory(sid: str, mgr: SessionManager):

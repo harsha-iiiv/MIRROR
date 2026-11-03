@@ -7,6 +7,12 @@ import { Viewer } from './viewer.js';
 import { fmtT, statusLabel, sceneLabel, latest, cupOutcome, isAux, isBlockedScene } from './util.js';
 import { PANELS, STEPS, stepState, correctionVersion, StoryBar, AboutPanel } from './panels.js';
 import { VideoPane, ModelsPanel } from './media.js';
+import { OverviewPanel } from './overview.js';
+import { ChallengePanel } from './challenge.js';
+import { recordIdFromUrl } from './challenge_state.js';
+import { correctionStory } from './story.js';
+import { demoSource, videoMediaKind, demoEvidence, tiltStatusAt } from './provenance.js';
+import { generationId, rolloutCacheKey, isStale, latestOnly, DROPPED } from './identity.js';
 
 const html = htm.bind(h);
 
@@ -51,8 +57,16 @@ function useStudio() {
   const [error, setError] = useState(null);
   const [jobs, setJobs] = useState({});
   const timer = useRef(null);
+  // Only the newest state request is applied: a slow response that arrives after a newer one
+  // (for example across a demonstration change) is dropped instead of rolling the page back.
+  const getState = useMemo(() => latestOnly(api.getState), []);
   const refresh = useCallback(async () => {
-    try { setSnap(await api.getState()); setError(null); } catch (e) { setError(String(e.message || e)); }
+    try {
+      const s = await getState();
+      if (s === DROPPED) return;
+      api.setGeneration(generationId(s));
+      setSnap(s); setError(null);
+    } catch (e) { setError(String(e.message || e)); }
   }, []);
   useEffect(() => {
     let conn = null, gone = false;
@@ -61,11 +75,12 @@ function useStudio() {
       refresh();
       conn = api.connect((msg) => {
         if (msg.type === 'state') { clearTimeout(timer.current); timer.current = setTimeout(refresh, 60); }
-        if (msg.type === 'job') setJobs((j) => ({ ...j, [msg.job.id]: msg.job }));
+        if (msg.type === 'job' && !isStale(api.currentGeneration(), msg.job)) setJobs((j) => ({ ...j, [msg.job.id]: msg.job }));
       });
     }, (e) => setError(String(e.message || e)));
     const off = api.onSessionReset(() => { setJobs({}); refresh(); });
-    return () => { gone = true; off(); conn && conn.close(); };
+    const offStale = api.onStaleGeneration(() => { setJobs({}); refresh(); });
+    return () => { gone = true; off(); offStale(); conn && conn.close(); };
   }, [refresh]);
   return { snap, error, jobs, setJobs, refresh, setError };
 }
@@ -84,6 +99,8 @@ function App() {
   const liveStatus = useLiveStatus();
   const [noteHidden, setNoteHidden] = useState(false);
   const toggleStory = (on) => { localStorage.setItem('mirror-story', on ? 'on' : 'off'); setStory(on); };
+  const [stageOverride, setStageOverride] = useState(null);   // challenge mode drives the stage itself
+  const editHandler = useRef(null);
   const viewerRef = useRef(null);
 
   // Start with the reference demonstration loaded.
@@ -94,9 +111,15 @@ function App() {
     action('demo', () => api.post('demo/load'));
   }, [snap]);
 
-  // Choose a sensible starting step once data arrives.
+  // Choose a sensible starting step once data arrives: a ?step= link, else the story
+  // overview when the session holds a correction, else where the session left off.
   useEffect(() => {
     if (!snap || step) return;
+    const asked = new URLSearchParams(location.search).get('step');
+    if (recordIdFromUrl(location.search)) { setStep('challenge'); return; }
+    if (asked === 'test') { setStep('challenge'); return; }
+    if (asked && (asked === 'overview' || asked === 'challenge' || STEPS.some((s) => s.key === asked))) { setStep(asked); return; }
+    if (correctionStory(snap)) { setStep('overview'); return; }
     if (api.isStatic) { setStep('watch'); return; }
     setStep(snap.evaluation ? 'evidence' : snap.specs.length ? 'interpret' : 'watch');
   }, [snap]);
@@ -116,6 +139,7 @@ function App() {
       return res;
     } catch (e) {
       setBusy((b) => { const n = { ...b }; delete n[key]; return n; });
+      if (e.stale) { await refresh(); return null; }   // late result from an earlier demonstration: not shown
       setError(String(e.message || e));
       await refresh();
       return null;
@@ -144,30 +168,38 @@ function App() {
   }
 
   const cur = step || 'watch';
-  if (api.isStatic && snap) api.prefetch(prefetchFor(snap, cur));
+  if (api.isStatic && snap) api.prefetch(prefetchFor(snap, cur), (id) => rolloutCacheKey(snap, id));
   const sstate = stepState(snap);
-  const display = chooseDisplay(snap, cur, pick, tool);
+  const display = (cur === 'challenge' && stageOverride) || chooseDisplay(snap, cur, pick, tool);
   const ctx = {
-    snap, step: cur, setStep: (s) => { setStep(s); setPick(null); setTool(null); }, pick, setPick, busy: busyLive, action,
+    snap, step: cur, setStep: (s) => { setStep(s); setPick(null); setTool(null); if (s !== 'challenge') setStageOverride(null); }, pick, setPick, busy: busyLive, action,
     tool, setTool, viewer: viewerRef, display, isStatic: api.isStatic, error, setError, story, toggleStory,
+    setStageOverride, setEditHandler: (fn) => { editHandler.current = fn; }, editHandler,
+    openChallenge: () => { setStep('challenge'); setPick(null); setTool(null); },
+    challengeLive: !api.isStatic,
   };
-  const Panel = PANELS[cur];
+  const Panel = cur === 'overview' ? OverviewPanel : cur === 'challenge' ? ChallengePanel : PANELS[cur];
+  const hasStory = !!correctionStory(snap);
 
   return html`
     <div class="app">
       <header class="top">
         <div class="brand"><b>MIRROR</b><span>task authoring and correction testing</span></div>
         <nav class="steps" aria-label="Story steps">
+          ${hasStory ? html`<button aria-current=${cur === 'overview' ? 'step' : null} class="start" onClick=${() => ctx.setStep('overview')}
+            title="What happened, in one screen" aria-label="Overview"><span class="ix" aria-hidden="true">·</span><span class="lbl">Overview</span></button>` : ''}
           ${STEPS.map((s, i) => html`
             <button aria-current=${cur === s.key ? 'step' : null} class=${sstate[s.key]?.done ? 'done' : ''}
               disabled=${!sstate[s.key]?.enabled} onClick=${() => ctx.setStep(s.key)}
-              title=${s.title} aria-label=${`Step ${i + 1}: ${s.short}`}><span class="ix" aria-hidden="true">${i + 1}</span>${s.short}</button>`)}
+              title=${s.title} aria-label=${`Step ${i + 1}: ${s.short}`}><span class="ix" aria-hidden="true">${i + 1}</span><span class="lbl">${s.short}</span></button>`)}
+          <button aria-current=${cur === 'challenge' ? 'step' : null} class="challenge" onClick=${() => ctx.openChallenge()}
+            title=${api.isStatic ? 'A recorded test, step by step' : 'Change a layout and correct a rule yourself'} aria-label="Test MIRROR"><span class="ix" aria-hidden="true">⚑</span><span class="lbl">Test MIRROR</span></button>
         </nav>
         <div class="top-right">
           <${LiveSwitch} status=${liveStatus} />
           ${api.config.recordings && api.config.liveAvailable && snap.mode !== 'fixture' ? ''
             : html`<span class=${'badge ' + (api.isStatic ? '' : snap.mode)}
-            title=${modeTitle(snap)}>${api.isStatic ? 'recorded session' : snap.mode === 'live' ? 'live simulation' : 'fixture data'}</span>`}
+            title=${modeTitle(snap)}><span class="long">${api.isStatic ? 'recorded session' : snap.mode === 'live' ? 'live simulation' : 'fixture data'}</span><span class="short" aria-hidden="true">${api.isStatic ? 'recorded' : snap.mode === 'live' ? 'live' : 'fixture'}</span></span>`}
           ${!story ? html`<button class="iconbtn" onClick=${() => toggleStory(true)} title="Show the guided story">Story</button>` : ''}
           <button class="iconbtn" aria-expanded=${models} onClick=${() => { setModels(!models); setAbout(false); }}>Models${(snap.models || []).length ? html` <span class="cnt">${snap.models.length}</span>` : ''}</button>
           <button class="iconbtn" aria-expanded=${about} onClick=${() => { setAbout(!about); setModels(false); }}>About</button>
@@ -178,7 +210,7 @@ function App() {
         ? `The simulator packages are not available (${snap.missing_packages.slice(0, 3).join(', ')}${snap.missing_packages.length > 3 ? ', …' : ''}), so`
         : 'The studio was started on fixtures, so'} motion here is key-framed for interface development. It is not evidence.` : ''}
         ${!noteHidden ? html`<${LiveNote} status=${liveStatus} onClose=${() => setNoteHidden(true)} />` : ''}</div>
-      ${story ? html`<${StoryBar} ctx=${ctx} />` : ''}
+      ${story && cur !== 'overview' && cur !== 'challenge' ? html`<${StoryBar} ctx=${ctx} />` : ''}
       ${about ? html`<${AboutPanel} ctx=${ctx} onClose=${() => setAbout(false)} />` : ''}
       ${models ? html`<${ModelsPanel} ctx=${ctx} onClose=${() => setModels(false)} />` : ''}
       <main class="main">
@@ -220,13 +252,26 @@ export function chooseDisplay(snap, step, pick, tool) {
   const res = { kind: 'scene', id: null, ghost: null, title: sceneLabel(sceneId), sub: '' };
   const asRollout = (r, ghost = null, sub = '') => ({ kind: 'rollout', id: r.id, ghost: ghost?.id || null, rollout: r,
     title: `${r.report.condition || r.id} · ${sceneLabel(r.scene_id)}`, sub: sub || `spec v${r.spec_version} · ${statusLabel(r.report)}` });
-  if (pick === 'demo' && snap.demo) return { kind: 'demo', id: 'demo', title: 'Demonstration', sub: snap.demo.source_note || snap.demo.source };
+  if (step === 'overview' && !pick) {
+    const st = correctionStory(snap);
+    const fixed = st?.fixed && rs.find((x) => x.id === st.fixed.id);
+    const failed = st && rs.find((x) => x.id === st.failed.id);
+    if (fixed) return asRollout(fixed, failed, `spec v${fixed.spec_version} · after the correction · faint line: before`);
+    if (failed) return asRollout(failed);
+  }
+  if (step === 'overview' && pick) {
+    const st = correctionStory(snap);
+    const r = rs.find((x) => x.id === pick);
+    if (r && st) return asRollout(r, r.id === st.fixed?.id ? rs.find((x) => x.id === st.failed.id) : null,
+      r.id === st.failed.id ? `spec v${r.spec_version} · before the correction` : `spec v${r.spec_version} · after the correction · faint line: before`);
+  }
+  if (pick === 'demo' && snap.demo) return { kind: 'demo', id: 'demo', title: 'Demonstration', sub: sourceText(snap) };
   if (pick) {
     const r = rs.find((x) => x.id === pick);
     if (r) return asRollout(r, ghostFor(snap, r));
   }
   if (step === 'watch' || step === 'interpret') {
-    if (snap.demo) return { kind: 'demo', id: 'demo', title: 'Demonstration', sub: sourceText(snap.demo) };
+    if (snap.demo) return { kind: 'demo', id: 'demo', title: 'Demonstration', sub: sourceText(snap) };
     return res;
   }
   if (tool) return { ...res, sub: 'Editing the layout' };
@@ -281,11 +326,7 @@ export function ghostFor(snap, r) {
   return null;
 }
 
-function sourceText(demo) {
-  const m = { teleop_scripted: 'Scripted teleoperation in simulation', teleop_keyboard: 'Keyboard teleoperation in simulation',
-    replay: 'Replayed trace', video_grounded: 'Video grounded to simulator objects' };
-  return m[demo.source] || demo.source;
-}
+function sourceText(snap) { return demoSource(snap).short; }
 
 function Stage({ ctx, viewerRef, opts, setOpts }) {
   const el = useRef(null);
@@ -315,6 +356,7 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
   editRef.current = ctx;
   function onEdit(e) {
     const c = editRef.current;
+    if (c.editHandler?.current) { c.editHandler.current(e); return; }
     let edit = null;
     if (e.kind === 'tray') edit = { tray: { x: e.x, y: e.y } };
     else if (e.kind === 'object') edit = { object: { id: e.id, x: e.x, y: e.y } };
@@ -323,15 +365,24 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
   }
 
   useEffect(() => { viewerRef.current?.setEditMode(tool); }, [tool]);
+  // Follow the cup on the overview and on narrow screens, until the visitor picks a view.
+  const userView = useRef(false);
+  useEffect(() => {
+    const vw = viewerRef.current;
+    if (!vw || userView.current) return;
+    const narrow = (el.current?.clientWidth || 1000) < 560;
+    const want = display.kind === 'rollout' && (ctx.step === 'overview' || narrow) ? 'follow' : '3d';
+    if (vw.view !== want) { vw.setView(want); setOpts((o) => ({ ...o })); }
+  }, [ctx.step, display.kind]);
   useEffect(() => { viewerRef.current?.setOptions(opts); }, [opts]);
   useEffect(() => { if (viewerRef.current) viewerRef.current.speed = speed; }, [speed]);
 
   // Load what the stage should show.
-  const key = display.kind === 'scene' ? `scene:${snap.scene?.scene_id}:${snap.revision}`
-    : display.kind === 'demo' ? `demo:${snap.demo?.demo_id}:${snap.demo?.duration}` : `${display.id}|${display.ghost || ''}`;
-  const lastDemo = useRef(null);
-  if (display.kind === 'demo' && lastDemo.current && lastDemo.current !== key) api.forget('demo');
-  if (display.kind === 'demo') lastDemo.current = key;
+  // Keys combine the generation with immutable artifact ids and hashes, never bare run numbers.
+  const gen = generationId(snap);
+  const k1 = display.kind === 'scene' ? '' : display.cacheKey || rolloutCacheKey(snap, display.id);
+  const k2 = display.ghost ? display.ghostKey || rolloutCacheKey(snap, display.ghost) : '';
+  const key = display.kind === 'scene' ? `scene:${gen}:${snap.scene?.scene_id}:${snap.revision}` : `${k1}||${k2}`;
   useEffect(() => {
     const v = viewerRef.current;
     if (!v) return;
@@ -345,8 +396,10 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
     }
     (async () => {
       try {
-        const p = await api.getRollout(display.id);
-        const g = display.ghost ? await api.getRollout(display.ghost) : null;
+        // Shared records and the tour bring their own loader (their runs are stored with the record).
+        const load = display.load || ((id, key) => api.getRollout(id, key, gen));
+        const p = await load(display.id, k1);
+        const g = display.ghost ? await load(display.ghost, k2) : null;
         if (cancelled) return;
         if (!p.t || !p.t.length) {
           setPayload(p);
@@ -354,12 +407,15 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
           setDur(0); setT(0);
           return;
         }
-        v.loadRollout(p, { ghost: g, sceneState: p.scene || (display.kind === 'demo' ? snap.demo?.scene : null) });
+        const ev = display.kind === 'demo' ? demoEvidence(snap) : null;
+        const hz = snap.demo?.sample_hz || 0;
+        const tiltStatus = ev && hz && p.t ? (i) => tiltStatusAt(ev, v.traceObject || '', Math.round(p.t[i] * hz)) : null;
+        v.loadRollout(p, { ghost: g, sceneState: p.scene || (display.kind === 'demo' ? snap.demo?.scene : null), tiltStatus });
         setPayload(p);
         setDur(v.duration());
         v.setTime(0);
         if (!matchMedia('(prefers-reduced-motion: reduce)').matches) v.play();
-      } catch (e) { if (!cancelled) setLoadErr(String(e.message || e)); }
+      } catch (e) { if (!cancelled && !e.stale) setLoadErr(String(e.message || e)); }
     })();
     return () => { cancelled = true; };
   }, [key]);
@@ -393,24 +449,26 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
         <div class="v-head">
           ${display.title ? html`<div class="v-title"><div class="t1">${display.title}</div><div class="t2">${display.sub}</div></div>` : html`<span></span>`}
           <div class="v-tools">
-            ${['3d', 'top', 'side'].map((k) => html`<button class="iconbtn" aria-pressed=${v?.view === k}
-              onClick=${() => { viewerRef.current.setView(k); setOpts({ ...opts }); }}>${k === '3d' ? '3D' : k === 'top' ? 'Top' : 'Side'}</button>`)}
+            ${['follow', '3d', 'top', 'side'].map((k) => (k === 'follow' && display.kind === 'scene') ? '' : html`<button class="iconbtn" aria-pressed=${v?.view === k}
+              title=${k === 'follow' ? 'Camera follows the cup' : ''}
+              onClick=${() => { userView.current = true; viewerRef.current.setView(k); setOpts({ ...opts }); }}>${{ follow: 'Follow', '3d': '3D', top: 'Top', side: 'Side' }[k]}</button>`)}
             <button class="iconbtn" aria-pressed=${opts.trace} onClick=${() => setOpts({ ...opts, trace: !opts.trace })}>Path</button>
             ${ghostOn ? html`<button class="iconbtn" aria-pressed=${opts.ghost} onClick=${() => setOpts({ ...opts, ghost: !opts.ghost })}>Previous</button>` : ''}
             <button class="iconbtn" aria-pressed=${opts.labels} onClick=${() => setOpts({ ...opts, labels: !opts.labels })}>Labels</button>
           </div>
         </div>
         ${display.kind === 'demo' && snap.video_demo && snap.demo && snap.video_demo.trace_source === snap.demo.source
-          ? html`<${VideoPane} vd=${snap.video_demo} t=${t} />` : ''}
+          ? html`<${VideoPane} vd=${snap.video_demo} t=${t} kind=${videoMediaKind(snap)} />` : ''}
         ${display.kind !== 'scene' && payload && !payload.t?.length ? html`<div class="v-empty"><span class="v-note">${report?.plan_status === 'no_plan' ? 'No plan: nothing was executed.' : 'Nothing was executed.'}</span></div>` : ''}
         ${loadErr ? html`<div class="v-empty err">${loadErr}</div>` : ''}
         ${loading ? html`<div class="v-loading" role="status">Loading recorded rollout ${loading.total ? `${Math.round((100 * loading.got) / loading.total)}%` : `${(loading.got / 1e6).toFixed(1)} MB`}
           <div class="progress"><div style=${`width:${loading.total ? (100 * loading.got) / loading.total : 30}%`}></div></div></div>` : ''}
         ${payload?.t?.length ? html`<div class="v-legend">
-          <span><i class="grad"></i>container path by tilt: within ${15}° → over</span>
-          ${ghostOn && opts.ghost ? html`<span><i style="background:var(--faint)"></i>${ghostText(snap, display.ghost)}</span>` : ''}
+          <span><i class="grad"></i><span class="long">container path by tilt: within ${15}° → over</span><span class="short">cup path by tilt</span></span>
+          ${viewerRef.current?.hasUnobservedTilt ? html`<span><i style="background:var(--faint)"></i>tilt not observed</span>` : ''}
+          ${ghostOn && opts.ghost ? html`<span><i style="background:var(--faint)"></i><span class="long">${display.ghostLabel || ghostText(snap, display.ghost)}</span><span class="short">${display.ghostLabel || `before (v${(snap.rollouts || []).find((r) => r.id === display.ghost)?.spec_version ?? '?'})`}</span></span>` : ''}
           ${payload.beads_hidden ? html`<span>beads not recorded in demo trace</span>`
-            : html`<span><i style="background:#ff2bd6;border-radius:50%;width:8px;height:8px"></i>beads, drawn enlarged at their true positions${(() => {
+            : html`<span><i style="background:#ff2bd6;border-radius:50%;width:8px;height:8px"></i><span class="long">beads, drawn enlarged at their true positions</span><span class="short">beads (enlarged)</span>${(() => {
               const off = t >= 0 ? viewerRef.current?.beadsOffTable?.() || 0 : 0;
               return off ? html` · <b class="bad-t">${off} fell off the table</b>` : '';
             })()}</span>`}
@@ -418,7 +476,7 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
         ${tool ? html`<div class="v-hint">${tool === 'obstacle' ? 'Click the table to place a box' : 'Drag the tray or an object'}</div>` : ''}
       </div>
       <div class="transport">
-        <button class="iconbtn" onClick=${() => v?.toggle()} disabled=${!dur} aria-label=${playing ? 'Pause' : 'Play'}>${playing ? Icon.pause : Icon.play}</button>
+        <button class="iconbtn play" onClick=${() => v?.toggle()} disabled=${!dur} aria-label=${playing ? 'Pause' : 'Play'}>${playing ? Icon.pause : Icon.play}</button>
         <span class="time">${fmtT(t)} / ${fmtT(dur)}</span>
         <div class="scrub">
           <input type="range" min="0" max=${dur || 1} step="0.01" value=${t} disabled=${!dur} aria-label="Playback position"
@@ -430,7 +488,7 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
             style=${`left:${(100 * x.t_start) / dur}%;width:${Math.max(0.4, (100 * (x.t_end - x.t_start)) / dur)}%`}></div>`) : ''}
           ${dur ? events.map((e) => html`<div class=${'ev ' + e.type} style=${`left:${(100 * e.t) / dur}%`} title=${`${e.type} ${e.object_id || ''} at ${fmtT(e.t)}`}></div>`) : ''}
         </div>
-        <span class="muted num" style="font-size:12px">${cup ? `beads ${cup.beads_in_container}/${cup.beads_total}` : ''}</span>
+        <span class="muted num beads" style="font-size:12px">${cup ? `beads ${cup.beads_in_container}/${cup.beads_total}` : ''}</span>
         <select class="speed" value=${speed} onChange=${(e) => setSpeed(parseFloat(e.target.value))} aria-label="Playback speed">
           ${[0.5, 1, 2, 4].map((s) => html`<option value=${s}>${s}×</option>`)}
         </select>

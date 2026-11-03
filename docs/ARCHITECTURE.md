@@ -67,7 +67,11 @@ sampling fallback for extra obstacles. Collision checks use a conservative
 envelope of the gripper plus the held object. Confirmed upright rules remove
 orientation modes whose tilt exceeds the limit, for the matching objects
 only. The cheapest feasible route wins; every candidate is recorded with its
-cost or rejection reason.
+cost or rejection reason. Cost is path length plus 0.05 m per radian of
+gripper rotation (`PlannerConfig.rotation_penalty`). That weight decides how
+often a tilted slot route beats an upright detour when no rule forbids tilting,
+and the shorter route is usually not the faster one in execution; see
+[F-A1](EVALUATION.md#audit-findings-and-narrowed-claims-2-november-2026).
 
 When nothing is feasible the planner returns `no_plan`. It attaches a proof
 (`proven: true`, `scope: any_motion`) only when a geometric bound shows that
@@ -85,9 +89,47 @@ actuator commands. Grasps are friction grasps. Every physics step (0.004 s)
 is logged: object and gripper poses, jaw width, which object both fingers
 touch, the plan phase, bead positions and contacts.
 
+### Arm backend (optional)
+
+`mirror.arm` is a second execution backend, selected with `--backend arm` or
+`mirror.backends.get_backend("arm")`. It takes the same plan and turns each TCP
+segment into a validated joint path on a simulated UR10e or UR5e (inverse
+kinematics, joint limits, discontinuities, arm-link and self collisions), then
+executes it with joint servos. Grasp, drop and settle detection and the step log
+are the baseline's, so the checker reads both backends the same way. When no
+plan can be executed it reports `arm_motion_planning_failure`, which is never a
+proof; a planner certificate passes through unchanged. A fixed-base arm cannot
+pass the wall slot with the tool horizontal, so slot routes are always rejected
+and the spill-then-correct story occurs only on the gripper baseline. Mount and
+tool were tuned on development seeds 100-107, excluded from the development
+report (`results/arm/v1`, which names its physics platform). Vendored models
+and their BSD-3-Clause licences live in `mirror/assets/`. Every evaluation
+result uses the gripper baseline.
+
 ## Checking
 
 `evaluate.check` is a pure function of the step log, the specification and
 the scene. Because logs are kept, any recorded rollout can be re-checked
 against a later specification version; violations of rules that version did
 not enforce are reported separately as `advisory_violations`.
+
+## Evaluation layers
+
+Three parts of the pipeline are evaluated separately, then composed:
+
+| Layer | Input → output | Where it is measured |
+|---|---|---|
+| Perception | demonstration video → `DemoTrace` | Video and robustness registrations (rendered simulator video only) |
+| Authoring | demonstration summary + human corrections → validated `TaskSpec` versions | Correction-compiler benchmark (single sentences, one scene); protocol v3 (prepared, not run) |
+| Execution | fixed `TaskSpec` + new layout → plan, physics, checker verdict | First and second registrations (one fixed specification pair on new layouts) |
+
+The pre-registered evaluations exercise only the execution layer with a fixed
+specification pair; the agreement check in `mirror/evaluate/specs.py` (replayed
+model specification must equal the offline-rule specification) is a
+deterministic regression check, so they say nothing about the model's
+contribution. Protocol v3 (`mirror/evaluate/protocol_v3/`,
+[protocols/v3_authoring.md](protocols/v3_authoring.md)) measures authoring and
+runs each authored specification through the same planner, simulator and
+checker, so the composition of authoring and execution is measured on the same
+cases. Its modules are new and do not import or alter the frozen evaluation
+runners.

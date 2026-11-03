@@ -129,6 +129,7 @@ def check_proposal(d: ProposalDraft, summary: DemoSummary) -> list[str]:
                     shown.append(s.end_tilt_deg)
                 if r.phase == "always":
                     shown.append(s.start_tilt_deg)
+                shown = [x for x in shown if x is not None]   # None: tilt not observed (e.g. top-only video)
                 if shown and max(shown) > tol:
                     errs.append(f"{where}: the demonstration itself violates this rule "
                                 f"({r.object_kind} reached {max(shown):g} degrees > {tol:g})")
@@ -252,6 +253,14 @@ def _options(lean: str) -> list[str]:
 PHASE_TEXT = {"final": "once placed", "transport": "while carried", "always": "at all times"}
 
 
+def describe_ordering(before: str, after: str, be: str, ae: str) -> str:
+    if (be, ae) == ("grasp_start", "grasp_start"):
+        return f"Pick up the {before} before the {after}."
+    if (be, ae) == ("placement_complete", "placement_complete"):
+        return f"The {before} is in the tray before the {after} is placed."
+    return f"Pack the {before} before touching the {after}."
+
+
 def describe_rule(ctype: str, phase: str, kind: Optional[str], params: dict) -> str:
     who = f"the {kind}" if kind else "every object"
     if ctype == "upright":
@@ -289,6 +298,60 @@ class CorrectionDraft(_M):
     question: Optional[str]
     options: list[str] = Field(default_factory=list)
     ops: list[DraftOp]
+
+
+# Prompt revision 4 (contract 1.2): orderings name which events they relate.
+# Revision 3 schemas above are unchanged so recorded responses keep replaying.
+OrderEvent = Literal["finish_before_start", "start_before_start", "placed_before_placed"]
+ORDER_EVENTS: dict[str, tuple[str, str]] = {
+    "finish_before_start": ("placement_complete", "grasp_start"),
+    "start_before_start": ("grasp_start", "grasp_start"),
+    "placed_before_placed": ("placement_complete", "placement_complete"),
+}
+
+
+class DraftOpV4(DraftOp):
+    order_event: Optional[OrderEvent]
+
+
+class CorrectionDraftV4(_M):
+    outcome: Literal["apply", "clarify", "reject"]
+    interpretation: str
+    question: Optional[str]
+    options: list[str] = Field(default_factory=list)
+    ops: list[DraftOpV4]
+
+
+def order_events(op) -> tuple[str, str]:
+    ev = getattr(op, "order_event", None) or "finish_before_start"
+    return ORDER_EVENTS[ev]
+
+
+def ordering_id_for(before: str, after: str, be: str, ae: str) -> str:
+    if (be, ae) == ("placement_complete", "grasp_start"):
+        return so.ordering_id(before, after)
+    if (be, ae) == ("grasp_start", "grasp_start"):
+        return f"o_{before}_started_before_{after}"
+    if (be, ae) == ("placement_complete", "placement_complete"):
+        return f"o_{before}_placed_before_{after}_placed"
+    return f"o_{before}_{be}_before_{after}_{ae}"
+
+
+def _unsupported_question(c: Constraint) -> Optional[NeedsClarification]:
+    from mirror.rules_support import unsupported_reason
+    why = unsupported_reason(c, for_compiler=True)
+    if why is None:
+        return None
+    k = c.applies_to.kind or "object"
+    if c.type == "forbidden_contact" and "table_outside_tray" in (c.params.get("with") or []):
+        return NeedsClarification(
+            f"The {k} rests on the table when the robot picks it up, so 'not touching the table' cannot hold "
+            f"while it is carried. Do you mean it must end up in the tray, never left on the table?",
+            [f"Yes: the {k} must not end on the table", "No, something else"],
+            reason="unsupported rule: table contact before or during the carry")
+    return NeedsClarification(f"I cannot plan for that rule: {why}. What should change instead?",
+                              ["Keep it upright", "Keep a distance from obstacles", "Change the packing order"],
+                              reason="unsupported rule")
 
 
 _UNIVERSAL = re.compile(r"\b(all|every|everything|each|any object|anything|all objects|nothing)\b")
@@ -344,6 +407,11 @@ def correction_to_ops(d: CorrectionDraft, spec: TaskSpec, text: str,
                 if perr:
                     errs.append(f"{where}: {perr}")
                     continue
+                q = _unsupported_question(Constraint(
+                    id="probe", type=r.type, applies_to=ObjectSelector(kind=r.object_kind), phase=r.phase,
+                    params=params, status=Status.confirmed, provenance=Provenance(source="user_correction")))
+                if q is not None:
+                    raise q
                 require_keys.add((r.type, r.phase, r.object_kind))
                 cid = so.constraint_id(r.type, r.phase, r.object_kind)
                 existing = so.find_constraint(spec, r.type, r.phase, r.object_kind)
@@ -406,8 +474,9 @@ def correction_to_ops(d: CorrectionDraft, spec: TaskSpec, text: str,
                 continue
             if not (kind_ok(op.before_kind, where) and kind_ok(op.after_kind, where)):
                 continue
+            be, ae = order_events(op)
             require_keys.add(("order", op.before_kind, op.after_kind))
-            oid = so.ordering_id(op.before_kind, op.after_kind)
+            oid = ordering_id_for(op.before_kind, op.after_kind, be, ae)
             for o in spec.ordering:
                 if (so.effective_kind(o.before, spec) == op.after_kind
                         and so.effective_kind(o.after, spec) == op.before_kind and o.status != Status.rejected):
@@ -416,7 +485,8 @@ def correction_to_ops(d: CorrectionDraft, spec: TaskSpec, text: str,
                     touched.append(o.id)
             existing = so.find_item(spec, oid) or next(
                 (o for o in spec.ordering if so.effective_kind(o.before, spec) == op.before_kind
-                 and so.effective_kind(o.after, spec) == op.after_kind), None)
+                 and so.effective_kind(o.after, spec) == op.after_kind
+                 and (o.before_event, o.after_event) == (be, ae)), None)
             if existing is not None:
                 oid = existing.id
                 if existing.status != Status.confirmed:
@@ -425,7 +495,8 @@ def correction_to_ops(d: CorrectionDraft, spec: TaskSpec, text: str,
             else:
                 ops.append(SpecOp(op="add_ordering", target_id=oid, rationale=op.rationale, value=OrderingConstraint(
                     id=oid, before=ObjectSelector(kind=op.before_kind), after=ObjectSelector(kind=op.after_kind),
-                    status=Status.confirmed, provenance=Provenance(source="user_correction", evidence=text)
+                    status=Status.confirmed, provenance=Provenance(source="user_correction", evidence=text),
+                    before_event=be, after_event=ae, description=describe_ordering(op.before_kind, op.after_kind, be, ae)
                 ).model_dump(mode="json")))
             touched.append(oid)
         elif op.action == "relax_order":

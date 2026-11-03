@@ -22,6 +22,14 @@ class Clock:
 
 
 def fixture_manager(**kw):
+    """Legacy-mode manager (session id alone, no per-address limits, immediate eviction):
+    these tests cover the job gate, budgets and origins. Tokens, admission and eviction
+    rules have their own tests in test_admission.py."""
+    from mirror.studio.admission import Admission
+    kw.setdefault("require_token", False)
+    kw.setdefault("evict_min_idle_s", 0)
+    kw.setdefault("admission", Admission(limits={k: 0 for k in ("session", "upload", "upload_bytes", "job", "model",
+                                                               "request", "live_sessions")}))
     return SessionManager(lambda sid, m: StudioService(backend="fixture", session_id=sid, gate=m.gate,
                                                        budget=m.budget, one_job=True, private_runtime=True), **kw)
 
@@ -56,12 +64,12 @@ def test_sessions_are_separate():
 def test_lru_cap_and_idle_expiry():
     clock = Clock()
     mgr = fixture_manager(max_sessions=2, idle_s=1800, clock=clock)
-    s1, _ = mgr.create()
+    s1, _, _ = mgr.create()
     clock.t += 10
-    s2, _ = mgr.create()
+    s2, _, _ = mgr.create()
     clock.t += 10
     mgr.get(s1)                       # s1 is now the most recently used
-    s3, _ = mgr.create()              # full: the least recently used idle session (s2) makes room
+    s3, _, _ = mgr.create()              # full: the least recently used idle session (s2) makes room
     assert mgr.stats()["active"] == 2
     with pytest.raises(SessionExpired):
         mgr.get(s2)
@@ -74,7 +82,7 @@ def test_lru_cap_and_idle_expiry():
 
 def test_server_busy_when_every_session_has_work():
     mgr = fixture_manager(max_sessions=1)
-    sid, svc = mgr.create()
+    sid, _tok, svc = mgr.create()
     svc.jobs["x"] = type("J", (), {"status": "running"})()
     with pytest.raises(ServerBusy):
         mgr.create()

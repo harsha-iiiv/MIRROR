@@ -5,10 +5,14 @@ Then open http://127.0.0.1:8000/ . The same frontend also runs without this
 server from a static export (scripts/export_static.py), and a static export can
 connect to this server as its live backend (see deploy/README.md).
 
-Every visitor gets their own session: POST /api/session returns an id, which
-the browser sends as the X-Mirror-Session header (and as ?session= on the
-websocket). Limits are set through environment variables, documented in
-mirror/studio/sessions.py and deploy/mirror.env.example.
+Every visitor gets their own session: POST /api/session returns an id and a
+secret token, which the browser sends as the X-Mirror-Session and
+X-Mirror-Token headers (and as ?session=&token= on the websocket and media
+URLs). The Origin check below only stops other web sites from using a
+visitor's browser; it does not authenticate HTTP clients. Admission is bounded
+per client address and globally; see mirror/studio/admission.py,
+mirror/studio/sessions.py, mirror/studio/uploads.py, docs/CHALLENGE_API.md and
+deploy/mirror.env.example.
 """
 from __future__ import annotations
 
@@ -27,13 +31,20 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from .session_adapter import (MAX_UPLOAD_MB, EvaluationFenceError, StudioService, max_eval_seeds,
-                              packages_available)
-from .sessions import ServerBusy, SessionBusy, SessionExpired, SessionManager, budgets_public, llm_public
+from .admission import RateLimited, client_address
+from .challenge import FenceError
+from .records import RecordExpired
+from .session_adapter import (EvaluationFenceError, JobCancelled, StaleGeneration, StudioService, max_eval_seeds,
+                              packages_available, tour_record, tour_rollout)
+from .sessions import (ServerBusy, SessionBusy, SessionExpired, SessionManager, TokenInvalid, TokenRequired,
+                       budgets_public, llm_public)
+from .uploads import UploadRejected
 
 WEB_DIR = Path(__file__).resolve().parents[2] / "web"
 SESSION_HEADER = "X-Mirror-Session"
-VERSION = "0.2"
+TOKEN_HEADER = "X-Mirror-Token"
+GENERATION_HEADER = "X-Mirror-Generation"
+VERSION = "0.3"
 
 
 class CorrectionIn(BaseModel):
@@ -55,6 +66,7 @@ class RunIn(BaseModel):
     spec_version: Optional[int] = None
     condition: str = ""
     tags: list[str] = []
+    backend: Optional[str] = None           # gripper (default baseline) | arm
 
 
 class SceneIn(BaseModel):
@@ -65,6 +77,82 @@ class SceneIn(BaseModel):
 class RecheckIn(BaseModel):
     rollout_id: str
     spec_version: Optional[int] = None
+    spec_version_id: Optional[str] = None
+
+
+class ChallengeIn(BaseModel):
+    family: str
+    seed: Optional[int] = None
+    preset: Optional[str] = None
+    edits: list[dict[str, Any]] = []
+    backend: Optional[str] = None
+
+
+class ChallengeExecuteIn(BaseModel):
+    backend: Optional[str] = None
+
+
+class ChallengeCorrectionIn(BaseModel):
+    text: Optional[str] = None
+    transcript_id: Optional[str] = None
+    focus_kind: Optional[str] = None
+    answer: Optional[str] = None
+
+
+class ReviewIn(BaseModel):
+    accept: bool
+    note: str = ""
+
+
+class StudyIn(BaseModel):
+    participant: str
+    context: Optional[str] = None
+    task: Optional[str] = None
+    task_origin: Optional[str] = None
+    condition: Optional[str] = None
+    consent: dict[str, bool] = {}
+    task_packet_sha256: Optional[str] = None
+
+
+class StudyTaskIn(BaseModel):
+    task: Optional[str] = None
+    task_origin: Optional[str] = None
+    condition: Optional[str] = None
+
+
+class StudyEndIn(BaseModel):
+    reason: str = "participant_done"
+
+
+class ComprehensionIn(BaseModel):
+    trial_id: str
+    answer: str
+
+
+class ClarificationRatingIn(BaseModel):
+    trial_id: str
+    answered: bool
+    useful: Optional[int] = None
+
+
+class CaptureIn(BaseModel):
+    mode: str
+    notes: str = ""
+
+
+class CaptureClipsIn(BaseModel):
+    clips: dict[str, str]
+    sync: Optional[dict[str, Any]] = None
+
+
+class CaptureReviewIn(BaseModel):
+    correspondence: list[dict[str, Any]] = []
+    events: list[dict[str, Any]] = []
+
+
+class ManualEditIn(BaseModel):
+    edits: list[dict[str, Any]]
+    note: str = ""
 
 
 class EvalIn(BaseModel):
@@ -75,9 +163,11 @@ class EvalIn(BaseModel):
 
 
 class StudioError(Exception):
-    def __init__(self, status: int, code: str, detail: str, headers: Optional[dict] = None):
+    def __init__(self, status: int, code: str, detail: str, headers: Optional[dict] = None,
+                 extra: Optional[dict] = None):
         super().__init__(detail)
         self.status, self.code, self.detail, self.headers = status, code, detail, headers or {}
+        self.extra = extra or {}
 
 
 def allowed_origins(raw: Optional[str] = None) -> list[str]:
@@ -122,7 +212,8 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
 
     if origins:
         app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST", "OPTIONS"],
-                           allow_headers=["Content-Type", SESSION_HEADER], expose_headers=["Retry-After"],
+                           allow_headers=["Content-Type", SESSION_HEADER, TOKEN_HEADER, GENERATION_HEADER],
+                           expose_headers=["Retry-After"],
                            allow_credentials=False, max_age=600)
 
     @app.middleware("http")
@@ -136,28 +227,78 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
 
     @app.exception_handler(StudioError)
     async def studio_error(_req, exc: StudioError):
-        return JSONResponse({"error": exc.code, "detail": exc.detail}, status_code=exc.status, headers=exc.headers)
+        return JSONResponse({"error": exc.code, "detail": exc.detail, **exc.extra}, status_code=exc.status,
+                            headers=exc.headers)
+
+    def addr_of(request) -> str:
+        peer = request.client.host if request.client else None
+        return client_address(peer, request.headers.get("x-forwarded-for"))
+
+    @app.middleware("http")
+    async def request_rate(request: Request, call_next):
+        if request.url.path.startswith("/api/") and request.method != "OPTIONS":
+            try:
+                mgr.admission.check("request", addr_of(request))
+            except RateLimited as exc:
+                return JSONResponse({"error": "rate_limited", "detail": exc.detail}, status_code=429,
+                                    headers={"Retry-After": str(exc.retry_after)})
+        return await call_next(request)
+
+    def mapped(exc: BaseException) -> Optional[StudioError]:
+        if isinstance(exc, StudioError):
+            return exc
+        if isinstance(exc, StaleGeneration):
+            return StudioError(409, "stale_generation", str(exc), extra={"current_generation": exc.current})
+        if isinstance(exc, RateLimited):
+            return StudioError(429, "rate_limited", exc.detail, headers={"Retry-After": str(exc.retry_after)})
+        if isinstance(exc, UploadRejected):
+            return StudioError(exc.status, exc.code, exc.detail)
+        if isinstance(exc, SessionBusy):
+            return StudioError(409, "session_busy", str(exc))
+        if isinstance(exc, (EvaluationFenceError, FenceError)):
+            return StudioError(403, "evaluation_fenced", str(exc))
+        if isinstance(exc, JobCancelled):
+            return StudioError(409, "job_cancelled", str(exc))
+        if isinstance(exc, RecordExpired):
+            return StudioError(410, "record_expired", "this shared record has expired from the server's bounded store")
+        if isinstance(exc, KeyError):
+            return StudioError(404, "not_found", f"not found: {exc}")
+        if isinstance(exc, (ValueError, RuntimeError)):
+            return StudioError(409, "conflict", str(exc))
+        return None
 
     def session(request: Request) -> StudioService:
         sid = request.headers.get(SESSION_HEADER) or request.query_params.get("session")
+        token = request.headers.get(TOKEN_HEADER) or request.query_params.get("token")
         if not sid:
             raise StudioError(400, "no_session", "start a session first (POST /api/session)")
         try:
-            return mgr.get(sid)
+            svc = mgr.get(sid, token)
         except SessionExpired:
             raise StudioError(404, "session_expired", "this session has ended (idle too long or the server restarted)")
+        except TokenRequired as exc:
+            raise StudioError(401, "token_required", str(exc))
+        except TokenInvalid as exc:
+            raise StudioError(401, "token_invalid", str(exc))
+        except ServerBusy as exc:
+            raise StudioError(503, "server_busy", f"{exc}; try again shortly or watch the recordings",
+                              headers={"Retry-After": "30"})
+        asked = request.headers.get(GENERATION_HEADER)
+        if asked and request.method == "POST":
+            try:
+                svc.check_generation(asked)
+            except StaleGeneration as exc:
+                raise mapped(exc)
+        return svc
 
     def guard(fn, *a, **k):
         try:
             return fn(*a, **k)
-        except SessionBusy as exc:
-            raise StudioError(409, "session_busy", str(exc))
-        except EvaluationFenceError as exc:
-            raise StudioError(403, "evaluation_fenced", str(exc))
-        except KeyError as exc:
-            raise StudioError(404, "not_found", f"not found: {exc}")
-        except (ValueError, RuntimeError) as exc:
-            raise StudioError(409, "conflict", str(exc))
+        except Exception as exc:  # noqa: BLE001 - mapped onto API errors below
+            err = mapped(exc)
+            if err is None:
+                raise
+            raise err from exc
 
     @app.get("/api/health")
     def health():
@@ -167,17 +308,23 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
                 "llm": llm_public(mgr.budget),
                 "meta_budgets": budgets_public(mgr.meta_budgets),
                 "sessions": mgr.stats(), "jobs": mgr.gate.stats(),
+                "admission": mgr.admission.stats(), "media": mgr.media_quota.stats(),
+                "records": mgr.records.stats(), "challenge": {"tour": bool(tour_record())},
                 "eval": {"max_seeds": max_eval_seeds(), "showcase_seeds": [9000, 9099]},
                 "uptime_s": round(time.time() - started, 1)}
 
     @app.post("/api/session")
-    def new_session():
+    def new_session(request: Request):
         try:
-            sid, svc = mgr.create()
+            sid, token, svc = mgr.create(addr_of(request))
         except ServerBusy as exc:
             raise StudioError(503, "server_busy", f"{exc}; try again shortly or watch the recordings",
                               headers={"Retry-After": "30"})
-        return {"session": sid, "mode": svc.mode, "idle_expiry_s": int(mgr.idle_s)}
+        except RateLimited as exc:
+            raise mapped(exc)
+        return {"session": sid, "token": token, "mode": svc.mode, "idle_expiry_s": int(mgr.idle_s),
+                "generation_id": svc.generation_id, "token_required": mgr.require_token,
+                "limits": {"uploads": svc.upload_limits.public()}}
 
     @app.get("/api/state")
     def state(svc: StudioService = Depends(session)):
@@ -192,7 +339,12 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
         j = svc.jobs.get(job_id)
         if j is None:
             raise StudioError(404, "not_found", "no such job")
+        svc.busy()                      # applies the job timeout watchdog
         return j.public()
+
+    @app.post("/api/jobs/{job_id}/cancel")
+    def job_cancel(job_id: str, svc: StudioService = Depends(session)):
+        return guard(svc.cancel_job, job_id)
 
     @app.post("/api/demo/load")
     def demo_load(svc: StudioService = Depends(session)):
@@ -219,11 +371,11 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
     def run(body: RunIn, svc: StudioService = Depends(session)):
         if not svc.session.specs:
             raise StudioError(409, "conflict", "interpret the demonstration first")
-        return guard(svc.run, body.spec_version, body.condition[:120], body.tags[:6]).public()
+        return guard(svc.run, body.spec_version, body.condition[:120], body.tags[:6], body.backend).public()
 
     @app.post("/api/recheck")
     def recheck(body: RecheckIn, svc: StudioService = Depends(session)):
-        return guard(svc.recheck, body.rollout_id, body.spec_version)
+        return guard(svc.recheck, body.rollout_id, body.spec_version, body.spec_version_id)
 
     @app.post("/api/scene")
     def scene(body: SceneIn, svc: StudioService = Depends(session)):
@@ -256,20 +408,49 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
         n = request.headers.get("content-length")
         if n is not None and n.isdigit() and int(n) > limit:
             raise StudioError(413, "too_large", f"upload larger than {limit // (1024 * 1024)} MB")
-        data = b""
+        data = bytearray()
         async for chunk in request.stream():
             data += chunk
             if len(data) > limit:
                 raise StudioError(413, "too_large", f"upload larger than {limit // (1024 * 1024)} MB")
-        return data
+        return bytes(data)
 
     @app.post("/api/video/upload")
     async def video_upload(request: Request, view: str = "top", svc: StudioService = Depends(session)):
-        data = await read_body(request, MAX_UPLOAD_MB * 1024 * 1024)
+        """Streamed to disk inside the admitted size; validated (probe + full decode) before it counts."""
+        from .session_adapter import UPLOAD_VIEWS
+        if view not in UPLOAD_VIEWS:
+            raise StudioError(422, "invalid_video", f"view must be one of {list(UPLOAD_VIEWS)}")
+        n = request.headers.get("content-length")
+        if n is None or not n.isdigit():
+            raise StudioError(411, "length_required", "send the upload with a Content-Length header")
+        nbytes = int(n)
+        guard(svc.admit_upload, nbytes)
+        import uuid as _uuid
+        tmp = svc.upload_dir() / f".incoming-{_uuid.uuid4().hex[:8]}"
+        got = 0
         try:
-            return await asyncio.to_thread(svc.upload_video, data, view)
-        except ValueError as exc:
-            raise StudioError(422, "invalid_video", str(exc))
+            with tmp.open("wb") as fh:
+                async for chunk in request.stream():
+                    got += len(chunk)
+                    if got > nbytes:
+                        raise StudioError(413, "too_large", "upload longer than its Content-Length")
+                    fh.write(chunk)
+        except BaseException:
+            tmp.unlink(missing_ok=True)
+            svc.media.unadmit(nbytes)
+            raise
+        if got != nbytes:
+            tmp.unlink(missing_ok=True)
+            svc.media.unadmit(nbytes)
+            raise StudioError(400, "incomplete_upload", f"received {got} of {nbytes} bytes")
+        try:
+            return await asyncio.to_thread(svc.accept_upload, tmp, view, nbytes)
+        except Exception as exc:  # noqa: BLE001
+            err = mapped(exc)
+            if err is None:
+                raise
+            raise err from exc
 
     @app.post("/api/video/process")
     def video_process(body: VideoIn, svc: StudioService = Depends(session)):
@@ -278,7 +459,7 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
     @app.get("/api/video/file/{vid}")
     def video_file(vid: str, svc: StudioService = Depends(session)):
         path = guard(svc.video_file, vid)
-        return FileResponse(path, media_type="video/mp4")
+        return FileResponse(path, media_type="video/mp4", headers={"Cache-Control": "private, max-age=3600"})
 
     @app.post("/api/voice")
     async def voice(request: Request, svc: StudioService = Depends(session)):
@@ -293,6 +474,130 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
     @app.get("/api/models")
     def models(svc: StudioService = Depends(session)):
         return svc.models_public()
+
+    # ------------------------------------------------------------ challenge mode
+    @app.get("/api/challenge/options")
+    def challenge_options(svc: StudioService = Depends(session)):
+        return guard(svc.challenge_options)
+
+    @app.post("/api/challenge")
+    def challenge_create(body: ChallengeIn, svc: StudioService = Depends(session)):
+        return guard(svc.challenge_create, body.family, body.seed, body.preset, body.edits, body.backend).public()
+
+    @app.get("/api/challenge/{cid}")
+    def challenge_get(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.challenge_public, cid)
+
+    @app.post("/api/challenge/{cid}/correction")
+    def challenge_correction(cid: str, body: ChallengeCorrectionIn, svc: StudioService = Depends(session)):
+        return guard(svc.challenge_correction, cid, body.text, body.transcript_id, body.focus_kind,
+                     body.answer).public()
+
+    @app.post("/api/challenge/{cid}/manual")
+    def challenge_manual(cid: str, body: ManualEditIn, svc: StudioService = Depends(session)):
+        return guard(svc.challenge_manual, cid, body.edits, body.note)
+
+    @app.post("/api/challenge/{cid}/review")
+    def challenge_review(cid: str, body: ReviewIn, svc: StudioService = Depends(session)):
+        return guard(svc.challenge_review, cid, body.accept, body.note)
+
+    @app.post("/api/challenge/{cid}/execute")
+    def challenge_execute(cid: str, body: Optional[ChallengeExecuteIn] = None, svc: StudioService = Depends(session)):
+        return guard(svc.challenge_execute, cid, body.backend if body is not None else None).public()
+
+    @app.post("/api/challenge/{cid}/publish")
+    def challenge_publish(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.challenge_publish, cid)
+
+    # ------------------------------------------------------------ study mode (consented trials)
+    def study_guard(fn, *a, **k):
+        from .trials import StudyError
+        try:
+            return fn(*a, **k)
+        except StudyError as exc:
+            raise StudioError(422, "invalid_study", str(exc))
+
+    @app.post("/api/study/start")
+    def study_start(body: StudyIn, svc: StudioService = Depends(session)):
+        return guard(study_guard, svc.study_start, body.model_dump())
+
+    @app.post("/api/study/task")
+    def study_task(body: StudyTaskIn, svc: StudioService = Depends(session)):
+        return guard(study_guard, svc.study_task, body.task, body.task_origin, body.condition)
+
+    @app.post("/api/study/end")
+    def study_end(body: StudyEndIn, svc: StudioService = Depends(session)):
+        return guard(svc.study_end, body.reason)
+
+    @app.post("/api/study/comprehension")
+    def study_comprehension(body: ComprehensionIn, svc: StudioService = Depends(session)):
+        return guard(svc.study_comprehension, body.trial_id, body.answer)
+
+    @app.post("/api/study/clarification")
+    def study_clarification(body: ClarificationRatingIn, svc: StudioService = Depends(session)):
+        return guard(svc.study_clarification, body.trial_id, body.answered, body.useful)
+
+    @app.post("/api/spec/manual")
+    def spec_manual(body: ManualEditIn, svc: StudioService = Depends(session)):
+        if not svc.session.specs:
+            raise StudioError(409, "conflict", "interpret the demonstration first")
+        return guard(svc.manual_edit, body.edits, body.note)
+
+    # ------------------------------------------------------------ real-phone capture
+    def capture_guard(fn, *a, **k):
+        from .capture import CaptureError
+        try:
+            return fn(*a, **k)
+        except CaptureError as exc:
+            raise StudioError(422, "invalid_capture", str(exc))
+
+    @app.post("/api/capture")
+    def capture_create(body: CaptureIn, svc: StudioService = Depends(session)):
+        return guard(capture_guard, svc.capture_create, body.mode, body.notes)
+
+    @app.get("/api/capture/{cid}")
+    def capture_get(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.capture_public, cid)
+
+    @app.post("/api/capture/{cid}/clips")
+    def capture_clips(cid: str, body: CaptureClipsIn, svc: StudioService = Depends(session)):
+        return guard(capture_guard, svc.capture_clips, cid, body.clips, body.sync)
+
+    @app.post("/api/capture/{cid}/calibrate")
+    def capture_calibrate(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.capture_step, cid, "calibrate").public()
+
+    @app.post("/api/capture/{cid}/track")
+    def capture_track(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.capture_step, cid, "track").public()
+
+    @app.post("/api/capture/{cid}/review")
+    def capture_review(cid: str, body: CaptureReviewIn, svc: StudioService = Depends(session)):
+        return guard(capture_guard, svc.capture_review, cid, body.model_dump())
+
+    @app.post("/api/capture/{cid}/propose")
+    def capture_propose(cid: str, svc: StudioService = Depends(session)):
+        return guard(svc.capture_propose, cid).public()
+
+    # Records and the recorded tour need no session: they are immutable and public.
+    @app.get("/api/records/{record_id}")
+    def record(record_id: str):
+        return guard(mgr.records.get, record_id)
+
+    @app.get("/api/records/{record_id}/rollouts/{rollout_id}")
+    def record_rollout(record_id: str, rollout_id: str):
+        return guard(mgr.records.rollout, record_id, rollout_id)
+
+    @app.get("/api/tour")
+    def tour():
+        rec = tour_record()
+        if rec is None:
+            raise StudioError(404, "not_found", "no recorded tour on this server")
+        return rec
+
+    @app.get("/api/tour/rollouts/{rollout_id}")
+    def tour_rollout_payload(rollout_id: str):
+        return guard(tour_rollout, rollout_id)
 
     @app.post("/api/teleop/start")
     def teleop_start(svc: StudioService = Depends(session)):
@@ -314,9 +619,15 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
             return
         sid = socket.query_params.get("session")
         try:
-            svc = mgr.get(sid)
+            svc = mgr.get(sid, socket.query_params.get("token"))
         except SessionExpired:
             await socket.close(code=4404)
+            return
+        except (TokenRequired, TokenInvalid):
+            await socket.close(code=4401)
+            return
+        except ServerBusy:
+            await socket.close(code=1013)
             return
         await socket.accept()
         loop = asyncio.get_running_loop()
@@ -337,7 +648,8 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
 
         task = asyncio.create_task(sender())
         try:
-            await socket.send_text(json.dumps({"type": "hello", "mode": svc.mode, "revision": svc.revision}))
+            await socket.send_text(json.dumps({"type": "hello", "mode": svc.mode, "revision": svc.revision,
+                                               "generation_id": svc.generation_id}))
             while True:
                 raw = await socket.receive_text()
                 mgr.touch(sid)

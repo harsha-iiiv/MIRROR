@@ -1,0 +1,1475 @@
+{
+ "meta": {
+  "generated_unix": 1793677105.950283,
+  "commit": "b5b234b",
+  "mujoco": "3.17.0",
+  "python": "3.12.11",
+  "numpy": "2.5.4",
+  "platform": {
+   "system": "Darwin",
+   "machine": "arm64",
+   "release": "25.6.0",
+   "processor": "arm",
+   "mujoco_gl": "cgl"
+  },
+  "platform_note": "Physics results differ slightly between platforms (about 1e-4 m); compare runs only within one platform.",
+  "seeds": [
+   300,
+   301,
+   302,
+   303,
+   304,
+   305,
+   306,
+   307,
+   308,
+   309
+  ],
+  "split": "dev",
+  "excluded_tuning_seeds": [
+   100,
+   101,
+   102,
+   103,
+   104,
+   105,
+   106,
+   107
+  ],
+  "total_wall_time_s": 143.7,
+  "specs": {
+   "v1": "cup upright at the end (reference original)",
+   "v2": "v1 + cup upright while carried (reference corrected)"
+  },
+  "note": "Simulation only (MuJoCo). No hardware. Development layouts, not an evaluation."
+ },
+ "rows": [
+  {
+   "backend": "gripper",
+   "scene_id": "ref_demo",
+   "seed": null,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.14,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.062,
+   "episode_wall_time_s": 1.723,
+   "simulated_time_s": 52.336,
+   "physics_steps": 13085,
+   "plan_status": "ok",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "ref_demo",
+   "seed": null,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.14,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.062,
+   "episode_wall_time_s": 1.618,
+   "simulated_time_s": 52.336,
+   "physics_steps": 13085,
+   "plan_status": "ok"
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "ref_shortcut",
+   "seed": null,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 89.62,
+   "cup_beads_kept": "6/8",
+   "planning_time_s": 0.1,
+   "episode_wall_time_s": 1.893,
+   "simulated_time_s": 58.084,
+   "physics_steps": 14522,
+   "plan_status": "ok",
+   "recheck_under_v2": {
+    "status": "constraint_violated",
+    "violations": [
+     "c_container_upright_transport"
+    ]
+   }
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "ref_shortcut",
+   "seed": null,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.14,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.095,
+   "episode_wall_time_s": 2.102,
+   "simulated_time_s": 61.316,
+   "physics_steps": 15330,
+   "plan_status": "ok"
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "ref_blocked",
+   "seed": null,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched-90"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 89.62,
+   "cup_beads_kept": "6/8",
+   "planning_time_s": 0.083,
+   "episode_wall_time_s": 2.154,
+   "simulated_time_s": 65.34,
+   "physics_steps": 16336,
+   "plan_status": "ok",
+   "recheck_under_v2": {
+    "status": "constraint_violated",
+    "violations": [
+     "c_container_upright_transport"
+    ]
+   }
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "ref_blocked",
+   "seed": null,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "planning_failed",
+   "routes": [],
+   "violations": [],
+   "cup_max_transport_tilt_deg": null,
+   "cup_beads_kept": null,
+   "planning_time_s": 0.075,
+   "episode_wall_time_s": 0.081,
+   "simulated_time_s": 0.0,
+   "physics_steps": 0,
+   "plan_status": "no_plan",
+   "infeasibility": {
+    "proven": true,
+    "kind": "separating_wall_slot_clearance",
+    "failure_kind": null,
+    "search_budget_exhausted": null,
+    "validation_attempts": null
+   },
+   "plan_reason": "no feasible transport route for cup_0 [direct: no collision-free path within the workspace (blocked by obstacle:wall_0); around:wall_0:+y: no collision-free path: the +y end of wall_0 is 0.500 m along the wall from its centre, beyond the workspace limit of 0.400 m; around:wall_0:-y: no collision-free path: the -y end of wall_0 is 0.500 m along the wall from its centre, beyond the workspace limit of 0.400 m; through_slot:wall_0:0:upright: envelope height 0.170 m plus 2 x 0.010 m margin exceeds slot opening 0.100 m; through_slot:wall_0:0:pitched+30: violates c_container_upright_transport (object"
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_300",
+   "seed": 300,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 89.58,
+   "cup_beads_kept": "5/8",
+   "planning_time_s": 0.092,
+   "episode_wall_time_s": 2.033,
+   "simulated_time_s": 64.18,
+   "physics_steps": 16046,
+   "plan_status": "ok",
+   "recheck_under_v2": {
+    "status": "constraint_violated",
+    "violations": [
+     "c_container_upright_transport"
+    ]
+   }
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_300",
+   "seed": 300,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.14,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.105,
+   "episode_wall_time_s": 1.871,
+   "simulated_time_s": 59.284,
+   "physics_steps": 14822,
+   "plan_status": "ok"
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_301",
+   "seed": 301,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 89.72,
+   "cup_beads_kept": "6/8",
+   "planning_time_s": 0.105,
+   "episode_wall_time_s": 2.066,
+   "simulated_time_s": 62.38,
+   "physics_steps": 15596,
+   "plan_status": "ok",
+   "recheck_under_v2": {
+    "status": "constraint_violated",
+    "violations": [
+     "c_container_upright_transport"
+    ]
+   }
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_301",
+   "seed": 301,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.18,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.097,
+   "episode_wall_time_s": 1.813,
+   "simulated_time_s": 57.448,
+   "physics_steps": 14363,
+   "plan_status": "ok"
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_302",
+   "seed": 302,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.14,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.103,
+   "episode_wall_time_s": 1.726,
+   "simulated_time_s": 55.488,
+   "physics_steps": 13873,
+   "plan_status": "ok",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_302",
+   "seed": 302,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.14,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.091,
+   "episode_wall_time_s": 1.728,
+   "simulated_time_s": 55.488,
+   "physics_steps": 13873,
+   "plan_status": "ok"
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_303",
+   "seed": 303,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 89.66,
+   "cup_beads_kept": "4/8",
+   "planning_time_s": 0.084,
+   "episode_wall_time_s": 1.848,
+   "simulated_time_s": 62.12,
+   "physics_steps": 15531,
+   "plan_status": "ok",
+   "recheck_under_v2": {
+    "status": "constraint_violated",
+    "violations": [
+     "c_container_upright_transport"
+    ]
+   }
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_303",
+   "seed": 303,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched-90"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.21,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.079,
+   "episode_wall_time_s": 1.817,
+   "simulated_time_s": 59.932,
+   "physics_steps": 14984,
+   "plan_status": "ok"
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_304",
+   "seed": 304,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.18,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.101,
+   "episode_wall_time_s": 1.657,
+   "simulated_time_s": 52.948,
+   "physics_steps": 13238,
+   "plan_status": "ok",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_304",
+   "seed": 304,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.18,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.097,
+   "episode_wall_time_s": 1.65,
+   "simulated_time_s": 52.948,
+   "physics_steps": 13238,
+   "plan_status": "ok"
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_305",
+   "seed": 305,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched+90"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.18,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.152,
+   "episode_wall_time_s": 1.558,
+   "simulated_time_s": 48.176,
+   "physics_steps": 12045,
+   "plan_status": "ok",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_305",
+   "seed": 305,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched+90"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.18,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.14,
+   "episode_wall_time_s": 1.578,
+   "simulated_time_s": 48.176,
+   "physics_steps": 12045,
+   "plan_status": "ok"
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_306",
+   "seed": 306,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched+90"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 89.63,
+   "cup_beads_kept": "5/8",
+   "planning_time_s": 0.106,
+   "episode_wall_time_s": 1.817,
+   "simulated_time_s": 55.684,
+   "physics_steps": 13922,
+   "plan_status": "ok",
+   "recheck_under_v2": {
+    "status": "constraint_violated",
+    "violations": [
+     "c_container_upright_transport"
+    ]
+   }
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_306",
+   "seed": 306,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched+90"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.13,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.096,
+   "episode_wall_time_s": 1.612,
+   "simulated_time_s": 51.224,
+   "physics_steps": 12807,
+   "plan_status": "ok"
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_307",
+   "seed": 307,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "direct",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.15,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.078,
+   "episode_wall_time_s": 1.326,
+   "simulated_time_s": 43.192,
+   "physics_steps": 10799,
+   "plan_status": "ok",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_307",
+   "seed": 307,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "direct",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.15,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.076,
+   "episode_wall_time_s": 1.32,
+   "simulated_time_s": 43.192,
+   "physics_steps": 10799,
+   "plan_status": "ok"
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_308",
+   "seed": 308,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 89.63,
+   "cup_beads_kept": "3/8",
+   "planning_time_s": 0.089,
+   "episode_wall_time_s": 1.628,
+   "simulated_time_s": 54.036,
+   "physics_steps": 13510,
+   "plan_status": "ok",
+   "recheck_under_v2": {
+    "status": "constraint_violated",
+    "violations": [
+     "c_container_upright_transport"
+    ]
+   }
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_308",
+   "seed": 308,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.21,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.085,
+   "episode_wall_time_s": 1.608,
+   "simulated_time_s": 51.68,
+   "physics_steps": 12921,
+   "plan_status": "ok"
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_309",
+   "seed": 309,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 89.64,
+   "cup_beads_kept": "5/8",
+   "planning_time_s": 0.104,
+   "episode_wall_time_s": 2.067,
+   "simulated_time_s": 59.372,
+   "physics_steps": 14844,
+   "plan_status": "ok",
+   "recheck_under_v2": {
+    "status": "constraint_violated",
+    "violations": [
+     "c_container_upright_transport"
+    ]
+   }
+  },
+  {
+   "backend": "gripper",
+   "scene_id": "dev_309",
+   "seed": 309,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.17,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.102,
+   "episode_wall_time_s": 1.807,
+   "simulated_time_s": 55.764,
+   "physics_steps": 13942,
+   "plan_status": "ok"
+  },
+  {
+   "backend": "arm",
+   "scene_id": "ref_demo",
+   "seed": null,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.21,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.401,
+   "episode_wall_time_s": 2.127,
+   "simulated_time_s": 52.336,
+   "physics_steps": 13085,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.407,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.333
+   },
+   "arm_variant": "",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "arm",
+   "scene_id": "ref_demo",
+   "seed": null,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.21,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.4,
+   "episode_wall_time_s": 2.165,
+   "simulated_time_s": 52.336,
+   "physics_steps": 13085,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.407,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.331
+   },
+   "arm_variant": ""
+  },
+  {
+   "backend": "arm",
+   "scene_id": "ref_shortcut",
+   "seed": null,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.28,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 1.225,
+   "episode_wall_time_s": 3.27,
+   "simulated_time_s": 59.96,
+   "physics_steps": 14991,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.48,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.25
+   },
+   "arm_variant": "",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "arm",
+   "scene_id": "ref_shortcut",
+   "seed": null,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.28,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 2.419,
+   "episode_wall_time_s": 4.555,
+   "simulated_time_s": 59.96,
+   "physics_steps": 14991,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.48,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.262
+   },
+   "arm_variant": ""
+  },
+  {
+   "backend": "arm",
+   "scene_id": "ref_blocked",
+   "seed": null,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "planning_failed",
+   "routes": [],
+   "violations": [],
+   "cup_max_transport_tilt_deg": null,
+   "cup_beads_kept": null,
+   "planning_time_s": 1.153,
+   "episode_wall_time_s": 1.16,
+   "simulated_time_s": 0.0,
+   "physics_steps": 0,
+   "plan_status": "no_plan",
+   "infeasibility": {
+    "proven": false,
+    "kind": "arm_motion_planning_failure",
+    "failure_kind": "collision",
+    "search_budget_exhausted": false,
+    "validation_attempts": 4
+   },
+   "plan_reason": "arm motion planning failed: no remaining admissible route for cup_0, block_0, marker_0 is executable by the arm; last failure (collision): transport cup_0 (step 5, waypoint 2): arm link wrist_3_link within 2 mm of obstacle:wall_0 (margin 10 mm) at TCP (-0.123, -0.180, 0.140). The task planner did find plans for the gripper; this is not a proof that no arm motion exists"
+  },
+  {
+   "backend": "arm",
+   "scene_id": "ref_blocked",
+   "seed": null,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "planning_failed",
+   "routes": [],
+   "violations": [],
+   "cup_max_transport_tilt_deg": null,
+   "cup_beads_kept": null,
+   "planning_time_s": 0.079,
+   "episode_wall_time_s": 0.079,
+   "simulated_time_s": 0.0,
+   "physics_steps": 0,
+   "plan_status": "no_plan",
+   "infeasibility": {
+    "proven": true,
+    "kind": "separating_wall_slot_clearance",
+    "failure_kind": null,
+    "search_budget_exhausted": null,
+    "validation_attempts": null
+   },
+   "plan_reason": "planner (before arm validation): no feasible transport route for cup_0 [direct: no collision-free path within the workspace (blocked by obstacle:wall_0); around:wall_0:+y: no collision-free path: the +y end of wall_0 is 0.500 m along the wall from its centre, beyond the workspace limit of 0.400 m; around:wall_0:-y: no collision-free path: the -y end of wall_0 is 0.500 m along the wall from its centre, beyond the workspace limit of 0.400 m; through_slot:wall_0:0:upright: envelope height 0.170 m plus 2 x 0.010 m margin exceeds slot opening 0.100 m; through_slot:wall_0:0:pitched+30: violates c_co"
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_300",
+   "seed": 300,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.18,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 3.123,
+   "episode_wall_time_s": 5.284,
+   "simulated_time_s": 70.996,
+   "physics_steps": 17750,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.366,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.363
+   },
+   "arm_variant": "",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_300",
+   "seed": 300,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.18,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 3.416,
+   "episode_wall_time_s": 5.769,
+   "simulated_time_s": 70.996,
+   "physics_steps": 17750,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.366,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.357
+   },
+   "arm_variant": ""
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_301",
+   "seed": 301,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.31,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 1.565,
+   "episode_wall_time_s": 3.092,
+   "simulated_time_s": 50.032,
+   "physics_steps": 12509,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 1.809,
+    "tool_flipped": false,
+    "start_branch": 1,
+    "validation_time_s": 0.426
+   },
+   "arm_variant": "",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_301",
+   "seed": 301,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.31,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 2.731,
+   "episode_wall_time_s": 4.294,
+   "simulated_time_s": 50.032,
+   "physics_steps": 12509,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 1.809,
+    "tool_flipped": false,
+    "start_branch": 1,
+    "validation_time_s": 0.423
+   },
+   "arm_variant": ""
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_302",
+   "seed": 302,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.15,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 2.077,
+   "episode_wall_time_s": 3.723,
+   "simulated_time_s": 53.032,
+   "physics_steps": 13259,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 1.841,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.244
+   },
+   "arm_variant": "",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_302",
+   "seed": 302,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.15,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 2.107,
+   "episode_wall_time_s": 3.773,
+   "simulated_time_s": 53.032,
+   "physics_steps": 13259,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 1.841,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.302
+   },
+   "arm_variant": ""
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_303",
+   "seed": 303,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.13,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 1.864,
+   "episode_wall_time_s": 3.904,
+   "simulated_time_s": 57.296,
+   "physics_steps": 14325,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 1.755,
+    "tool_flipped": false,
+    "start_branch": 1,
+    "validation_time_s": 0.518
+   },
+   "arm_variant": "",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_303",
+   "seed": 303,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.13,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 2.781,
+   "episode_wall_time_s": 4.679,
+   "simulated_time_s": 57.296,
+   "physics_steps": 14325,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 1.755,
+    "tool_flipped": false,
+    "start_branch": 1,
+    "validation_time_s": 0.54
+   },
+   "arm_variant": ""
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_304",
+   "seed": 304,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.17,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 2.445,
+   "episode_wall_time_s": 4.058,
+   "simulated_time_s": 47.116,
+   "physics_steps": 11780,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.752,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.275
+   },
+   "arm_variant": "",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_304",
+   "seed": 304,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.17,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 2.045,
+   "episode_wall_time_s": 3.586,
+   "simulated_time_s": 47.116,
+   "physics_steps": 11780,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.752,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.233
+   },
+   "arm_variant": ""
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_305",
+   "seed": 305,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.18,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 4.228,
+   "episode_wall_time_s": 5.731,
+   "simulated_time_s": 46.26,
+   "physics_steps": 11566,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 1.978,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.214
+   },
+   "arm_variant": "",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_305",
+   "seed": 305,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.18,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 4.401,
+   "episode_wall_time_s": 5.919,
+   "simulated_time_s": 46.26,
+   "physics_steps": 11566,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 1.978,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.213
+   },
+   "arm_variant": ""
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_306",
+   "seed": 306,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.22,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 1.76,
+   "episode_wall_time_s": 3.297,
+   "simulated_time_s": 49.216,
+   "physics_steps": 12305,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.763,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.232
+   },
+   "arm_variant": "",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_306",
+   "seed": 306,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.22,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 4.575,
+   "episode_wall_time_s": 6.224,
+   "simulated_time_s": 49.216,
+   "physics_steps": 12305,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.763,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.242
+   },
+   "arm_variant": ""
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_307",
+   "seed": 307,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "direct",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.27,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 1.53,
+   "episode_wall_time_s": 3.495,
+   "simulated_time_s": 61.16,
+   "physics_steps": 15291,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.146,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.354
+   },
+   "arm_variant": "",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_307",
+   "seed": 307,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "direct",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.27,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 1.573,
+   "episode_wall_time_s": 3.559,
+   "simulated_time_s": 61.16,
+   "physics_steps": 15291,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.146,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.348
+   },
+   "arm_variant": ""
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_308",
+   "seed": 308,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.29,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 1.883,
+   "episode_wall_time_s": 3.74,
+   "simulated_time_s": 52.064,
+   "physics_steps": 13017,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.791,
+    "tool_flipped": false,
+    "start_branch": 1,
+    "validation_time_s": 0.411
+   },
+   "arm_variant": "",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_308",
+   "seed": 308,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.29,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 0.649,
+   "episode_wall_time_s": 2.299,
+   "simulated_time_s": 52.064,
+   "physics_steps": 13017,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.791,
+    "tool_flipped": false,
+    "start_branch": 1,
+    "validation_time_s": 0.558
+   },
+   "arm_variant": ""
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_309",
+   "seed": 309,
+   "spec_version": 1,
+   "condition": "v1",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.21,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 2.061,
+   "episode_wall_time_s": 3.701,
+   "simulated_time_s": 49.372,
+   "physics_steps": 12344,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.556,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.292
+   },
+   "arm_variant": "",
+   "recheck_under_v2": {
+    "status": "success",
+    "violations": []
+   }
+  },
+  {
+   "backend": "arm",
+   "scene_id": "dev_309",
+   "seed": 309,
+   "spec_version": 2,
+   "condition": "v2",
+   "status": "success",
+   "routes": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "violations": [],
+   "cup_max_transport_tilt_deg": 0.21,
+   "cup_beads_kept": "8/8",
+   "planning_time_s": 2.578,
+   "episode_wall_time_s": 4.257,
+   "simulated_time_s": 49.372,
+   "physics_steps": 12344,
+   "plan_status": "ok",
+   "arm": {
+    "peak_tcp_tracking_error_mm": 2.556,
+    "tool_flipped": false,
+    "start_branch": 0,
+    "validation_time_s": 0.262
+   },
+   "arm_variant": ""
+  }
+ ]
+}

@@ -20,7 +20,7 @@ from ..contracts import (Constraint, ObjectSpec, PlanResult, PlanStep, Pose, Rou
                          SceneState, Status, TaskSpec)
 from ..geometry import DEFAULT_UPRIGHT_TOL_DEG, GRIPPER
 from . import certificate as cert_mod
-from .collision import Box, World, check_segment, make_envelope
+from .collision import Box, World, box_distance, check_segment, make_envelope
 from .config import DEFAULT_CONFIG, PLANNER_NAME, UPRIGHT, Mode, PlannerConfig
 from .grasp import GraspModel, grasp_model, grasp_yaws
 from .grounding import Grounding, destination_tray, ground
@@ -112,13 +112,55 @@ def mode_restrictions(spec: TaskSpec, g: Grounding, obj_id: str, cfg: PlannerCon
                     banned[m.name] = (f"violates {c.id} (object tilt {m.tilt_deg:.0f} deg > "
                                       f"max_tilt_deg {lim:g} during {c.phase})")
         elif c.type == "keep_clearance":
-            margin_extra = max(margin_extra, float(c.params.get("min_m", 0.0)))
+            if c.phase in ("transport", "always"):
+                margin_extra = max(margin_extra, float(c.params.get("min_m", 0.0)))
+            else:
+                notes.append(f"{c.id}: the tray spot for {obj_id} is checked against the clearance")
         elif c.type == "upright" and c.phase == "final":
             notes.append(f"{c.id}: objects are always placed upright")
         elif c.type == "forbidden_contact":
             notes.append(f"{c.id}: planned motions keep {obj_id} clear of obstacles and other objects "
                          "by the safety margin")
     return allowed, banned, margin_extra, notes
+
+
+# ------------------------------------------------------------ clearance ---
+
+CLEARANCE_TOL = 1e-4
+
+
+def clearance_rules(spec: TaskSpec, g: Grounding, obj_id: str) -> list[Constraint]:
+    return [c for c in spec.enforced_constraints()
+            if c.type == "keep_clearance" and obj_id in g.constraint_objects.get(c.id, [])]
+
+
+def object_clearance(obj: ObjectSpec, scene: SceneState, pos=None, R=None) -> tuple[float, str]:
+    """Exact distance from the object's solid shape (box; capsule for the
+    marker) at a pose to the nearest obstacle box, and that obstacle's name."""
+    from .world import obstacle_boxes
+    c = np.array(obj.pose.pos if pos is None else pos, float)
+    Rm = quat_to_mat(obj.pose.quat) if R is None else np.asarray(R, float)
+    if obj.kind == "marker":
+        core, radius = np.array([0.0, 0.0, float(obj.size["half_length"])]), float(obj.size["radius"])
+    else:
+        core, radius = np.array(object_half_extents(obj), float), 0.0
+    me = Box(c, Rm, core, obj.id, "object")
+    best, name = math.inf, ""
+    for ob in scene.obstacles:
+        for b in obstacle_boxes(ob):
+            d = box_distance(me, b) - radius
+            if d < best:
+                best, name = d, ob.id
+    return max(best, 0.0), name
+
+
+def object_half_extents(obj: ObjectSpec):
+    if obj.kind == "cup":
+        return tuple(obj.size["outer_half"])
+    if obj.kind == "block":
+        return tuple(obj.size["half"])
+    r = float(obj.size["radius"])
+    return (r, r, float(obj.size["half_length"]) + r)
 
 
 # ----------------------------------------------------------- the core ---
@@ -175,6 +217,29 @@ def build_core(spec: TaskSpec, scene: SceneState, cfg: PlannerConfig = DEFAULT_C
         allowed, banned, mextra, cnotes = mode_restrictions(spec, g, oid, cfg)
         core.notes += cnotes
         ocfg = _cfg_with_margin(cfg, mextra)
+        crules = clearance_rules(spec, g, oid)
+        start_rules = [c for c in crules if c.phase in ("transport", "always")]
+        if start_rules:
+            d0, near = object_clearance(obj, scene)
+            need = max(float(c.params.get("min_m", 0.0)) for c in start_rules)
+            if d0 < need - CLEARANCE_TOL:
+                rule = max(start_rules, key=lambda c: float(c.params.get("min_m", 0.0)))
+                stmt = (f"{oid} rests {d0:.3f} m from {near}. The {rule.phase} phase begins when it is grasped "
+                        f"at that resting pose, so a clearance of {need:g} m cannot hold.")
+                proof = {"proven": True, "scope": "any_motion", "kind": "clearance_at_start", "object_id": oid,
+                         "object": oid, "constraint_ids": [rule.id], "rule": rule.id,
+                         "distance_m": round(d0, 5), "required_m": need, "nearest_obstacle": near,
+                         "statement": stmt, "argument": stmt,
+                         "assumptions": ["objects are picked up only by top grasps at their resting pose",
+                                         "object and obstacle dimensions from the scene description",
+                                         "clearance is the distance between solid shapes (box; capsule for the marker)"],
+                         "not_covered": ["pushing or sliding the object before grasping it", "other grasp types"],
+                         "method": "exact distance at the start pose (mirror/plan/planner.py)"}
+                op = ObjectPlan(obj, gm, 0.0, np.zeros(3), np.zeros(3), None, [], [], banned, allowed,
+                                failure=f"{oid} starts {d0:.3f} m from {near}, closer than the {need:g} m "
+                                        f"required by {rule.id}", infeasibility=proof)
+                core.objects.append(op)
+                continue
         if tilt_deg_of(obj.pose.quat) > 10.0:
             op = ObjectPlan(obj, gm, 0.0, np.zeros(3), np.zeros(3), None, [], [], banned, allowed,
                             failure=f"{oid} is not standing upright (tilt {tilt_deg_of(obj.pose.quat):.0f} deg); "
@@ -228,6 +293,15 @@ def build_core(spec: TaskSpec, scene: SceneState, cfg: PlannerConfig = DEFAULT_C
             core.objects.append(ObjectPlan(obj, gm, gy, grasp_tcp, pre, None, transit, [], banned, allowed,
                                            failure=f"no free spot for {oid} in {tray.id}"))
             continue
+        if crules:
+            dp, near = object_clearance(obj, scene, pl.obj_pos, quat_to_mat(_yaw_quat(pl.obj_yaw)))
+            need = max(float(c.params.get("min_m", 0.0)) for c in crules)
+            if dp < need - CLEARANCE_TOL:
+                core.objects.append(ObjectPlan(
+                    obj, gm, gy, grasp_tcp, pre, None, transit, [], banned, allowed,
+                    failure=(f"the chosen spot for {oid} in {tray.id} is {dp:.3f} m from {near}, closer than "
+                             f"the {need:g} m required by keep_clearance; no other spot was searched")))
+                continue
         held = gm.held(oid, rel)
         env_h = make_envelope(gm.width, held)
         world_h = World(static.boxes + [b for k, b in current.items() if k != oid], 0.0)
@@ -253,6 +327,10 @@ def build_core(spec: TaskSpec, scene: SceneState, cfg: PlannerConfig = DEFAULT_C
         cur_yaw = pl.gripper_yaw
         prev_open = gm.open_width
     return core
+
+
+def _yaw_quat(yaw: float):
+    return (math.cos(yaw / 2), 0.0, 0.0, math.sin(yaw / 2))
 
 
 def _rrt(q: Query) -> list[Candidate]:

@@ -12,6 +12,18 @@ Two parts:
 
 Nothing secret reaches the browser: the model key lives only in `/etc/mirror/mirror.env`.
 
+## Before deploying (checks)
+
+1. **Client addresses.** Verify whether the tunnel adds `X-Forwarded-For`: from two different networks,
+   call `GET /api/health` and compare `admission.tracked`, or log the header once. If it does, set
+   `MIRROR_TRUST_PROXY=1`. If it does not, leave it at 0: every visitor then arrives from 127.0.0.1,
+   per-address limits are off for them, and only the global limits apply.
+2. **Session state.** Set `MIRROR_STUDIO_STATE` (for example `/var/lib/mirror/state`, owned by the
+   service account) so sessions, their tokens and shared challenge records survive a restart.
+   Without it a restart ends every visitor session and shared records are lost.
+3. **Study recording** stays off unless `MIRROR_TRIAL_STORE` is set, and only for sessions a facilitator
+   starts with consent.
+
 ## 1. Live server
 
 Assumes a fresh Debian 13 machine with 4 cores and 7 GB of memory, and a tunnel that
@@ -79,6 +91,50 @@ Logs: `journalctl -u mirror-studio -f`. After changing the env file:
 | `MIRROR_VOICE_CALLS_PER_HOUR` | 60 | Speech-to-text requests per hour |
 | `MIRROR_VOICE_CALLS_PER_SESSION` | 10 | Speech-to-text requests per session |
 
+#### Tokens, admission, persistence and uploads
+
+The Origin check stops other web sites from using a visitor's browser; it does not authenticate
+HTTP clients. Sessions are bearer capabilities (id + secret token), and what any client can make the
+server do is bounded per client address and globally (docs/CHALLENGE_API.md sections 1, 7, 8).
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `MIRROR_REQUIRE_TOKEN` | 1 | Every session request needs `X-Mirror-Token` (0: legacy id-only) |
+| `MIRROR_STUDIO_STATE` | *(none)* | Persist sessions here; they survive a restart with the same id and token |
+| `MIRROR_RECORDS_MAX` | 200 | Shared challenge records kept (oldest evicted, evicted ids answer 410) |
+| `MIRROR_RECORDS_MAX_MB` | 500 | Bytes of shared records kept |
+| `MIRROR_EVICT_MIN_IDLE_S` | 300 | A newcomer may only displace a session idle at least this long |
+| `MIRROR_SESSIONS_PER_ADDR_HOUR` | 12 | New sessions per client address per hour |
+| `MIRROR_LIVE_SESSIONS_PER_ADDR` | 2 | Sessions one address holds at once |
+| `MIRROR_UPLOADS_PER_ADDR_HOUR` | 12 | Video uploads per address per hour |
+| `MIRROR_UPLOAD_MB_PER_ADDR_HOUR` | 200 | Uploaded megabytes per address per hour |
+| `MIRROR_JOBS_PER_ADDR_HOUR` | 120 | Simulation and interpretation jobs per address per hour |
+| `MIRROR_MODEL_CALLS_PER_ADDR_HOUR` | 24 | Model requests per address per hour |
+| `MIRROR_REQUESTS_PER_ADDR_MIN` | 300 | API requests per address per minute |
+| `MIRROR_TRUST_PROXY` | 0 | 1: client address = right-most `X-Forwarded-For` entry |
+| `MIRROR_JOB_TIMEOUT_S` | 900 | Longer jobs are reported failed and their late result discarded |
+| `MIRROR_UPLOAD_MAX_MB` | 40 | One uploaded video |
+| `MIRROR_UPLOAD_SESSION_MB` | 120 | All media one session holds |
+| `MIRROR_UPLOAD_GLOBAL_MB` | 1024 | All uploaded media on the server |
+| `MIRROR_UPLOAD_SESSION_FILES` | 6 | Files one session holds |
+| `MIRROR_UPLOAD_MAX_S` | 90 | Longest video |
+| `MIRROR_UPLOAD_MAX_SIDE` | 1920 | Largest width or height |
+| `MIRROR_UPLOAD_MAX_PIXELS` | 2073600 | Largest frame (1080p) |
+| `MIRROR_UPLOAD_MAX_FPS` | 60 | Highest frame rate |
+| `MIRROR_UPLOAD_MAX_FRAMES` | 5400 | Most frames |
+| `MIRROR_UPLOAD_PROBE_S` | 15 | Wall time for ffprobe |
+| `MIRROR_UPLOAD_DECODE_S` | 60 | Wall time for the full decode check |
+| `MIRROR_UPLOAD_MEM_MB` | 1536 | Address-space limit of ffprobe/ffmpeg |
+| `MIRROR_UPLOAD_TTL_S` | 1800 | An upload not used by a demonstration expires |
+| `MIRROR_STUDY_AUDIO_RETENTION_DAYS` | 0 | Consented study audio is kept only when > 0 (then deleted after that many days) |
+
+The tunnel forwards every visitor from `127.0.0.1`. Set `MIRROR_TRUST_PROXY=1` only if the tunnel
+adds `X-Forwarded-For`; check with two networks that `GET /api/health` shows `admission.tracked`
+growing per network. Without it, loopback requests cannot be told apart and are exempt from the
+per-address limits (counting them together would let one visitor push the others out); only the
+global session, job, upload and model limits apply. These are controlled-demo
+settings, not measured public-load capacity.
+
 A model request is one structured interpreter request (it may include one repair round).
 When a budget is used up, or the model fails, that step uses the offline rule-based
 interpreter and the page names the interpreter that produced the specification.
@@ -112,7 +168,10 @@ recorded responses and `MIRROR_LLM_MODEL` to the model they were recorded with.
 | 404 | `session_expired` | Session closed (idle, evicted or server restarted); the page starts a new one |
 | 409 | `session_busy` | This session already has a job running |
 | 503 | `server_busy` | Every session slot has work in progress (`Retry-After: 30`) |
-| 403 | `origin_not_allowed` / `evaluation_fenced` | Origin not listed / non-showcase seeds |
+| 403 | `origin_not_allowed` / `evaluation_fenced` | Origin not listed / non-showcase or frozen seeds |
+| 401 | `token_required` / `token_invalid` | Missing or wrong `X-Mirror-Token` |
+| 429 | `rate_limited` | Per-address limit (`Retry-After`) |
+| 409 | `stale_generation` | The request named a replaced demonstration generation |
 | 422 | `too_many_seeds` | More than `MIRROR_MAX_EVAL_SEEDS` layouts |
 
 ## 2. Static site on Netlify
@@ -120,8 +179,12 @@ recorded responses and `MIRROR_LLM_MODEL` to the model they were recorded with.
 Build the site on a machine with the repository installed:
 
 ```bash
-MIRROR_LLM_MODE=replay python scripts/export_static.py --out site --evaluation results/eval
+MIRROR_LLM_MODE=replay python scripts/export_static.py --out site --evaluation results/eval_muse
 ```
+
+The deployed site loads the second pre-registered evaluation (`results/eval_muse`, Muse Spark
+specifications, seeds 50000+/60000+). `--evaluation results/eval` builds the first registration
+(seeds 30000+/40000+) instead; the page names whichever folder it loaded.
 
 Point it at the live server (rewrites only `site/config.js`, `site/netlify.toml` and
 `site/_headers`; the content security policy then allows exactly that server):

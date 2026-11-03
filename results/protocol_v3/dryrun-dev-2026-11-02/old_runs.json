@@ -1,0 +1,132 @@
+[
+  {
+    "case_id": "d01",
+    "gold_changes_spec": true,
+    "base_status": "success",
+    "under_gold": "constraint_violated",
+    "unverified": [],
+    "rejected": true,
+    "violations": [
+      "c_upright_transport_cup"
+    ]
+  },
+  {
+    "case_id": "d02",
+    "gold_changes_spec": true,
+    "base_status": "success",
+    "under_gold": "constraint_violated",
+    "unverified": [],
+    "rejected": true,
+    "violations": [
+      "c_upright_transport_cup"
+    ]
+  },
+  {
+    "case_id": "d03",
+    "gold_changes_spec": true,
+    "base_status": "success",
+    "under_gold": "success",
+    "unverified": [],
+    "rejected": false,
+    "violations": []
+  },
+  {
+    "case_id": "d04",
+    "gold_changes_spec": false
+  },
+  {
+    "case_id": "d08",
+    "gold_changes_spec": true,
+    "base_status": "success",
+    "under_gold": "constraint_violated",
+    "unverified": [],
+    "rejected": true,
+    "violations": [
+      "c_upright_transport_cup"
+    ]
+  },
+  {
+    "case_id": "d09",
+    "gold_changes_spec": false
+  },
+  {
+    "case_id": "d10",
+    "gold_changes_spec": true,
+    "base_status": "success",
+    "under_gold": "success",
+    "unverified": [],
+    "rejected": false,
+    "violations": []
+  },
+  {
+    "case_id": "d11",
+    "gold_changes_spec": true,
+    "base_status": "success",
+    "under_gold": "success (unverified: ['o_marker_before_cup'])",
+    "unverified": [
+      "o_marker_before_cup"
+    ],
+    "rejected": null,
+    "violations": []
+  },
+  {
+    "case_id": "d12",
+    "gold_changes_spec": true,
+    "base_status": "success",
+    "under_gold": "constraint_violated",
+    "unverified": [],
+    "rejected": true,
+    "violations": [
+      "c_keep_clearance_transport_cup"
+    ]
+  },
+  {
+    "case_id": "d13",
+    "gold_changes_spec": true,
+    "base_status": "success",
+    "under_gold": "success",
+    "unverified": [],
+    "rejected": false,
+    "violations": []
+  },
+  {
+    "case_id": "d14",
+    "gold_changes_spec": true,
+    "base_status": "success",
+    "under_gold": "success",
+    "unverified": [],
+    "rejected": false,
+    "violations": []
+  },
+  {
+    "case_id": "d15",
+    "gold_changes_spec": true,
+    "base_status": "success",
+    "under_gold": "success",
+    "unverified": [],
+    "rejected": false,
+    "violations": []
+  },
+  {
+    "case_id": "d17",
+    "gold_changes_spec": true,
+    "base_status": "success",
+    "under_gold": "constraint_violated",
+    "unverified": [],
+    "rejected": true,
+    "violations": [
+      "c_upright_transport_cup"
+    ]
+  },
+  {
+    "case_id": "d18",
+    "gold_changes_spec": true,
+    "base_status": "success",
+    "under_gold": "constraint_violated",
+    "unverified": [],
+    "rejected": true,
+    "violations": [
+      "c_upright_transport_cup"
+    ]
+  }
+]

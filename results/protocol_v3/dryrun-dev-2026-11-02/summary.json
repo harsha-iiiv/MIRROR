@@ -1,0 +1,230 @@
+{
+  "manual_structured": {
+    "attempt_status": {
+      "completed": 18
+    },
+    "cases_with_result": 18,
+    "turns": 20,
+    "not_measured_turns": 0,
+    "turn_exact": 16,
+    "apply_turns": 16,
+    "apply_exact": 16,
+    "refusal_turns": 4,
+    "refusal_exact": 0,
+    "refused_any_type": 4,
+    "false_accepts": 0,
+    "false_refusals": 0,
+    "wrong_scope_turns": 0,
+    "clarification_turns": 0,
+    "invalid_or_error_turns": 0,
+    "final_state_exact": 18,
+    "cases_measured": 18,
+    "end_to_end_success": 16,
+    "end_to_end_known": 17,
+    "end_to_end_unknown": 1,
+    "end_to_end_wilson95": [
+      0.73,
+      0.99
+    ],
+    "executed": 14,
+    "gold_violations": 1,
+    "gold_completion": 13,
+    "proven_infeasible_stops": 1,
+    "turn_latency_s_median": 0.0,
+    "planning_time_s_median": 0.22,
+    "sim_time_s_median": 57.152,
+    "path_length_m_median": 4.712,
+    "cost_usd": 0,
+    "network_calls": 0,
+    "by_category": {
+      "ambiguous": {
+        "cases": 2,
+        "end_to_end_success": 2,
+        "final_state_exact": 2
+      },
+      "infeasible": {
+        "cases": 1,
+        "end_to_end_success": 1,
+        "final_state_exact": 1
+      },
+      "negative": {
+        "cases": 1,
+        "end_to_end_success": 1,
+        "final_state_exact": 1
+      },
+      "positive": {
+        "cases": 12,
+        "end_to_end_success": 10,
+        "final_state_exact": 12
+      },
+      "unsupported": {
+        "cases": 2,
+        "end_to_end_success": 2,
+        "final_state_exact": 2
+      }
+    },
+    "by_input": {
+      "synthetic": {
+        "turns": 1,
+        "exact": 1
+      },
+      "typed": {
+        "turns": 19,
+        "exact": 15
+      }
+    },
+    "cases_planned": 18
+  },
+  "mirror_model": {
+    "attempt_status": {
+      "completed": 18
+    },
+    "cases_with_result": 18,
+    "turns": 20,
+    "not_measured_turns": 0,
+    "turn_exact": 15,
+    "apply_turns": 16,
+    "apply_exact": 11,
+    "refusal_turns": 4,
+    "refusal_exact": 4,
+    "refused_any_type": 4,
+    "false_accepts": 0,
+    "false_refusals": 2,
+    "wrong_scope_turns": 0,
+    "clarification_turns": 3,
+    "invalid_or_error_turns": 1,
+    "final_state_exact": 13,
+    "cases_measured": 18,
+    "end_to_end_success": 16,
+    "end_to_end_known": 17,
+    "end_to_end_unknown": 1,
+    "end_to_end_wilson95": [
+      0.73,
+      0.99
+    ],
+    "executed": 14,
+    "gold_violations": 1,
+    "gold_completion": 13,
+    "proven_infeasible_stops": 1,
+    "turn_latency_s_median": 0.001,
+    "planning_time_s_median": 0.228,
+    "sim_time_s_median": 57.792,
+    "path_length_m_median": 4.686,
+    "cost_usd": 0,
+    "network_calls": 0,
+    "by_category": {
+      "ambiguous": {
+        "cases": 2,
+        "end_to_end_success": 2,
+        "final_state_exact": 2
+      },
+      "infeasible": {
+        "cases": 1,
+        "end_to_end_success": 1,
+        "final_state_exact": 1
+      },
+      "negative": {
+        "cases": 1,
+        "end_to_end_success": 1,
+        "final_state_exact": 1
+      },
+      "positive": {
+        "cases": 12,
+        "end_to_end_success": 10,
+        "final_state_exact": 7
+      },
+      "unsupported": {
+        "cases": 2,
+        "end_to_end_success": 2,
+        "final_state_exact": 2
+      }
+    },
+    "by_input": {
+      "synthetic": {
+        "turns": 1,
+        "exact": 1
+      },
+      "typed": {
+        "turns": 19,
+        "exact": 14
+      }
+    },
+    "cases_planned": 18
+  },
+  "offline_rules": {
+    "attempt_status": {
+      "completed": 18
+    },
+    "cases_with_result": 18,
+    "turns": 20,
+    "not_measured_turns": 0,
+    "turn_exact": 15,
+    "apply_turns": 16,
+    "apply_exact": 11,
+    "refusal_turns": 4,
+    "refusal_exact": 4,
+    "refused_any_type": 4,
+    "false_accepts": 0,
+    "false_refusals": 2,
+    "wrong_scope_turns": 0,
+    "clarification_turns": 3,
+    "invalid_or_error_turns": 1,
+    "final_state_exact": 13,
+    "cases_measured": 18,
+    "end_to_end_success": 16,
+    "end_to_end_known": 17,
+    "end_to_end_unknown": 1,
+    "end_to_end_wilson95": [
+      0.73,
+      0.99
+    ],
+    "executed": 14,
+    "gold_violations": 1,
+    "gold_completion": 13,
+    "proven_infeasible_stops": 1,
+    "turn_latency_s_median": 0.001,
+    "planning_time_s_median": 0.228,
+    "sim_time_s_median": 57.792,
+    "path_length_m_median": 4.686,
+    "cost_usd": 0,
+    "network_calls": 0,
+    "by_category": {
+      "ambiguous": {
+        "cases": 2,
+        "end_to_end_success": 2,
+        "final_state_exact": 2
+      },
+      "infeasible": {
+        "cases": 1,
+        "end_to_end_success": 1,
+        "final_state_exact": 1
+      },
+      "negative": {
+        "cases": 1,
+        "end_to_end_success": 1,
+        "final_state_exact": 1
+      },
+      "positive": {
+        "cases": 12,
+        "end_to_end_success": 10,
+        "final_state_exact": 7
+      },
+      "unsupported": {
+        "cases": 2,
+        "end_to_end_success": 2,
+        "final_state_exact": 2
+      }
+    },
+    "by_input": {
+      "synthetic": {
+        "turns": 1,
+        "exact": 1
+      },
+      "typed": {
+        "turns": 19,
+        "exact": 14
+      }
+    },
+    "cases_planned": 18
+  }
+}

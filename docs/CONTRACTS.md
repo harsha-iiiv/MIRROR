@@ -184,3 +184,29 @@ seed at or above `EVAL_SEED_BASE` is appended to `results/eval/ledger.jsonl`
 
 **Route labels** are carried in transport step notes as `route=<label>; ...`,
 for example `route=through_slot:wall_0:0:pitched+90` or `route=around:wall_0:+y`.
+
+## Contract 1.2 (additive)
+
+All additions are omitted from JSON while they hold their default, so every
+1.0/1.1 specification, trace and report re-serializes byte-identically (spec
+hashes and recorded request keys are unchanged).
+
+- `OrderingConstraint.before_event` / `after_event`: `placement_complete` or
+  `grasp_start`. Defaults `placement_complete` / `grasp_start` mean "the first
+  object is packed before the second is touched", the meaning orderings always
+  had. `description` is optional text.
+- `RuleResult`: one per goal, constraint and ordering in a checked spec:
+  `rule_id`, `kind` (goal, constraint, ordering), `type`, `status`, `enforced`,
+  `verdict` (satisfied, violated, unknown, not_applicable, not_evaluated),
+  `objects`, `detail`, `evidence`.
+- `RolloutReport.rule_results`, `RolloutReport.evidence_source`
+  (e.g. `playback_frames`), and the status `unverified`: a confirmed rule whose
+  verdict is unknown (the evidence cannot settle it) never yields `success`.
+  Status precedence: execution_failed / timeout, constraint_violated,
+  task_incomplete, unverified, success.
+- `CorrectionRecord.kind` may be `revert` (a new version equal to an earlier one).
+- Checker id `mirror.evaluate.check/2`: ordering monitored from execution
+  evidence (grasp start, placement completion), never from the plan; exact
+  solid-shape clearance. Rule semantics and the support matrix: docs/RULES.md.
+- Perception track: `DemoTrace.evidence` (optional; omitted when absent) belongs
+  to the same additive minor version when merged.

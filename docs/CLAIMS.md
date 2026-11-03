@@ -12,6 +12,84 @@ rule improves on freshly sampled layouts, while objects the correction does
 not cover keep their freedom. Evaluation numbers are in
 [EVALUATION.md](EVALUATION.md) and `results/`.
 
+## What the evaluation numbers measure
+
+* **The pre-registered evaluations test one fixed specification pair.** In each
+  of the first two registrations the demonstration was interpreted once and the
+  reference correction compiled once, before the freeze. The resulting original
+  and corrected specifications were then run on 60 fresh layouts and 30 shortcut
+  layouts (33/60 → 60/60 and 3/30 → 30/30 with the Muse Spark pair), with 5
+  blocked layouts handled separately. The layouts are new; the language input is
+  not. These are not 90 new-video interpretations and not 90 independent
+  language-learning trials.
+* **The Muse Spark correction benchmark is not blind.** Its rows (44/44 frozen,
+  27/28 held-out) swap the model after development, on case sets that had
+  already been seen, with a prompt revision tuned on the development model.
+  Reused development cases are not a fresh external holdout. The first-run rows
+  of the development model and the offline rules were intended to be run on
+  unseen cases, but the chronology below does not establish it.
+* **The demo film and the studio site show different registrations.** The film's
+  side-by-side and grid clips use first-registration seeds (30000+, development
+  model specifications); the site's evidence step loads the second registration
+  (50000+ and 60000+, Muse Spark specifications). See
+  [Evidence provenance](EVALUATION.md#evidence-provenance).
+* **The agreement check is a regression check, not evidence about Muse.** Each
+  registration requires the replayed model specifications to equal the
+  offline-rule specifications before it runs (`mirror/evaluate/specs.py`). This
+  deterministic regression check guarantees the recorded responses still
+  produce the expected rules. Because of it, the offline rules alone would give
+  the same layout results, so the evaluations do not show that Muse Spark caused
+  the improvement. Language understanding has its own prepared protocol
+  ([protocols/v3_language.md](protocols/v3_language.md)), not yet run.
+* **The baseline's failure rate depends on the planner objective.** The route
+  cost charges 0.05 m per radian of rotation (`PlannerConfig.rotation_penalty`).
+  An audit's plan-only sweep over 90 frozen layouts found tilted cup routes on
+  54 at 0.05, 32 at 0.10, 2 at 0.20 and 0 at 0.40 and 1.0 (not executed). The
+  tilted route is shorter but not faster: in 110 of 113 pairs where the
+  specifications differed, the corrected upright run finished sooner in
+  simulation (median 3.6 s, from the stored reports). The 33/60 and 3/30
+  original-specification results are therefore specific to this objective, and
+  a planner that never tilts would not spill. **PENDING (track `baseline`):** a
+  new registration with an executed rotation-cost sweep, a time-calibrated
+  objective and a never-tilt baseline.
+* **Outcome-level reproduction, not bit-exact.** An isolated, network-blocked
+  replay at the audited commit reproduced all 95 Muse-registration scene hashes,
+  statuses and violation-free outcomes; one bead-loss count differed (6 vs 2).
+  Across CPU architectures physics is not bit-identical either: the sim golden
+  rollout (recorded on Linux x86_64) re-run on macOS arm64 (Apple M3 Pro) gives
+  the same status, steps, events, phases, contact pairs and beads in the cup, with
+  object positions up to 8.4e-5 m and bead positions up to 3.3 mm apart.
+  Registered evaluations were run on Linux x86_64 only.
+* **The video benchmark's tilt check is not informative.** True cup tilt stays
+  at or below 0.3° in all 20 registered clips, so a constant-zero estimate beats
+  the reported 2.0°. Position error is computed only for estimates within 5 cm of
+  the truth, so 0.72 cm is conditional on detection, not overall accuracy.
+  **PENDING (track `reanalysis`):** unconditional localisation errors,
+  constant-zero and classical baselines, missing detections, outliers and
+  identity errors reported separately. A new video benchmark with substantial,
+  varied tilt is being prepared (track `perception`), awaiting budget.
+* **Robustness denominators.** The near-zero median IoU change includes objects
+  for which no phrase was chosen (0 before and after). **PENDING (track
+  `reanalysis`):** prompted and evaluated object counts, detection-conditional and
+  unconditional scores, missing detections and geometry-changing edits, next to
+  the failed found-rate checks and the cup's segmentation failures.
+* **Correction-benchmark chronology is unresolved.** The held-out case file's
+  `frozen_at` (2026-10-31 04:45 PDT) is later than its results file's
+  `generated_at` (11:27:50 UTC, 04:27:50 PDT); the frozen set's `frozen_at`
+  (04:25 PDT) is likewise later than its results (04:22:31 PDT). The `frozen_at`
+  values look hand-written, and the record does not establish that either set was
+  fixed before its first run. Pre-registration of the correction benchmark is not
+  claimed. **PENDING (track `reanalysis`):** a timeline from file, cassette, ledger
+  and commit times, with linked code, model and prompt versions.
+* **No fresh authoring evaluation and no user study has been run.** The v3
+  protocol ([protocols/v3_authoring.md](protocols/v3_authoring.md), with its
+  [test matrix](protocols/v3_test_matrix.md)), the impact study kit (`study/`)
+  and a 3-5 person usability pilot (`study/pilot/`) are prepared, not run, and
+  tested only on development and clearly synthetic fixtures. The builder's own
+  testing is a developer smoke test, not independent user validation; a 3-5
+  person pilot, when run, is preliminary usability evidence only, not proof of
+  demand or of a general productivity gain.
+
 ## What it does not claim
 
 * No physical robot, and no evidence of simulation-to-reality transfer.
@@ -32,6 +110,15 @@ not cover keep their freedom. Evaluation numbers are in
 ### Robot and physics
 * The robot is a free-flying parallel-jaw gripper on three prismatic and
   three revolute actuated joints, with no arm body. Only the gripper collides.
+  Every evaluation result uses this baseline.
+* The optional arm backend (simulated UR10e/UR5e, `mirror/arm`) has a
+  development report only (`results/arm/v1`: reference scenes and development
+  layouts 300-309 on one platform, Darwin arm64 with MuJoCo 3.17.0). It never
+  takes slot routes, so in those layouts its uncorrected runs did not spill and
+  the correction changed nothing; the spill-then-correct story is a gripper
+  baseline result. Its mount and tool were tuned on development seeds 100-107,
+  excluded from that report. Servo gains are chosen, gravity compensation is
+  exact, and nothing is claimed about a physical arm.
 * Its workspace is a box (0.45 m reach in height). The wall is taller than
   this, so no route goes over it.
 * Grasps are contact-based (the jaw closes at 12 N per finger; friction
@@ -90,9 +177,17 @@ not cover keep their freedom. Evaluation numbers are in
 * Benchmark cases are single sentences applied to one base specification in
   one scene. Gold answers follow the documented policies (for example, a rule
   with no phase applies while the object is carried). The prompt was revised
-  twice after results were seen; the blind first-revision numbers remain the
-  headline and later rows are labelled post-change
-  (`results/corrections_benchmark_summary.md`).
+  twice after results were seen; the first-revision numbers (offline rules and
+  the development model, the rows intended to be blind; see the chronology
+  above) remain the headline and later rows are labelled post-change
+  (`results/corrections_benchmark_summary.md`, whose row labels "blind" and
+  "before any run" predate this audit and are not established by the record).
+* The Muse Spark rows of that benchmark are a post-hoc model swap: both case
+  sets had been seen and the prompt was tuned on the development model. They
+  are not a blind or held-out measurement of Muse Spark.
+* The held-out set was written by the same people who wrote the frozen set and
+  the compiler, after seeing the frozen-set failures. It is held out from the
+  interpreters, not independent of their authors.
 
 ### Planning
 * Routes are enumerated (direct, around each wall end, through each slot in
@@ -163,7 +258,9 @@ not cover keep their freedom. Evaluation numbers are in
 * **Video benchmark: 16 of 20 seeds, 2 of 6 checks met.** The registered spend
   cap's reservation stopped admission after 16 of 20 seeds; a second run was
   refused by the run-once guard, and the four missing seeds cannot change any
-  verdict. Position (0.72 cm) and cup tilt (2.0°) met their targets. Objects
+  verdict. Position (0.72 cm) and cup tilt (2.0°) met their targets as
+  registered, but the position error is conditional on a 5 cm detection gate
+  and the tilt check is uninformative (true tilt at most 0.3°; see above). Objects
   found (0.886), grasp/release within 1 s (0.635), timing (0.65 s) and the
   specification check (same as from the true trace on 8 of 16 seeds) did not.
   On one seed tracking found nothing. The first attempt produced no usable

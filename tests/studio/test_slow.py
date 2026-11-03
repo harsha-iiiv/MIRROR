@@ -24,10 +24,12 @@ def test_live_session_runs_and_rechecks():
     svc.set_scene_preset("shortcut")
     j = svc.wait(svc.run(condition="v1", tags=["world"]), timeout=600)
     assert j.status == "done", j.error
+    rid = j.result["rollout_id"]
+    assert j.result["label"] == "r001" and rid.startswith(svc.generation_id + ".v1.")
     j = svc.wait(svc.correct(REFERENCE_CORRECTION), timeout=120)
     assert j.status == "done" and j.result["changed"], j.result
-    assert any(r["rollout_id"] == "r001" for r in svc.rechecks)
-    p = svc.rollout_payload("r001")
+    assert any(r["rollout_id"] == rid for r in svc.rechecks)
+    p = svc.rollout_payload(rid)
     assert p["t"] and any("bead" in n for n in p["bodies"])
     assert svc.rollout_payload("demo")["beads_hidden"] is True
 
@@ -54,7 +56,8 @@ def test_static_site_renders_without_console_errors(tmp_path):
             pg = b.new_page(viewport={"width": 1280, "height": 800})
             pg.on("pageerror", lambda e: errors.append(str(e)))
             pg.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
-            pg.goto(f"http://127.0.0.1:{port}/", wait_until="networkidle", timeout=60_000)
+            # ?step=watch: newer pages open on an overview; this deep-links the demonstration step
+            pg.goto(f"http://127.0.0.1:{port}/?step=watch", wait_until="networkidle", timeout=60_000)
             pg.get_by_text("The demonstration").first.wait_for(timeout=30_000)
             for step in ["Interpret", "Run", "Change world", "Correct", "Evidence"]:
                 pg.get_by_role("button", name=step).first.click()
@@ -105,8 +108,10 @@ def test_live_switch_connects_and_falls_back(tmp_path):
     cfg = ex.parse_config_js((out / "config.js").read_text())
     cfg["wakeTimeoutMs"] = 6000
     (out / "config.js").write_text(ex.config_js(cfg))
+    # Pages that predate session tokens cannot send one; test them against the legacy mode.
+    tokens = "X-Mirror-Token" in (ROOT / "web" / "js" / "api.js").read_text()
     env = dict(os.environ, MIRROR_STUDIO_BACKEND="fixture", MIRROR_LLM_MODE="offline",
-               MIRROR_CORS_ORIGINS=f"http://127.0.0.1:{web_port}")
+               MIRROR_CORS_ORIGINS=f"http://127.0.0.1:{web_port}", MIRROR_REQUIRE_TOKEN="1" if tokens else "0")
     web = subprocess.Popen([sys.executable, "-m", "http.server", str(web_port), "--bind", "127.0.0.1"], cwd=out,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
     api = subprocess.Popen([sys.executable, "-m", "uvicorn", "mirror.studio.app:app", "--host", "127.0.0.1",
@@ -119,7 +124,7 @@ def test_live_switch_connects_and_falls_back(tmp_path):
             b = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
             pg = b.new_page(viewport={"width": 1280, "height": 800})
             pg.on("pageerror", lambda e: errors.append(str(e)))
-            pg.goto(f"http://127.0.0.1:{web_port}/", wait_until="networkidle", timeout=60_000)
+            pg.goto(f"http://127.0.0.1:{web_port}/?step=watch", wait_until="networkidle", timeout=60_000)
             sw = pg.locator(".live-switch")
             assert sw.get_attribute("aria-checked") == "false"
             sw.click()
