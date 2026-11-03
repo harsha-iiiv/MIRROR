@@ -4,7 +4,7 @@ Two cuts are built from recorded MuJoCo rollouts; no frame is animated by hand, 
 
 | Cut | Size | Length | Purpose |
 |---|---|---|---|
-| social | 1080x1920 | about 33 s | phone feed; text kept between y 290 and 1240 |
+| social | 1080x1920 | 35 s | phone feed; text kept between y 290 and 1240 |
 | judging | 1920x1080 | about 2 min 15 s | submission video |
 
 Headline: corrections you can check. A correction is one sentence that becomes a scoped rule change, checked three
@@ -22,7 +22,12 @@ when no compliant route exists, the planner refuses with a proof instead of spil
   correction does not change behaviour on layouts that have an upright route; the films say so.
 - The blocked-layout result holds at both prices: the original specification completes and loses beads, the
   corrected one plans nothing and carries a proven-infeasibility certificate (quoted with its assumptions).
-- Ordering and clearance corrections come from `scripts/demo_corrections.py` run at 0.2445 m/rad (offline rule
+- The social cut's second check is a second sentence, "Pack the marker before the cup.", compiled by the offline
+  rule interpreter on top of the corrected specification and run at 0.2445 m/rad on the six development transfer
+  layouts (`make_sources.py`, group `second`): every earlier run is re-judged as violated and every new plan puts the
+  marker first. The upright rule alone does not change behaviour on those layouts at 0.2445, so it is not shown as
+  if it did.
+- Ordering and clearance corrections in the judging video come from `scripts/demo_corrections.py` run at 0.2445 m/rad (offline rule
   interpreter, development layouts). They are demonstrations, not an evaluation.
 - The specification pair is built by replaying the recorded Muse Spark responses (`data/cassettes_muse`); the
   offline interpreter produces the same enforced rules. No model is called while building the films.
