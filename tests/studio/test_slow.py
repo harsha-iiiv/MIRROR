@@ -114,9 +114,10 @@ def test_live_switch_connects_and_falls_back(tmp_path):
                MIRROR_CORS_ORIGINS=f"http://127.0.0.1:{web_port}", MIRROR_REQUIRE_TOKEN="1" if tokens else "0")
     web = subprocess.Popen([sys.executable, "-m", "http.server", str(web_port), "--bind", "127.0.0.1"], cwd=out,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+    api_log = open(tmp_path / "api.log", "w")
     api = subprocess.Popen([sys.executable, "-m", "uvicorn", "mirror.studio.app:app", "--host", "127.0.0.1",
                             "--port", str(api_port)], cwd=ROOT, env=env,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+                           stdout=api_log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
     errors = []
     try:
         time.sleep(3.0)
@@ -131,8 +132,23 @@ def test_live_switch_connects_and_falls_back(tmp_path):
             pg.wait_for_url("**live=1**", timeout=20_000)
             pg.locator(".live-switch.live").wait_for(timeout=30_000)
             pg.get_by_text("The demonstration").first.wait_for(timeout=30_000)
-            pg.locator(".story .btn.primary").click()               # interpret on the server
-            pg.get_by_text("What MIRROR thinks matters").wait_for(timeout=30_000)
+            # interpret on the server: wait for the live session's own button, not the recording's "Next"
+            btn = pg.get_by_role("button", name="Interpret the demonstration")
+            btn.wait_for(timeout=30_000)
+            # The page loads the demonstration on the server when it goes live; an interpret request sent
+            # before that finishes is refused as stale (409), correctly. Let the page settle first.
+            pg.wait_for_load_state("networkidle", timeout=30_000)
+            pg.wait_for_function("() => [...document.querySelectorAll('.story .btn.primary')].some("
+                                 "(b) => b.textContent.includes('Interpret the demonstration') && !b.disabled)",
+                                 timeout=30_000)
+            btn.click()
+            try:
+                pg.get_by_text("What MIRROR thinks matters").wait_for(timeout=60_000)
+            except Exception:
+                body = pg.locator("body").inner_text()
+                api_log.flush()
+                raise AssertionError("no interpretation shown; page said: " + body[-2500:] + "\nserver log tail: "
+                                     + (tmp_path / "api.log").read_text()[-4000:] + "\npage errors: " + repr(errors))
             api.terminate()
             api.wait(timeout=10)
             pg.reload()
