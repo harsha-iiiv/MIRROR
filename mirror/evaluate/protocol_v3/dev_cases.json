@@ -1,0 +1,862 @@
+{
+ "protocol": "mirror-authoring-v3",
+ "split": "dev",
+ "synthetic_or_team_written": true,
+ "description": "Development cases written by the project team to build and dry-run the protocol v3 harness. They are NOT held-out cases and their results are not evaluation evidence. Manual edits are team-written fixtures (editor 'team-fixture'), equal to the gold by construction, so the manual condition on these cases measures nothing about people. d17 and d18 reuse an earlier benchmark sentence only to exercise the replay and spoken paths. Development layouts use reserved dev seeds 9600-9699.",
+ "cases": [
+  {
+   "id": "d01",
+   "category": "positive",
+   "scope_tags": [
+    "object:cup",
+    "phase:transport",
+    "type:upright",
+    "paraphrase"
+   ],
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "turns": [
+    {
+     "text": "Carry the cup level the whole way to the tray.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d02",
+   "category": "positive",
+   "scope_tags": [
+    "object:cup",
+    "phase:transport",
+    "type:upright",
+    "tolerance",
+    "paraphrase"
+   ],
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "shortcut",
+    "seed": 9600
+   },
+   "turns": [
+    {
+     "text": "The cup may lean a little while it moves, but never past 30 degrees.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 30
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 30
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d03",
+   "category": "positive",
+   "scope_tags": [
+    "object:block",
+    "phase:transport",
+    "type:upright"
+   ],
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "shortcut",
+    "seed": 9601
+   },
+   "turns": [
+    {
+     "text": "The block also has to stay flat while it is being carried.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "block",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "block",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d04",
+   "category": "negative",
+   "scope_tags": [
+    "object:marker",
+    "freedom"
+   ],
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "shortcut",
+    "seed": 9602
+   },
+   "notes": "Confirms an existing freedom; the enforced specification must not change.",
+   "turns": [
+    {
+     "text": "Tilting the marker on the way is completely fine.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "marker",
+         "phase": "transport",
+         "status": "rejected"
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "marker",
+         "phase": "transport",
+         "status": "rejected"
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d05",
+   "category": "ambiguous",
+   "scope_tags": [
+    "referent:missing"
+   ],
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "expect_execution": "not_executed",
+   "turns": [
+    {
+     "text": "Keep it upright.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": null
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d06",
+   "category": "unsupported",
+   "scope_tags": [
+    "unsupported:cleaning"
+   ],
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "expect_execution": "not_executed",
+   "turns": [
+    {
+     "text": "Wipe the table once you are done.",
+     "gold": {
+      "outcome": "rejects"
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": null
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d07",
+   "category": "unsupported",
+   "scope_tags": [
+    "unsupported:speed"
+   ],
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "expect_execution": "not_executed",
+   "turns": [
+    {
+     "text": "Go slower whenever you are near the wall.",
+     "gold": {
+      "outcome": "rejects"
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": null
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d08",
+   "category": "infeasible",
+   "scope_tags": [
+    "object:cup",
+    "phase:transport",
+    "blocked"
+   ],
+   "scene": {
+    "kind": "reference",
+    "name": "blocked"
+   },
+   "expect_execution": "proven_infeasible",
+   "turns": [
+    {
+     "text": "While the cup is in the gripper it has to stay upright.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d09",
+   "category": "positive",
+   "scope_tags": [
+    "multi_turn",
+    "reversal",
+    "object:cup"
+   ],
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "notes": "Second turn reverses the first; final enforced state equals the base.",
+   "turns": [
+    {
+     "text": "Keep the cup upright while you carry it over.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     }
+    },
+    {
+     "text": "Actually, never mind: the cup may tilt while it is carried.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "status": "rejected"
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "status": "rejected"
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d10",
+   "category": "positive",
+   "scope_tags": [
+    "multi_turn",
+    "scope:all",
+    "exception",
+    "object:marker"
+   ],
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "mixed",
+    "seed": 9603
+   },
+   "turns": [
+    {
+     "text": "Every object should stay upright while it is carried.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "all",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "all",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     }
+    },
+    {
+     "text": "Except the marker; that one can tilt.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "all",
+         "phase": "transport",
+         "status": "rejected"
+        },
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        },
+        {
+         "type": "upright",
+         "object": "block",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "all",
+         "phase": "transport",
+         "status": "rejected"
+        },
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        },
+        {
+         "type": "upright",
+         "object": "block",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d11",
+   "category": "positive",
+   "scope_tags": [
+    "ordering",
+    "object:marker",
+    "object:cup"
+   ],
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "mixed",
+    "seed": 9604
+   },
+   "notes": "Ordering verdicts depend on the checker's ordering monitor.",
+   "turns": [
+    {
+     "text": "Put the marker in the tray before the cup.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [],
+       "orderings": [
+        {
+         "before": "marker",
+         "after": "cup"
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [],
+       "orderings": [
+        {
+         "before": "marker",
+         "after": "cup"
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d12",
+   "category": "positive",
+   "scope_tags": [
+    "type:keep_clearance",
+    "object:cup",
+    "phase:transport"
+   ],
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "mixed",
+    "seed": 9605
+   },
+   "turns": [
+    {
+     "text": "While carrying the cup, keep it at least 3 cm away from the wall.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "keep_clearance",
+         "object": "cup",
+         "phase": "transport",
+         "min_m": 0.03
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "keep_clearance",
+         "object": "cup",
+         "phase": "transport",
+         "min_m": 0.03
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d13",
+   "category": "positive",
+   "scope_tags": [
+    "type:forbidden_contact",
+    "object:block"
+   ],
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "mixed",
+    "seed": 9606
+   },
+   "turns": [
+    {
+     "text": "The block must never bump into the wall while you move it.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "forbidden_contact",
+         "object": "block",
+         "phase": "transport",
+         "with_groups": [
+          "obstacle"
+         ]
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "forbidden_contact",
+         "object": "block",
+         "phase": "transport",
+         "with_groups": [
+          "obstacle"
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d14",
+   "category": "positive",
+   "scope_tags": [
+    "goal",
+    "object:marker"
+   ],
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "mixed",
+    "seed": 9607
+   },
+   "turns": [
+    {
+     "text": "Leave the marker where it is; only the cup and the block go in the tray.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [],
+       "goals": [
+        {
+         "object": "marker",
+         "status": "rejected"
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [],
+       "goals": [
+        {
+         "object": "marker",
+         "status": "rejected"
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d15",
+   "category": "positive",
+   "scope_tags": [
+    "phase:final",
+    "object:block",
+    "phase-specific"
+   ],
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "shortcut",
+    "seed": 9608
+   },
+   "turns": [
+    {
+     "text": "The block only has to sit upright once it is in the tray; on the way it can turn.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "block",
+         "phase": "final",
+         "max_tilt_deg": 15
+        },
+        {
+         "type": "upright",
+         "object": "block",
+         "phase": "transport",
+         "status": "rejected"
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "block",
+         "phase": "final",
+         "max_tilt_deg": 15
+        },
+        {
+         "type": "upright",
+         "object": "block",
+         "phase": "transport",
+         "status": "rejected"
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d16",
+   "category": "ambiguous",
+   "scope_tags": [
+    "absent_object"
+   ],
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "expect_execution": "not_executed",
+   "turns": [
+    {
+     "text": "Keep the bowl upright the whole time.",
+     "gold": {
+      "outcome": "asks"
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": null
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d17",
+   "category": "positive",
+   "scope_tags": [
+    "replay_anchor",
+    "object:cup",
+    "phase:transport"
+   ],
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "notes": "Sentence reused verbatim from the earlier correction benchmark (p01) only to exercise the replay path; not new wording.",
+   "turns": [
+    {
+     "text": "This container must remain upright throughout transport, not just at the destination.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  },
+  {
+   "id": "d18",
+   "category": "positive",
+   "scope_tags": [
+    "replay_anchor",
+    "speech:synthetic",
+    "object:cup"
+   ],
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "notes": "Synthetic voice sample (not a person) of the reference correction; exercises the spoken path only.",
+   "turns": [
+    {
+     "text": "This container must remain upright throughout transport, not just at the destination.",
+     "gold": {
+      "outcome": "apply",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     },
+     "speech": {
+      "audio": "../../../data/demos/voice/reference_correction.wav",
+      "speaker": "synthetic",
+      "speaker_id": "elevenlabs:eleven_v4_turbo:premade-roger"
+     },
+     "manual": {
+      "editor_id": "team-fixture",
+      "edit": {
+       "rules": [
+        {
+         "type": "upright",
+         "object": "cup",
+         "phase": "transport",
+         "max_tilt_deg": 15
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "author_id": "team-dev"
+  }
+ ]
+}

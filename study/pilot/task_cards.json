@@ -1,0 +1,277 @@
+{
+ "cards": [
+  {
+   "id": "C0",
+   "set": "practice",
+   "title": "Practice",
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "conditions": [
+    "mirror",
+    "manual"
+   ],
+   "outcome": "The block should end up standing upright in the tray.",
+   "expected_first": "apply",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "upright",
+      "object": "block",
+      "phase": "final",
+      "max_tilt_deg": 15
+     }
+    ]
+   }
+  },
+  {
+   "id": "C1",
+   "set": "A",
+   "title": "Loose fill",
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "shortcut",
+    "seed": 9740
+   },
+   "conditions": [
+    "mirror",
+    "manual"
+   ],
+   "outcome": "Beads keep ending up on the floor. The cup may lean at most 20 degrees whenever it is being moved. Nothing else should change.",
+   "expected_first": "apply",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "upright",
+      "object": "cup",
+      "phase": "transport",
+      "max_tilt_deg": 20
+     }
+    ]
+   }
+  },
+  {
+   "id": "C2",
+   "set": "A",
+   "title": "Picking order",
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "mixed",
+    "seed": 9741
+   },
+   "conditions": [
+    "mirror",
+    "manual"
+   ],
+   "outcome": "The next station needs the block to be in the tray before the marker arrives.",
+   "expected_first": "apply",
+   "acceptance": {
+    "orderings": [
+     {
+      "before": "block",
+      "after": "marker"
+     }
+    ]
+   }
+  },
+  {
+   "id": "C3",
+   "set": "A",
+   "title": "Display position",
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "shortcut",
+    "seed": 9742
+   },
+   "conditions": [
+    "mirror",
+    "manual"
+   ],
+   "outcome": "Customers see the block in the tray, so it must sit upright once it is placed. How it is held on the way does not matter.",
+   "expected_first": "apply",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "upright",
+      "object": "block",
+      "phase": "final",
+      "max_tilt_deg": 15
+     }
+    ]
+   }
+  },
+  {
+   "id": "C4",
+   "set": "B",
+   "title": "Ink leak",
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "shortcut",
+    "seed": 9743
+   },
+   "conditions": [
+    "mirror",
+    "manual"
+   ],
+   "outcome": "The marker leaks ink if it is carried on its side. Only the marker has this problem.",
+   "expected_first": "apply",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "upright",
+      "object": "marker",
+      "phase": "transport",
+      "max_tilt_deg": 15
+     }
+    ]
+   }
+  },
+  {
+   "id": "C5",
+   "set": "B",
+   "title": "Scuffed cup",
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "mixed",
+    "seed": 9744
+   },
+   "conditions": [
+    "mirror",
+    "manual"
+   ],
+   "outcome": "The cup gets scuffed against the wall. While it is moved it should stay at least 3 cm away from the wall and other obstacles.",
+   "expected_first": "apply",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "keep_clearance",
+      "object": "cup",
+      "phase": "transport",
+      "min_m": 0.03
+     }
+    ]
+   }
+  },
+  {
+   "id": "C6",
+   "set": "B",
+   "title": "Fragile batch, then an exception",
+   "scene": {
+    "kind": "layout",
+    "split": "dev",
+    "family": "mixed",
+    "seed": 9745
+   },
+   "conditions": [
+    "mirror",
+    "manual"
+   ],
+   "outcome": "Step 1: this batch is fragile, so every part must stay upright while carried. Step 2: then you learn the block is solid and may be tilted. Finish with that combined requirement.",
+   "expected_first": "apply",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "upright",
+      "object": "cup",
+      "phase": "transport",
+      "max_tilt_deg": 15
+     },
+     {
+      "type": "upright",
+      "object": "marker",
+      "phase": "transport",
+      "max_tilt_deg": 15
+     }
+    ]
+   }
+  },
+  {
+   "id": "C7",
+   "set": "probe",
+   "title": "Be careful",
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "conditions": [
+    "mirror"
+   ],
+   "outcome": "First, without giving specifics, ask the robot to be more careful with the cup and see how it responds. Then get it to keep the cup within 15 degrees of upright while it is carried.",
+   "expected_first": "asks",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "upright",
+      "object": "cup",
+      "phase": "transport",
+      "max_tilt_deg": 15
+     }
+    ]
+   }
+  },
+  {
+   "id": "C8",
+   "set": "probe",
+   "title": "Wrong note",
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "conditions": [
+    "mirror"
+   ],
+   "outcome": "A colleague's note says to protect the thermos, but this scene has no thermos. Pass the note on in your own words and see what the robot does. The specification should not change unless you decide it should.",
+   "expected_first": "asks",
+   "acceptance": null,
+   "absent_term": "thermos"
+  },
+  {
+   "id": "C9",
+   "set": "probe",
+   "title": "Slow down",
+   "scene": {
+    "kind": "reference",
+    "name": "shortcut"
+   },
+   "conditions": [
+    "mirror"
+   ],
+   "outcome": "The line manager wants the robot to move more slowly when people are nearby. Ask for that and see how the robot responds.",
+   "expected_first": "rejects",
+   "acceptance": null
+  },
+  {
+   "id": "C10",
+   "set": "probe",
+   "title": "No way through",
+   "scene": {
+    "kind": "reference",
+    "name": "blocked"
+   },
+   "conditions": [
+    "mirror"
+   ],
+   "outcome": "The cup must stay upright while it is carried. Ask for that, run it, and note what the robot tells you.",
+   "expected_first": "apply",
+   "acceptance": {
+    "rules": [
+     {
+      "type": "upright",
+      "object": "cup",
+      "phase": "transport",
+      "max_tilt_deg": 15
+     }
+    ]
+   },
+   "expected_execution": "proven_infeasible"
+  }
+ ],
+ "time_limit_s": 420,
+ "note": "Task cards for the usability pilot. 'outcome' is what the participant reads: a desired result, never a sentence to type. 'expected_first' and 'acceptance' are for scoring and are never shown. Scenes use reserved development seeds 9740-9749."
+}

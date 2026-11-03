@@ -16,8 +16,9 @@ from typing import Optional
 
 from mirror.contracts import SceneState, Status, TaskSpec
 from mirror.interpret.specops import effective_kind
-from mirror.interpret.drafts import (CorrectionDraft, DraftDismissal, DraftObject, DraftOp,
-                                     DraftOrdering, DraftRule, DraftRuleSpec, ProposalDraft)
+from mirror.interpret.drafts import (CorrectionDraft, CorrectionDraftV4, DraftDismissal, DraftObject,
+                                     DraftOp, DraftOpV4, DraftOrdering, DraftRule, DraftRuleSpec,
+                                     ProposalDraft)
 from mirror.interpret.types import CorrectionRejected, DemoSummary, NeedsClarification
 
 OFFLINE_LABEL = "offline-rules"
@@ -38,11 +39,16 @@ _TILT_RE = re.compile(r"\b(tilt|tilts|tilted|tilting|tip|tips|tipped|tipping|on 
                       r"flip|flipped|turn over|turned over|spill|spills|spilled|spilling|pitch|pitched|lean|leans)\b")
 _CONTACT_RE = re.compile(r"\b(touch|touches|touching|hit|hits|hitting|bump|bumps|bumping|contact|collide|"
                          r"collides|scrape|scrapes|brush|brushes)\b")
-_CLEAR_RE = re.compile(r"\b(clearance|away from|distance from|margin|keep \w+ ?\w* (at least|\d))")
+_CLEAR_RE = re.compile(r"\b(clearance|away from|distance from|margin|clear of|keep \w+ ?\w* (at least|\d))")
+_CARE_RE = re.compile(r"\b(careful(ly)?|gentl[ey]|gentleness)\b")
+_GRASP_ORDER_RE = re.compile(r"\b(pick(s|ed|ing)? up|grab(s|bed|bing)?|grasp(s|ed|ing)?|start with|begin with|"
+                             r"start by|begin by)\b")
+_PLACED_ORDER_RE = re.compile(r"\b(in the tray before|into the tray before|is placed|are placed|gets placed|"
+                              r"before (the \w+ )?(is |gets )?(placed|put in|set down))\b")
 _ORDER_RE = re.compile(r"\b(order|first|before|after|last|sequence|start with|then)\b")
 _GOAL_RE = re.compile(r"\b(pack|packed|packing|go in the tray|goes in the tray|go into the tray|"
                       r"in the tray|into the tray|leave|left out|put .* in the tray)\b")
-_NEG_RE = re.compile(r"(\bnot\b|n't\b|\bnever\b|\bno need\b|\bwithout\b|\bavoid\b|\bcannot\b|\bnor\b|\bno\b)")
+_NEG_RE = re.compile(r"(\bnot\b|n't\b|\bnever\b|\bno need\b|\bwithout\b|\bavoid\b|\bcannot\b|\bnor\b|\bno\b|\bnothing\b)")
 _PERMIT_RE = re.compile(r"\b(can|may|allowed|fine|ok|okay|free to|is acceptable|doesn't matter|does not matter|"
                         r"irrelevant|optional|either way)\b")
 _MATTERS_RE = re.compile(r"\b(matters|counts|is important|is what matters|care about)\b")
@@ -244,7 +250,7 @@ def _analyze(t: str) -> _Clause:
         c.prop = "contact"
     elif _CLEAR_RE.search(t) or (_DIST_RE.search(t) and re.search(r"\b(from|away)\b", t)):
         c.prop = "clearance"
-    elif _ORDER_RE.search(t) and (len(c.kinds) >= 1 or "order" in t):
+    elif (_ORDER_RE.search(t) or _GRASP_ORDER_RE.search(t)) and (len(c.kinds) >= 1 or "order" in t):
         c.prop = "order"
     elif _GOAL_RE.search(t):
         c.prop = "goal"
@@ -281,17 +287,40 @@ def _contact_groups(t: str) -> list[str]:
     return g or ["obstacle"]
 
 
+_REVERT_RE = re.compile(r"^(please )?(undo|revert|roll back|go back|take back|cancel)\b|"
+                        r"\b(undo (that|the last|my last)|go back to (version|v) ?\d+|revert to (version|v) ?\d+|"
+                        r"the way it was( before)?|as it was before)\b")
+
+
+def revert_request(text: str):
+    """RevertRequested if the text asks to undo earlier changes, else None."""
+    from mirror.interpret.types import RevertRequested
+    t = _normalize(text)
+    if not _REVERT_RE.search(t):
+        return None
+    m = re.search(r"\b(?:version|v) ?(\d+)\b", t)
+    if m:
+        return RevertRequested(to_version=int(m.group(1)), text=text)
+    m = re.search(r"\b(two|2|three|3) (changes|corrections|steps)\b", t)
+    steps = {"two": 2, "2": 2, "three": 3, "3": 3}[m.group(1)] if m else 1
+    return RevertRequested(steps=steps, text=text)
+
+
 def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -> CorrectionDraft:
     context = context or {}
     t = _normalize(text)
     if not t:
         raise CorrectionRejected("empty correction")
+    rv = revert_request(text)
+    if rv is not None:
+        raise rv
     from mirror.interpret.specops import active_goal_kinds
     included = active_goal_kinds(spec) or [b.kind for b in spec.bindings]
     bound = [b.kind for b in spec.bindings]
     clauses = [_analyze(p) for p in _split(t)]
     text_prop = next((c.prop for c in clauses if c.prop), None)
     universal = bool(_UNIVERSAL_RE.search(t))
+    text_dists = sorted({c.dist for c in clauses if c.dist is not None})
 
     for c in clauses:
         if c.unknown and not c.kinds:
@@ -307,6 +336,22 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
                     + ", ".join(f"the {b}" for b in bound) + "?",
                     [f"The {b}" for b in bound], reason=f"{k} not in scene")
 
+    from mirror.interpret.guard import unknown_object_question
+    q, alias = unknown_object_question(text, spec, context.get("scene") if isinstance(context.get("scene"), SceneState) else None,
+                                       focus_kind=context.get("focus_kind"))
+    if q is not None:
+        raise q
+    alias_note = (f"\"the {alias['word']}\" taken as the {alias['resolved_to']} ({alias['source']})" if alias else "")
+    if not text_prop and _CARE_RE.search(t):
+        kinds = [k for c in clauses for k in c.kinds] or ([context.get("focus_kind")] if context.get("focus_kind") else [])
+        who = f"the {kinds[0]}" if kinds else "it"
+        raise NeedsClarification(
+            f"I can keep {who} upright (while carried, once placed, or always), keep it a set distance from the "
+            f"wall and other obstacles, stop it touching obstacles, or change the packing order. Which of these "
+            f"matters for {who}?",
+            ["Keep it upright while carried", "Keep it away from obstacles (say how far)",
+             "Do not let it touch obstacles", "Pack it first"],
+            reason="vague instruction: no supported rule named")
     ops: list[DraftOp] = []
     notes: list[str] = []
     last_kinds: list[str] = []
@@ -378,6 +423,10 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
                 continue
             rtype = {"upright": "upright", "contact": "forbidden_contact", "clearance": "keep_clearance"}[prop]
             phases = list(c.phases)
+            if rtype == "keep_clearance" and c.dist is None and len(text_dists) == 1:
+                c.dist = text_dists[0]   # "While carrying the cup, keep it 3 cm from the wall"
+            if rtype == "keep_clearance" and c.positive:
+                _clearance_questions(c, k)
             if c.positive:
                 if not phases:
                     phases = ["transport"]
@@ -390,7 +439,7 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
                                        rule=DraftRuleSpec(type=rtype, object_kind=k, phase=ph,
                                                           max_tilt_deg=c.deg if rtype == "upright" else None,
                                                           contact_with=_contact_groups(c.text) if rtype == "forbidden_contact" else None,
-                                                          min_clearance_m=(c.dist or 0.02) if rtype == "keep_clearance" else None)))
+                                                          min_clearance_m=c.dist if rtype == "keep_clearance" else None)))
                 if (rtype == "upright" and c.only and phases == ["final"]):
                     ops.append(DraftOp(action="relax_rule", target_id=None, before_kind=None, after_kind=None,
                                        goal_kind=None, rationale=f"User: \"{c.text}\" (only at the destination)",
@@ -414,6 +463,9 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
                                    goal_kind=None, rationale=f"User said only the {', '.join(only_kinds)} matters",
                                    rule=DraftRuleSpec(type=rtype, object_kind=k, phase=None, max_tilt_deg=None,
                                                       contact_with=None, min_clearance_m=None)))
+    ops = _merge_requirements(ops)
+    if not ops:
+        ops = _follow_up_ops(spec, t, clauses)
     if not ops:
         raise CorrectionRejected(
             "This does not describe a supported change: object orientation (upright), contact with "
@@ -421,13 +473,99 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
     interp = "; ".join(_describe_op(o) for o in ops)
     if notes:
         interp += ". " + " ".join(dict.fromkeys(notes))
-    return CorrectionDraft(outcome="apply", interpretation=interp, question=None, options=[], ops=ops)
+    if alias_note:
+        interp += f" ({alias_note})"
+    ops = [o if isinstance(o, DraftOpV4) else DraftOpV4(**o.model_dump(), order_event=None) for o in ops]
+    return CorrectionDraftV4(outcome="apply", interpretation=interp, question=None, options=[], ops=ops)
+
+
+def _merge_requirements(ops: list[DraftOp]) -> list[DraftOp]:
+    """One require_rule per (type, phase, object): clauses that restate the same
+    rule are merged, an explicit parameter beating an unstated one. Two
+    different explicit values are a contradiction and get a question."""
+    out: list[DraftOp] = []
+    seen: dict[tuple, int] = {}
+    for op in ops:
+        r = op.rule
+        if op.action != "require_rule" or r is None:
+            out.append(op)
+            continue
+        key = (r.type, r.phase, r.object_kind)
+        if key not in seen:
+            seen[key] = len(out)
+            out.append(op)
+            continue
+        prev = out[seen[key]].rule
+        merged = {}
+        for f in ("max_tilt_deg", "min_clearance_m"):
+            a, b = getattr(prev, f), getattr(r, f)
+            if a is not None and b is not None and a != b:
+                raise NeedsClarification(
+                    f"You gave two different values for the same rule ({a:g} and {b:g}). Which one should hold?",
+                    [f"{a:g}", f"{b:g}"], reason="contradictory values")
+            merged[f] = a if a is not None else b
+        if prev.type == "forbidden_contact":
+            merged["contact_with"] = sorted(set((prev.contact_with or []) + (r.contact_with or []))) or None
+        out[seen[key]] = out[seen[key]].model_copy(update={"rule": prev.model_copy(update=merged)})
+    return out
+
+
+def _clearance_questions(c: _Clause, k: Optional[str]) -> None:
+    """Clearance is measured from obstacles only, and needs a distance."""
+    who = f"the {k}" if k else "every object"
+    tail = re.split(r"\b(?:away from|distance from|clear of|from|between)\b", c.text, maxsplit=1)
+    target_kinds = [x for x in _kinds_in(tail[1]) if x != k] if len(tail) > 1 else []
+    if target_kinds:
+        raise NeedsClarification(
+            f"I can keep {who} a set distance from the wall and other obstacles, but not from the "
+            f"{target_kinds[0]}. Should it keep its distance from the obstacles instead?",
+            [f"Yes, keep {who} away from obstacles (say how far)", "No"],
+            reason="unsupported rule: clearance from another object")
+    if c.dist is None:
+        raise NeedsClarification(
+            f"How much room should the robot leave between {who} and the wall or other obstacles?",
+            ["2 cm", "5 cm", "10 cm"], reason="clearance without a distance")
+
+
+def _follow_up_ops(spec: TaskSpec, t: str, clauses: list[_Clause]) -> list[DraftOp]:
+    """A bare number after an earlier correction ("make that 30 degrees",
+    "actually 8 cm") adjusts the rule the previous version changed."""
+    from mirror.interpret.specops import effective_kind as ek
+    if not spec.history:
+        return []
+    deg = next((c.deg for c in clauses if c.deg is not None), None)
+    dist = next((c.dist for c in clauses if c.dist is not None), None)
+    if deg is None and dist is None:
+        return []
+    want = "upright" if deg is not None else "keep_clearance"
+    by_id = {x.id: x for x in spec.constraints}
+    for rec in reversed(spec.history):
+        for d in reversed(rec.diff):
+            cn = by_id.get(d.target_id or "")
+            if cn is not None and cn.type == want and cn.status != Status.rejected:
+                return [DraftOp(action="require_rule", target_id=None, before_kind=None, after_kind=None,
+                                goal_kind=None, rationale=f"User: \"{t}\" (adjusts {cn.id} from version {rec.version})",
+                                rule=DraftRuleSpec(type=want, object_kind=ek(cn.applies_to, spec), phase=cn.phase,
+                                                   max_tilt_deg=deg if want == "upright" else None,
+                                                   contact_with=None,
+                                                   min_clearance_m=dist if want == "keep_clearance" else None))]
+    return []
+
+
+def _order_event(t: str) -> str:
+    if _GRASP_ORDER_RE.search(t):
+        return "start_before_start"
+    if _PLACED_ORDER_RE.search(t):
+        return "placed_before_placed"
+    return "finish_before_start"
 
 
 def _order_ops(c: _Clause, included: list[str], notes: list[str]) -> list[DraftOp]:
     t = c.text
-    mk = lambda action, b=None, a=None: DraftOp(action=action, rule=None, target_id=None, before_kind=b,
-                                                after_kind=a, goal_kind=None, rationale=f"User: \"{t}\"")
+    ev = _order_event(t)
+    mk = lambda action, b=None, a=None: DraftOpV4(action=action, rule=None, target_id=None, before_kind=b,
+                                                  after_kind=a, goal_kind=None, rationale=f"User: \"{t}\"",
+                                                  order_event=ev if action == "require_order" else None)
     if c.positive is False:
         if len(c.kinds) >= 2:
             return [mk("relax_order", c.kinds[0], c.kinds[1])]
@@ -436,7 +574,6 @@ def _order_ops(c: _Clause, included: list[str], notes: list[str]) -> list[DraftO
         return [mk("relax_order")]
     if len(c.kinds) >= 2:
         a, b = c.kinds[0], c.kinds[1]
-        between = t[t.find(a if a in t else a):]
         if re.search(r"\bafter\b", t) and not re.search(r"\bbefore\b", t):
             a, b = b, a
         return [mk("require_order", a, b)]
@@ -445,7 +582,7 @@ def _order_ops(c: _Clause, included: list[str], notes: list[str]) -> list[DraftO
         others = [o for o in included if o != k]
         if re.search(r"\b(last|after everything|at the end)\b", t):
             return [mk("require_order", o, k) for o in others]
-        if re.search(r"\b(first|start with|before everything|before the others)\b", t):
+        if re.search(r"\b(first|start with|begin with|start by|begin by|before everything|before the others)\b", t):
             return [mk("require_order", k, o) for o in others]
     raise NeedsClarification("Which order do you want? Name the object that should go first.",
                              [f"The {k} first" for k in included], reason="unclear ordering")
