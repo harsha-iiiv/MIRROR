@@ -1,0 +1,33 @@
+{
+ "label": "POST HOC sensitivity (plan only, nothing executed): cup tilted under the original specification at the bounds of the calibration's bootstrap 95% CI",
+ "sets": {
+  "objective_v1 primary": {
+   "layouts": 80,
+   "cup_tilted": {
+    "0.2247": 1,
+    "0.2691": 0
+   }
+  },
+  "objective_v1 shortcut": {
+   "layouts": 40,
+   "cup_tilted": {
+    "0.2247": 2,
+    "0.2691": 0
+   }
+  },
+  "muse primary": {
+   "layouts": 60,
+   "cup_tilted": {
+    "0.2247": 0,
+    "0.2691": 0
+   }
+  },
+  "muse shortcut": {
+   "layouts": 30,
+   "cup_tilted": {
+    "0.2247": 1,
+    "0.2691": 0
+   }
+  }
+ }
+}

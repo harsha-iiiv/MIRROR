@@ -1,0 +1,4580 @@
+{
+ "rows": [
+  {
+   "stratum": "primary",
+   "seed": 50000,
+   "scene_sha256": "b4dbb46f951efa1df350e72f540aeefe21f5461f0498e12f239445f4f9eb6ed9",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.593
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.469
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.323
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.258
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.236
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50001,
+   "scene_sha256": "9426a1ce9521173107bbc0775914604138440c91b1d4e25f8142d4c2738df566",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.381
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.365
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.373
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.417
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.452
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50002,
+   "scene_sha256": "ed1a0b1cb5603e7a286dab932a4bda2de1256c82a7d53de79ac2be3e7c9af84b",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.232
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.233
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.194
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.181
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.259
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50003,
+   "scene_sha256": "c56010ea25a706077cecc49fab9502f6f0f8b028422ca50652a9520bf651c2f1",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "detour",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.465
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.333
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.478
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.387
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.376
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50004,
+   "scene_sha256": "8da6d22414063f4d0134d2766387294cc6c93fef7683c81f6b8e579fcac5df8d",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.275
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.226
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.24
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.294
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.265
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50005,
+   "scene_sha256": "22d6b5b60d1031d1aee6fc71440f5b4a122b2f5cc4fca99e16d0f58a175783fb",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.246
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.308
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.432
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.408
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.489
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50006,
+   "scene_sha256": "d671a53ccc735f16df1d89402265b169eb7966d71cbf870a7c79bd3463bc159e",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.411
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.349
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.299
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.272
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.286
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50007,
+   "scene_sha256": "9ae704ed2d4895faa0b95fde12b550ebded0831459904db176b2107096d64d6b",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.391
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.398
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.404
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.379
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.438
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50008,
+   "scene_sha256": "c7930c30951d62bcdf6137783f5032d517c3a57a2574fb31feb7c505e44a6fd1",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.563
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.393
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.39
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.387
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.548
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50009,
+   "scene_sha256": "6e96a1bbcc3470f49ab7dda7f30f85105e9123e3d395e523c6b7b75a3867ea13",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.249
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.27
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.243
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.148
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.203
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50010,
+   "scene_sha256": "9f54d8b3f9d07d2889a17e0ccf27c1e3a579b9ed5e79bd598d6caab95bd10781",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:+y",
+    "through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.273
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.311
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.303
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.217
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.442
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50011,
+   "scene_sha256": "a52484156d2108e8c69b98e7f0d03002db549f27099ccd059222320276316855",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.575
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.509
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.466
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.391
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.348
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50012,
+   "scene_sha256": "76bf7712d0eceab7b7702ef51a0cbaa5314ddd5d5728b01b611355931e480e91",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.638
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.713
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.686
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.791
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.583
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50013,
+   "scene_sha256": "12fa54e6e12d10994cd151a547018c5f3d2fb16e430dc49d85149ab90d622f0a",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:-y",
+    "direct",
+    "around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.366
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.39
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.469
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.422
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.445
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50014,
+   "scene_sha256": "d59c03740b605f8eda2bb5b769755892de58eb366f0c023a7a9e6314fa10b9b8",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.434
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.336
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.486
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.37
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.356
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50015,
+   "scene_sha256": "befb3a75490713783bc6fe7e6b9b7fc1dfbf05a5681168cada619475a843ed5e",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.313
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.387
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.347
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.498
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.419
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50016,
+   "scene_sha256": "ca57eec26c3a1544e0a3cb6b4dcbbf0846433718b2d48b997b3fd8dfb9fe58d5",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.24
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.291
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.311
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.39
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.259
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50017,
+   "scene_sha256": "5d4d8fb35637207fb8227971c838a6695e24d26b73b94054a6b500b5d9f3609c",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.293
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.294
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.289
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.391
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.48
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50018,
+   "scene_sha256": "13d5656df534e57b1aeb486bd5032c05ab821538cef950e9cd41c195a1688981",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.317
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.208
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.226
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.26
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.201
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50019,
+   "scene_sha256": "6872dd67725f4790fe39db48b9e4dcbcc4f28bc03b2a4295340a8f165a7f5ac0",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.226
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.237
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.219
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.212
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.182
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50020,
+   "scene_sha256": "dcbe997559abdf37deb5a222e6fbfadec05daed15385beb043ac38669b9031e2",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.296
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.35
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.294
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.489
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.401
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50021,
+   "scene_sha256": "50ed6a20dceb303b7d68d1a4805f5be4c3516d32f71aa55418f7642402b4dd62",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y",
+    "direct"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.326
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.362
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.273
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.394
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.326
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50022,
+   "scene_sha256": "a8e57190e5bddbccc607621abc0cbaa0fdb32678553633d263cd81d02d243c8d",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.32
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.295
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.301
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.302
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.294
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50023,
+   "scene_sha256": "7a229377437db43fc3625739372308e07f1e4d9dad4d4348dfb28993b5a32fb6",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "direct",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "direct",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.413
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "direct",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.338
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "direct",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.409
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "direct",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.458
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "direct",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.511
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50024,
+   "scene_sha256": "5e789b0e476c1f14540dfbbfef6b37738832eee7b18ae81fbebba2cf9ae2bddc",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.524
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.385
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.321
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.361
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.371
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50025,
+   "scene_sha256": "3cc97f9ac332cc7a0114dd7ed48bae657cac1ed98b397b9aafd62434ddb11142",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.275
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.356
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.418
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.323
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.533
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50026,
+   "scene_sha256": "f30af5068968d6a8df6e6554e5f8180e9f85eafd1253c6a9860560c592654a07",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.377
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.535
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.5
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.853
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.341
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50027,
+   "scene_sha256": "794fe20559bf2e4337ed72c8b286a90092c18f4f9320f8a315904277878693fa",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.163
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.132
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.155
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.23
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.158
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50028,
+   "scene_sha256": "d665058755ddf58fc0feaccd082447a5a6410b6a00618d86ac237b83945447b0",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.594
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.402
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.53
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.38
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.424
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50029,
+   "scene_sha256": "b5f2151576bc9b020942d4fa0bf260b48726caa844625413f5da042071f7f911",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.253
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.36
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.248
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.248
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.231
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50030,
+   "scene_sha256": "44e9afaf23f6c67936a0929adbc8462eb569e125f55c18d70d4b916c9062bbb1",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.551
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.462
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.294
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.335
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.364
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50031,
+   "scene_sha256": "9fa1055f7a205f04562e1d712edcfc47c21008d9335ad152c07d6b96c71fd22f",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.258
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.479
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.493
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.333
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.481
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50032,
+   "scene_sha256": "aae8bb41f860e8c2a2890371728a31f404d33b8b1fc602bdc048138115904322",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.506
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.339
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.316
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.473
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.438
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50033,
+   "scene_sha256": "e07b5beafbab8844c77a07795ea8005ebcd27ae0999587d37a9da9722af43220",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.213
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.251
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.173
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.167
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.212
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50034,
+   "scene_sha256": "1b17d3117b6e6f228d69ebafcdf95be3395dc62318b9a6789777fed492e791cd",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.496
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.524
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.358
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.421
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.371
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50035,
+   "scene_sha256": "14337bf844a8d1b4cdf3d8146706b4077c513fcbcafb8484e92f25c2ecea2481",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.629
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.379
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.443
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.513
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.392
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50036,
+   "scene_sha256": "c9c3029f5d80dbd0137535e50948f6540dd273dfaa482e89e9b6d51145f31dcd",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.463
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.511
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.416
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.701
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.574
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50037,
+   "scene_sha256": "51354d89ec9d1594bba117ef891b0e4f7635e0c22585f9458f7ec631a92bf37e",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.483
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.475
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.512
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.772
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 1.473
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50038,
+   "scene_sha256": "b9f7382afa4d10269ce46a5adb9fc33bb6cd0e0d7eff7f44602826591dd344fa",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.31
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.263
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.413
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.417
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.662
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50039,
+   "scene_sha256": "3989b97d206c2ac1acbcc694687958d965e7e001a9336ebcef14b7a4104d9715",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.366
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.342
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.497
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.312
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.288
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50040,
+   "scene_sha256": "874559d99006b6ca124c6846aba8009f95f111784dae917215a5905c1b4e31a0",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.331
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.449
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 1.223
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 1.084
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.434
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50041,
+   "scene_sha256": "5a11554e9e97c07983f533901af56dcc65ba1d0dc915ed23aecd955715c2fe7e",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.732
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.947
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.647
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.557
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.523
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50042,
+   "scene_sha256": "00ac752d31ca19f583e15d65ca8f82dca119fb6e9113c18acd932434323b6ff3",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.211
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.228
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.197
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.27
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.209
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50043,
+   "scene_sha256": "826ae55b15f9399802b3e7b976396de174e0db954553c96fb07f6791061fdbcb",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "detour",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "detour",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.619
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "detour",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.39
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "detour",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.357
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "detour",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.408
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "detour",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.348
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50044,
+   "scene_sha256": "16ccd77533355b847eb3249011283befce7151c09e863fcf24a9c6c98cd52832",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.47
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.579
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.544
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.525
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.457
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50045,
+   "scene_sha256": "8a3551194e8d2be37f8c1471c34b2a9d02a89ea8f2b63a4035d3c5ed78020b06",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y",
+    "direct"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.502
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.646
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.548
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.409
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.738
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50046,
+   "scene_sha256": "e0081bb90563ef64b1ec18c96a2273a6e491bd9fccb07844863f1eff0dca3e0d",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.739
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.63
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.6
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.373
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.427
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50047,
+   "scene_sha256": "5018de76f955c90e237f443731fe0ed4fdaef422ad546ba0b43283ebd1fc2005",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.613
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.595
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.499
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.494
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.548
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50048,
+   "scene_sha256": "680a000868b55a32e9c6f0a0125f79bd7254515faca37c09363127c0ce234914",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.574
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.663
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.435
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.476
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.445
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50049,
+   "scene_sha256": "f3302eb849b9d560c4a9cb84b42d140b9a6c002c4e062e50fe681f876e068997",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.42
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.406
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.379
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.427
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.378
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50050,
+   "scene_sha256": "31a6e97379906e759cb3ec6d40e022b7f3c31ac30ca67bcd10bb641581c60d54",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.188
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.308
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.411
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.357
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.419
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50051,
+   "scene_sha256": "1ef4adc3fcb0dc7050943cc6a74e18f192447f5c4467e3cf2a5aec4897895420",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.472
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.525
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.396
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.491
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.516
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50052,
+   "scene_sha256": "af123e576e16e5268f17232dc9e49d176deae9cd720f2fd689d4d4cfe9684d78",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y",
+    "direct"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.223
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.249
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.257
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.242
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.226
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50053,
+   "scene_sha256": "12812d024aba16722c16c651146e9a246709d0fe0dbf065578e2c85c6fb7c89f",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.512
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.696
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.524
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.781
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.76
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50054,
+   "scene_sha256": "f6a544c77f690c6ebbad22dbacbfbfa6e9b3a86179aebbfe6f4a85f83c06c933",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.518
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.434
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.372
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.493
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.387
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50055,
+   "scene_sha256": "fe147ce4ba187b014cc2ce2c6cead0fa87a515e366975934932f3697e095921a",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.533
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.64
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.495
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.354
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.424
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50056,
+   "scene_sha256": "d44ac543703b67440f9a95116dfd8ee5a3813fa5297d20c99f684ca031c786f1",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y",
+    "direct"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.373
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.353
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.375
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.457
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.343
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50057,
+   "scene_sha256": "4d70e64ee48906f8091a7d1c373df498c8567c9eded91c6472fc3838976282e1",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.356
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.419
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.3
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.347
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.255
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50058,
+   "scene_sha256": "fb891d2a33ddb931a3f2fc31be34e83045aecd6c3140cfcebaea58dbf8ddad25",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.228
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.19
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.202
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.196
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.202
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "primary",
+   "seed": 50059,
+   "scene_sha256": "58f81a3681ba191fef7de5497a28fb9ccd402cd1321bb93d75cb07cdd529c5d4",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.281
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.246
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.186
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.222
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.229
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60000,
+   "scene_sha256": "04d344e2c4d58d7d039d090b320063c35c09af75d7d8340622db71f9dea90981",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.332
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.229
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.258
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.337
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.331
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60001,
+   "scene_sha256": "5d5dd591d5e103770b74ab1f495859d2bdcb1fffb6769300793f15447a1491da",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.33
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.479
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.36
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.323
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.33
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60002,
+   "scene_sha256": "9d6a491b11554cd32f3001a5340c86f5835d126a8253642edb189ed929ec56c7",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.307
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.449
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.401
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.454
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.681
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60003,
+   "scene_sha256": "8a8624a0cbd3866c03de09b995e3d06eb0017c759d42b34eef906c92b6202924",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.794
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.622
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 1.058
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.983
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.79
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60004,
+   "scene_sha256": "17168f27207e3469d8538dae780901c96c77bca08e10d50ac0648c00e4f12dde",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.581
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.527
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.509
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.392
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.722
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60005,
+   "scene_sha256": "59e2e83464b282163090b28459c57572d8b1bc2e0279788c2f6631b617211ddf",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.805
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.567
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.453
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.623
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.607
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60006,
+   "scene_sha256": "9d1bd0703ba8d8ffcfba320fae701b62210d4c80271bc5f07c62b23134d05d79",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.303
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.32
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.267
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.445
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.419
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60007,
+   "scene_sha256": "11d982fededdd0abaf18bae61902b3a24a9df999a103fb3854beac9d30569d03",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.352
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.313
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.284
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.269
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.292
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60008,
+   "scene_sha256": "5af0eedb420bfa0e5b73c32426ec09fbc6f16c8887dcd966e930bf8d6aed6213",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.349
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.407
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.535
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.465
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.668
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60009,
+   "scene_sha256": "b183c357c68f8191e9951559a9eaf249508ea59566a5fe2ffec50d4cec768fef",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "around:wall_0:-y",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.396
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.625
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.54
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.368
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.297
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60010,
+   "scene_sha256": "9bf686fdfc44f0ab83e596f76430d8b082b00334c663355c36ad869cf7240a95",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.385
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.358
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.331
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.414
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.35
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60011,
+   "scene_sha256": "daf864f756a93dd2055b11afd40d25b54c7f127753d33233cd3a01e87728f17f",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.43
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.44
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.426
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.353
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.387
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60012,
+   "scene_sha256": "1e3449f2bf25e498cad5ffd338084f0b5e96f0ab7e45d3d643debaae353b2ff7",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.49
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.426
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.452
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.315
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.663
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60013,
+   "scene_sha256": "8454ac58dda3179c1268b228a49651803d1aabc989bea121f78a98591eae9f72",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.57
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.394
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.286
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.276
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.449
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60014,
+   "scene_sha256": "e73d87fade0897a74d5915ac88bb91b2cc8b157ac74bb13973cb1361bbb82bde",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.838
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.497
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.807
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.509
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.517
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60015,
+   "scene_sha256": "c0b0430f42cc4af95e52b71fb077ec2021ada07d0011d749490dbe738aab4560",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.309
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.511
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.447
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.37
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.354
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60016,
+   "scene_sha256": "219c1b85a686315e780ace314dd969fed013e10a6a7cfe250ba297f4124e64f7",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.304
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.328
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.347
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.481
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.339
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60017,
+   "scene_sha256": "68c6be7c6b490817abb0048a70c504657fdb8b5e723241bd5ce5906c9502d6d8",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.269
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.238
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.321
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.383
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.308
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60018,
+   "scene_sha256": "c7135570d4695dc4ffaa7a21b1f05359718ea6fa62ab7965b43a5f5b6690914a",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.428
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.289
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.284
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.361
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.505
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60019,
+   "scene_sha256": "6e0ebe023d7f5900d8b37cfc8fd2603c3d327b8e5b508b51d37f6e4c4c2f3637",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "around:wall_0:-y",
+    "transit:around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.44
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.306
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.294
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.332
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.233
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60020,
+   "scene_sha256": "d0dc67ac8112ee934743e10d9d6fb2842b5f86983b0ea3f95521bcb1a6687f8d",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.268
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.444
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.404
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.364
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.546
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60021,
+   "scene_sha256": "83139ad14c92410d944fd2fe02c8cc737d7e91c7ab17686588b07154e666fede",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.501
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.408
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.448
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.498
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.416
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60022,
+   "scene_sha256": "ecf0f17c72cb2e6109b6a2c8aa95f2457c53f73b353e7b29bbf33d7703cf5ade",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "around:wall_0:+y",
+    "transit:through_slot:wall_0:0:pitched+90",
+    "through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.404
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.297
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.304
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.426
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.258
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60023,
+   "scene_sha256": "21a4da3512349fd24211ea6082b327d10278cc12ccd990be11892031e6dae0f2",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.318
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 1.034
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.858
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.453
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.485
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60024,
+   "scene_sha256": "ed25b3d3f2660c2edf5dd9e5f153f5adc80bda08afca2f0943ef23381aa64c50",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:through_slot:wall_0:0:pitched-90",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.491
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.42
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.399
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.431
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.601
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60025,
+   "scene_sha256": "618ab5753bbab42d9aa1b10f2293cb10d04c0c63082e3f8f1036459993146b7b",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched+90",
+    "transit:around:wall_0:+y",
+    "around:wall_0:+y",
+    "through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.401
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched+90",
+     "cup_mode": "pitched+90",
+     "cup_tilted": true,
+     "planning_s": 0.485
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.381
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.462
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:+y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.443
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60026,
+   "scene_sha256": "62bf1e26fcfb43a0770b51e53894af60116ec3fb30aae5bcc5ca9e6ccbe5818f",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.884
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.509
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.656
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.787
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.871
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60027,
+   "scene_sha256": "4f417fcb2db2b037f9f21cd42486bfa868c02935de671bb7e1e579ef95138aac",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched-90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.773
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.428
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.318
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.482
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.405
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60028,
+   "scene_sha256": "f8f7baf31e1a4c90c79ce49f8c06e328117ec60ab6281f74dfb71e9007c4cf57",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y",
+    "transit:through_slot:wall_0:0:pitched+90"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.462
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.38
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.331
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.325
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.353
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  },
+  {
+   "stratum": "shortcut",
+   "seed": 60029,
+   "scene_sha256": "2280bea9a65e03f839861bfe6b307e0b3b11bf0ae17c4e4551c0b673a40ec767",
+   "scene_matches_frozen": true,
+   "frozen_original_route_labels": [
+    "transit:direct",
+    "through_slot:wall_0:0:pitched-90",
+    "transit:around:wall_0:-y",
+    "around:wall_0:-y"
+   ],
+   "plans": {
+    "0.05": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.357
+    },
+    "0.10": {
+     "status": "ok",
+     "cup_route": "through_slot:wall_0:0:pitched-90",
+     "cup_mode": "pitched-90",
+     "cup_tilted": true,
+     "planning_s": 0.382
+    },
+    "0.20": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.372
+    },
+    "0.40": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.452
+    },
+    "1.0": {
+     "status": "ok",
+     "cup_route": "around:wall_0:-y",
+     "cup_mode": "upright",
+     "cup_tilted": false,
+     "planning_s": 0.538
+    }
+   },
+   "frozen_route_reproduced_at_0.05": true
+  }
+ ],
+ "counts": {
+  "0.05": {
+   "total": 54,
+   "primary": 27,
+   "shortcut": 27,
+   "no_plan": 0
+  },
+  "0.10": {
+   "total": 32,
+   "primary": 18,
+   "shortcut": 14,
+   "no_plan": 0
+  },
+  "0.20": {
+   "total": 2,
+   "primary": 0,
+   "shortcut": 2,
+   "no_plan": 0
+  },
+  "0.40": {
+   "total": 0,
+   "primary": 0,
+   "shortcut": 0,
+   "no_plan": 0
+  },
+  "1.0": {
+   "total": 0,
+   "primary": 0,
+   "shortcut": 0,
+   "no_plan": 0
+  }
+ },
+ "layouts": 90,
+ "scenes_matching_frozen": 90,
+ "frozen_route_reproduced_at_0_05": 90,
+ "spec_original_sha256": [
+  "c_upright_final_cup"
+ ],
+ "ledger": "layout_ledger.jsonl"
+}
