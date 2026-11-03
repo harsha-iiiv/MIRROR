@@ -38,9 +38,14 @@ from mirror.studio.session_adapter import REFERENCE_CORRECTION, StudioService  #
 
 
 def code_version() -> str:
+    """Commit of the code that produced the tour; "+uncommitted" when mirror/ or scripts/ had local changes."""
+    def git(*a):
+        return subprocess.run(["git", "-C", str(ROOT), *a], capture_output=True, text=True, timeout=10,
+                              stdin=subprocess.DEVNULL).stdout.strip()
     try:
-        return subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"], capture_output=True,
-                              text=True, timeout=10, stdin=subprocess.DEVNULL).stdout.strip() or "unknown"
+        head = git("rev-parse", "--short", "HEAD") or "unknown"
+        dirty = git("status", "--porcelain", "--", "mirror", "scripts")
+        return head + ("+uncommitted" if dirty else "")
     except (OSError, subprocess.SubprocessError):
         return "unknown"
 
@@ -87,6 +92,10 @@ def main() -> int:
                 e = svc.session.rollouts[res["rollout_id"]]
                 row[key] = svc._rollout_brief(e)
                 payloads[res["rollout_id"]] = svc.rollout_payload(res["rollout_id"])
+            # The independent checker on the prior behaviour's step log, under the revised rule.
+            base_e = svc.session.rollouts[row["base"]["rollout_id"]]
+            rep = svc.session.recheck(base_e.rollout_id, int(ch.revised_spec_version_id.rpartition(".v")[2]))
+            row["base_under_revised"] = {**svc._rollout_brief(base_e, rep), "spec_version_id": ch.revised_spec_version_id}
             transfer.append(row)
         record["transfer"] = transfer
         record["provenance"] = {**record["provenance"], "recorded": True,
@@ -107,7 +116,8 @@ def main() -> int:
         print(json.dumps({"record_id": record["record_id"], "before": record["rollouts"]["before"]["status"],
                           "recheck_before": [r["status"] for r in record["rechecks"] if r.get("is_before")],
                           "after": record["rollouts"]["after"]["status"],
-                          "transfer": [(t["seed"], t["base"]["status"], t["revised"]["status"]) for t in transfer],
+                          "transfer": [(t["seed"], t["base"]["status"], t["base_under_revised"]["status"],
+                                        t["revised"]["status"]) for t in transfer],
                           "wall_s": record["provenance"]["recorded_wall_s"]}, indent=1))
     finally:
         svc.close("tour recorded")
