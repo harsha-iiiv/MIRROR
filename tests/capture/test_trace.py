@@ -97,3 +97,31 @@ def test_session_json_carries_fidelity_statement_and_ignores_stored_copies():
     back = SE.CaptureSession.model_validate(d)
     assert back.mappings[0].fidelity_statement() == MUG.fidelity_statement()
     assert json.loads(back.model_dump_json())["mappings"][0]["fidelity_statement"] == MUG.fidelity_statement()
+
+
+def test_scene_tray_takes_the_region_and_its_measured_footprint():
+    from mirror.capture import trace as TR
+    s = _session()
+    s.tray = s.tray.model_copy(update={"inner_half": (0.16, 0.11), "yaw_deg": 0.0, "footprint_source": "measured_ruler"})
+    scene = TR.to_scene(s)
+    assert len(scene.trays) == 1
+    tr = scene.trays[0]
+    assert tuple(round(v, 3) for v in tr.inner_half) == (0.16, 0.11)
+    want = TR._to_sim(s, np.array([*s.tray.center_xy, 0.0]))
+    assert np.allclose(tr.pose.pos[:2], want[:2])
+    assert "measured ruler" in scene.notes
+
+
+def test_scene_has_a_tray_without_a_tray_track_when_the_region_was_entered():
+    from mirror.capture import trace as TR
+    s = _session()
+    s.mappings = [m for m in s.mappings if m.proxy != "tray"]
+    assert len(TR.to_scene(s).trays) == 1
+
+
+def test_scene_refuses_without_a_tray():
+    from mirror.capture import trace as TR
+    s = _session()
+    s.tray = None
+    with pytest.raises(TR.TrayNotMapped, match="map the tray"):
+        TR.to_scene(s)

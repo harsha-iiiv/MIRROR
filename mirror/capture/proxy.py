@@ -128,6 +128,8 @@ def review_items(mappings: list[ObjectMapping]) -> list[dict]:
         s = SUPPORTED[m.proxy]
         if s["proxy_dims_m"] and m.real_dims:
             for k, i in (("width", 0), ("depth", 1), ("height", 2)):
+                if m.proxy == "tray" and k != "height":
+                    continue   # the simulated tray takes the measured inside footprint (see trace.to_scene)
                 d = m.real_dims.get(k)
                 if d is not None and s["proxy_dims_m"][i] > 0 and abs(d.value_m / s["proxy_dims_m"][i] - 1.0) > 0.5:
                     items.append({"code": "proxy_size_mismatch", "severity": "review", "object": m.track_label,

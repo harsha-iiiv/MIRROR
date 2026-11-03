@@ -40,6 +40,8 @@ class TrayRegion(_M):
     inner_half: tuple[float, float]
     yaw_deg: float = 0.0
     source: Literal["tracked_tray_at_rest", "person_supplied", "assumed_aligned_with_board"] = "tracked_tray_at_rest"
+    # where inner_half (the inside footprint) came from; the simulated tray uses this footprint
+    footprint_source: Literal["measured_ruler", "person_supplied", "assumed_proxy"] = "person_supplied"
 
     def contains(self, xy) -> bool:
         c, s = np.cos(np.radians(-self.yaw_deg)), np.sin(np.radians(-self.yaw_deg))

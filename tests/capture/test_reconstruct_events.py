@@ -181,3 +181,27 @@ def test_mapping_review_items():
                                               real_dims={"height": PX.Dimension(value_m=0.20, source="measured_ruler")})])
     codes = {i["code"] for i in items}
     assert {"mapping_unconfirmed", "multiple_trays", "proxy_size_mismatch"} <= codes
+
+
+def test_tray_review_blocks_without_a_destination_and_flags_assumed_footprints():
+    from mirror.capture import session as SE
+    items = SE.tray_review(None, [MUG])
+    assert [i.code for i in items] == ["tray_not_mapped"] and items[0].severity == "abstain"
+    assert "Map the tray" in items[0].message and "no object is mapped" in items[0].message
+    tray_map = PX.ObjectMapping(track_label="tray", real_identity="tray", proxy="tray", confirmed_by_person=True)
+    assert "never located" in SE.tray_review(None, [MUG, tray_map])[0].message
+    ok = EV.TrayRegion(center_xy=(0.3, 0.1), inner_half=(0.12, 0.09), footprint_source="measured_ruler")
+    assert SE.tray_review(ok, [MUG]) == []
+    assumed = ok.model_copy(update={"footprint_source": "assumed_proxy"})
+    assert [(i.code, i.severity) for i in SE.tray_review(assumed, [MUG])] == [("tray_footprint_assumed", "review")]
+    huge = ok.model_copy(update={"inner_half": (0.5, 0.09)})
+    assert [i.code for i in SE.tray_review(huge, [MUG])] == ["tray_size_unsupported"]
+
+
+def test_gate_blocks_while_the_tray_is_not_mapped():
+    from mirror.capture import session as SE
+    rec = RC.reconstruct({c: MODELS[c] for c in ("top", "side")}, tracks_for(mug_world), [MUG], sync=SYNC)
+    s = SE.CaptureSession(synthetic=True, mappings=[MUG], reconstruction=rec, mode=rec.mode)
+    s.review = SE.tray_review(None, s.mappings)
+    ok, blocking = s.gate()
+    assert not ok and blocking[0].code == "tray_not_mapped"
