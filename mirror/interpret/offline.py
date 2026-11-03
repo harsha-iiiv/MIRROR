@@ -139,6 +139,7 @@ def propose_offline(summary: DemoSummary, scene: SceneState) -> ProposalDraft:
                 "The object was tilted while carried, so no upright requirement is inferred for it.")))
         elif r.kind in ("carry_upright", "final_upright"):
             dismissed.append(DraftDismissal(regularity_id=r.id, reason="Object is not part of the task."))
+    rules += _unobserved_tilt_rules(summary, regs, included, rules)
     by_id = {o.object_id: o for o in summary.objects}
     order = [by_id[i].kind for i in summary.order if by_id[i].kind in included]
     ordering = []
@@ -477,6 +478,51 @@ def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -
         interp += f" ({alias_note})"
     ops = [o if isinstance(o, DraftOpV4) else DraftOpV4(**o.model_dump(), order_event=None) for o in ops]
     return CorrectionDraftV4(outcome="apply", interpretation=interp, question=None, options=[], ops=ops)
+
+
+def _tilt_unobserved(o, phase: str) -> bool:
+    """True when the evidence did not see the object's tilt in this phase:
+    an explicit end/start tilt of None, or observability coverage under 80 %
+    of the carry (perception evidence for real or rendered video)."""
+    if phase == "final":
+        return getattr(o, "end_tilt_deg", 0.0) is None
+    obs = getattr(o, "observability", None) or {}
+    tilt = obs.get("tilt") if isinstance(obs, dict) else getattr(obs, "tilt", None)
+    if isinstance(tilt, dict):
+        frames, seen = tilt.get("carry_frames") or 0, tilt.get("carry_observed_frames") or 0
+        return frames > 0 and seen / frames < 0.8
+    return False
+
+
+def _unobserved_tilt_rules(summary, regs, included, rules) -> list[DraftRule]:
+    """Ask instead of asserting: an included object whose tilt was not seen
+    gets an upright question (lean unclear, no regularity) rather than no rule."""
+    have = {(r.object_kind, r.phase) for r in rules if r.type == "upright"}
+    seen_kinds = {(r.object_kind, r.kind) for r in regs}
+    out = []
+    for o in summary.objects:
+        k = o.kind
+        if k not in included:
+            continue
+        if (k, "transport") not in have and (k, "carry_tilted") not in seen_kinds and o.moved \
+                and _tilt_unobserved(o, "transport"):
+            out.append(DraftRule(
+                type="upright", object_kind=k, phase="transport", max_tilt_deg=15.0, contact_with=None,
+                min_clearance_m=None, regularity_ids=[], shown_by_demo="",
+                assumption=f"The {k}'s tilt was not observed while it was carried, so nothing is inferred.",
+                lean="unclear",
+                question=(f"The {k}'s tilt was not observed while it was carried (the cameras did not see it). "
+                          f"Must it stay upright during transport?")))
+            have.add((k, "transport"))
+        if (k, "final") not in have and _tilt_unobserved(o, "final"):
+            out.append(DraftRule(
+                type="upright", object_kind=k, phase="final", max_tilt_deg=15.0, contact_with=None,
+                min_clearance_m=None, regularity_ids=[], shown_by_demo="",
+                assumption=f"The {k}'s final tilt was not observed, so nothing is inferred.",
+                lean="unclear",
+                question=f"The {k}'s tilt in the tray was not observed. Must it end upright?"))
+            have.add((k, "final"))
+    return out
 
 
 def _merge_requirements(ops: list[DraftOp]) -> list[DraftOp]:
