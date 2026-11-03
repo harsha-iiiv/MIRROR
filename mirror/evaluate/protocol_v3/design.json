@@ -1,7 +1,7 @@
 {
   "protocol": "mirror-authoring-v3",
   "version": "3.0",
-  "status": "draft: written and dry-run on development cases only; not frozen, not run",
+  "status": "draft: written and dry-run on development cases only; not frozen, not run; awaiting independent authors, adjudicators and budget",
   "question": "When independent task authors correct a robot task specification in their own words, across new scenes, object scopes and multi-turn changes, how often does MIRROR (Muse Spark compiling corrections) produce the intended specification and a compliant execution, compared with the offline rule compiler and with manual structured-spec editing, all through an identical planner, simulator and checker?",
   "layers": {
     "authoring": "text or speech -> TaskSpec version (scored against an adjudicated gold edit)",
@@ -159,14 +159,62 @@
         "max_cost_usd": 8.5,
         "reserve_per_turn_usd": 0.05,
         "compute": "CPU only, about 400 simulated executions at about 5 s each"
+      },
+      {
+        "id": "J2",
+        "what": "the frozen language-understanding run",
+        "calls": "<= 300 turns x <= 3 attempts of compile_correction to muse-spark-1.3",
+        "expected_cost_usd": 3.5,
+        "max_cost_usd": 6.0,
+        "reserve_per_turn_usd": 0.05,
+        "compute": "none beyond CPU scoring"
       }
     ],
-    "max_cost_usd": 10.0,
+    "max_cost_usd": 16.0,
     "prerequisites": [
       "owner approval of the spend",
       "recruited independent authors, editors, adjudicators and real speakers with signed consent (study/consent_form.md)",
       "a custodian who is not a developer",
-      "freeze committed before the bundle is opened"
+      "freeze committed before the bundle is opened",
+      "two gold adjudicators and two blind judges, none of them authors or developers"
     ]
+  },
+  "language_understanding": {
+    "purpose": "Measure whether corrections in people's own words are understood, separately from execution and separately from the earlier fixed-pair evaluations. Required by audit finding F-A2: the pre-registered layout evaluations require the replayed model specification to equal the offline-rule specification (mirror/evaluate/specs.py), so they cannot show what the model contributes.",
+    "track": "language (case field track='language'); authoring only, no execution",
+    "cases": {
+      "authors": "same independent authors as the authoring track, separate case files; no reused development or benchmark cases",
+      "bases": [
+        "reference_reviewed",
+        "reference_unreviewed",
+        "cup_transport_confirmed",
+        "block_strict",
+        "ordering_confirmed",
+        "all_transport_upright"
+      ],
+      "scenes": "reference scenes and reserved held-out layouts (scene objects affect absent-object handling)",
+      "must_cover": [
+        "negation and reversal",
+        "scope: only, except, every, pairs",
+        "ambiguity: missing or unclear referent, unclear tolerance",
+        "new rule types and phases not in the base",
+        "multi-turn refinement",
+        "unsupported requests",
+        "no-change statements"
+      ],
+      "target": "at least 120 turns, at least 15 per phenomenon"
+    },
+    "conditions": "mirror_model, offline_rules, manual_structured; no agreement gate: the model and the rules are each scored against the gold and may differ",
+    "scoring": {
+      "primary": "automatic: outcome and semantic enforced state equal the gold or an adjudicator-accepted alternative",
+      "secondary": "blind human judgement of every output (JUDGEMENTS in adjudication.py) on sheets with shuffled condition labels; the key stays with the custodian",
+      "disagreement": "every turn where automatic score and blind judgement disagree is listed"
+    },
+    "adjudication": {
+      "gold": "two adjudicators independently write outcome and edit per turn, plus accepted alternatives; Cohen's kappa on outcomes and exact edit agreement reported; a third resolves disagreements before the freeze",
+      "judges": "two judges per output after the run, not the gold adjudicators, blind to condition",
+      "tools": "python -m mirror.evaluate.protocol_v3 adjudication-agreement | adjudication-pack | adjudication-unblind"
+    },
+    "analysis": "per phenomenon and per base: exact rate per condition with Wilson intervals; paired exact McNemar per turn (mirror_model vs offline_rules, mirror_model vs manual_structured); no thresholds pre-stated beyond the authoring track's false-accept and wrong-scope checks"
   }
 }

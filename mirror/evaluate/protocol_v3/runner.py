@@ -28,12 +28,39 @@ from .scenes import resolve
 REFUSALS = ("asks", "rejects", "abstain")
 
 
+_BASE_EDITS = {
+    "cup_transport_confirmed": {"rules": [{"type": "upright", "object": "cup", "phase": "transport"}]},
+    "block_strict": {"rules": [{"type": "upright", "object": "block", "phase": "transport", "max_tilt_deg": 10}]},
+    "ordering_confirmed": {"orderings": [{"before": "cup", "after": "block"}]},
+    "all_transport_upright": {"rules": [{"type": "upright", "object": "all", "phase": "transport"}]},
+}
+
+
 def base_spec(name: str = "reference_reviewed") -> TaskSpec:
-    """The reviewed reference specification every case starts from (goals and
-    the cup's final upright rule confirmed; other demonstration rules proposed)."""
-    if name != "reference_reviewed":
-        raise ValueError(f"unknown base {name!r}")
-    return load_base_spec()
+    """Base specifications a case can start from.
+
+    reference_reviewed       the reference demonstration after review (goals and the
+                             cup's final upright rule confirmed, other rules proposed)
+    reference_unreviewed     the same proposal before review (nothing confirmed)
+    cup_transport_confirmed  reviewed + cup upright while carried (15 deg)
+    block_strict             reviewed + block upright while carried (10 deg)
+    ordering_confirmed       reviewed + cup before block confirmed
+    all_transport_upright    reviewed + every object upright while carried
+    """
+    from mirror.contracts import SpecOp
+    from mirror.interpret.specops import apply_ops
+
+    from .schema import StructuredEdit
+    ref = load_base_spec()
+    if name == "reference_reviewed":
+        return ref
+    if name == "reference_unreviewed":
+        ops = [SpecOp(op="set_status", target_id=i.id, value={"status": "proposed"}, rationale="unreviewed base")
+               for coll in (ref.goals, ref.constraints) for i in coll if i.status.value == "confirmed"]
+        return apply_ops(ref, ops, text="base: before review", kind="confirmation")[0]
+    if name in _BASE_EDITS:
+        return apply_edit(ref, StructuredEdit.model_validate(_BASE_EDITS[name]), text=f"base: {name}")[0]
+    raise ValueError(f"unknown base {name!r}")
 
 
 def gold_chain(case: Case, base: TaskSpec) -> list[TaskSpec]:
@@ -46,20 +73,25 @@ def gold_chain(case: Case, base: TaskSpec) -> list[TaskSpec]:
     return out
 
 
-def score_turn(prev: dict, got: TurnResult, gold_prev: dict, gold_now: dict, gold_outcome: str) -> dict[str, Any]:
+def score_turn(prev: dict, got: TurnResult, gold_prev: dict, gold_now: dict, gold_outcome: str,
+               alternatives: tuple = ()) -> dict[str, Any]:
+    """``alternatives``: semantic states the adjudicators also accept for this turn."""
     now = semantic_state(got.spec) if got.spec is not None else prev
     s: dict[str, Any] = {"outcome": got.outcome, "gold_outcome": gold_outcome, "exact": False,
                          "refused_any": False, "false_accept": False, "false_refusal": False,
                          "wrong_scope_kinds": [], "state_matches_gold": now == gold_now}
     changed = got.outcome == "apply" and now != prev
+    s["acceptable_alternative"] = False
     if gold_outcome == "apply":
         s["exact"] = got.outcome == "apply" and now == gold_now
+        if not s["exact"] and got.outcome == "apply" and now in alternatives:
+            s["exact"] = s["acceptable_alternative"] = True
         s["false_refusal"] = got.outcome in REFUSALS
     else:
         s["refused_any"] = got.outcome in REFUSALS
         s["exact"] = got.outcome == gold_outcome and now == prev
         s["false_accept"] = changed
-    if changed:
+    if changed and not s["acceptable_alternative"]:
         s["wrong_scope_kinds"] = sorted(changed_kinds(now, prev) - changed_kinds(gold_now, gold_prev))
     return s
 
@@ -89,12 +121,17 @@ def run_case(case: Case, cond: Condition, *, base_dir: Path, executor: Optional[
     golds = gold_chain(case, base)
     spec, turns, usage = base, [], []
     gold_prev = semantic_state(base)
+    gold_prev_spec = base
     for t, g in zip(case.turns, golds):
         prev = semantic_state(spec)
         res = cond.run_turn(spec, t, scene, base_dir)
         gold_now = semantic_state(g)
-        sc = score_turn(prev, res, gold_prev, gold_now, t.gold.outcome)
-        turns.append({**res.public(), "score": sc, "speech": t.speech.speaker if t.speech else "typed"})
+        alts = tuple(semantic_state(apply_edit(gold_prev_spec, a, text="alternative")[0]) for a in t.gold.alternatives)
+        sc = score_turn(prev, res, gold_prev, gold_now, t.gold.outcome, alts)
+        gold_prev_spec = g
+        turns.append({**res.public(), "score": sc, "speech": t.speech.speaker if t.speech else "typed",
+                      "text": t.text, "state_before": prev,
+                      "state_after": semantic_state(res.spec) if res.spec is not None else prev})
         usage += res.usage
         if res.outcome == "apply" and res.spec is not None:
             spec = res.spec
@@ -106,7 +143,8 @@ def run_case(case: Case, cond: Condition, *, base_dir: Path, executor: Optional[
             all(t["outcome"] != "not_measured" for t in turns):
         ex = executor.execute(scene, spec, golds[-1]).public()
     return {"case_id": case.id, "condition": cond.name, "provenance": cond.provenance,
-            "category": case.category, "scene": case.scene.key(), "turns": turns,
+            "category": case.category, "track": case.track, "base": case.base, "tags": list(case.scope_tags),
+            "scene": case.scene.key(), "turns": turns,
             "final_state_exact": final_exact, "final_spec_version": spec.version,
             "final_state": state_of(spec), "gold_final_state": state_of(golds[-1]),
             "measured": measured,

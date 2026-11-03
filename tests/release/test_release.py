@@ -38,6 +38,11 @@ def test_scope_statements_present_in_published_docs():
     assert "not blind" in claims.lower() and "post-hoc model swap" in claims
     assert "## Scope of each result" in ev and "## Evidence provenance" in ev
     assert "95 new layouts" not in readme
+    for doc in (readme, claims, ev):
+        assert "deterministic regression check" in doc
+    assert "outcome-level reproduction" in claims.lower() or "reproduction of outcomes" in readme
+    assert "## Audit findings and narrowed claims" in ev
+    assert ev.count("PENDING") >= 4                       # pending items stay visibly marked
 
 
 def test_historical_rollouts_and_manifests_still_parse():

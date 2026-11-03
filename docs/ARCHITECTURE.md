@@ -67,7 +67,11 @@ sampling fallback for extra obstacles. Collision checks use a conservative
 envelope of the gripper plus the held object. Confirmed upright rules remove
 orientation modes whose tilt exceeds the limit, for the matching objects
 only. The cheapest feasible route wins; every candidate is recorded with its
-cost or rejection reason.
+cost or rejection reason. Cost is path length plus 0.05 m per radian of
+gripper rotation (`PlannerConfig.rotation_penalty`). That weight decides how
+often a tilted slot route beats an upright detour when no rule forbids tilting,
+and the shorter route is usually not the faster one in execution; see
+[F-A1](EVALUATION.md#audit-findings-and-narrowed-claims-2-november-2026).
 
 When nothing is feasible the planner returns `no_plan`. It attaches a proof
 (`proven: true`, `scope: any_motion`) only when a geometric bound shows that
@@ -103,7 +107,10 @@ Three parts of the pipeline are evaluated separately, then composed:
 | Execution | fixed `TaskSpec` + new layout → plan, physics, checker verdict | First and second registrations (one fixed specification pair on new layouts) |
 
 The pre-registered evaluations exercise only the execution layer with a fixed
-specification pair. Protocol v3 (`mirror/evaluate/protocol_v3/`,
+specification pair; the agreement check in `mirror/evaluate/specs.py` (replayed
+model specification must equal the offline-rule specification) is a
+deterministic regression check, so they say nothing about the model's
+contribution. Protocol v3 (`mirror/evaluate/protocol_v3/`,
 [protocols/v3_authoring.md](protocols/v3_authoring.md)) measures authoring and
 runs each authored specification through the same planner, simulator and
 checker, so the composition of authoring and execution is measured on the same

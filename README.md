@@ -86,6 +86,32 @@ A new protocol for a genuinely fresh authoring evaluation (independent correctio
 authors, held-out cases, baselines) is written and dry-run on development cases,
 but **not yet run**: [docs/protocols/v3_authoring.md](docs/protocols/v3_authoring.md).
 
+How to read these numbers (audit of 2 November 2026; details in
+[Audit findings](docs/EVALUATION.md#audit-findings-and-narrowed-claims-2-november-2026)):
+
+* **Not evidence that Muse Spark caused the improvement.** Before either
+  evaluation runs, the replayed model specifications must equal the
+  offline-rule specifications (`mirror/evaluate/specs.py`). That is a
+  deterministic regression check, and it means the offline rules alone would
+  give the same layout results. The table shows the effect of the corrected
+  rule. Language understanding is measured separately (prepared, not run:
+  [protocol v3, language track](docs/protocols/v3_language.md)).
+* **The size of the original specification's failure rate depends on the
+  planner's objective.** Route cost charges 0.05 m per radian of gripper
+  rotation, so the tilted slot route is often cheapest when nothing forbids
+  it. An audit's plan-only sweep over the 90 frozen layouts found tilted cup
+  routes on 54 at 0.05, 32 at 0.10, 2 at 0.20 and none at 0.40 or 1.0 (planned,
+  not executed). The shortest route is not the fastest: in 110 of the 113 pairs
+  where the specifications differed, the corrected upright run finished sooner
+  in simulation (median 3.6 s; from the stored reports). A cautious planner
+  that never tilts would not spill at all. **PENDING (track `baseline`):** an
+  executed rotation-cost sweep, a time-calibrated objective and a never-tilt
+  baseline, as a new registration.
+* **Reproduced at the outcome level.** An isolated, network-blocked replay at
+  the audited commit reproduced all 95 Muse-registration scene hashes, statuses
+  and violation-free outcomes; one bead-loss count differed (6 vs 2). That is
+  reproduction of outcomes, not bit-exact determinism.
+
 No planning failures, execution failures, timeouts or obstacle contacts in
 either condition of either evaluation. On five layouts per evaluation where the
 slot is the only way through, the original specification spills beads to finish
@@ -99,10 +125,10 @@ run: motion comes from the planner and the physics, verdicts from the checker.
 
 | Model | Job in MIRROR | Why this model | Evidence |
 |---|---|---|---|
-| **Muse Spark** (`muse-spark-1.3`) | Proposes the task specification from the demonstration, compiles corrections into scoped rule changes, asks clarifying questions. In the video path it also locates the objects on the first frame so SAM can track them, and it is the video observer (kept over Muse Wonder by a rule stated before the test). | Strict JSON-schema output, and text, image and video input in one model. | [Second evaluation](results/eval_muse/report.md): its one specification pair on new layouts, 33/60 → 60/60 and 3/30 → 30/30. [Correction benchmark](results/corrections_benchmark_summary.md): 44/44 and 27/28, but as a post-hoc model swap on cases already seen during development, not a blind test |
+| **Muse Spark** (`muse-spark-1.3`) | Proposes the task specification from the demonstration, compiles corrections into scoped rule changes, asks clarifying questions. In the video path it also locates the objects on the first frame so SAM can track them, and it is the video observer (kept over Muse Wonder by a rule stated before the test). | Strict JSON-schema output, and text, image and video input in one model. | [Second evaluation](results/eval_muse/report.md): its one specification pair on new layouts, 33/60 → 60/60 and 3/30 → 30/30; the pair had to equal the offline-rule pair (a deterministic regression check), so this does not show Muse Spark caused the improvement. [Correction benchmark](results/corrections_benchmark_summary.md): 44/44 and 27/28, a post-hoc model swap on cases already seen during development, not a blind test or a fresh external holdout |
 | **Muse Voice Transcribe** (`muse-voice-transcribe-1.0`) | Turns a spoken correction into text for the same correction compiler. | Push-to-talk transcription; median latency 1.0 s in the spoken-correction benchmark. | [Spoken corrections](results/eval_voice/report.md): 3.0% word error rate on clean speech; corrections right from audio 141/144 vs 142/144 from text |
-| **SAM 3.1** (`sam-3.1`) | Tracks the cup, block, marker and gripper through a demonstration video and segments the table, tray and wall, so the demonstration can be rebuilt from video. | Video segmentation with object identities kept across frames. | [Video benchmark](results/eval_video2/report.md), 16 of 20 seeds. Met: median position error 0.72 cm, cup tilt error 2.0°. **Not met:** objects found 0.886 (target 0.95), grasp/release within 1 s 0.635 (target 0.9), median timing error 0.65 s (target 0.3 s), same specification as from the true trace on 8 of 16 seeds (target 18 of 20). One seed tracked nothing. Also [robustness](results/eval_robustness/report.md). |
-| **Muse Image** (`muse-image-1.0`) | Edits frames (lighting, background, distractors, material) to test whether segmentation holds up when the scene looks different. | Instruction-based edits of a frame whose true masks are still known from the simulator. | [Robustness](results/eval_robustness/report.md): on objects whose position the edit kept, median IoU change about 0 and centroid error under 2 px |
+| **SAM 3.1** (`sam-3.1`) | Tracks the cup, block, marker and gripper through a demonstration video and segments the table, tray and wall, so the demonstration can be rebuilt from video. | Video segmentation with object identities kept across frames. | [Video benchmark](results/eval_video2/report.md), 16 of 20 seeds. Met as registered: median position error 0.72 cm, counted only for estimates within 5 cm of the truth (so it is conditional on detection, not overall accuracy), and cup tilt error 2.0°, which is not informative because the cup never tilted more than 0.3° in any clip (an estimate of always zero would score better). **Not met:** objects found 0.886 (target 0.95), grasp/release within 1 s 0.635 (target 0.9), median timing error 0.65 s (target 0.3 s), same specification as from the true trace on 8 of 16 seeds (target 18 of 20). One seed tracked nothing. Also [robustness](results/eval_robustness/report.md). |
+| **Muse Image** (`muse-image-1.0`) | Edits frames (lighting, background, distractors, material) to test whether segmentation holds up when the scene looks different. | Instruction-based edits of a frame whose true masks are still known from the simulator. | [Robustness](results/eval_robustness/report.md): on objects whose position the edit kept, median IoU change about 0 and centroid error under 2 px; that median includes objects no phrase was chosen for (0 before, 0 after), and the found-rate check failed in both conditions. **PENDING (track `reanalysis`):** prompted and evaluated object counts, detection-conditional and unconditional scores |
 | **Muse Wonder** (`muse-wonder-1.0`) | Tested as the video observer (objects, grasp and release events, care cues) against Muse Spark on the same clips. Not used: the pre-stated rule kept Muse Spark. | The alternative video model, to be used only if it beat Spark by a margin stated before the test. | [Video benchmark](results/eval_video2/report.md), 16 clips: event F1 0.062 vs Spark 0.115, relevant objects right 14 vs 16, $3.86 vs $0.76, median latency 79 s vs 42 s |
 
 Every model call is recorded, so the story and the published results replay

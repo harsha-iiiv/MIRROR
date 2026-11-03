@@ -31,7 +31,13 @@ def latest(results: list[dict]) -> dict[tuple[str, str], dict]:
     return by
 
 
-def per_condition(results: list[dict], ledger: list[dict], n_cases: Optional[int] = None) -> dict[str, Any]:
+def per_condition(results: list[dict], ledger: list[dict], n_cases: Optional[int] = None,
+                  track: Optional[str] = None) -> dict[str, Any]:
+    """``track`` restricts to authoring or language cases (results and ledger)."""
+    if track is not None:
+        keep = {r["case_id"] for r in results if r.get("track", "authoring") == track}
+        results = [r for r in results if r["case_id"] in keep]
+        ledger = [e for e in ledger if e.get("case_id") in keep]
     by = latest(results)
     conds = sorted({c for _, c in by} | {e["condition"] for e in ledger})
     statuses: dict[str, Counter] = defaultdict(Counter)
@@ -55,6 +61,13 @@ def per_condition(results: list[dict], ledger: list[dict], n_cases: Optional[int
             c["cases"] += 1
             c["end_to_end_success"] += int(r["end_to_end_success"] is True)
             c["final_state_exact"] += int(r["final_state_exact"])
+        tags: dict[str, Counter] = defaultdict(Counter)
+        for r in rows:
+            for tag in r.get("tags", []):
+                tags[tag]["cases"] += 1
+                tags[tag]["final_state_exact"] += int(r["final_state_exact"])
+                tags[tag]["turns"] += len(r["turns"])
+                tags[tag]["turn_exact"] += sum(t["score"]["exact"] for t in r["turns"])
         speech: dict[str, Counter] = defaultdict(Counter)
         for t in turns:
             speech[t.get("speech", "typed")]["turns"] += 1
@@ -68,6 +81,7 @@ def per_condition(results: list[dict], ledger: list[dict], n_cases: Optional[int
             "turns": len(turns),
             "not_measured_turns": len(all_turns) - len(turns),
             "turn_exact": sum(s["exact"] for s in sc),
+            "acceptable_alternatives": sum(s.get("acceptable_alternative", False) for s in sc),
             "apply_turns": len(apply_t), "apply_exact": sum(s["exact"] for s in apply_t),
             "refusal_turns": len(refuse_t), "refusal_exact": sum(s["exact"] for s in refuse_t),
             "refused_any_type": sum(s["refused_any"] for s in refuse_t),
@@ -93,6 +107,7 @@ def per_condition(results: list[dict], ledger: list[dict], n_cases: Optional[int
             "network_calls": sum(t["network_calls"] for t in turns),
             "by_category": {k: dict(v) for k, v in sorted(by_cat.items())},
             "by_input": {k: dict(v) for k, v in sorted(speech.items())},
+            "by_tag": {k: dict(v) for k, v in sorted(tags.items())},
         }
     if n_cases is not None:
         for v in out.values():
