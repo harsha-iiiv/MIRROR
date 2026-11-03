@@ -2,6 +2,7 @@
 // A recorded page can switch to a live server (?live=1) when config.js names one;
 // if it cannot be reached the page keeps showing the recordings and says so.
 import { resolveConfig, apiUrl, wsUrl, withLive } from './config.js';
+import { isStale } from './identity.js';
 
 export const config = resolveConfig(window.MIRROR_CONFIG, window.location);
 export let isStatic = config.recordings;          // final value is set by init()
@@ -10,6 +11,10 @@ const base = config.base;
 const rolloutCache = new Map();
 const SKEY = 'mirror-session:' + (config.apiBase || location.origin);
 let session = null;
+let token = null;        // capability token for the session (never put in share URLs)
+let generation = '';     // generation of the latest applied snapshot
+export function setGeneration(g) { generation = g || ''; }
+export function currentGeneration() { return generation; }
 
 // ------------------------------------------------------------ live status
 // state: off | connecting | waking | live | unavailable | busy
@@ -41,8 +46,13 @@ async function readError(r) {
 async function newSession() {
   const r = await fetchTimeout(apiUrl(config, 'session'), { method: 'POST' }, 15000);
   if (!r.ok) throw await readError(r);
-  session = (await r.json()).session;
-  try { sessionStorage.setItem(SKEY, session); } catch (_) { /* storage disabled */ }
+  const body = await r.json();
+  session = body.session;
+  token = body.token || null;
+  try {
+    sessionStorage.setItem(SKEY, session);
+    if (token) sessionStorage.setItem(SKEY + ':token', token); else sessionStorage.removeItem(SKEY + ':token');
+  } catch (_) { /* storage disabled */ }
   return session;
 }
 
@@ -59,16 +69,32 @@ async function resetSession(reason) {
 // ended is replaced once, and the caller is told through onSessionReset.
 async function request(path, opts = {}, retry = true) {
   const headers = { ...(opts.headers || {}), 'X-Mirror-Session': session || '' };
+  if (token) headers['X-Mirror-Token'] = token;
+  const method = (opts.method || 'GET').toUpperCase();
+  // Mutations name the generation they were made against; the server refuses stale ones (409).
+  if (method !== 'GET' && generation && !generation.startsWith('legacy:')) headers['X-Mirror-Generation'] = generation;
   const r = await fetch(apiUrl(config, path), { ...opts, headers, cache: 'no-store' });
   if (r.ok) return r;
   const err = await readError(r);
-  if (retry && r.status === 404 && err.code === 'session_expired') {
+  if (retry && ((r.status === 404 && err.code === 'session_expired') || (r.status === 401 && err.code === 'token_invalid'))) {
     await resetSession('Your live session ended after a period of inactivity, so a new one was started.');
     return request(path, opts, false);
   }
   if (err.code === 'server_busy') err.message = 'The live server is busy. ' + err.message;
+  if (err.code === 'rate_limited') {
+    const s = Number(r.headers.get('Retry-After')) || 0;
+    err.message = 'Too many requests from this connection.' + (s ? ` Try again in ${s} s.` : ' Try again shortly.');
+  }
+  if (err.code === 'stale_generation') {
+    err.message = 'The demonstration changed since this page last updated, so nothing was applied. The current one is shown now.';
+    staleListeners.forEach((fn) => fn(err));
+  }
+  if (err.code === 'evaluation_fenced') err.message = 'That layout belongs to a frozen evaluation set, so it cannot be used for a challenge. ' + err.message;
   throw err;
 }
+
+const staleListeners = new Set();
+export function onStaleGeneration(fn) { staleListeners.add(fn); return () => staleListeners.delete(fn); }
 
 // Decide recorded or live before the first render.
 export async function init() {
@@ -95,6 +121,7 @@ export async function init() {
   }
   try {
     session = (() => { try { return sessionStorage.getItem(SKEY); } catch (_) { return null; } })();
+    token = (() => { try { return sessionStorage.getItem(SKEY + ':token'); } catch (_) { return null; } })();
     if (!session) await newSession();
   } catch (e) {
     if (!config.recordings) throw e;
@@ -112,7 +139,7 @@ export async function init() {
 
 async function getJSON(url) {
   const r = await fetch(url, { cache: 'no-store' });
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText}: ${url}`);
+  if (!r.ok) { r.body?.cancel?.().catch(() => {}); throw new Error(`${r.status} ${r.statusText}: ${url}`); }
   return r.json();
 }
 
@@ -147,33 +174,48 @@ async function readProgress(r, onProgress) {
 const listeners = new Set();
 export function onRolloutProgress(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 
-export async function getRollout(id) {
-  if (rolloutCache.has(id)) return rolloutCache.get(id);
+export class StaleResponse extends Error {
+  constructor(what) { super(`Ignored a late ${what} from an earlier demonstration.`); this.stale = true; }
+}
+
+// Playback payload of a rollout. `key` is its immutable cache key (identity.rolloutCacheKey);
+// `expect` is the generation the caller is showing: a payload from another generation is
+// rejected and not cached, so an old demonstration can never appear as the new one's result.
+export async function getRollout(id, key = id, expect = '') {
+  if (rolloutCache.has(key)) return rolloutCache.get(key);
   const report = (got, total) => listeners.forEach((fn) => fn(id, got, total));
   const fetchIt = async () => {
     if (isStatic) {
       const url = `${base}rollouts/${encodeURIComponent(id)}.json` + (exportId ? `?v=${exportId}` : '');
       const r = await fetch(url);
-      if (!r.ok) throw new Error(`${r.status} ${r.statusText}: ${url}`);
+      if (!r.ok) { r.body?.cancel?.().catch(() => {}); throw new Error(`${r.status} ${r.statusText}: ${url}`); }
       return readProgress(r, report);
     }
     return readProgress(await request(`rollouts/${encodeURIComponent(id)}`), report);
   };
   const p = fetchIt()
-    .then((v) => { report(-1, 0); return v; })
-    .catch((e) => { rolloutCache.delete(id); report(-1, 0); throw e; });
-  rolloutCache.set(id, p);
+    .then((v) => {
+      report(-1, 0);
+      if (isStale(expect, v)) throw new StaleResponse('rollout');
+      return v;
+    })
+    .catch((e) => { rolloutCache.delete(key); report(-1, 0); throw e; });
+  rolloutCache.set(key, p);
   return p;
 }
 
 // Warm the cache in the background (recorded pages: the next step's rollouts).
-export function prefetch(ids) {
-  const run = () => ids.filter((x) => x && !rolloutCache.has(x)).slice(0, 2).forEach((x) => getRollout(x).catch(() => {}));
+// Keys whose background fetch failed are not retried in the background (each render calls
+// prefetch; retrying a missing file on every render would loop). A direct load still retries.
+const prefetchFailed = new Set();
+export function prefetch(ids, keyOf = (x) => x) {
+  const run = () => ids.filter((x) => x && !rolloutCache.has(keyOf(x)) && !prefetchFailed.has(keyOf(x))).slice(0, 2)
+    .forEach((x) => getRollout(x, keyOf(x)).catch(() => prefetchFailed.add(keyOf(x))));
   (window.requestIdleCallback || ((f) => setTimeout(f, 800)))(run);
 }
 
 export function forgetRollouts() { rolloutCache.clear(); }
-export function forget(id) { rolloutCache.delete(id); }
+export function forget(key) { rolloutCache.delete(key); }
 
 export async function postBinary(path, blob, type) {
   if (isStatic) throw new Error('These are recordings: actions need the live simulation.');
@@ -187,7 +229,8 @@ export async function getJSONApi(path) { return (await request(path)).json(); }
 export function videoUrl(v) {
   if (!v) return '';
   if (isStatic) return v.file ? base + 'media/' + v.file : '';
-  return apiUrl(config, `video/file/${encodeURIComponent(v.id)}`) + '?session=' + encodeURIComponent(session || '');
+  return apiUrl(config, `video/file/${encodeURIComponent(v.id)}`) + '?session=' + encodeURIComponent(session || '')
+    + (token ? '&token=' + encodeURIComponent(token) : '');
 }
 
 // A recorded audio file (static site only).
@@ -204,7 +247,7 @@ export function connect(onMessage) {
   if (isStatic) return { send() {}, close() {} };
   let ws = null, closed = false, delay = 500, ping = null;
   const open = () => {
-    ws = new WebSocket(wsUrl(config, location, session));
+    ws = new WebSocket(wsUrl(config, location, session) + (token ? '&token=' + encodeURIComponent(token) : ''));
     ws.onmessage = (e) => { try { onMessage(JSON.parse(e.data)); } catch (_) { /* ignore */ } };
     ws.onopen = () => {
       delay = 500;
@@ -235,6 +278,38 @@ export async function waitJob(job, onUpdate) {
     cur = await (await request(`jobs/${job.id}`)).json();
     onUpdate && onUpdate(cur);
   }
-  if (cur.status === 'error') throw new Error(cur.error || 'job failed');
+  if (cur.status === 'error') {
+    const e = new Error(cur.error || 'job failed');
+    if (/stale_generation/.test(cur.error || '')) e.stale = true;
+    throw e;
+  }
+  // A result computed for an earlier demonstration is not shown as the current one's.
+  if ((cur.result && cur.result.stale) || isStale(generation, cur)) throw new StaleResponse('job result');
   return cur;
+}
+
+// ---------------------------------------------------------- challenge records
+// Published records need no session; recorded pages carry the tour under `tour/`.
+export async function getRecord(recordId) {
+  if (isStatic) return getJSON(`${base}records/${encodeURIComponent(recordId)}.json`);
+  const r = await fetch(apiUrl(config, `records/${encodeURIComponent(recordId)}`), { cache: 'no-store' });
+  if (!r.ok) throw await readError(r);
+  return r.json();
+}
+
+export async function getTour() {
+  if (isStatic) return getJSON(`${base}tour/record.json`);
+  return (await request('tour')).json();
+}
+
+// Playback stored with a record, keyed by the record and the rollout's content hash.
+export function getRecordRollout(record, rolloutId, sha = '') {
+  const key = `record|${record.record_id || 'tour'}|${rolloutId}|${sha}`;
+  if (rolloutCache.has(key)) return rolloutCache.get(key);
+  const url = record.__tour && isStatic ? `${base}tour/rollouts/${encodeURIComponent(rolloutId)}.json`
+    : isStatic ? `${base}records/${encodeURIComponent(record.record_id)}/rollouts/${encodeURIComponent(rolloutId)}.json`
+      : apiUrl(config, `records/${encodeURIComponent(record.record_id)}/rollouts/${encodeURIComponent(rolloutId)}`);
+  const p = getJSON(url).catch((e) => { rolloutCache.delete(key); throw e; });
+  rolloutCache.set(key, p);
+  return p;
 }
