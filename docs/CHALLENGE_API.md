@@ -194,26 +194,61 @@ success, after success 8/8).
   `remove_rule`, `add_ordering`, `remove_ordering`; see mirror/studio/manual.py) → one new version,
   `step_provenance.kind = manual`; invalid edits answer 409 and are recorded as `outcome: error`.
 
-## 6. Real-phone capture
+## 6. Real-phone capture (offline phone pipeline, mirror.capture)
 
-Uploads accept `view` = `top | side | calibration | single` (same validation as section 7).
+Procedure and thresholds: docs/CAMERA_CAPTURE.md. Tested on synthetic renders only; no real footage has
+been validated. Every step runs offline (person-drawn boxes + classical tracking): no model calls.
+Printable targets are served at `<site>/calibration/` (live server and static export).
 
-* `POST /api/capture {mode two_view|single_view, notes}` → capture (`observability` states what a single
-  view cannot observe).
-* `POST /api/capture/{cid}/clips {clips {role: upload id}, sync {method clap|flash|visual_marker|manual,
-  top_t, side_t}}`: two_view needs top + side + calibration and a declared sync event inside both clips;
-  clips whose lengths differ by more than 3 s (beyond the sync offset) are refused as separate takes.
-  `sync.status` is `declared`; the studio never calls it verified.
-* `POST /api/capture/{cid}/calibrate`, `/track` → jobs calling `mirror.perception.phone.calibrate` /
-  `.track` (phone track). A failed calibration returns the capture to `clips_ready` with the reason.
-  Missing module → 409 "not available on this server".
-* `POST /api/capture/{cid}/review {correspondence [{track_id, proxy cup|block|marker|null, label,
-  dimensions_m, dimensions_source, unsupported_features, assumed {mass_kg, friction, contents}}],
-  events [{track_id, type grasp|release|carry_start|carry_end|place, t_start, t_end, status
-  confirmed|rejected|uncertain|edited}]}`: append-only history; events are labelled human-hand
-  inferred intervals, not robot contact.
-* `POST /api/capture/{cid}/propose` → job: `reconstruct(capture, review)` → new generation
-  (`reason: phone_capture`, source media with roles and hashes, calibration attached) → proposal.
+Uploads: `view` = `take_top | take_side | lens_top | lens_side` (aliases: `top`/`single` → take_top,
+`side` → take_side, `calibration` → lens_top). Each phone needs its own lens clip; a two-view capture with
+only `calibration` has no lens for the side phone and says so. Capture clips are validated like every
+upload (probe + full decode) under capture limits (300 MB per file, 900 MB per session, 120 s, up to
+3840 px, 60 fps; `MIRROR_CAPTURE_UPLOAD_*`).
+
+States: `awaiting_clips → clips_ready → calibrated → tracked → reviewed → proposed`; `stale: true` while
+the last run predates the current inputs; `missing` lists what tracking still needs.
+
+* `POST /api/capture {mode two_view|single_view, notes, synthetic, print_check?, objects?, tags?, tray?}`.
+  `print_check {measured_bar_mm, measured_square_mm}` is refused (422) with mirror.capture's own rule
+  (bar 50 ± 1 mm, square within 2% of what the bar implies). `synthetic: true` marks rendered test clips
+  (label "SYNTHETIC test render: not real footage"); it can be set later through `/inputs`, never unset.
+* `POST /api/capture/{cid}/clips {clips {role: upload id}, sync?}`: a declared `sync {method, top_t, side_t}`
+  is kept as the person's note (`status: declared`, `offset_s`); the pipeline finds the sync events itself.
+* `POST /api/capture/{cid}/inputs {synthetic?, print_check?, objects?, tags?, tray?}`: objects are
+  ObjectMappings (track_label, real_identity, proxy cup|block|marker|tray|wall|ignore, real_dims,
+  unsupported_features, assumptions, real_contents, confirmed_by_person). Map the tray as an object
+  (`proxy: tray`, with `tray {center_xy, inner_half}`) or the proposal has no destination.
+* `POST /api/capture/{cid}/calibrate` → job: lens intrinsics, table pose and synchronisation only (no boxes
+  needed). `GET` then shows `calibration {ok, errors, cameras {cam: lens_accepted, pose_accepted, rms_px,
+  n_views, pose_rms_px, ok}, source}` and `sync` (pipeline result + `status detected|refused`).
+* `GET /api/capture/{cid}/frame/{role}/{index}` → PNG, for drawing boxes.
+* `POST /api/capture/{cid}/prompts {prompts [{camera top|side, label, frame, box [x, y, w, h]}]}`.
+* `POST /api/capture/{cid}/track` (= `/run`) → job: `mirror.capture.session.build_session` on the stored
+  inputs; 409 listing what is missing (objects, boxes). A pipeline failure reconstructs nothing (`errors`).
+* `GET /api/capture/{cid}` → `{state, hooks {calibrate, track, reconstruct}, label, clips, print_check,
+  inputs, missing, stale, calibration, sync, session (the CaptureSession JSON after tracking),
+  summary_lines, report, gate_open, blocking, effort, review_log, proposal, errors, provenance}`.
+  `report` = `{evidence_kind, synthetic, mode, calibration, poses, recalibration, camera_shift_px, sync,
+  mappings (+ fidelity_statement), tray, objects {label: proxy, coverage {measured, inferred,
+  interpolated, unobserved}, tilt_observed}, events, review [..., blocking, how_to_resolve,
+  needs_new_input], gate_open, track_sources, model_calls}`. `GET .../session` returns the same session.
+* `POST /api/capture/{cid}/review` records each action with the time spent (`review_log`, `effort`) and
+  starts a re-run; returns `{capture, recorded, job}`. Canonical body: `objects [{track_label,
+  confirmed_by_person, proxy?, ..., seconds_spent}]`, `identity_confirmations [{camera, label, from_frame,
+  seconds_spent}]`, `corrections [{target event id, field t|t_lo|t_hi|reject|object|confirm, before, after,
+  seconds_spent}]`. The wizard's shape is also accepted: `correspondence [{track_id, proxy, label}]`
+  confirms each object; `events [{track_id, type, t_start, t_end, status}]` matched to the pipeline's
+  events by object, kind and order (`confirmed` confirms a bracketed moment, `edited` sets its time,
+  `rejected` rejects it, `uncertain` changes nothing). Identity confirmations have no equivalent there.
+  The studio never marks a review item resolved itself.
+* `POST /api/capture/{cid}/propose` → job, refused (409) unless the last run used the current inputs and
+  every blocking item is resolved. Builds the DemoTrace (`mirror.capture.trace.to_demo_trace`, human-hand
+  events labelled inferred), starts a new generation (`reason: phone_capture`, source media with roles
+  and hashes, `calibration` = capture summary incl. effort and `synthetic`) and proposes a specification.
+  An interpreter refusal is reported (`proposal.error`), never replaced.
+* Static export: `scripts/export_static.py --capture-sample <session.json>` ships a SYNTHETIC session (only
+  `synthetic: true`, `evidence_kind: synthetic_test_render`) at `data/capture/synthetic_session.json`.
 
 ## 7. Upload bounds (defaults; environment variables in deploy/mirror.env.example)
 

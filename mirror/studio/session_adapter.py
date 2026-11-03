@@ -327,7 +327,8 @@ class Job:
 
 # Jobs that run the simulator (the expensive part); they share the server's job gate.
 SIM_JOB_KINDS = {"run", "clarify", "evaluate", "video", "challenge", "challenge_execute", "capture"}
-UPLOAD_VIEWS = ("top", "side", "calibration", "single")
+UPLOAD_VIEWS = ("top", "side", "calibration", "single", "take_top", "take_side", "lens_top", "lens_side")
+CAPTURE_VIEWS = ("calibration", "single", "take_top", "take_side", "lens_top", "lens_side")
 
 TOUR_DIR = REPO_ROOT / "data" / "challenge_tour"
 
@@ -525,6 +526,7 @@ class StudioService:
         self.state_dir = Path(state_dir) if state_dir else None   # persisted for restart recovery
         self.upload_limits = upload_limits or UploadLimits.from_env()
         self.media = SessionMedia(self.upload_limits, media_quota)
+        self.capture_limits = UploadLimits.capture_from_env()
         self.challenges: dict = {}
         self.challenge_order: list[str] = []
         self.study = None                       # StudyRecorder when a facilitator started study mode
@@ -1094,12 +1096,17 @@ class StudioService:
             for _ in range(used - n):
                 b.take(sid)
 
-    def admit_upload(self, nbytes: int) -> None:
-        """Reserve room for an upload of ``nbytes`` before it is written (raises UploadRejected / RateLimited)."""
+    def _limits_for(self, view: Optional[str]):
+        return self.capture_limits if view in CAPTURE_VIEWS else self.upload_limits
+
+    def admit_upload(self, nbytes: int, view: Optional[str] = None) -> None:
+        """Reserve room for an upload of ``nbytes`` before it is written (raises UploadRejected / RateLimited).
+        Phone-capture views use the capture limits (original phone files are larger)."""
         if self.closed:
             raise RuntimeError("this session has ended")
-        if nbytes > self.upload_limits.max_file_bytes:
-            raise UploadRejected(f"upload larger than {self.upload_limits.max_file_bytes // 2**20} MB",
+        lim = self._limits_for(view)
+        if nbytes > lim.max_file_bytes:
+            raise UploadRejected(f"upload larger than {lim.max_file_bytes // 2**20} MB",
                                  code="too_large", status=413)
         if self.admission is not None:
             self.admission.check("upload", self.client_addr)
@@ -1109,7 +1116,7 @@ class StudioService:
                 self.admission.give_back("upload", self.client_addr)
                 raise
         try:
-            self.media.admit(nbytes)
+            self.media.admit(nbytes, lim)
         except UploadRejected:
             if self.admission is not None:
                 self.admission.give_back("upload", self.client_addr)
@@ -1133,7 +1140,7 @@ class StudioService:
                 raise UploadRejected("upload size does not match what was announced")
             if size < 64:
                 raise UploadRejected("file too small to be a video")
-            info = validate_video(path, self.upload_limits)
+            info = validate_video(path, self._limits_for(view))
             vid = "v" + uuid.uuid4().hex[:10]
             final = self.upload_dir() / f"{vid}.mp4"
             path.replace(final)
@@ -1150,7 +1157,7 @@ class StudioService:
         """Bytes in memory (tests, small clients): admit, write, validate."""
         if view not in UPLOAD_VIEWS:
             raise UploadRejected(f"view must be one of {list(UPLOAD_VIEWS)}")
-        self.admit_upload(len(data))
+        self.admit_upload(len(data), view)
         tmp = self.upload_dir() / f".incoming-{uuid.uuid4().hex[:8]}"
         try:
             tmp.write_bytes(data)
@@ -2304,115 +2311,250 @@ class StudioService:
             raise KeyError(f"capture {cid}")
         return c
 
-    def capture_create(self, mode: str, notes: str = "") -> dict:
-        from .capture import Capture
-        if len(self.captures) >= 5:
-            oldest = min(self.captures.values(), key=lambda c: c.created_at)
-            self.captures.pop(oldest.id)
-        c = Capture(mode, notes)
-        self.captures[c.id] = c
-        self._changed()
-        return c.public()
+    def capture_create(self, mode: str = "two_view", notes: str = "", synthetic: bool = False,
+                       inputs: Optional[dict] = None) -> dict:
+        from .capture import Capture, capture_available, set_inputs
+        ok, why = capture_available()
+        if not ok:
+            raise RuntimeError(why)
+        with self.lock:
+            if len(self.captures) >= 5:
+                oldest = min(self.captures.values(), key=lambda c: c.created_at)
+                self._capture_release(oldest)
+                self.captures.pop(oldest.id)
+            c = Capture(mode, notes, synthetic)
+            if inputs:
+                set_inputs(c, inputs)
+            self.captures[c.id] = c
+            self._changed()
+            return c.public()
+
+    def _capture_release(self, c) -> None:
+        for clip in c.clips.values():
+            try:
+                self.media.release(clip["id"])
+            except Exception:  # noqa: BLE001
+                pass
 
     def capture_clips(self, cid: str, clips: dict, sync: Optional[dict] = None) -> dict:
-        from .capture import set_clips
+        """Attach validated uploads to roles take_top / take_side / lens_top / lens_side. The pipeline finds
+        the synchronisation events itself; a declared sync is recorded only as the person's note."""
+        from .capture import CaptureError, norm_role
         c = self._capture(cid)
-        ups = {}
-        for role, vid in (clips or {}).items():
-            e = self.media.get(vid)
-            if e.view != role:
-                raise ValueError(f"upload {vid} was sent as view {e.view!r}, not {role!r}")
-            ups[role] = {**e.public(), "path": e.path}
-        set_clips(c, ups, sync or {})
-        self._changed()
-        return c.public()
+        with self.lock:
+            for role, vid in (clips or {}).items():
+                r = norm_role(role)
+                e = self.media.get(vid)
+                if norm_role(e.view) != r:
+                    raise ValueError(f"upload {vid} was sent as view {e.view!r}, not {r!r}")
+                old = c.clips.get(r)
+                if old and old["id"] != vid:
+                    self.media.release(old["id"])
+                if not old or old["id"] != vid:
+                    self.media.acquire(vid)
+                pub = e.public()
+                c.clips[r] = {"id": vid, "sha256": pub.get("sha256"), "bytes": pub.get("bytes"),
+                              "duration": pub.get("duration"), "width": pub.get("width"), "height": pub.get("height"),
+                              "fps": pub.get("fps"), "frames": pub.get("frames"), "role": r}
+            if c.mode == "single_view" and "take_side" in c.clips:
+                raise CaptureError("a single-view capture has no side take")
+            if sync:
+                ds = {k: sync.get(k) for k in ("method", "top_t", "side_t")}
+                try:
+                    ds["offset_s"] = round(float(ds["side_t"]) - float(ds["top_t"]), 3)
+                except (TypeError, ValueError, KeyError):
+                    ds["offset_s"] = None
+                c.declared_sync = {**ds, "status": "declared",
+                                   "note": "the person's note; the pipeline detects the sync events itself"}
+            c.stale = c.session is not None or c.stale
+            self._changed()
+            return c.public()
 
-    def _capture_payload(self, c) -> dict:
-        d = c.to_state()
-        d["paths"] = {role: self.media.get(clip["id"]).path for role, clip in c.clips.items()}
-        return d
-
-    def capture_step(self, cid: str, step: str) -> Job:
-        """calibrate | track: run the phone module's hook as a job."""
-        from .capture import hook
+    def capture_inputs(self, cid: str, body: dict) -> dict:
+        from .capture import set_inputs
         c = self._capture(cid)
-        want = {"calibrate": ("clips_ready", "calibrated", "tracked", "reviewed"),
-                "track": ("calibrated", "tracked", "reviewed")}
-        if step not in want:
-            raise ValueError("step is calibrate or track")
-        if c.state not in want[step]:
-            raise RuntimeError(f"{step} needs the capture in state {want[step][0]} (now {c.state})")
-        fn = hook(step)
-        if fn is None:
-            raise RuntimeError(f"phone {step} is not available on this server (mirror.perception.phone.{step} missing)")
+        with self.lock:
+            set_inputs(c, body)
+            self._changed()
+            return c.public()
+
+    def capture_prompts(self, cid: str, prompts: list) -> dict:
+        from .capture import set_prompts
+        c = self._capture(cid)
+        with self.lock:
+            set_prompts(c, prompts)
+            self._changed()
+            return c.public()
+
+    def capture_frame(self, cid: str, role: str, index: int) -> bytes:
+        """One frame of a clip as PNG, for drawing the object boxes."""
+        import cv2
+        from mirror.capture import media as M
+        from .capture import norm_role
+        c = self._capture(cid)
+        r = norm_role(role)
+        if r not in c.clips:
+            raise KeyError(f"capture {cid} has no {r} clip")
+        path = self.media.get(c.clips[r]["id"]).path
+        cache = getattr(self, "_probe_cache", None)
+        if cache is None:
+            cache = self._probe_cache = {}
+        meta = cache.get(path) or M.probe(path)
+        cache[path] = meta
+        if not 0 <= int(index) < int(meta.n_frames):
+            raise ValueError(f"frame index is 0-{meta.n_frames - 1}")
+        img = M.read_frame(meta, int(index))
+        ok, buf = cv2.imencode(".png", img)
+        if not ok:
+            raise RuntimeError("could not encode the frame")
+        return bytes(buf)
+
+    def capture_calibrate(self, cid: str) -> Job:
+        """Lens intrinsics, table pose and synchronisation (no tracking, no boxes needed)."""
+        from .capture import calibrate
+        c = self._capture(cid)
+        if "take_top" not in c.clips:
+            raise RuntimeError("upload the take clip(s) first")
+        if not c.inputs.get("print_check"):
+            raise RuntimeError("enter the print check (measured 50 mm bar and one square) first")
         ids = [clip["id"] for clip in c.clips.values()]
 
         def work(job):
             for vid in ids:
                 self.media.acquire(vid)
             try:
-                self._progress(job, 0.05, "Calibrating the cameras" if step == "calibrate" else "Tracking the objects")
+                self._progress(job, 0.05, "Calibrating lenses, finding the board on the table, matching sync events")
                 t0 = time.time()
-                out = _dump(fn(self._capture_payload(c)))
-                wall = round(time.time() - t0, 3)
+                paths = {r: self.media.get(clip["id"]).path for r, clip in c.clips.items()}
+                try:
+                    out = calibrate(c, paths)
+                except Exception as exc:  # noqa: BLE001 - recorded; nothing calibrated
+                    with self.lock:
+                        c.errors.append(f"calibration failed: {type(exc).__name__}: {exc}"[:400])
+                        self._changed()
+                    raise
+                wall = round(time.time() - t0, 2)
             finally:
                 for vid in ids:
                     self.media.release(vid)
             with self.lock:
-                if step == "calibrate":
-                    ok = bool(out.get("ok"))
-                    c.calibration = {**out, "wall_s": wall, "at": time.time()}
-                    c.state = "calibrated" if ok else "clips_ready"
-                    if not ok:
-                        c.errors.append("calibration rejected: " + "; ".join(out.get("errors") or ["insufficient quality"]))
-                    c.tracking, c.reviews = (None, []) if ok else (c.tracking, c.reviews)
-                else:
-                    c.tracking = {**out, "wall_s": wall, "at": time.time()}
-                    c.state = "tracked"
+                c.calibration_preview = out
                 self._changed()
-            return {"capture_id": c.id, "state": c.state, "step": step, "wall_s": wall}
-        return self.submit("capture", {"capture_id": cid, "step": step}, work)
+                st = c.calibration_status()
+            return {"capture_id": c.id, "state": c.public()["state"], "calibration": st, "sync": c.sync_status(),
+                    "wall_s": wall, "step_provenance": {"kind": "offline_pipeline", "label": "Offline calibration (no model calls)",
+                                                        "model": None, "request_status": "ok", "latency_s": wall,
+                                                        "latency_source": "measured_now", "cost_usd": None,
+                                                        "fallback_reason": None}}
+        return self.submit("capture", {"capture_id": cid, "step": "calibrate"}, work)
 
-    def capture_review(self, cid: str, review: dict) -> dict:
-        from .capture import check_review
+    def capture_run(self, cid: str) -> Job:
+        from .capture import build
         c = self._capture(cid)
-        with self.lock:
-            c.reviews.append(check_review(c, review or {}))
-            c.state = "reviewed"
-            self._changed()
-            return c.public()
-
-    def capture_propose(self, cid: str) -> Job:
-        """Reconstruct an object-centric demonstration from the reviewed capture, start a new
-        generation with it (source media and calibration attached) and propose a specification."""
-        from .capture import hook
-        c = self._capture(cid)
-        if c.state != "reviewed":
-            raise RuntimeError("review the correspondences and events before proposing a task")
-        fn = hook("reconstruct")
-        if fn is None:
-            raise RuntimeError("phone reconstruction is not available on this server (mirror.perception.phone.reconstruct missing)")
+        miss = c.missing()
+        if miss:
+            raise RuntimeError("missing: " + "; ".join(miss))
+        ids = [clip["id"] for clip in c.clips.values()]
 
         def work(job):
-            self._progress(job, 0.1, "Rebuilding the demonstration from the reviewed capture")
-            trace = fn(self._capture_payload(c), c.reviews[-1])
+            for vid in ids:
+                self.media.acquire(vid)
+            try:
+                self._progress(job, 0.05, "Calibrating, synchronising and tracking (offline, no model calls)")
+                t0 = time.time()
+                paths = {r: self.media.get(clip["id"]).path for r, clip in c.clips.items()}
+                try:
+                    s = build(c, paths)
+                except Exception as exc:  # noqa: BLE001 - recorded; nothing reconstructed
+                    with self.lock:
+                        c.errors.append(f"{type(exc).__name__}: {exc}"[:400])
+                        c.state = "clips_ready"
+                        c.refresh_state()
+                        self._changed()
+                    raise
+                from mirror.capture.session import summary_lines
+                wall = round(time.time() - t0, 2)
+            finally:
+                for vid in ids:
+                    self.media.release(vid)
+            with self.lock:
+                c.session = json.loads(s.model_dump_json())
+                c.reviewed = bool(c.review_log)    # results of a re-run after a review
+                c.summary = summary_lines(s)
+                c.runs += 1
+                c.stale = False
+                c.proposal = None
+                c.state = "tracked"
+                c.refresh_state()
+                self._changed()
+                ok, blocking = c.gate()
+            return {"capture_id": c.id, "state": c.state, "gate_open": ok, "blocking": len(blocking), "wall_s": wall,
+                    "evidence_kind": c.session.get("evidence_kind"),
+                    "step_provenance": {"kind": "offline_pipeline", "label": "Offline phone pipeline (no model calls)",
+                                        "model": None, "interpreter": None, "request_status": "ok", "latency_s": wall,
+                                        "latency_source": "measured_now", "cost_usd": None, "fallback_reason": None}}
+        return self.submit("capture", {"capture_id": cid, "step": "run"}, work)
+
+    def capture_review(self, cid: str, review: dict) -> dict:
+        """Record confirmations and corrections (with time spent), then re-run the pipeline so they take
+        effect. The studio never marks a review item resolved itself."""
+        from .capture import add_review, translate_review
+        c = self._capture(cid)
+        with self.lock:
+            entries = add_review(c, translate_review(c, review or {}))
+            c.reviewed = True                 # state "reviewed" (stale until the re-run finishes)
+            self._changed()
+        job = self.capture_run(cid)
+        return {"capture": c.public(), "recorded": entries, "job": job.public()}
+
+    def capture_propose(self, cid: str) -> Job:
+        """Reviewed capture -> object-centric DemoTrace (new generation, source media and calibration
+        attached) -> task proposal. Refused while any blocking review item is open."""
+        c = self._capture(cid)
+        if c.session is None or c.stale:
+            raise RuntimeError("run the capture with the latest inputs before proposing a task")
+        ok, blocking = c.gate()
+        if not ok:
+            raise RuntimeError("resolve these first: " + "; ".join(b["message"] for b in blocking))
+
+        def work(job):
+            from mirror.capture.session import CaptureSession
+            from mirror.capture.trace import to_demo_trace
+            from .capture import calibration_summary
+            self._progress(job, 0.1, "Building the demonstration from the reviewed capture")
+            s = CaptureSession.model_validate(c.session)
+            okk, blk = s.gate()
+            if not okk:      # checked again on the pipeline's own object
+                raise RuntimeError("resolve these first: " + "; ".join(b.message for b in blk))
+            trace = to_demo_trace(s, demo_id=f"demo_capture_{c.id}")
             with self.lock:
                 self._guard(job)
                 media = [{**clip, "role": role} for role, clip in c.clips.items()]
-                self.session.set_demo(trace, reason="phone_capture", source_media=media, calibration=c.calibration)
+                self.session.set_demo(trace, reason="phone_capture", source_media=media,
+                                      calibration=calibration_summary(c))
                 job.generation_id = self.generation_id
                 for clip in c.clips.values():
                     self.media.release(clip["id"], self.generation_id)
                 self.demo_rollout = self._make_demo_rollout()
                 self.video_demo = None
                 t0, mark = time.time(), self._llm_mark()
-                spec, fb = self._with_fallback(self.session.interpret, job)
+                try:
+                    spec, fb = self._with_fallback(self.session.interpret, job)
+                except Exception as exc:  # noqa: BLE001 - recorded on the capture; nothing is substituted
+                    c.errors.append(f"proposal failed: {type(exc).__name__}: {exc}"[:400])
+                    c.proposal = {"generation_id": self.generation_id, "spec_version_id": None,
+                                  "error": f"{type(exc).__name__}: {exc}"[:400], "synthetic": c.synthetic}
+                    c.state = "tracked"
+                    c.refresh_state()
+                    self._changed()
+                    raise
                 sp = self._model_prov(fb, mark, t0, spec.interpreter)
                 lat, tok = self._llm_latency(mark, t0)
                 self._log_model(f"specification v{spec.version}", "proposes the task from the reviewed phone capture",
                                 spec.interpreter, lat, self._client_source(fb), tokens=tok, step_provenance=sp)
                 c.proposal = {"generation_id": self.generation_id, "spec_version_id": self._spec_vid(spec.version),
-                              "step_provenance": sp, "evidence": _dump(getattr(trace, "evidence", None))}
+                              "step_provenance": sp, "evidence_kind": getattr(getattr(trace, "evidence", None), "kind", None),
+                              "synthetic": c.synthetic}
                 c.state = "proposed"
                 self._changed()
             return {"capture_id": c.id, **c.proposal}
@@ -2420,6 +2562,12 @@ class StudioService:
 
     def capture_public(self, cid: str) -> dict:
         return self._capture(cid).public()
+
+    def capture_session_json(self, cid: str) -> dict:
+        c = self._capture(cid)
+        if c.session is None:
+            raise KeyError(f"capture {cid} has not been run")
+        return c.session
 
     # ------------------------------------------------------------ persistence
     def persist(self) -> None:

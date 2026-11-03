@@ -120,10 +120,39 @@ def code_digest() -> str:
     return h.hexdigest()
 
 
+CALIBRATION = ROOT / "assets" / "calibration"
+
+
+def copy_calibration(out: Path) -> list[str]:
+    """Printable calibration targets at <site>/calibration/ (the capture guide links to them)."""
+    if not CALIBRATION.exists():
+        return []
+    dst = out / "calibration"
+    dst.mkdir(parents=True, exist_ok=True)
+    names = []
+    for p in sorted(CALIBRATION.iterdir()):
+        if p.suffix in (".pdf", ".png", ".json") and p.is_file():
+            shutil.copyfile(p, dst / p.name)
+            names.append(p.name)
+    return names
+
+
+def copy_capture_sample(out: Path, sample: Path) -> None:
+    """Ship a capture session as the wizard's review sample, only if it is labelled SYNTHETIC."""
+    s = json.loads(Path(sample).read_text())
+    if s.get("synthetic") is not True or s.get("evidence_kind") != "synthetic_test_render":
+        raise SystemExit("--capture-sample must be a SYNTHETIC session (synthetic: true, evidence_kind synthetic_test_render)")
+    dst = out / "data" / "capture"
+    dst.mkdir(parents=True, exist_ok=True)
+    s.setdefault("notes", []).append("SYNTHETIC test render shipped as a review sample: not real footage.")
+    (dst / "synthetic_session.json").write_text(json.dumps(s, indent=1) + "\n")
+
+
 def write_site(svc: StudioService, out: Path, steps: list[dict], extra: dict) -> None:
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(WEB, out)
+    copy_calibration(out)
     data = out / "data"
     (data / "rollouts").mkdir(parents=True)
     snap = svc.snapshot()
@@ -364,6 +393,8 @@ def main(argv=None) -> int:
     ap.add_argument("--ws-base", default="", help="websocket origin, if different from --api-base")
     ap.add_argument("--write-config", metavar="SITE", default=None,
                     help="only rewrite SITE/config.js with --api-base/--ws-base, then exit")
+    ap.add_argument("--capture-sample", type=Path, default=None,
+                    help="a SYNTHETIC capture session.json (python -m mirror.capture.ingest demo DIR) shown as the review sample")
     ap.add_argument("--no-clarify", action="store_true")
     ap.add_argument("--no-blocked", action="store_true")
     ap.add_argument("--evaluation", default=None,
@@ -410,6 +441,8 @@ def main(argv=None) -> int:
                                             "evaluation": Path(args.evaluation).name if args.evaluation else None,
                                             "repo_url": args.repo_url, "api_base": api_base, "ws_base": ws_base,
                                             "wall_time_s": round(time.time() - t0, 1)})
+    if args.capture_sample:
+        copy_capture_sample(Path(args.out), args.capture_sample)
     failed = [s["step"] for s in steps if s["status"] != "done"]
     if failed:
         log("incomplete export, failed steps: " + "; ".join(failed))
