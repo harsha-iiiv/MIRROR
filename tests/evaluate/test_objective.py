@@ -120,3 +120,18 @@ def test_report_retained_benefit_on_synthetic_records():
     assert res["strata"]["primary"]["vfs"]["corrected@cal vs original@cal"]["only_b"] == 1
     md = report.markdown(man, dict(attempt="synthetic", status="synthetic"), res)
     assert "Retained benefit" in md
+
+
+def test_committed_attempt_report_recomputes_from_records():
+    out = ROOT / "results/eval_objective_v1"
+    if not (out / "attempt_1/records.jsonl").exists():
+        pytest.skip("no attempt recorded")
+    manifest, recs, _ = report.load(out, "attempt_1")
+    res = report.analyse(manifest, recs)
+    saved = json.loads((out / "attempt_1/report.json").read_text())
+    assert json.loads(json.dumps(res["strata"])) == saved["strata"]
+    assert len(recs) == manifest["seed_count"] * len(manifest["conditions"])
+    # the run's ledger entries come after the freeze and cover every frozen seed once
+    led = [json.loads(l) for l in (out / "ledger.jsonl").read_text().splitlines()]
+    run = [e for e in led if e["caller"] == "mirror.evaluate.objective.run"]
+    assert len(run) == manifest["seed_count"] and min(e["unix"] for e in run) > manifest["created_unix"]
