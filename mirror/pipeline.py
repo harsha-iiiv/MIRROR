@@ -131,7 +131,8 @@ class Session:
             old.archived_reason = f"{reason}: replaced by {new.id}"
             self.archive.append(ArchivedGeneration(old, self._demo, self.scene, list(self.specs), dict(self.rollouts)))
         if carry_demo and self._demo is not None:
-            new.bind_demo(self._demo, source_media=list(old.source_media), calibration=old.calibration)
+            new.bind_demo(self._demo, source_media=list(old.source_media), calibration=old.calibration,
+                          input_evidence=old.input_evidence, synthetic=old.synthetic)
         self.generation = new
         self.specs = []
         self.rollouts = {}
@@ -149,19 +150,30 @@ class Session:
         self.set_demo(trace, reason="demo_set", keep_scene=True)
 
     def set_demo(self, trace: Optional[DemoTrace], *, reason: str = "demo_loaded", source_media: Optional[list] = None,
-                 calibration: Optional[dict] = None, keep_scene: bool = False) -> Generation:
+                 calibration: Optional[dict] = None, keep_scene: bool = False, input_evidence: Optional[str] = None,
+                 synthetic: bool = False) -> Generation:
         """Replace the demonstration: archive the current generation and start a new one.
 
         Specifications and rollouts of the old demonstration are never carried over."""
         gen = self._start_generation(reason, carry_demo=False)
         self._demo = trace
-        gen.bind_demo(trace, source_media=source_media or [], calibration=calibration)
+        if input_evidence is None and trace is not None:
+            src = getattr(trace, "source", "") or ""
+            input_evidence = ("video_reconstruction" if src == "video_grounded" else
+                              "simulator_trace" if src in ("teleop_keyboard", "teleop_scripted", "replay") else src or None)
+        gen.bind_demo(trace, source_media=source_media or [], calibration=calibration,
+                      input_evidence=input_evidence, synthetic=synthetic)
         if trace is not None and not (keep_scene and self.scene is not None):
             self.scene = trace.scene
         return gen
 
     def all_generations(self) -> list:
         return [a.generation for a in self.archive] + [self.generation]
+
+    def generation_by_id(self, gid: Optional[str]) -> Optional[Generation]:
+        if not gid:
+            return None
+        return next((g for g in self.all_generations() if g.id == gid), None)
 
     def find_rollout(self, rollout_id: str) -> tuple[RolloutEntry, Optional[ArchivedGeneration]]:
         """A rollout of the current generation (owner None) or of an archived one."""

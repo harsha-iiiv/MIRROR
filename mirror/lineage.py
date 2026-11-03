@@ -142,6 +142,9 @@ def demo_playback_id(generation_id: str, demo_sha: str) -> str:
     return f"demo.{generation_id}.{(demo_sha or '0' * 8)[:8]}"
 
 
+SYNTHETIC_LABEL = "SYNTHETIC capture (rendered test clips): not real footage"
+
+
 @dataclass
 class Generation:
     """One demonstration and everything derived from it."""
@@ -158,12 +161,22 @@ class Generation:
     seq: int = 0                                          # rollouts executed in this generation
     archived_at: Optional[float] = None
     archived_reason: str = ""
+    # What the demonstration was made from (simulator_trace | rendered_video | uploaded_video | phone_capture |
+    # synthetic_capture | fixture). ``synthetic`` is true for rendered test clips; it is never cleared and every
+    # specification and rollout of the generation inherits it.
+    input_evidence: Optional[str] = None
+    synthetic: bool = False
 
     def next_seq(self) -> int:
         self.seq += 1
         return self.seq
 
-    def bind_demo(self, demo, source_media: Optional[list] = None, calibration: Optional[dict] = None) -> None:
+    def bind_demo(self, demo, source_media: Optional[list] = None, calibration: Optional[dict] = None,
+                  input_evidence: Optional[str] = None, synthetic: Optional[bool] = None) -> None:
+        if input_evidence is not None:
+            self.input_evidence = input_evidence
+        if synthetic:
+            self.synthetic = True
         self.demo_id = getattr(demo, "demo_id", None) if demo is not None else None
         self.demo_sha256 = sha256_of(demo) if demo is not None else None
         self.demo_source = getattr(demo, "source", None) if demo is not None else None
@@ -182,7 +195,13 @@ class Generation:
                          "playback_id": self.demo_playback_id},
                 "source_media": list(self.source_media), "calibration": self.calibration,
                 "rollouts_executed": self.seq, "archived_at": self.archived_at,
-                "archived_reason": self.archived_reason or None}
+                "archived_reason": self.archived_reason or None, **self.evidence()}
+
+    def evidence(self) -> dict:
+        """Provenance every derived object carries: what the demonstration came from."""
+        return {"input_evidence": self.input_evidence, "synthetic": bool(self.synthetic),
+                "synthetic_capture": bool(self.synthetic and (self.input_evidence or "").endswith("capture")),
+                "evidence_label": SYNTHETIC_LABEL if self.synthetic else None}
 
     def to_json(self) -> dict:
         return {"format": LINEAGE_FORMAT, **{k: getattr(self, k) for k in self.__dataclass_fields__}}

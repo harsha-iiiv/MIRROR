@@ -173,6 +173,7 @@ class Capture:
                 "camera_shift_px": s.get("camera_shift_px"), "sync": s.get("sync"), "mappings": mappings, "tray": s.get("tray"),
                 "objects": objs, "events": s.get("events") or [], "review": review, "gate_open": ok,
                 "blocking": len(blocking), "track_sources": s.get("track_sources"), "model_calls": s.get("model_calls") or [],
+                "reacquisitions": reacquisitions(self),
                 "notes": s.get("notes") or []}
 
     def public(self) -> dict:
@@ -182,7 +183,8 @@ class Capture:
                 "hooks": dict.fromkeys(("calibrate", "track", "reconstruct"), capture_available()[0]),
                 "calibration": self.calibration_status(), "sync": self.sync_status(), "session": self.session,
                 "print_check": self.inputs.get("print_check"),
-                "synthetic": self.synthetic, "notes": self.notes,
+                "synthetic": self.synthetic, "synthetic_capture": self.synthetic, "notes": self.notes,
+                "input_evidence": "synthetic_capture" if self.synthetic else "phone_capture",
                 "label": ("SYNTHETIC test render: not real footage" if self.synthetic else
                           "Real phone footage (calibrated, reviewed)" if (self.session or {}).get("evidence_kind")
                           == "camera_video_reconstruction" else "Phone footage: not yet verified"),
@@ -374,7 +376,18 @@ def add_review(cap: Capture, body: dict) -> list[dict]:
         entries.append({"kind": "mapping", "target": lab, "change": {k: [before.get(k), upd[k]] for k in upd},
                         "seconds_spent": _secs(m), "at": now, "by": by})
     cams = {PIPELINE_ROLE[r][1] for r in cap.clips if r.startswith("take_")}
+    expanded = []
     for ic in body.get("identity_confirmations") or []:
+        if isinstance(ic, dict) and ic.get("object") and not ic.get("camera"):
+            # "same object throughout": confirm the whole track in every take clip
+            if ic["object"] not in labels:
+                raise CaptureError(f"unknown object {ic['object']!r}")
+            for cam in sorted(cams):
+                expanded.append({"camera": cam, "label": ic["object"], "from_frame": 0,
+                                 "seconds_spent": ic.get("seconds_spent") if cam == sorted(cams)[0] else None})
+        else:
+            expanded.append(ic)
+    for ic in expanded:
         cam, lab, frm = (ic.get("camera"), ic.get("label"), ic.get("from_frame")) if isinstance(ic, dict) else (list(ic) + [None] * 3)[:3]
         if cam not in cams or lab not in labels:
             raise CaptureError("identity confirmation needs a camera with a take clip and a known object label")
@@ -518,6 +531,8 @@ def translate_review(cap: Capture, body: dict) -> dict:
     bracketed moment, "edited" sets its time, "rejected" rejects it, "uncertain" changes nothing.
     Identity confirmations have no equivalent there and must be sent explicitly."""
     out = {k: list(body.get(k) or []) for k in ("objects", "identity_confirmations", "corrections")}
+    out["identity_confirmations"] += [{"object": x.get("object") or x.get("track_id"), "seconds_spent": x.get("seconds_spent")}
+                                      for x in body.get("identity") or [] if x.get("confirmed", True)]
     labels = {m["track_label"] for m in cap.inputs["objects"]}
     for c in body.get("correspondence") or []:
         lab = str(c.get("track_id"))
@@ -533,14 +548,20 @@ def translate_review(cap: Capture, body: dict) -> dict:
         out["objects"].append(upd)
     events = (cap.session or {}).get("events") or []
     seen: dict[tuple, int] = {}
+    by_id = {x.get("id"): x for x in events}
     for e in body.get("events") or []:
-        key = (str(e.get("track_id")), EVENT_TYPES.get(e.get("type"), e.get("type")))
-        n = seen.get(key, 0)
-        seen[key] = n + 1
-        matches = [x for x in events if x.get("object") == key[0] and x.get("type") == key[1]]
-        if n >= len(matches):
-            raise CaptureError(f"no {key[1]} event number {n + 1} for {key[0]!r} in this capture")
-        ev = matches[n]
+        if e.get("id"):
+            ev = by_id.get(e["id"])
+            if ev is None:
+                raise CaptureError(f"unknown event {e['id']!r}")
+        else:
+            key = (str(e.get("track_id")), EVENT_TYPES.get(e.get("type"), e.get("type")))
+            n = seen.get(key, 0)
+            seen[key] = n + 1
+            matches = [x for x in events if x.get("object") == key[0] and x.get("type") == key[1]]
+            if n >= len(matches):
+                raise CaptureError(f"no {key[1]} event number {n + 1} for {key[0]!r} in this capture")
+            ev = matches[n]
         st = e.get("status")
         if st == "confirmed" and ev.get("ambiguous") and ev.get("status") != "person_corrected":
             out["corrections"].append({"target": ev["id"], "field": "confirm", "seconds_spent": e.get("seconds_spent")})
@@ -550,4 +571,47 @@ def translate_review(cap: Capture, body: dict) -> dict:
                                        "seconds_spent": e.get("seconds_spent")})
         elif st == "rejected":
             out["corrections"].append({"target": ev["id"], "field": "reject", "seconds_spent": e.get("seconds_spent")})
+    return out
+
+
+def options(limits_public: Optional[dict] = None) -> dict:
+    """What the wizard's forms need: proxy catalogue, clip roles, target geometry and the print rule."""
+    from mirror.capture import calibrate as C, proxy as PX
+    from mirror.capture.target import DEFAULT_TARGET as T
+    ok, why = capture_available()
+    return {"available": ok, "reason": why or None, "modes": ["two_view", "single_view"],
+            "roles": {"two_view": ["take_top", "take_side", "lens_top", "lens_side"],
+                      "single_view": ["take_top", "lens_top"]},
+            "role_aliases": ROLE_ALIASES,
+            "proxies": {k: {**v, "proxy_dims_m": v.get("proxy_dims_m")} for k, v in PX.SUPPORTED.items()},
+            "proxy_choices": ["cup", "block", "marker", "tray", "wall", "ignore"],
+            "dimension_sources": ["measured_ruler", "manual_estimate"],
+            "target": {"name": T.name, "square_mm": T.square_mm, "scale_bar_mm": T.scale_bar_mm,
+                       "squares": [T.squares_x, T.squares_y], "sync_marker_id": T.sync_marker_id,
+                       "pdf": ["calibration/mirror_charuco_v1_A4.pdf", "calibration/mirror_charuco_v1_Letter.pdf"]},
+            "print_rule": {"bar_tolerance_mm": C.THRESHOLDS["print_bar_tolerance_mm"],
+                           "square_tolerance_rel": C.THRESHOLDS["print_square_tolerance_rel"]},
+            "review": {"needs_new_input": NEEDS_NEW_INPUT, "how_to_resolve": HOW_TO_RESOLVE,
+                       "identity_confirmation": "{object} confirms the whole track in every take; {camera, label, "
+                                                "from_frame} confirms from one frame of one clip"},
+            "limits": limits_public, "model_calls": "none (person-drawn boxes + classical tracking)"}
+
+
+def reacquisitions(cap: Capture) -> list[dict]:
+    """Intervals where a track was lost and found again (identity not yet confirmed), on the reference timeline."""
+    out = []
+    recon = (cap.session or {}).get("reconstruction") or {}
+    for lab, tr in (recon.get("objects") or {}).items():
+        t, flags = tr.get("t") or [], tr.get("identity_uncertain") or []
+        k = 0
+        while k < len(flags):
+            if flags[k]:
+                j = k
+                while j + 1 < len(flags) and flags[j + 1]:
+                    j += 1
+                out.append({"object": lab, "t_start": t[k] if k < len(t) else None, "t_end": t[j] if j < len(t) else None,
+                            "reference_camera": recon.get("reference_camera")})
+                k = j + 1
+            else:
+                k += 1
     return out

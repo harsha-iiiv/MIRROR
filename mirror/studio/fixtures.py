@@ -465,7 +465,8 @@ class FixtureSession(Session):
                     events.append(TraceEvent(t=f.t, type=ph[0], object_id=ph[1]))
             held_prev = f.phase
         self.set_demo(DemoTrace(demo_id="demo-fixture", scene=scene, source="teleop_scripted", source_note=FIXTURE_NOTE,
-                                sample_hz=_HZ / 3, frames=trace_frames, events=events), reason="demo_recorded")
+                                sample_hz=_HZ / 3, frames=trace_frames, events=events), reason="demo_recorded",
+                      input_evidence="fixture")
         self.scene = scene
         self._demo_frames = frames
         self._event("demo_recorded", demo_id=self.demo.demo_id, source=self.demo.source)
