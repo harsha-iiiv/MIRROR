@@ -1,0 +1,114 @@
+{
+ "registration": "video_v3",
+ "status": "design, freeze-ready, NOT run; awaiting budget approval",
+ "title": "Video to specification with substantial, varied cup tilt: unconditional perception measures, baselines and repeated proposals",
+ "why": [
+  "Every rendered clip of the earlier video registrations carried the cup upright (true tilt <= ~0.3 deg), so a constant-zero estimator beat the reported 2 deg tilt error.",
+  "The earlier position error was computed only over estimates within 5 cm of the truth (conditional).",
+  "Earlier video summaries stated unobserved tilt as measured 0 deg (fixed in the perception code; see docs/PERCEPTION.md)."
+ ],
+ "demonstrations": {
+  "generator": "mirror.perception.videobench.demos.render_tilted_demo (reference script; cup tilted by the commanded angle about the wrist roll or pitch axis for 2 s at half of its carry, then returned upright)",
+  "split": "eval",
+  "seeds": [
+   72000,
+   72001,
+   72002,
+   72003,
+   72004,
+   72005,
+   72006,
+   72007,
+   72008,
+   72009,
+   72010,
+   72011,
+   72012,
+   72013,
+   72014,
+   72015,
+   72016,
+   72017,
+   72018,
+   72019,
+   72020,
+   72021,
+   72022,
+   72023
+  ],
+  "seed_note": "seeds 72000-72023 have never been sampled, rendered or tracked; development uses dev seeds 9100-9199 only",
+  "commanded_tilt_deg": [
+   0,
+   10,
+   20,
+   35,
+   50,
+   60
+  ],
+  "assignment": "seed 72000+k gets commanded tilt [0,10,20,35,50,60][k // 4] and axis roll if k is even else pitch",
+  "render": {
+   "fps": 15,
+   "width": 960,
+   "height": 540,
+   "cameras": [
+    "top",
+    "side"
+   ],
+   "tracking_copy_fps": 5
+  },
+  "truth": "simulator ground truth (poses, cup tilt, masks, events) for measurement only, never an input"
+ },
+ "conditions": {
+  "two_view": "top + side tracks",
+  "top_only": "the same tracks with the side camera dropped (no extra model calls); tilt is unobservable and the correct output is to abstain"
+ },
+ "estimators": {
+  "localisation": [
+   "mirror (Muse Spark grounding + SAM 3.1 tracking + reconstruction)",
+   "static_positions (objects never move; first estimate held)",
+   "colour_tracker (classical colour threshold from the same first-frame boxes; rendered video only)"
+  ],
+  "tilt": [
+   "mirror (side-view silhouette; abstains where the trace evidence marks tilt unobserved)",
+   "constant_zero",
+   "pca_axis (classical principal axis of the side-view cup mask)"
+  ]
+ },
+ "measures": {
+  "localisation": "over EVERY visible ground-truth (object, frame): missing rate, outliers (> 5 cm), identity errors (outlier within 5 cm of another object), full error distribution over answered frames (p50/p90/p99/max), and within 1/2/5 cm as a share of ALL visible frames",
+  "tilt": "over EVERY true carry frame of the cup: coverage (answered share), error over answered frames, within 5 deg as a share of ALL carry frames (abstention is not within), false-upright frames (truth > 15 deg, estimate <= 15), abstentions on tilted frames; per demo the carried-upright decision (upright / tilted / abstained) against the truth",
+  "specification": "proposal signatures (constraints not rejected + active goals) from the ground-truth trace and from each video trace: offline rules once (deterministic), Muse Spark 3 repeats per input with separate cassette directories; model variability = distinct signatures among repeats of one input; perception-induced difference = video modal signature differs from the ground-truth modal signature"
+ },
+ "hypotheses_and_thresholds": {
+  "H1": "two_view, demos with true max tilt > 15 deg: mirror tilt within 5 deg on >= 0.70 of ALL carry frames, and strictly more than constant_zero",
+  "H2": "top_only: mirror abstains on >= 0.95 of carry frames and makes 0 false-upright frames",
+  "H3": "two_view: carried-upright decision correct on >= 20 of 24 demos (abstentions count as not correct)",
+  "H4": "two_view: localisation within 2 cm on >= 0.85 of ALL visible object-frames; missing, outlier and identity counts reported, no threshold",
+  "H5": "two_view: Muse Spark modal signature from video equals the modal signature from ground truth on >= 18 of 24 demos; report model variability separately",
+  "H6": "top_only: no proposal from video asserts an upright transport rule as shown by the demonstration (a proposal may ask about it)",
+  "reporting": "every check reported met / not met; no threshold changes after freezing; conditional numbers never reported without coverage"
+ },
+ "budget": {
+  "model_calls": {
+   "muse-spark-1.3 grounding": "3 per camera per demo + up to 2 re-seeds per camera = up to 10 per demo, 240 total",
+   "sam-3.1": "1 video + 1 static image per camera + up to 2 re-seeds per camera = up to 8 per demo, 192 total",
+   "muse-spark-1.3 propose_spec": "3 repeats x 3 inputs (ground truth, two_view, top_only) = 9 per demo, 216 total"
+  },
+  "expected_usd": {
+   "tracking": "24 x 0.31 (video2 mean) = 7.4",
+   "proposals": "216 x 0.029 (video2 mean) = 6.3",
+   "total": 13.7
+  },
+  "cap_usd": 20.0,
+  "stop_rule": "reserve 1.5 x the running per-demo mean before each demo; stop before a demo that would exceed the cap; report stopped demos",
+  "render_compute": "24 demos x 2 cameras on GPU boxes (L4, EGL): about 150 s per demo measured earlier, about 1 L4-hour in total (L4 2 CPU/8 GiB quoted at 1.34 credits/hour); or local CPU about 15 min per demo (6 hours)",
+  "no_other_spend": true
+ },
+ "freeze_procedure": [
+  "commit design + code + rehearsal (oracle masks, dev seeds) before any eval seed is generated",
+  "record code sha256 and git commit in freeze.json",
+  "render eval demos, record their sha256 in inputs.json and commit",
+  "run once from a clean worktree with an append-only ledger; resumable per demo"
+ ],
+ "rehearsal": "dev seeds 9101 (35 deg roll) and 9102 (60 deg pitch), oracle masks, offline proposals, 5 fps renders; see rehearsal_v3 in the status log"
+}
