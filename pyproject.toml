@@ -21,6 +21,9 @@ dev = ["pytest>=8", "playwright>=1.45"]
 video = ["imageio>=2.34", "imageio-ffmpeg>=0.5"]
 # SAM 3.1 output decoding (mirror.meta.sam); imported only when segmentation output is parsed
 meta = ["meta-sam-parser>=0.1.0"]
+# Calibration board detection for real camera footage (mirror.perception.calibration.detect_board);
+# the calibration maths itself needs only numpy/scipy
+camera = ["opencv-python-headless==4.10.0.84"]
 
 [project.scripts]
 mirror = "mirror.cli:main"
