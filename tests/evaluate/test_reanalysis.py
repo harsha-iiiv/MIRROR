@@ -112,3 +112,13 @@ def test_scene_numeric_compare_reports_largest_difference():
     r = scenes.compare(a, b)
     assert r["hash_equal"] == 0 and r["structure_differs"] == 0
     assert r["max_abs_numeric_difference"] == pytest.approx(1e-9) and r["at"].endswith("pos[1]")
+
+
+def test_video_reanalysis_rebuilt_every_reported_seed_exactly():
+    rep = json.loads((ROOT / "results/reanalysis_v1/video/report.json").read_text())
+    rows = [p for p in rep["per_seed"] if p["source"] == "eval_video2"]
+    assert len(rows) == 16
+    assert all(p["reproduces_stored_row"] and all(p["reproduces_stored_row"].values()) for p in rows)
+    t = rep["sources"]["eval_video2"]["tilt"]
+    assert t["gt_tilt_max_deg_over_all_seeds"] < 0.3
+    assert t["constant_zero_median_of_seed_medians_deg"] < t["registered_median_of_seed_medians_deg"]
