@@ -312,7 +312,7 @@ class Uncertainty(_Model):
 class CorrectionRecord(_Model):
     version: int  # the spec version this correction produced
     text: str
-    kind: Literal["correction", "clarification_answer", "confirmation"]
+    kind: Literal["correction", "clarification_answer", "confirmation", "revert"]
     diff: list["SpecOp"] = Field(default_factory=list)
     model: Optional[str] = None
 

@@ -138,3 +138,16 @@ class NeedsClarification(InterpretError):
     def as_dict(self) -> dict[str, Any]:
         return {"question": self.question, "options": self.options,
                 "reason": self.reason, "interpretation": self.interpretation}
+
+
+class RevertRequested(InterpretError):
+    """The text asks to undo earlier changes. ``to_version`` names an explicit
+    target version; otherwise ``steps`` versions back from the current one.
+    Apply it with mirror.interpret.correct.apply_correction (which has the
+    version history), never by editing a specification in place."""
+
+    def __init__(self, steps: int = 1, to_version: Optional[int] = None, text: str = ""):
+        super().__init__(f"revert {'to v' + str(to_version) if to_version else str(steps) + ' step(s)'}")
+        self.steps = steps
+        self.to_version = to_version
+        self.text = text

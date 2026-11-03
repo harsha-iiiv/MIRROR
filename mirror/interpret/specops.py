@@ -347,3 +347,85 @@ def confirm_items(spec: TaskSpec, confirm: Iterable[str] = (), reject: Iterable[
             parts.append("rejected " + ", ".join(reject))
         text = "; ".join(parts) or "no change"
     return apply_ops(spec, ops, text=text, kind="confirmation")
+
+
+
+# ------------------------------------------------------------ reverting ---
+
+def _dump(item) -> dict:
+    return item.model_dump(mode="json")
+
+
+def revert_ops(current: TaskSpec, target: TaskSpec) -> list[SpecOp]:
+    """Ops that turn ``current``'s goals, constraints and orderings into
+    ``target``'s. Uncertainties are left as they are (an answered question is
+    not re-opened)."""
+    ops: list[SpecOp] = []
+    why = f"revert to version {target.version}"
+    cur_c, tgt_c = {c.id: c for c in current.constraints}, {c.id: c for c in target.constraints}
+    for cid in cur_c:
+        if cid not in tgt_c:
+            ops.append(SpecOp(op="remove_constraint", target_id=cid, rationale=why))
+    for cid, t in tgt_c.items():
+        c = cur_c.get(cid)
+        if c is None:
+            ops.append(SpecOp(op="add_constraint", target_id=cid, value=_dump(t), rationale=why))
+            continue
+        if c.type != t.type or set(c.params) - set(t.params):
+            ops += [SpecOp(op="remove_constraint", target_id=cid, rationale=why),
+                    SpecOp(op="add_constraint", target_id=cid, value=_dump(t), rationale=why)]
+            continue
+        val: dict = {}
+        if c.params != t.params:
+            val["params"] = dict(t.params)
+        if c.phase != t.phase:
+            val["phase"] = t.phase
+        if c.applies_to != t.applies_to:
+            val["applies_to"] = t.applies_to.model_dump(mode="json")
+        if c.description != t.description:
+            val["description"] = t.description
+        if c.status != t.status:
+            val["status"] = t.status.value
+        if val:
+            ops.append(SpecOp(op="modify_constraint", target_id=cid, value=val, rationale=why))
+    cur_g, tgt_g = {g.id: g for g in current.goals}, {g.id: g for g in target.goals}
+    for gid in cur_g:
+        if gid not in tgt_g:
+            ops.append(SpecOp(op="remove_goal", target_id=gid, rationale=why))
+    for gid, t in tgt_g.items():
+        g = cur_g.get(gid)
+        if g is None:
+            ops.append(SpecOp(op="add_goal", target_id=gid, value=_dump(t), rationale=why))
+        elif g.object != t.object or g.target != t.target:
+            ops += [SpecOp(op="remove_goal", target_id=gid, rationale=why),
+                    SpecOp(op="add_goal", target_id=gid, value=_dump(t), rationale=why)]
+        elif g.status != t.status:
+            ops.append(SpecOp(op="set_status", target_id=gid, value={"status": t.status.value}, rationale=why))
+    cur_o, tgt_o = {o.id: o for o in current.ordering}, {o.id: o for o in target.ordering}
+    for oid in cur_o:
+        if oid not in tgt_o:
+            ops.append(SpecOp(op="remove_ordering", target_id=oid, rationale=why))
+    for oid, t in tgt_o.items():
+        o = cur_o.get(oid)
+        if o is None:
+            ops.append(SpecOp(op="add_ordering", target_id=oid, value=_dump(t), rationale=why))
+        elif (o.before, o.after, o.before_event, o.after_event) != (t.before, t.after, t.before_event, t.after_event):
+            ops += [SpecOp(op="remove_ordering", target_id=oid, rationale=why),
+                    SpecOp(op="add_ordering", target_id=oid, value=_dump(t), rationale=why)]
+        elif o.status != t.status:
+            ops.append(SpecOp(op="set_status", target_id=oid, value={"status": t.status.value}, rationale=why))
+    return ops
+
+
+def revert_to(current: TaskSpec, target: TaskSpec, text: str = "") -> tuple[TaskSpec, CorrectionRecord]:
+    """A new version (current + 1) whose rules equal ``target``'s. History is
+    appended, never rewritten: version numbers are not reused."""
+    if target.spec_id != current.spec_id:
+        raise InterpretError("cannot revert across specifications")
+    if target.version >= current.version:
+        raise InterpretError(f"version {target.version} is not earlier than the current version {current.version}")
+    ops = revert_ops(current, target)
+    if not ops:
+        raise InterpretError(f"version {target.version} has the same rules as the current version")
+    new, rec = apply_ops(current, ops, text=text or f"revert to version {target.version}", kind="revert")
+    return new, rec

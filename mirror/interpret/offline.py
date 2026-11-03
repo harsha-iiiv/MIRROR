@@ -287,11 +287,33 @@ def _contact_groups(t: str) -> list[str]:
     return g or ["obstacle"]
 
 
+_REVERT_RE = re.compile(r"^(please )?(undo|revert|roll back|go back|take back|cancel)\b|"
+                        r"\b(undo (that|the last|my last)|go back to (version|v) ?\d+|revert to (version|v) ?\d+|"
+                        r"the way it was( before)?|as it was before)\b")
+
+
+def revert_request(text: str):
+    """RevertRequested if the text asks to undo earlier changes, else None."""
+    from mirror.interpret.types import RevertRequested
+    t = _normalize(text)
+    if not _REVERT_RE.search(t):
+        return None
+    m = re.search(r"\b(?:version|v) ?(\d+)\b", t)
+    if m:
+        return RevertRequested(to_version=int(m.group(1)), text=text)
+    m = re.search(r"\b(two|2|three|3) (changes|corrections|steps)\b", t)
+    steps = {"two": 2, "2": 2, "three": 3, "3": 3}[m.group(1)] if m else 1
+    return RevertRequested(steps=steps, text=text)
+
+
 def compile_offline(spec: TaskSpec, text: str, context: Optional[dict] = None) -> CorrectionDraft:
     context = context or {}
     t = _normalize(text)
     if not t:
         raise CorrectionRejected("empty correction")
+    rv = revert_request(text)
+    if rv is not None:
+        raise rv
     from mirror.interpret.specops import active_goal_kinds
     included = active_goal_kinds(spec) or [b.kind for b in spec.bindings]
     bound = [b.kind for b in spec.bindings]
