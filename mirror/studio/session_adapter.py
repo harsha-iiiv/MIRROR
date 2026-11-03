@@ -331,6 +331,14 @@ UPLOAD_VIEWS = ("top", "side", "calibration", "single")
 TOUR_DIR = REPO_ROOT / "data" / "challenge_tour"
 
 
+def _has_outcome_api() -> bool:
+    try:
+        import importlib.util
+        return importlib.util.find_spec("mirror.interpret.outcome") is not None
+    except (ImportError, ValueError):
+        return False
+
+
 def tour_record(version: Optional[str] = None) -> Optional[dict]:
     """The shipped, recorded challenge tour (no live inference), newest version unless named."""
     if not TOUR_DIR.exists():
@@ -1658,7 +1666,18 @@ class StudioService:
         rep = report or entry.rollout.report
         beads = [{"object_id": o.object_id, "beads_total": o.beads_total, "beads_in_container": o.beads_in_container}
                  for o in rep.outcomes if getattr(o, "beads_total", 0)]
+        po = None
+        try:
+            from ..plan.outcome import planning_outcome
+            po = planning_outcome(entry.plan) if entry.plan is not None else None
+        except Exception:  # noqa: BLE001 - older planner package or fixture plan
+            po = None
+        rr = [r.model_dump(mode="json") if hasattr(r, "model_dump") else r
+              for r in (getattr(rep, "rule_results", None) or [])]
         return {"rollout_id": entry.rollout_id, "label": entry.label, "status": rep.status,
+                "planning_outcome": ({k: po.get(k) for k in ("kind", "headline", "detail", "assumptions", "not_covered")}
+                                     if po else None),
+                "rule_results": rr,
                 "spec_version_id": entry.spec_version_id, "content_sha256": entry.content_sha256,
                 "scene_id": entry.scene.scene_id, "route_labels": list(rep.route_labels), "beads": beads,
                 "plan_status": rep.plan_status, "plan_reason": rep.plan_reason,
@@ -1718,7 +1737,8 @@ class StudioService:
                     "step_provenance": ch.before["step_provenance"], "preparation": prep}
         return self.submit("challenge", {"family": family, "seed": seed, "preset": preset, "edits": len(edits or [])}, work)
 
-    def challenge_correction(self, cid: str, text: Optional[str] = None, transcript_id: Optional[str] = None) -> Job:
+    def challenge_correction(self, cid: str, text: Optional[str] = None, transcript_id: Optional[str] = None,
+                             focus_kind: Optional[str] = None) -> Job:
         """Compile a correction for review; nothing is committed."""
         from .challenge import spec_scope
         ch = self._challenge_current(cid)
@@ -1734,6 +1754,8 @@ class StudioService:
         if len(text) > 600:
             raise ValueError("a correction is one or two sentences (600 characters at most)")
         how = "typed" if tr is None else ("spoken" if text == tr["text"] else "spoken_edited")
+        if focus_kind is not None and focus_kind not in {o.kind for o in ch.scene.objects}:
+            raise ValueError(f"focus_kind {focus_kind!r} is not an object kind in this scene")
 
         def work(job):
             self._progress(job, 0.1, "Compiling the correction")
@@ -1754,7 +1776,31 @@ class StudioService:
                         "base_spec_version_id": self._spec_vid(base.version), "ops": [], "diff": None, "scope": None,
                         "question": None, "options": [], "rejected": None}
                 try:
-                    (new, record), fb = self._with_fallback(lambda: self.session.preview_correction(text), job)
+                    if self.mode == "live" and _has_outcome_api():
+                        # Structured outcome (apply | clarify | refuse | revert): never an exception for a
+                        # user-level result; the selected object resolves words like "the coffee".
+                        from ..interpret.outcome import interpret as _interp
+                        ctx = {"scene": ch.scene, "focus_kind": focus_kind}
+                        (oc, oc_new), fb = self._with_fallback(
+                            lambda: _interp(list(self.session.specs), text, self.session._client(), ctx,
+                                            os.environ.get("MIRROR_PROMPT_REVISION")), job)
+                        prop.update(outcome=oc.outcome, reason_code=oc.reason_code, message=oc.message,
+                                    interpretation=oc.interpretation, supported_changes=oc.supported_changes,
+                                    alias=oc.alias, interpreter=oc.interpreter, prompt_revision=oc.prompt_revision,
+                                    model_calls=len(oc.model_calls))
+                        if oc.outcome == "clarify":
+                            prop.update(question=oc.message, options=list(oc.options))
+                        elif oc.outcome == "refuse":
+                            prop["rejected"] = oc.message
+                        if oc_new is not None and oc.outcome in ("apply", "revert"):
+                            from ..contracts import CorrectionRecord
+                            new = oc_new
+                            record = CorrectionRecord(version=new.version, text=text, kind="correction",
+                                                      diff=list(oc.ops), model=oc.interpreter or None)
+                        else:
+                            new, record = base, None
+                    else:
+                        (new, record), fb = self._with_fallback(lambda: self.session.preview_correction(text), job)
                 except Exception as exc:  # noqa: BLE001 - typed outcomes from the interpreter
                     name = type(exc).__name__
                     if name == "NeedsClarification":
@@ -1775,6 +1821,8 @@ class StudioService:
                 q = getattr(record, "question", None) if record is not None else None
                 if q:
                     prop["question"] = q
+                prop.setdefault("outcome", "apply" if new.version != base.version else
+                                "clarify" if prop.get("question") else "refuse")
                 if new.version != base.version:
                     diff, scope = spec_scope(base, new, ch.scene)
                     prop.update(changed=True, diff=diff, scope=scope,
@@ -1799,6 +1847,7 @@ class StudioService:
         return self.submit("challenge_correction", {"challenge_id": cid, "input": how}, work)
 
     def _study_proposal(self, tid: str, prop: dict, new_spec) -> None:
+        # trial outcome vocabulary: apply | asks | rejects | error (revert counts as apply)
         errors = []
         if new_spec is not None and self.mode != "fixture":
             from ..interpret import validate_spec
@@ -1891,7 +1940,9 @@ class StudioService:
                     self.study.update(tid, execution={
                         "rollout_id": entry.rollout_id, "status": entry.rollout.report.status,
                         "violations": ch.after["violations"],
-                        "proven_infeasible": bool(entry.rollout.report.status == "planning_failed" and inf.get("proven")),
+                        "proven_infeasible": bool(entry.rollout.report.status == "planning_failed"
+                                                  and (ch.after.get("planning_outcome") or {}).get("kind") == "proven_infeasible"),
+                        "planning_outcome": (ch.after.get("planning_outcome") or {}).get("headline"),
                         "provenance": "fixture" if self.mode == "fixture" else "simulated"})
                     self.study.event("execution_run", rollout_id=entry.rollout_id, verdict=entry.rollout.report.status,
                                      scene_key=ch.scene.scene_id)

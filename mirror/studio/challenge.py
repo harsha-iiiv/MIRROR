@@ -108,9 +108,27 @@ def options(audio: bool) -> dict:
                       "remove_obstacle": "obstacle id"},
             "max_edits": MAX_EDITS,
             "correction": {"max_chars": 600, "audio": bool(audio), "supported": SUPPORTED_RULES,
+                           "supported_changes": _supported_changes(), "matrix": _matrix(),
                            "note": "Corrections are compiled into this bounded rule language; anything else is "
                                    "answered with a question or refused, never executed as a free-form command."},
             "fenced_seed_count": len(fenced_seeds()), "fence_sources": fence_sources()}
+
+
+def _matrix() -> Optional[dict]:
+    """The rule-support matrix (mirror.rules_support) when that module is present."""
+    try:
+        from ..rules_support import matrix
+        return matrix()
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _supported_changes() -> list[str]:
+    try:
+        from ..interpret.outcome import SUPPORTED_CHANGES
+        return list(SUPPORTED_CHANGES)
+    except Exception:  # noqa: BLE001
+        return [r["example"] for r in SUPPORTED_RULES]
 
 
 # ---------------------------------------------------------------- scene edits

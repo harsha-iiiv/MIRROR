@@ -89,6 +89,7 @@ class ChallengeIn(BaseModel):
 class ChallengeCorrectionIn(BaseModel):
     text: Optional[str] = None
     transcript_id: Optional[str] = None
+    focus_kind: Optional[str] = None
 
 
 class ReviewIn(BaseModel):
@@ -482,7 +483,7 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
 
     @app.post("/api/challenge/{cid}/correction")
     def challenge_correction(cid: str, body: ChallengeCorrectionIn, svc: StudioService = Depends(session)):
-        return guard(svc.challenge_correction, cid, body.text, body.transcript_id).public()
+        return guard(svc.challenge_correction, cid, body.text, body.transcript_id, body.focus_kind).public()
 
     @app.post("/api/challenge/{cid}/review")
     def challenge_review(cid: str, body: ReviewIn, svc: StudioService = Depends(session)):
