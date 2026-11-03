@@ -155,6 +155,22 @@ conservatively because a frozen design names them). Anything else: 403 `evaluati
   and kept 5/8 beads; recheck under the correction: constraint violated; after: around the wall, 8/8;
   transfer seeds 4243-4245: base routes violate under the revised rule, revised runs succeed.
 
+### Execution backends
+
+`POST /api/run`, `POST /api/challenge` and `POST /api/challenge/{cid}/execute` accept `backend`:
+`gripper` (default; the free-flying gripper baseline) or `arm` (articulated UR10e carrying the same
+gripper; mirror/arm/README.md). Execute defaults to the challenge's backend (`challenge.backend`); a
+different one is marked `after.backend_differs_from_before`. Same scenes, planner and independent checker
+for both. Every run result, rollout brief and snapshot rollout names its `backend`;
+`step_provenance.backend`, `backend_label` and `simulator` say which one ran. An arm motion-planning
+failure is reported in `backend_failure {kind: arm_motion_planning_failure, failure_kind,
+search_budget_exhausted}` and is never a proof (`planning_outcome.kind` stays `no_route_found`).
+`capabilities.backends` says which backends this server can run (the fixture server only `gripper`;
+asking it for `arm` answers 409). Note: the arm cannot pass the 0.10 m wall slots, so on the shortcut
+family its prior run already goes around the wall and a transport-upright correction changes nothing
+visible there (development observation on the reference shortcut scene: before success, re-check
+success, after success 8/8).
+
 ## 5. Study mode and trial export (consented trials only)
 
 * `GET /api/challenge/options` → `study {recording_available, event_log, contexts, retention

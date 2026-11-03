@@ -90,10 +90,17 @@ def model_step(source: str, *, model: Optional[str], latency_s: Optional[float],
             "fallback_reason": fallback_reason}
 
 
-def sim_step(mode: str, *, wall_s: Optional[float] = None, status: str = "ok", recorded: bool = False) -> dict:
+BACKEND_LABELS = {"gripper": "baseline: free-flying gripper (no arm)",
+                  "arm": "articulated arm (UR10e) carrying the same gripper"}
+
+
+def sim_step(mode: str, *, wall_s: Optional[float] = None, status: str = "ok", recorded: bool = False,
+             backend: str = "gripper") -> dict:
     kind = "fixture" if mode == "fixture" else ("recorded_playback" if recorded else "new_simulation")
     return {"kind": kind, "label": LABELS[kind], "model": None, "interpreter": None,
-            "simulator": "fixture (key-framed)" if mode == "fixture" else "MuJoCo",
+            "backend": backend, "backend_label": BACKEND_LABELS.get(backend, backend),
+            "simulator": "fixture (key-framed)" if mode == "fixture" else
+            ("MuJoCo, " + BACKEND_LABELS.get(backend, backend)),
             "request_status": status, "latency_s": round(wall_s, 3) if wall_s is not None else None,
             "latency_source": None if recorded else "measured_now", "cost_usd": None, "fallback_reason": None}
 

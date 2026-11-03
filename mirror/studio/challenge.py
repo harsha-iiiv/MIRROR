@@ -341,6 +341,7 @@ class ChallengeState:
         self.record_id: Optional[str] = None
         self.preparation: list[dict] = []
         self.error: Optional[str] = None
+        self.backend: str = "gripper"          # execution backend of the before run (mirror.backends)
         self.lock = threading.RLock()
 
     def to_state(self) -> dict:
@@ -355,6 +356,7 @@ class ChallengeState:
         for k in ("before", "proposal", "revised_spec_version_id", "rechecks", "after", "record_id", "preparation",
                   "error", "pending_base_version"):
             setattr(ch, k, d.get(k))
+        ch.backend = d.get("backend") or "gripper"
         ch.rechecks = ch.rechecks or []
         ch.preparation = ch.preparation or []
         ch.pending_spec = TaskSpec.model_validate(d["pending_spec"]) if d.get("pending_spec") else None
@@ -368,4 +370,4 @@ class ChallengeState:
                 "base_spec_version_id": self.base_spec_version_id, "preparation": self.preparation,
                 "before": self.before, "proposal": self.proposal,
                 "revised_spec_version_id": self.revised_spec_version_id, "rechecks": self.rechecks,
-                "after": self.after, "record_id": self.record_id, "error": self.error}
+                "after": self.after, "record_id": self.record_id, "error": self.error, "backend": self.backend}

@@ -356,6 +356,17 @@ def study_retention() -> dict:
     }
 
 
+def available_backends() -> dict:
+    """Which execution backends this server can run (the arm needs mirror.arm and its model)."""
+    out = {"gripper": True, "arm": False}
+    try:
+        import importlib.util
+        out["arm"] = importlib.util.find_spec("mirror.arm.backend") is not None
+    except (ImportError, ValueError):
+        pass
+    return out
+
+
 def _has_outcome_api() -> bool:
     try:
         import importlib.util
@@ -1021,6 +1032,7 @@ class StudioService:
         except Exception:  # noqa: BLE001
             cap = {"perception": False, "observe": False, "voice": False, "bundled_video": False}
         cap["video"] = bool(cap.get("perception") and cap.get("observe"))
+        cap["backends"] = {k: v and (k == "gripper" or self.mode != "fixture") for k, v in available_backends().items()}
         self._cap_cache = (now, dict(cap))
         return cap
 
@@ -1371,22 +1383,39 @@ class StudioService:
                 "budgets": {"interpreter": llm_public(self.budget, self.session_id) if self.budget is not None else None,
                             **budgets_public(self.meta_budgets, self.session_id)}}
 
-    def run(self, spec_version: Optional[int] = None, condition: str = "", tags: Optional[list[str]] = None) -> Job:
+    def _check_backend(self, backend: Optional[str]) -> str:
+        """gripper (default baseline) or arm; arm needs the live simulator and the arm package."""
+        from ..backends import BACKENDS
+        backend = backend or "gripper"
+        if backend not in BACKENDS:
+            raise ValueError(f"backend is one of {list(BACKENDS)}")
+        if backend != "gripper":
+            if self.mode == "fixture":
+                raise ValueError(f"the {backend} backend needs the live simulator; this server runs the fixture backend")
+            if not available_backends().get(backend):
+                raise RuntimeError(f"the {backend} backend is not available on this server")
+        return backend
+
+    def run(self, spec_version: Optional[int] = None, condition: str = "", tags: Optional[list[str]] = None,
+            backend: Optional[str] = None) -> Job:
+        backend = self._check_backend(backend)
+
         def work(job):
-            self._progress(job, 0.05, "Planning")
+            self._progress(job, 0.05, "Planning" + (" (articulated arm)" if backend == "arm" else ""))
             with self.lock:
                 self._guard(job)
                 t0 = time.time()
-                entry = self.session.run(spec_version=spec_version, condition=condition)
+                entry = self.session.run(spec_version=spec_version, condition=condition,
+                                         **({"backend": backend} if backend != "gripper" else {}))
                 wall = time.time() - t0
             rid = entry.rollout.report.rollout_id
             self.tags[rid] = list(tags or [])
             return {"rollout_id": rid, "status": entry.rollout.report.status, "label": entry.label,
                     "generation_id": entry.generation_id, "spec_version_id": entry.spec_version_id,
-                    "content_sha256": entry.content_sha256,
+                    "content_sha256": entry.content_sha256, "backend": backend,
                     "provenance": "fixture" if self.mode == "fixture" else "simulated",
-                    "step_provenance": sim_step(self.mode, wall_s=wall)}
-        return self.submit("run", {"spec_version": spec_version, "condition": condition}, work)
+                    "step_provenance": sim_step(self.mode, wall_s=wall, backend=backend)}
+        return self.submit("run", {"spec_version": spec_version, "condition": condition, "backend": backend}, work)
 
     def recheck(self, rollout_id: str, spec_version: Optional[int] = None,
                 spec_version_id: Optional[str] = None) -> dict:
@@ -1699,7 +1728,11 @@ class StudioService:
             po = None
         rr = [r.model_dump(mode="json") if hasattr(r, "model_dump") else r
               for r in (getattr(rep, "rule_results", None) or [])]
+        inf = entry.plan.infeasibility if (entry.plan is not None and isinstance(entry.plan.infeasibility, dict)) else {}
         return {"rollout_id": entry.rollout_id, "label": entry.label, "status": rep.status,
+                "backend": getattr(entry, "backend", "gripper"),
+                "backend_failure": ({k: inf.get(k) for k in ("kind", "failure_kind", "search_budget_exhausted")}
+                                    if inf.get("kind") == "arm_motion_planning_failure" else None),
                 "planning_outcome": ({k: po.get(k) for k in ("kind", "headline", "detail", "assumptions", "not_covered")}
                                      if po else None),
                 "rule_results": rr,
@@ -1717,8 +1750,11 @@ class StudioService:
         return out
 
     def challenge_create(self, family: str, seed: Optional[int] = None, preset: Optional[str] = None,
-                         edits: Optional[list] = None) -> Job:
-        """Build a development challenge scene and execute the current specification on it (prior behaviour)."""
+                         edits: Optional[list] = None, backend: Optional[str] = None) -> Job:
+        """Build a development challenge scene and execute the current specification on it (prior behaviour).
+
+        ``backend``: gripper (default baseline) or arm; execute uses the same backend unless told otherwise."""
+        backend = self._check_backend(backend)
         from .challenge import ChallengeState, challenge_scene
         scene, origin = challenge_scene(family, seed, list(edits or []), preset=preset, fixture=self.mode == "fixture")
 
@@ -1746,6 +1782,7 @@ class StudioService:
                 job.generation_id = self.generation_id
                 ch = ChallengeState(self.generation_id, scene, origin, self._spec_vid())
                 ch.preparation = prep
+                ch.backend = backend
                 self.challenges[ch.id] = ch
                 self.challenge_order.append(ch.id)
                 while len(self.challenge_order) > 10:
@@ -1753,15 +1790,18 @@ class StudioService:
                 self.session.set_scene(scene)
                 self._progress(job, 0.3, "Executing the current specification on the challenge layout")
                 t0 = time.time()
-                entry = self.session.run(condition=f"challenge {ch.id}: before")
+                entry = self.session.run(condition=f"challenge {ch.id}: before",
+                                         **({"backend": backend} if backend != "gripper" else {}))
                 self.tags[entry.rollout_id] = ["challenge", "before"]
-                ch.before = {**self._rollout_brief(entry), "step_provenance": sim_step(self.mode, wall_s=time.time() - t0)}
+                ch.before = {**self._rollout_brief(entry),
+                             "step_provenance": sim_step(self.mode, wall_s=time.time() - t0, backend=backend)}
                 ch.state = "scene_ready"
             return {"challenge_id": ch.id, "before_rollout_id": entry.rollout_id, "status": entry.rollout.report.status,
                     "generation_id": self.generation_id,
                     "provenance": "fixture" if self.mode == "fixture" else "simulated",
                     "step_provenance": ch.before["step_provenance"], "preparation": prep}
-        return self.submit("challenge", {"family": family, "seed": seed, "preset": preset, "edits": len(edits or [])}, work)
+        return self.submit("challenge", {"family": family, "seed": seed, "preset": preset, "edits": len(edits or []),
+                                         "backend": backend}, work)
 
     def challenge_correction(self, cid: str, text: Optional[str] = None, transcript_id: Optional[str] = None,
                              focus_kind: Optional[str] = None, answer: Optional[str] = None) -> Job:
@@ -2034,11 +2074,12 @@ class StudioService:
             self._changed()
             return ch.public()
 
-    def challenge_execute(self, cid: str) -> Job:
+    def challenge_execute(self, cid: str, backend: Optional[str] = None) -> Job:
         ch = self._challenge_current(cid)
         if not ch.revised_spec_version_id:
             raise RuntimeError("accept a reviewed correction before executing")
         version = int(ch.revised_spec_version_id.rpartition(".v")[2])
+        backend = self._check_backend(backend or ch.backend)
 
         def work(job):
             self._progress(job, 0.05, "Planning with the revised specification")
@@ -2046,9 +2087,12 @@ class StudioService:
                 self._guard(job)
                 self.session.set_scene(ch.scene)
                 t0 = time.time()
-                entry = self.session.run(spec_version=version, condition=f"challenge {ch.id}: after")
+                entry = self.session.run(spec_version=version, condition=f"challenge {ch.id}: after",
+                                         **({"backend": backend} if backend != "gripper" else {}))
                 self.tags[entry.rollout_id] = ["challenge", "after"]
-                ch.after = {**self._rollout_brief(entry), "step_provenance": sim_step(self.mode, wall_s=time.time() - t0)}
+                ch.after = {**self._rollout_brief(entry),
+                            "step_provenance": sim_step(self.mode, wall_s=time.time() - t0, backend=backend),
+                            "backend_differs_from_before": backend != ch.backend}
                 ch.state = "executed"
                 tid = self.study.trial_for(ch.id) if self.study is not None else None
                 if tid:
