@@ -156,7 +156,13 @@ def _pose_from_h(K, H):
     return Rm, t, resid
 
 
-def calibrate(table_mask: np.ndarray, K: np.ndarray, table_half=WORLD.table_half[:2]) -> Calib:
+def calibrate(table_mask: np.ndarray, K: np.ndarray, table_half=WORLD.table_half[:2],
+              all_candidates: bool = False):
+    """Camera pose from the table outline. With ``all_candidates`` returns every
+    corner assignment consistent with a camera above the table on the operator's
+    side (refined, best residual first): a rectangle's symmetry can make a wrong
+    assignment fit almost as well, so other cameras are checked against resting
+    objects before one is chosen."""
     quad = _quad_from_mask(table_mask)
     # image quad in a consistent (counter-clockwise in image) order
     c = quad.mean(0)
@@ -165,6 +171,7 @@ def calibrate(table_mask: np.ndarray, K: np.ndarray, table_half=WORLD.table_half
     hx, hy = table_half
     world = np.array([[-hx, -hy], [hx, -hy], [hx, hy], [-hx, hy]])
     best = None
+    cands = []
     for flip in (False, True):
         q = quad[::-1] if flip else quad
         for k in range(4):
@@ -173,10 +180,18 @@ def calibrate(table_mask: np.ndarray, K: np.ndarray, table_half=WORLD.table_half
             Rm, t, resid = _pose_from_h(K, H)
             C = -Rm.T @ t
             ok = C[2] > 0 and C[1] < 0 and np.linalg.det(Rm) > 0
+            if ok:
+                cands.append((resid, Rm, t, img))
             if ok and (best is None or resid < best[0]):
                 best = (resid, Rm, t, img)
     if best is None:
         raise ValueError("table corners do not give a camera above the table on the operator's side")
+    if all_candidates:
+        out = []
+        for c_ in cands:
+            Rm_, t_, r_ = _refine_slab(table_mask, np.asarray(K, float), c_[1], c_[2], table_half)
+            out.append(Calib(K=np.asarray(K, float), R=Rm_, t=t_, corners_px=c_[3], residual=float(r_)))
+        return sorted(out, key=lambda c: c.residual)
     resid, Rm, t, img = best
     Rm, t, resid2 = _refine_slab(table_mask, np.asarray(K, float), Rm, t, table_half)
     return Calib(K=np.asarray(K, float), R=Rm, t=t, corners_px=img, residual=float(resid2))
@@ -872,6 +887,22 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
             err = _anchor_error(cal, anchors, tracks, c, calib_frame)
             if err is not None and err <= ANCHOR_MAX_PX and (best is None or err < best[0]):
                 best = (err, cal, lab)
+        if best is None:
+            # the best-fitting corner assignment failed the resting-object check: try the others
+            for cal0, lab in hyps.get(c, []):
+                try:
+                    tm = next((tracks.get(c, lab, i) for i in range(calib_frame, min(tracks.n_frames, calib_frame + 30))
+                               if tracks.get(c, lab, i) is not None and tracks.get(c, lab, i).any()), None)
+                    alts = calibrate(ndimage.binary_fill_holes(tm), np.asarray(K[c], float), table_half=table_half_,
+                                     all_candidates=True) if tm is not None else []
+                except (ValueError, np.linalg.LinAlgError):
+                    alts = []
+                for cal in alts:
+                    if cal.residual > TABLE_FIT_MAX_PX:
+                        continue
+                    err = _anchor_error(cal, anchors, tracks, c, calib_frame)
+                    if err is not None and err <= ANCHOR_MAX_PX and (best is None or err < best[0]):
+                        best = (err, cal, lab + " (alternative corner assignment)")
         if best is not None:
             calib[c], calib_choice[c] = best[1], best[2]
             continue
@@ -1049,9 +1080,15 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
             tilt[lab] = np.where(ok, filt, np.nan)
     tray_poly = _tray_polygon(tracks, calib, top)
     if tray_poly is not None and len(tray_poly) >= 3:
-        P_ = np.asarray(tray_poly) - np.mean(tray_poly, 0)
-        w_, V_ = np.linalg.eigh(np.cov(P_.T))
-        ext = sorted(float(np.ptp(P_ @ V_[:, k])) for k in range(2))
+        P_ = np.asarray(tray_poly, float)
+        best_ = None
+        for a_ in np.radians(np.arange(0.0, 90.0, 0.5)):       # minimum-area enclosing rectangle
+            R_ = np.array([[math.cos(a_), -math.sin(a_)], [math.sin(a_), math.cos(a_)]])
+            Q_ = P_ @ R_
+            e_ = (float(np.ptp(Q_[:, 0])), float(np.ptp(Q_[:, 1])))
+            if best_ is None or e_[0] * e_[1] < best_[0] * best_[1]:
+                best_ = e_
+        ext = sorted(best_)
         ref = sorted([2 * (TRAY.inner_half[0] + TRAY.wall_thickness), 2 * (TRAY.inner_half[1] + TRAY.wall_thickness)])
         ratio = [e / r for e, r in zip(ext, ref)]
         if any(abs(x - 1) > SCALE_TOL for x in ratio):
@@ -1217,7 +1254,7 @@ def estimate(tracks: Tracks, K: dict, *, object_labels=None, prompts=None,
                                message=f"{lab} was found in only {100 * fr:.0f}% of frames."))
         identity[lab] = dict(identity=ident, note=note)
     for lab in [l for l in labels if l not in kinds and not l.startswith("wall") and not l.startswith("tray")
-                and l != bead_label and l not in ("gripper", "hand")]:
+                and l != bead_label and l not in ("gripper", "hand") and not l.startswith("box")]:
         review.append(dict(code="unknown_object", severity="review", object_id=lab,
                            message=f"Tracked label '{lab}' is not a supported kit object; it was ignored."))
     return Estimates(t=t, objects=pos, found=found, tilt_deg=tilt, gripper=grip, events=events,

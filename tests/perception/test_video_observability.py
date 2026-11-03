@@ -141,3 +141,18 @@ def test_object_centric_events_never_claim_robot_contact():
     assert "object_centric_events" in {r.code for r in ev.review}
     with pytest.raises(ValueError):
         estimate(tr, {"top": dv.cameras["top"].K}, actor="robot")
+
+
+def test_tray_scale_check_uses_the_enclosing_rectangle():
+    """A correct, axis-aligned tray outline sampled unevenly must not raise scale_mismatch
+    (found when rehearsing benchmark v3: principal axes of hull vertices overstate extents)."""
+    import math as _m
+    poly = np.array([[0.024, 0.113], [0.024, -0.07], [0.032, -0.082], [0.279, -0.082], [0.28, -0.014],
+                     [0.28, 0.094], [0.278, 0.109], [0.272, 0.113]])
+    best = None
+    for a in np.radians(np.arange(0.0, 90.0, 0.5)):
+        R = np.array([[_m.cos(a), -_m.sin(a)], [_m.sin(a), _m.cos(a)]])
+        q = poly @ R
+        e = (float(np.ptp(q[:, 0])), float(np.ptp(q[:, 1])))
+        best = e if best is None or e[0] * e[1] < best[0] * best[1] else best
+    assert abs(max(best) - 0.256) < 0.01 and abs(min(best) - 0.195) < 0.01
