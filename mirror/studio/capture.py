@@ -41,7 +41,26 @@ NEEDS_NEW_INPUT = {"print_scale_invalid": "reprint the target at 100% and measur
                    "views_disagree": "check identities and synchronisation, or film again"}
 HOW_TO_RESOLVE = {"mapping_unconfirmed": "confirm the object and its proxy (objects[].confirmed_by_person)",
                   "identity_uncertain": "confirm the reacquired track (identity_confirmations)",
-                  "ambiguous_event_interval": "set or confirm the event time (corrections)"}
+                  "ambiguous_event_interval": "set or confirm the event time (corrections)",
+                  # the destination tray: settled by the person's inputs, no new footage needed
+                  "tray_not_mapped": "map the tray: map an object as proxy tray (objects, with its measured inside "
+                                     "width and depth in real_dims) and draw its box in each camera (prompts), or enter "
+                                     "the tray region on the board (tray {center_xy, inner_half})",
+                  "tray_size_unsupported": "measure the tray's inside width and depth again and correct them (tray "
+                                           "inner_half, or the tray mapping's real_dims); supported 6-60 cm per side",
+                  "tray_footprint_assumed": "optional: measure the tray's inside width and depth with a ruler (tray "
+                                            "inner_half, or real_dims on the tray mapping); the catalogue size is used "
+                                            "until then"}
+# Which request settles a review item the person can resolve (the wizard shows this action).
+ACTIONS = {"mapping_unconfirmed": {"via": ["review"], "fields": ["objects[].confirmed_by_person", "objects[].proxy"]},
+           "identity_uncertain": {"via": ["review"], "fields": ["identity_confirmations"]},
+           "ambiguous_event_interval": {"via": ["review"], "fields": ["corrections"]},
+           "tray_not_mapped": {"via": ["inputs", "prompts"],
+                               "fields": ["objects[proxy=tray].real_dims.width|depth", "prompts[label=<tray label>]",
+                                          "tray.center_xy", "tray.inner_half"]},
+           "tray_size_unsupported": {"via": ["inputs"], "fields": ["tray.inner_half", "objects[proxy=tray].real_dims"]},
+           "tray_footprint_assumed": {"via": ["inputs"], "fields": ["tray.inner_half", "objects[proxy=tray].real_dims"],
+                                      "optional": True}}
 
 
 class CaptureError(ValueError):
@@ -167,7 +186,8 @@ class Capture:
         for i, r in enumerate(s.get("review") or []):
             review.append({**r, "index": i, "blocking": r["severity"] == "abstain" and not r.get("resolved"),
                            "how_to_resolve": NEEDS_NEW_INPUT.get(r["code"]) or HOW_TO_RESOLVE.get(r["code"]),
-                           "needs_new_input": r["code"] in NEEDS_NEW_INPUT})
+                           "needs_new_input": r["code"] in NEEDS_NEW_INPUT,
+                           "action": ACTIONS.get(r["code"])})
         return {"session_id": s.get("session_id"), "evidence_kind": s.get("evidence_kind"), "synthetic": s.get("synthetic"),
                 "mode": s.get("mode"), "calibration": cal, "poses": poses, "recalibration": s.get("recalibration"),
                 "camera_shift_px": s.get("camera_shift_px"), "sync": s.get("sync"), "mappings": mappings, "tray": s.get("tray"),
@@ -591,7 +611,7 @@ def options(limits_public: Optional[dict] = None) -> dict:
                        "pdf": ["calibration/mirror_charuco_v1_A4.pdf", "calibration/mirror_charuco_v1_Letter.pdf"]},
             "print_rule": {"bar_tolerance_mm": C.THRESHOLDS["print_bar_tolerance_mm"],
                            "square_tolerance_rel": C.THRESHOLDS["print_square_tolerance_rel"]},
-            "review": {"needs_new_input": NEEDS_NEW_INPUT, "how_to_resolve": HOW_TO_RESOLVE,
+            "review": {"needs_new_input": NEEDS_NEW_INPUT, "how_to_resolve": HOW_TO_RESOLVE, "actions": ACTIONS,
                        "identity_confirmation": "{object} confirms the whole track in every take; {camera, label, "
                                                 "from_frame} confirms from one frame of one clip"},
             "limits": limits_public, "model_calls": "none (person-drawn boxes + classical tracking)"}

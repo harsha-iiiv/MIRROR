@@ -364,3 +364,30 @@ def test_capture_options_and_review_shorthands(api, clip, monkeypatch):
     r = c.post(f"/api/capture/{cid}/review", json={"identity": [{"object": "mug", "confirmed": True, "seconds_spent": 3}]}).json()
     assert r["recorded"][0]["kind"] == "identity" and r["recorded"][0]["target"] == "top:mug@0"
     assert c.post(f"/api/capture/{cid}/review", json={"events": [{"id": "nope", "status": "confirmed"}]}).status_code == 422
+
+
+
+def test_tray_review_items_carry_the_right_action(api, clip, monkeypatch):
+    from mirror.capture import events as EV
+    from mirror.capture.session import CaptureSession, tray_review
+
+    def build(cap, paths):
+        region = EV.TrayRegion(center_xy=(0.1, 0.1), inner_half=(0.5, 0.1), footprint_source="assumed_proxy")
+        s = CaptureSession(synthetic=True, review=tray_review(None, []) + tray_review(region, []))
+        s.finalise_kind()
+        return s
+    monkeypatch.setattr(CP, "build", build)
+    c = api
+    cid = ready_capture(c, clip)["id"]
+    wait(c, c.post(f"/api/capture/{cid}/track").json())
+    items = {x["code"]: x for x in c.get(f"/api/capture/{cid}").json()["report"]["review"]}
+    assert set(items) == {"tray_not_mapped", "tray_size_unsupported", "tray_footprint_assumed"}
+    for code in ("tray_not_mapped", "tray_size_unsupported"):
+        assert items[code]["blocking"] and not items[code]["needs_new_input"] and items[code]["how_to_resolve"]
+    assert items["tray_not_mapped"]["action"]["via"] == ["inputs", "prompts"]
+    assert items["tray_size_unsupported"]["action"]["via"] == ["inputs"]
+    fa = items["tray_footprint_assumed"]
+    assert not fa["blocking"] and fa["action"]["optional"] and "ruler" in fa["how_to_resolve"]
+    assert c.post(f"/api/capture/{cid}/propose").status_code == 409
+    o = c.get("/api/capture/options").json()
+    assert "tray_not_mapped" in o["review"]["how_to_resolve"] and "tray_not_mapped" in o["review"]["actions"]

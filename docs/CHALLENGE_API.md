@@ -246,6 +246,11 @@ the last run predates the current inputs; `missing` lists what tracking still ne
   needs_new_input], gate_open, track_sources, model_calls}`. `GET .../session` returns the same session.
 * `GET /api/capture/options` → proxy catalogue (`proxies`, `proxy_choices`, `dimension_sources`), clip
   `roles` per mode, `target` geometry and PDFs, `print_rule`, review guidance, capture upload `limits`.
+* Each `report.review[]` item has `blocking`, `how_to_resolve`, `needs_new_input` (new clips or
+  measurements) and `action {via [review|inputs|prompts], fields, optional?}`. Tray items:
+  `tray_not_mapped` (blocking: map an object as proxy `tray` with measured inside width/depth and draw its
+  box, or enter `tray {center_xy, inner_half}`), `tray_size_unsupported` (blocking: re-measure, 6-60 cm
+  per side), `tray_footprint_assumed` (not blocking: catalogue size used until measured).
 * `report.reacquisitions [{object, t_start, t_end, reference_camera}]`: where a track was lost and found
   again, for the identity question.
 * `POST /api/capture/{cid}/review` records each action with the time spent (`review_log`, `effort`) and
