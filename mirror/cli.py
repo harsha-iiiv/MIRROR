@@ -449,7 +449,11 @@ def cmd_doctor(args, out: Out) -> int:
         ok = ok and (good or not required)
         rows.append(("ok" if good else ("FAIL" if required else "warn"), name, detail))
 
+    from mirror import glbackend
+    glbackend.apply(glbackend.default_backend())   # before mujoco is first imported
     check("python", sys.version_info >= (3, 10), sys.version.split()[0])
+    good, detail = glbackend.probe_context()
+    check("rendering backend", good, f"{glbackend.describe()}; {detail}", required=False)
     try:
         import mujoco
         check("mujoco", True, mujoco.__version__)

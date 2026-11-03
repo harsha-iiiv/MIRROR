@@ -1,5 +1,6 @@
 """Video observations (Muse Spark / Muse Wonder) and their optional use in proposals."""
 import gzip
+import subprocess
 from pathlib import Path
 
 import httpx
@@ -83,6 +84,28 @@ def test_frame_sampling_and_slowing():
         f.write(_slowed(CLIP, 4.0))
         f.flush()
         assert abs(video_duration(f.name) - 4 * video_duration(CLIP)) < 0.3
+
+
+def test_slowing_keeps_every_frame_once():
+    """Frame count and rate are fixed explicitly, so the result is the same with
+    every ffmpeg build (6.x duplicated frames, 7.x dropped the last duration)."""
+    import tempfile
+    from fractions import Fraction
+
+    from mirror.interpret.video_observe import _slowed, frame_rate, video_duration
+
+    def nb_frames(p):
+        out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_frames", "-show_entries",
+                              "stream=nb_read_frames", "-of", "default=nw=1:nk=1", str(p)],
+                             capture_output=True, text=True, stdin=subprocess.DEVNULL)
+        return int(out.stdout.strip())
+    for factor in (4.0, 2.5):
+        with tempfile.NamedTemporaryFile(suffix=".mp4") as f:
+            f.write(_slowed(CLIP, factor))
+            f.flush()
+            assert nb_frames(f.name) == nb_frames(CLIP)
+            assert frame_rate(f.name) == frame_rate(CLIP) / Fraction(factor)
+            assert abs(video_duration(f.name) - factor * video_duration(CLIP)) < 1e-3
 
 
 def test_rescale_and_timing_errors():

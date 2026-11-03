@@ -24,9 +24,28 @@ def test_top_view_prompts_each_match_one_object():
 
 
 def test_verification_is_recorded_and_can_reject():
-    ps = choose_prompts(FX / "ref_top_frame0.png", "muse-spark-1.3", _replay(), verify=True)
+    # The recording is keyed on the exact PNG bytes sent. PNG encoding depends on the
+    # zlib build (zlib vs zlib-ng give identical pixels, different bytes), so replay
+    # sends the stored annotated image; the next test checks its pixels are what
+    # _outlined draws on this platform.
+    ps = choose_prompts(FX / "ref_top_frame0.png", "muse-spark-1.3", _replay(), verify=True,
+                        verify_image=(FX / "ref_top_frame0_outlined.png").read_bytes())
     wall = next(c for c in ps.choices if c.kind == "wall")
     assert wall.verified is False and not wall.ok  # a correct box the model rejected (see status note)
+
+
+def test_outlined_image_pixels_match_the_stored_image():
+    import io
+
+    import numpy as np
+    from PIL import Image
+
+    from mirror.interpret.sam_prompts import _outlined, first_frame
+    ps = choose_prompts(FX / "ref_top_frame0.png", "muse-spark-1.3", _replay())
+    cand = [c for c in ps.choices if c.ok and c.box]
+    drawn = Image.open(io.BytesIO(_outlined(first_frame(FX / "ref_top_frame0.png"), cand))).convert("RGB")
+    stored = Image.open(FX / "ref_top_frame0_outlined.png").convert("RGB")
+    assert np.array_equal(np.asarray(drawn), np.asarray(stored))
 
 
 def test_side_view_unique_but_wrong_is_possible():

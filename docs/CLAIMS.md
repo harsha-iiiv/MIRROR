@@ -55,6 +55,11 @@ not cover keep their freedom. Evaluation numbers are in
 * **Outcome-level reproduction, not bit-exact.** An isolated, network-blocked
   replay at the audited commit reproduced all 95 Muse-registration scene hashes,
   statuses and violation-free outcomes; one bead-loss count differed (6 vs 2).
+  Across CPU architectures physics is not bit-identical either: the sim golden
+  rollout (recorded on Linux x86_64) re-run on macOS arm64 (Apple M3 Pro) gives
+  the same status, steps, events, phases, contact pairs and beads in the cup, with
+  object positions up to 8.4e-5 m and bead positions up to 3.3 mm apart.
+  Registered evaluations were run on Linux x86_64 only.
 * **The video benchmark's tilt check is not informative.** True cup tilt stays
   at or below 0.3° in all 20 registered clips, so a constant-zero estimate beats
   the reported 2.0°. Position error is computed only for estimates within 5 cm of

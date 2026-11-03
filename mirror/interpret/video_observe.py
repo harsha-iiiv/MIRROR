@@ -17,6 +17,7 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+from fractions import Fraction
 from pathlib import Path
 from typing import Literal, Optional, Union
 
@@ -145,12 +146,35 @@ The input is a sequence of still frames from the video, in time order, each
 preceded by its time in seconds. Use those times for events and cues."""
 
 
+def frame_rate(path: Union[str, Path]) -> Optional[Fraction]:
+    """The video stream's frame rate as an exact fraction (ffprobe r_frame_rate)."""
+    try:
+        out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+                              "stream=r_frame_rate", "-of", "default=nw=1:nk=1", str(path)],
+                             capture_output=True, text=True, timeout=30, stdin=subprocess.DEVNULL)
+        r = Fraction(out.stdout.strip().splitlines()[0])
+        return r if r > 0 else None
+    except (OSError, ValueError, IndexError, ZeroDivisionError, subprocess.TimeoutExpired):
+        return None
+
+
 def _slowed(path: Path, factor: float) -> bytes:
-    """The same video played ``factor`` times slower (every frame kept, no audio)."""
+    """The same video played ``factor`` times slower: every frame kept exactly
+    once, each shown ``factor`` times longer, no audio.
+
+    The output frame rate is set explicitly (input rate / factor). Without it the
+    result depends on the ffmpeg build: 6.x keeps the input rate and duplicates
+    frames (a 2.0 s clip slowed 4x came out 7.75 s), 7.x writes variable rate and
+    drops the last frame's duration (7.0 s)."""
     import tempfile
+    rate = frame_rate(path)
+    if rate is None:
+        raise RuntimeError(f"could not read the frame rate of {path}")
+    out_rate = rate / Fraction(factor).limit_denominator(1000)
     with tempfile.TemporaryDirectory() as d:
         out = Path(d) / "slow.mp4"
         p = subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(path), "-vf", f"setpts={factor}*PTS",
+                            "-r", f"{out_rate.numerator}/{out_rate.denominator}",
                             "-an", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
                             "-movflags", "+faststart", str(out)], capture_output=True, timeout=600,
                            stdin=subprocess.DEVNULL)

@@ -1,0 +1,6 @@
+{
+ "system": "Linux",
+ "machine": "x86_64",
+ "mujoco": "3.17.0",
+ "note": "Platform the golden files were recorded on. Bit-level comparison (atol 1e-7) applies only here; other platforms compare outcomes (see tests/sim/test_bookkeeping.py and docs/REPRODUCIBILITY.md)."
+}
