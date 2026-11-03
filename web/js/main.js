@@ -8,6 +8,8 @@ import { fmtT, statusLabel, sceneLabel, latest, cupOutcome, isAux, isBlockedScen
 import { PANELS, STEPS, stepState, correctionVersion, StoryBar, AboutPanel } from './panels.js';
 import { VideoPane, ModelsPanel } from './media.js';
 import { OverviewPanel } from './overview.js';
+import { ChallengePanel } from './challenge.js';
+import { recordIdFromUrl } from './challenge_state.js';
 import { correctionStory } from './story.js';
 import { demoSource, videoMediaKind, demoEvidence, tiltStatusAt } from './provenance.js';
 import { generationId, rolloutCacheKey, isStale, latestOnly, DROPPED } from './identity.js';
@@ -97,6 +99,8 @@ function App() {
   const liveStatus = useLiveStatus();
   const [noteHidden, setNoteHidden] = useState(false);
   const toggleStory = (on) => { localStorage.setItem('mirror-story', on ? 'on' : 'off'); setStory(on); };
+  const [stageOverride, setStageOverride] = useState(null);   // challenge mode drives the stage itself
+  const editHandler = useRef(null);
   const viewerRef = useRef(null);
 
   // Start with the reference demonstration loaded.
@@ -112,7 +116,8 @@ function App() {
   useEffect(() => {
     if (!snap || step) return;
     const asked = new URLSearchParams(location.search).get('step');
-    if (asked && (asked === 'overview' || STEPS.some((s) => s.key === asked))) { setStep(asked); return; }
+    if (recordIdFromUrl(location.search)) { setStep('challenge'); return; }
+    if (asked && (asked === 'overview' || asked === 'challenge' || STEPS.some((s) => s.key === asked))) { setStep(asked); return; }
     if (correctionStory(snap)) { setStep('overview'); return; }
     if (api.isStatic) { setStep('watch'); return; }
     setStep(snap.evaluation ? 'evidence' : snap.specs.length ? 'interpret' : 'watch');
@@ -164,12 +169,15 @@ function App() {
   const cur = step || 'watch';
   if (api.isStatic && snap) api.prefetch(prefetchFor(snap, cur), (id) => rolloutCacheKey(snap, id));
   const sstate = stepState(snap);
-  const display = chooseDisplay(snap, cur, pick, tool);
+  const display = (cur === 'challenge' && stageOverride) || chooseDisplay(snap, cur, pick, tool);
   const ctx = {
-    snap, step: cur, setStep: (s) => { setStep(s); setPick(null); setTool(null); }, pick, setPick, busy: busyLive, action,
+    snap, step: cur, setStep: (s) => { setStep(s); setPick(null); setTool(null); if (s !== 'challenge') setStageOverride(null); }, pick, setPick, busy: busyLive, action,
     tool, setTool, viewer: viewerRef, display, isStatic: api.isStatic, error, setError, story, toggleStory,
+    setStageOverride, setEditHandler: (fn) => { editHandler.current = fn; }, editHandler,
+    openChallenge: () => { setStep('challenge'); setPick(null); setTool(null); },
+    challengeLive: !api.isStatic,
   };
-  const Panel = cur === 'overview' ? OverviewPanel : PANELS[cur];
+  const Panel = cur === 'overview' ? OverviewPanel : cur === 'challenge' ? ChallengePanel : PANELS[cur];
   const hasStory = !!correctionStory(snap);
 
   return html`
@@ -183,6 +191,8 @@ function App() {
             <button aria-current=${cur === s.key ? 'step' : null} class=${sstate[s.key]?.done ? 'done' : ''}
               disabled=${!sstate[s.key]?.enabled} onClick=${() => ctx.setStep(s.key)}
               title=${s.title} aria-label=${`Step ${i + 1}: ${s.short}`}><span class="ix" aria-hidden="true">${i + 1}</span><span class="lbl">${s.short}</span></button>`)}
+          <button aria-current=${cur === 'challenge' ? 'step' : null} class="challenge" onClick=${() => ctx.openChallenge()}
+            title=${api.isStatic ? 'A recorded challenge, step by step' : 'Change a layout and correct a rule yourself'} aria-label="Challenge"><span class="ix" aria-hidden="true">⚑</span><span class="lbl">Challenge</span></button>
         </nav>
         <div class="top-right">
           <${LiveSwitch} status=${liveStatus} />
@@ -199,7 +209,7 @@ function App() {
         ? `The simulator packages are not available (${snap.missing_packages.slice(0, 3).join(', ')}${snap.missing_packages.length > 3 ? ', …' : ''}), so`
         : 'The studio was started on fixtures, so'} motion here is key-framed for interface development. It is not evidence.` : ''}
         ${!noteHidden ? html`<${LiveNote} status=${liveStatus} onClose=${() => setNoteHidden(true)} />` : ''}</div>
-      ${story && cur !== 'overview' ? html`<${StoryBar} ctx=${ctx} />` : ''}
+      ${story && cur !== 'overview' && cur !== 'challenge' ? html`<${StoryBar} ctx=${ctx} />` : ''}
       ${about ? html`<${AboutPanel} ctx=${ctx} onClose=${() => setAbout(false)} />` : ''}
       ${models ? html`<${ModelsPanel} ctx=${ctx} onClose=${() => setModels(false)} />` : ''}
       <main class="main">
@@ -345,6 +355,7 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
   editRef.current = ctx;
   function onEdit(e) {
     const c = editRef.current;
+    if (c.editHandler?.current) { c.editHandler.current(e); return; }
     let edit = null;
     if (e.kind === 'tray') edit = { tray: { x: e.x, y: e.y } };
     else if (e.kind === 'object') edit = { object: { id: e.id, x: e.x, y: e.y } };
@@ -368,8 +379,8 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
   // Load what the stage should show.
   // Keys combine the generation with immutable artifact ids and hashes, never bare run numbers.
   const gen = generationId(snap);
-  const k1 = display.kind === 'scene' ? '' : rolloutCacheKey(snap, display.id);
-  const k2 = display.ghost ? rolloutCacheKey(snap, display.ghost) : '';
+  const k1 = display.kind === 'scene' ? '' : display.cacheKey || rolloutCacheKey(snap, display.id);
+  const k2 = display.ghost ? display.ghostKey || rolloutCacheKey(snap, display.ghost) : '';
   const key = display.kind === 'scene' ? `scene:${gen}:${snap.scene?.scene_id}:${snap.revision}` : `${k1}||${k2}`;
   useEffect(() => {
     const v = viewerRef.current;
@@ -384,8 +395,10 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
     }
     (async () => {
       try {
-        const p = await api.getRollout(display.id, k1, gen);
-        const g = display.ghost ? await api.getRollout(display.ghost, k2, gen) : null;
+        // Shared records and the tour bring their own loader (their runs are stored with the record).
+        const load = display.load || ((id, key) => api.getRollout(id, key, gen));
+        const p = await load(display.id, k1);
+        const g = display.ghost ? await load(display.ghost, k2) : null;
         if (cancelled) return;
         if (!p.t || !p.t.length) {
           setPayload(p);
@@ -452,7 +465,7 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
         ${payload?.t?.length ? html`<div class="v-legend">
           <span><i class="grad"></i><span class="long">container path by tilt: within ${15}° → over</span><span class="short">cup path by tilt</span></span>
           ${viewerRef.current?.hasUnobservedTilt ? html`<span><i style="background:var(--faint)"></i>tilt not observed</span>` : ''}
-          ${ghostOn && opts.ghost ? html`<span><i style="background:var(--faint)"></i><span class="long">${ghostText(snap, display.ghost)}</span><span class="short">before (v${(snap.rollouts || []).find((r) => r.id === display.ghost)?.spec_version ?? '?'})</span></span>` : ''}
+          ${ghostOn && opts.ghost ? html`<span><i style="background:var(--faint)"></i><span class="long">${display.ghostLabel || ghostText(snap, display.ghost)}</span><span class="short">${display.ghostLabel || `before (v${(snap.rollouts || []).find((r) => r.id === display.ghost)?.spec_version ?? '?'})`}</span></span>` : ''}
           ${payload.beads_hidden ? html`<span>beads not recorded in demo trace</span>`
             : html`<span><i style="background:#ff2bd6;border-radius:50%;width:8px;height:8px"></i><span class="long">beads, drawn enlarged at their true positions</span><span class="short">beads (enlarged)</span>${(() => {
               const off = t >= 0 ? viewerRef.current?.beadsOffTable?.() || 0 : 0;
