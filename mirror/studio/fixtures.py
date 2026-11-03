@@ -575,7 +575,9 @@ class FixtureSession(Session):
             plans.append((o.id, _route_keys(o, (tx, ty), slot_center, around_y, tilt)))
         return plans, slot_center, around_y, wall
 
-    def run(self, *, spec_version=None, condition="", frame_hz=30.0):
+    def run(self, *, spec_version=None, condition="", frame_hz=30.0, backend="gripper"):
+        if backend != "gripper":
+            raise ValueError(f"the {backend} backend needs the live simulator; the fixture backend has no physics")
         spec = self.spec_version(spec_version)
         enforced = {c.id for c in spec.enforced_constraints()}
         has_slot = bool(any(o.kind == "wall" and o.slots for o in self.scene.obstacles))

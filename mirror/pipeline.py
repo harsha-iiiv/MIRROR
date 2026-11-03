@@ -43,12 +43,13 @@ class RolloutEntry:
     content_sha256: str = ""
     label: str = ""
     kind: str = "r"
+    backend: str = "gripper"            # mirror.backends: gripper (baseline) | arm
 
     def lineage(self) -> dict:
         return {"rollout_id": self.rollout_id, "generation_id": self.generation_id,
                 "spec_version_id": self.spec_version_id, "spec_sha256": self.spec_sha256,
                 "scene_sha256": self.scene_sha256, "content_sha256": self.content_sha256,
-                "label": self.label, "kind": self.kind}
+                "label": self.label, "kind": self.kind, "backend": self.backend}
 
 
 @dataclass
@@ -327,15 +328,26 @@ class Session:
         return scene
 
     def run(self, *, spec_version: Optional[int] = None, condition: str = "",
-            frame_hz: float = 30.0) -> RolloutEntry:
+            frame_hz: float = 30.0, backend: str = "gripper") -> RolloutEntry:
+        """Plan and execute the specification on the current scene.
+
+        ``backend`` (mirror.backends): ``gripper`` (default, the free-flying gripper baseline)
+        or ``arm`` (articulated UR arm carrying the same gripper). Both use the same planner
+        and the same independent checker; the entry records which one ran."""
         from .evaluate import check
-        from .plan import plan as make_plan
-        from .sim import SimEnv
         spec = self.spec_version(spec_version)
         scene = self.scene
         t0 = time.time()
-        plan_result = make_plan(spec, scene)
-        env = SimEnv(scene)
+        if backend == "gripper":
+            from .plan import plan as make_plan
+            from .sim import SimEnv
+            plan_result = make_plan(spec, scene)
+            env = SimEnv(scene)
+        else:
+            from .backends import get_backend
+            b = get_backend(backend)
+            plan_result = b.plan(spec, scene)
+            env = b.env(scene)
         visual = env.visual_scene()
         if plan_result.status != "ok":
             report = RolloutReport(rollout_id="", scene_id=scene.scene_id, spec_id=spec.spec_id,
@@ -357,9 +369,12 @@ class Session:
                 report.notes.append(result.reason)
             report.wall_time_s = time.time() - t0
             rollout, log = Rollout(report=report, visual=visual, frame_hz=frame_hz, frames=result.frames), result.log
+        if backend != "gripper":
+            report.notes.append(f"backend: {backend}")
         entry = self._register(rollout, log, plan_result, scene, spec, "r")
+        entry.backend = backend
         self._event("rollout", rollout_id=entry.rollout_id, status=entry.rollout.report.status,
-                    spec_version=spec.version, scene_id=scene.scene_id)
+                    spec_version=spec.version, scene_id=scene.scene_id, backend=backend)
         return entry
 
     def recheck_target(self, rollout_id: str, spec_version: Optional[int] = None,
@@ -489,7 +504,8 @@ class Session:
                                              **{k: lin.get(k, "") for k in ("rollout_id", "generation_id",
                                                                             "spec_version_id", "spec_sha256",
                                                                             "scene_sha256", "content_sha256",
-                                                                            "label", "kind")})
+                                                                            "label", "kind")},
+                                             backend=lin.get("backend") or "gripper")
                 if isinstance(log, dict):
                     entry.stats = log["stats"]
             return gen, demo, scene, specs, rollouts

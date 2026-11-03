@@ -66,6 +66,7 @@ class RunIn(BaseModel):
     spec_version: Optional[int] = None
     condition: str = ""
     tags: list[str] = []
+    backend: Optional[str] = None           # gripper (default baseline) | arm
 
 
 class SceneIn(BaseModel):
@@ -84,6 +85,11 @@ class ChallengeIn(BaseModel):
     seed: Optional[int] = None
     preset: Optional[str] = None
     edits: list[dict[str, Any]] = []
+    backend: Optional[str] = None
+
+
+class ChallengeExecuteIn(BaseModel):
+    backend: Optional[str] = None
 
 
 class ChallengeCorrectionIn(BaseModel):
@@ -365,7 +371,7 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
     def run(body: RunIn, svc: StudioService = Depends(session)):
         if not svc.session.specs:
             raise StudioError(409, "conflict", "interpret the demonstration first")
-        return guard(svc.run, body.spec_version, body.condition[:120], body.tags[:6]).public()
+        return guard(svc.run, body.spec_version, body.condition[:120], body.tags[:6], body.backend).public()
 
     @app.post("/api/recheck")
     def recheck(body: RecheckIn, svc: StudioService = Depends(session)):
@@ -476,7 +482,7 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
 
     @app.post("/api/challenge")
     def challenge_create(body: ChallengeIn, svc: StudioService = Depends(session)):
-        return guard(svc.challenge_create, body.family, body.seed, body.preset, body.edits).public()
+        return guard(svc.challenge_create, body.family, body.seed, body.preset, body.edits, body.backend).public()
 
     @app.get("/api/challenge/{cid}")
     def challenge_get(cid: str, svc: StudioService = Depends(session)):
@@ -496,8 +502,8 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
         return guard(svc.challenge_review, cid, body.accept, body.note)
 
     @app.post("/api/challenge/{cid}/execute")
-    def challenge_execute(cid: str, svc: StudioService = Depends(session)):
-        return guard(svc.challenge_execute, cid).public()
+    def challenge_execute(cid: str, body: Optional[ChallengeExecuteIn] = None, svc: StudioService = Depends(session)):
+        return guard(svc.challenge_execute, cid, body.backend if body is not None else None).public()
 
     @app.post("/api/challenge/{cid}/publish")
     def challenge_publish(cid: str, svc: StudioService = Depends(session)):
