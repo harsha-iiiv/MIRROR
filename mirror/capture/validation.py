@@ -108,8 +108,16 @@ def score_clip(s: CaptureSession, labels: ClipLabels, *, design: Optional[dict] 
             if tr is None:
                 rest_err.append(np.inf)
                 continue
-            idx = [k for k, (p, st) in enumerate(zip(tr.pos, tr.pos_status)) if p is not None and st == "measured" and tr.resting[k]]
-            idx = idx[: max(1, len(idx) // 4)] if which == "start" else idx[-max(1, len(idx) // 4):]
+            moving = [k for k, r in enumerate(tr.resting) if r is False]
+            if which == "start":
+                window = range(0, moving[0] if moving else len(tr.t))
+            else:
+                window = range(moving[-1] + 1 if moving else 0, len(tr.t))
+            idx = [k for k in window if tr.pos[k] is not None and tr.pos_status[k] == "measured" and tr.resting[k]]
+            if not idx:   # e.g. partly hidden by the tray walls: use inferred rest positions and say so
+                idx = [k for k in window if tr.pos[k] is not None and tr.pos_status[k] == "inferred" and tr.resting[k]]
+                if idx:
+                    out.setdefault("notes", []).append(f"{obj} {which} rest position from partly hidden (inferred) frames")
             if not idx:
                 rest_err.append(np.inf)
                 continue
@@ -190,6 +198,14 @@ def score_clip(s: CaptureSession, labels: ClipLabels, *, design: Optional[dict] 
             valid = float(np.mean([r[1] <= r[0] + T["tilt_lower_bound_slack_deg"] for r in lb]))
             res["lower_bound_valid_rate"] = valid
             check(f"tilt_lower_bound_valid[{obj}]", round(valid, 3), T["tilt_lower_bound_valid_min"], valid >= T["tilt_lower_bound_valid_min"])
+        tilted = [r for r in rows if r[0] >= 5.0]
+        if tilted:
+            tt = np.array([r[0] for r in tilted])
+            to = [r for r in tilted if r[2] == "measured"]
+            res["tilted_frames"] = {"n": len(tilted), "observed": len(to),
+                                    "constant_zero_median_abs_err_deg": float(np.median(tt)),
+                                    "estimate_median_abs_err_deg": float(np.median([abs(r[1] - r[0]) for r in to])) if to else None,
+                                    "note": "frames whose reference tilt is at least 5 degrees"}
         res["note"] = ("tilt not observed is reported as unobserved (an abstention), never as upright; "
                        "the constant-zero baseline is shown for comparison")
         out.setdefault("tilt", {})[obj] = res
