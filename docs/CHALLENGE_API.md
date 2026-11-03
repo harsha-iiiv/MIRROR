@@ -115,14 +115,27 @@ conservatively because a frozen design names them). Anything else: 403 `evaluati
 * `GET /api/challenge/{cid}` → `{id, state, generation_id, scene {family, split, seed, edits, scene_id,
   content_sha256, scene}, base_spec_version_id, before, proposal, revised_spec_version_id, rechecks,
   after, record_id}`. States: `preparing → scene_ready → proposed → reviewed → executed → published`.
-* `POST /api/challenge/{cid}/correction {text | transcript_id}` → job; nothing is committed. Result
-  `proposal {text, input typed|spoken|spoken_edited, changed, ops, diff {added, changed, removed},
-  scope {objects, phases, kinds, items, unaffected_objects}, question, options, rejected, provenance,
-  step_provenance, fallback_reason, trial_id}`.
+* `POST /api/challenge/{cid}/correction {text | transcript_id, focus_kind?}` → job; nothing is committed.
+  `focus_kind` (cup|block|marker) is the object the visitor selected: words outside the lexicon (for
+  example "the coffee") resolve only through it, recorded in `alias`; otherwise a question is asked.
+  Result `proposal {text, input typed|spoken|spoken_edited, outcome apply|clarify|refuse|revert,
+  reason_code, message, interpretation, supported_changes, alias, interpreter, prompt_revision,
+  model_calls, changed, ops, diff {added, changed, removed}, scope {objects, phases, kinds, items,
+  unaffected_objects}, question, options, rejected, provenance, step_provenance, fallback_reason,
+  trial_id}` (live backend: from `mirror.interpret.outcome.interpret`; vague input asks which measurable
+  requirement is meant, unsupported input is refused with the supported changes listed).
 * `POST /api/challenge/{cid}/review {accept, note}` → accept commits the version (409 if the spec moved)
   and re-checks the prior behaviour and every rollout of the generation from step logs
   (`rechecks[]` with `is_before`, `was`, `status`, `violations`, `step_provenance` kind `new_check`).
 * `POST /api/challenge/{cid}/execute` → job; result `{after_rollout_id, status, step_provenance}`.
+  Every rollout brief (`before`, `after`, `rechecks[]`) carries `planning_outcome {kind planned |
+  proven_infeasible | no_route_found | invalid_specification | error, headline, detail, assumptions,
+  not_covered}` (show `headline` verbatim; "Proven infeasible under these stated assumptions" only with
+  a valid certificate, never a physical-safety claim) and `rule_results[]` (per-rule verdict
+  satisfied | violated | unknown | not_applicable | not_evaluated). Status may be `unverified` when a
+  confirmed rule could not be checked (label it "Not verified").
+* `GET /api/challenge/options` also returns `correction.supported_changes` (plain-language list) and
+  `correction.matrix` (`mirror.rules_support.matrix()`).
 * `POST /api/challenge/{cid}/publish` → `{record_id, share_path: "?challenge=<record_id>"}`.
 * `GET /api/records/{record_id}` and `/api/records/{record_id}/rollouts/{rollout_id}` need no session.
   `record_id` = first 16 hex of the SHA-256 of the canonical record, so a URL resolves only to that
