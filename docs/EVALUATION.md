@@ -1,6 +1,96 @@
 # Evaluation
 
-## Question
+## Scope of each result
+
+Read every number below with its scope. The table says what varied between
+trials and what was fixed.
+
+| Result | What was new in each trial | What was fixed (reused in every trial) | What it supports | What it does not support |
+|---|---|---|---|---|
+| First and second pre-registered evaluations (60 fresh + 30 shortcut layouts each; 5 blocked layouts reported separately) | The layout: wall, slot, tray and object positions, generated after the freeze | One demonstration, one correction sentence, one compiled specification pair (original and corrected), planner, controller, checker | One compiled correction changes executed behaviour and carries to layouts it was not compiled on, without spreading to objects it does not name, under this planner's objective | Interpretation of 90 new demonstrations; 90 independent tests of language understanding; that Muse Spark caused the improvement (the pair must equal the offline-rule pair); the same failure rate under another planner objective; other corrections; other tasks |
+| Correction-compiler benchmark, development model and offline rules, first run of the frozen set (44 cases) and the held-out set (28 cases) | The sentence | Base specification, scene | Single-sentence compilation accuracy on cases intended to be unseen by that interpreter (the record does not establish the freeze order; see F-A5) | Multi-turn corrections, independent authors, new scenes, pre-registration |
+| Correction-compiler benchmark, Muse Spark rows (44/44, 27/28) | Only the model (swapped after development) | The same two case sets, already seen during development; prompt revision 3, tuned on the development model | That Muse Spark handles these known cases with the current prompt | A blind or held-out accuracy for Muse Spark |
+| Spoken corrections (288 clips) | Synthetic voice and noise condition | The 72 benchmark sentences | Transcription does not degrade compilation on clean synthetic speech | Real speakers |
+| Perception robustness, video to specification | Rendered frames and videos of new simulated layouts | Simulator renders, known kit geometry and camera intrinsics | Measured perception limits on rendered video | Camera footage, people, other objects; tilt estimation (true tilt at most 0.3°); unconditional position accuracy |
+
+A genuinely fresh authoring evaluation (independent authors, new wording,
+multi-turn, baselines, every attempt counted) is specified in
+[protocols/v3_authoring.md](protocols/v3_authoring.md). It has **not yet been
+run**; no result from it exists.
+
+## Audit findings and narrowed claims (2 November 2026)
+
+An audit of commit `7be0be7` (items F-A1 to F-A3 and F-A5 confirmed on `1787aa6`)
+found five places where the published wording claims more than the evidence
+shows. No original output is changed; corrected derived summaries go to new,
+versioned paths. Items marked **PENDING** wait for work in progress and have
+no result yet.
+
+**F-A1, planner objective.** The planner picks the cheapest route, with route
+cost = path length + 0.05 m per radian of gripper rotation
+(`PlannerConfig.rotation_penalty`). The audit's plan-only sweep over 90 frozen
+layouts found tilted cup routes on 54 at 0.05 m/rad, 32 at 0.10, 2 at 0.20 and 0
+at 0.40 and 1.0 (planned, not executed). In the stored reports of both
+registrations, in 110 of the 113 pairs where the two specifications disagreed
+on violation-free success, the corrected (upright) run finished sooner in
+simulation (median 3.6 s shorter): the shortest route is not the fastest. The
+original-specification failure rates (27/60, 4/30, 33/60, 3/30) therefore
+belong to this objective; a planner that never tilts would spill nothing. The
+corrected rule still did what it says in every trial, but the size of the
+improvement is not a property of MIRROR in general.
+**PENDING (track `baseline`):** a new registration that executes a
+rotation-cost sweep (0.05, 0.10, 0.20, 0.40, 1.0 and a value calibrated to
+measured execution time on development layouts) and a never-tilt baseline with
+the same controller and physics, reporting completion, violations, beads kept,
+path cost and execution time.
+
+**F-A2, model contribution.** `mirror/evaluate/specs.py` refuses to run unless
+the replayed model specification equals the offline-rule specification. This is
+kept as a deterministic regression check and labelled so. It means the
+layout results would be identical with the offline rules alone; they do not
+show that Muse Spark caused the improvement. The Muse Spark correction-benchmark
+rows are post-hoc, on cases seen in development, and are not a fresh external
+holdout. A separate language-understanding evaluation is prepared, not run:
+[protocols/v3_language.md](protocols/v3_language.md).
+
+**F-A3, video benchmark.** In all 20 registered clips the cup's true tilt stays
+at or below 0.3° (0.217° to 0.297°, from the stored traces), so a constant-zero
+estimate beats the reported 2.0° median error: the tilt check cannot show
+tilt estimation. `bench_video.frame_errors` computes position error only for
+estimates within 5 cm of the truth, so 0.72 cm is conditional on detection, not
+overall localisation accuracy. **PENDING (track `reanalysis`):** unconditional
+error distributions, constant-zero and simple classical baselines, and missing
+detections, outliers and identity errors reported separately, from the
+existing outputs. **PENDING (track `perception`):** a new video benchmark design
+with substantial, varied tilt and the same baselines, awaiting budget.
+
+**F-A4, robustness denominators.** The near-zero median IoU change includes
+objects no phrase was chosen for (IoU 0 before and after the edit).
+**PENDING (track `reanalysis`):** prompted and evaluated object counts,
+detection-conditional and unconditional scores, missing detections and
+geometry-changing edits, next to the failed found-rate checks and the cup's
+segmentation failures.
+
+**F-A5, correction-benchmark chronology.** The held-out case file says
+`frozen_at` 2026-10-31T04:45:00-07:00, but its results file says `generated_at`
+2026-10-31T11:27:50Z (04:27:50 PDT), 17 minutes earlier. The frozen set's
+`frozen_at` (04:25 PDT) is also later than its results (11:22:31Z, 04:22:31
+PDT). A contemporaneous project log reports the frozen set at 04:21:15 PDT and
+the held-out set at 04:27:37 PDT, which bound when those events were reported,
+not when they happened. This is not by itself evidence of leakage, but the
+record does not establish that either set was fixed before its first run, so
+pre-registration of the correction benchmark is not claimed.
+**PENDING (track `reanalysis`):** a timeline from file, cassette, ledger,
+usage-log and commit times, with linked code, model and prompt versions and
+immutable manifests.
+
+**Positive evidence.** An isolated, network-blocked replay at the audited commit
+reproduced all 95 Muse-registration scene hashes, statuses and violation-free
+outcomes. One bead-loss count differed (6 vs 2). This is reproduction at the
+outcome level, not bit-exact determinism. The README results table is
+recomputed from the stored reports by a test (`tests/release`).
+
+## Question (first and second registrations)
 
 Does a single confirmed correction ("this container must remain upright
 throughout transport") change executed behaviour and improve compliance on
@@ -14,7 +104,9 @@ objects it does not cover?
   specification plus the reference correction (cup upright during
   transport, 15° tolerance). Both are produced from the recorded interpreter
   responses and must agree with the offline rules on the enforced
-  constraints.
+  constraints. That agreement is a deterministic regression check on the
+  recordings; it also means these results do not show what the model
+  contributes (see F-A2 below).
 * **Pairing.** Each seed defines one initial scene. Both conditions run from
   that identical state with the same planner, controller and simulator
   configuration.
@@ -124,7 +216,10 @@ evaluation layout was generated; full report in
   by the frozen runner.
 
 What this does not show: behaviour outside this task family, with other
-corrections, or on physical hardware. These specifications were produced from
+corrections, or on physical hardware. It also does not measure how often a
+correction is understood: the demonstration was interpreted once and the
+correction compiled once, before the freeze, and that one pair was run on every
+layout. These specifications were produced from
 recorded development-model responses (the offline rules produce the same
 enforced constraints); the second registration below repeats the evaluation
 with specifications compiled by Muse Spark.
@@ -161,6 +256,24 @@ commit with the same runtime. Both attempts are in its ledger. Details:
 Reproduce: `git checkout 864060d`, then
 `python scripts/run_eval.py final --registration muse --workers 2` in a scratch
 clone (it writes its outputs and ledger entries into `results/eval_muse`).
+
+
+## Correction-compiler benchmark (not pre-registered as an evaluation)
+
+Single sentences compiled against one base specification in the shortcut scene;
+exact match of outcome and resulting enforced state. Full table and per-case
+results: [`results/corrections_benchmark_summary.md`](../results/corrections_benchmark_summary.md).
+
+| Rows | Exact | How to read it |
+|---|---|---|
+| Frozen set (44), first run, prompt revision 1: offline rules / development model (`gpt-5.5`) | 38/44 / 42/44 | Intended blind; the file's `frozen_at` is later than the results (F-A5) |
+| Held-out set (28), written after the offline fixes, prompt revision 1: offline rules / development model | 21/28 / 27/28 | Intended blind; the record does not establish that the set was frozen before this run (F-A5) |
+| Later prompt revisions and offline fixes | see summary | Post-change measurements on cases already seen |
+| Muse Spark (`muse-spark-1.3`), frozen / held-out | 44/44 / 27/28 | **Post-hoc model swap.** Both sets had been seen in development and prompt revision 3 was tuned on the development model. Not blind, not held-out for Muse Spark, not a fresh external holdout |
+
+The benchmark has no multi-turn cases, no independent authors and one scene. Its
+"held-out" set was written by the same team that wrote the frozen set. The v3
+protocol addresses these gaps; it has not been run.
 
 
 ## Third registration: spoken corrections
@@ -250,9 +363,12 @@ object, the cup's material), and under camera noise and blur?
 
 | Check (all edits, geometry kept, corrected) | Condition A | Condition B |
 |---|---|---|
-| Median IoU change ≥ −0.05 | met (−0.000) | met (0.000) |
+| Median IoU change ≥ −0.05 | met (−0.000)\* | met (0.000)\* |
 | Found rate ≥ 0.9 | **not met** (0.47) | **not met** (0.61) |
 | Median centroid error ≤ 4 px | met (0.67 px) | met (1.50 px) |
+
+\* Includes objects for which no phrase was chosen (0 before and after). Prompted
+and evaluated counts are **PENDING** (F-A4).
 
 * Uncorrected (A): median IoU change −0.001, centroid 1.93 px; the background
   edits lose 0.17 IoU uncorrected vs 0.04 corrected, so most of the apparent
@@ -350,10 +466,10 @@ at most 0.91, detection within 1 s at most 0.71 and equal specifications at most
 | Check (16 seeds) | Threshold | Result | |
 |---|---|---|---|
 | Objects found (within 5 cm, visible frames) | ≥ 0.95 | 0.886 | **not met** |
-| Median position error | ≤ 1.5 cm | 0.72 cm | met |
+| Median position error (estimates within 5 cm only) | ≤ 1.5 cm | 0.72 cm | met, conditional on detection (F-A3) |
 | Grasp/release detected within 1 s | ≥ 0.9 | 0.635 | **not met** |
 | Median timing error | ≤ 0.3 s | 0.65 s | **not met** |
-| Median cup tilt error (in-image vs true) | ≤ 5° | 2.0° | met |
+| Median cup tilt error (in-image vs true) | ≤ 5° | 2.0° | met, but uninformative: true tilt ≤ 0.3°, a constant zero scores better (F-A3) |
 | Same specification as from the true trace | ≥ 18 of 20 | 8 of 16 | **not met** |
 
 Two of six checks met. Same structure ignoring numeric limits (reported only):
@@ -383,8 +499,10 @@ lost the cup entirely. The report does not diagnose why. Seed 71002: found
 **Spend:** $10.44 (Muse Spark $2.71, SAM 3.1 $3.88, Muse Wonder $3.86), under
 the $14 cap; every call is in the ledger.
 
-**What this means.** On these rendered videos, perception is good at where
-things are and how the cup is tilted (0.72 cm, 2.0°), but not reliable enough
+**What this means.** On these rendered videos, where perception finds an
+object its position is close (0.72 cm, counted only within 5 cm), and the tilt
+number says nothing about tilt estimation because the cup stayed within 0.3° of
+upright (F-A3). Perception is not reliable enough
 about whether an object is present and when it is grasped or released
 (found 0.886, 0.635 of events within 1 s, median timing error 0.65 s), and on one seed
 it failed outright. The specification proposed from video matched the one from
@@ -393,3 +511,24 @@ yet replace the simulator trace that the main evaluations use. Both video models
 report events far less precisely than tracking (event F1 0.06 and 0.12 at
 0.5 s), so they are not a substitute for tracked event times either. Muse
 Wonder did not earn its higher cost and latency here.
+
+
+## Evidence provenance
+
+Different published artifacts draw on different registrations. None is relabelled
+as another.
+
+| Artifact | Source of the rollouts and numbers shown | Specification pair | Seeds |
+|---|---|---|---|
+| Studio site, evidence step | Second registration, loaded unchanged from `results/eval_muse` | Muse Spark (`muse-spark-1.3`), replayed | primary 50000–50059, shortcut 60000–60029, blocked 50000–50004 |
+| Studio site, live runs (with `?live=1`) | Development showcase layouts, run on request | whatever the visitor's session holds | dev 9000–9099 only; never evaluation seeds |
+| Demo film, side-by-side clip (seed 30002) and the nine-layout grid | First registration: these trials were re-run for rendering at 30 Hz with the frozen code and specifications; status, routes, beads in cup, maximum tilt and placement match the saved rollouts in `results/eval/primary` for every one | development model (`gpt-5.5`), replayed | 30002; 30000, 30002, 30004, 30005, 30006, 30008, 30010, 30012, 30015 |
+| Demo film, evidence cards | Numbers from `results/eval/report.json`, `results/eval_muse/report.json`, `results/eval_voice`, `results/eval_robustness`, `results/eval_video2` | as in each report | as in each report |
+| Demo film, Watch and Interpret steps | Recorded studio session: rendered simulator video of the reference demonstration, with recorded SAM 3.1 and Muse Spark outputs (no call while filming) | recorded Muse Spark proposal | reference demonstration only |
+| Demo film, spill, correction and corrected run | Reference scenes `ref_shortcut` and `ref_blocked`, not evaluation layouts. The spoken correction is a synthetic voice sample (not a person, not in any benchmark), transcribed by a recorded Muse Voice Transcribe call | the first registration's frozen specifications (development model, replayed) in the rendered clips; recorded Muse Spark responses in the studio shots | none |
+| README and this page | All registrations, each named in its own section | as named | as named |
+
+Both specification pairs enforce the same rules (`results/muse_spec_comparison.json`),
+so film clips from the first registration show the same rules the site
+evaluates, but they are rollouts of a different registration with different
+seeds. A film or page that shows a seed number should name its registration.

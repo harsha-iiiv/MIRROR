@@ -12,14 +12,17 @@ def _items(spec: TaskSpec) -> dict[str, tuple[str, dict[str, Any]]]:
     for kind, coll in (("goal", spec.goals), ("constraint", spec.constraints),
                        ("ordering", spec.ordering), ("uncertainty", spec.uncertainties)):
         for it in coll:
-            out[it.id] = (kind, it.model_dump(mode="json"))
+            val = it.model_dump(mode="json")
+            if kind == "ordering":   # defaults are omitted when serialised; show them in diffs
+                val["before_event"], val["after_event"] = it.before_event, it.after_event
+            out[it.id] = (kind, val)
     return out
 
 
 _FIELDS = {
     "goal": ("status", "object"),
     "constraint": ("status", "params", "phase", "applies_to", "description"),
-    "ordering": ("status", "before", "after"),
+    "ordering": ("status", "before", "after", "before_event", "after_event"),
     "uncertainty": ("status", "resolution"),
 }
 
