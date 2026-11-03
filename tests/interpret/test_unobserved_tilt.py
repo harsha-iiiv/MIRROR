@@ -42,3 +42,22 @@ def test_unobserved_carry_tilt_gets_a_question():
     t = _cup_rules(d, "transport")
     assert len(t) == 1 and t[0].lean == "unclear" and t[0].regularity_ids == []
     assert "not observed" in t[0].question and t[0].question.endswith("?")
+
+
+def test_no_carry_interval_but_ended_in_tray_gets_a_question():
+    """Regression (perception P3): 0 carry frames was treated as 'observed'."""
+    s, scene = _summary_with(carry_max_tilt_deg=None,
+                             observability={"tilt": {"carry_frames": 0, "carry_observed_frames": 0}})
+    regs = [r for r in s.regularities if not (r.object_kind == "cup" and r.kind.startswith("carry_"))]
+    s = s.model_copy(update={"regularities": regs})
+    assert next(o for o in s.objects if o.kind == "cup").ended_in_tray
+    t = _cup_rules(propose_offline(s, scene), "transport")
+    assert len(t) == 1 and t[0].lean == "unclear" and "not observed" in t[0].question
+
+
+def test_no_carry_interval_and_not_in_tray_asks_nothing():
+    from mirror.interpret.offline import _tilt_unobserved
+    s, _ = _summary_with(observability={"tilt": {"carry_frames": 0, "carry_observed_frames": 0}},
+                         ended_in_tray=None)
+    cup = next(o for o in s.objects if o.kind == "cup")
+    assert _tilt_unobserved(cup, "transport") is False

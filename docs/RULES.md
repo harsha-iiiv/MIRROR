@@ -88,6 +88,8 @@ rests closer than `min_m` (the transport phase begins at that resting pose), and
 Clearance from another object or from a region is not supported; the compiler asks a question instead. A
 clearance without a distance is also answered with a question, never a default.
 
+Planning margin: `PlannerConfig.clearance_tracking_margin` (metres, default 0) is added to `min_m` when planning transport and checking the tray spot; the checker still judges `min_m`. With the default 0 the gripper's plans are byte-identical to before (test: tests/plan/test_clearance_margin.py). The articulated arm backend sets 0.005 m (`mirror.arm.backend.CLEARANCE_TRACKING_MARGIN`) because it tracks its trajectory with a 2-3 mm lag; the planner notes the margin in the plan reason.
+
 ## Evidence sources
 
 - Dense step log (`dense_state_log`): every physics step; all monitors.

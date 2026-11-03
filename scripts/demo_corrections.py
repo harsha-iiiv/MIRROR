@@ -9,6 +9,12 @@ the independent checker judges. No model is called and no evaluation seed is
 touched (development seeds are below 10000; see TRANSFER_SEEDS).
 
     python scripts/demo_corrections.py [--out results/dev_v2/demo_corrections] [--cases a,b] [--quick]
+                                       [--rotation-penalty 0.2445]
+
+``--rotation-penalty`` sets PlannerConfig.rotation_penalty for every plan in
+the run (default: the planner default, 0.05 m/rad); the manifest records it
+and the platform. The blocked_refusal case (not run by default) uses the
+reference blocked scene and development blocked layouts BLOCKED_SEEDS.
 
 Outputs per case: summary.json (spec versions and diffs, rule verdicts,
 statuses, routes, timings, provenance) and the showcase rollouts (old and new)
@@ -48,7 +54,18 @@ from mirror.statelog import tilt_deg  # noqa: E402
 TRANSFER_SEEDS = [("mixed", 6200), ("mixed", 6201), ("mixed", 6202), ("shortcut", 6300), ("shortcut", 6301),
                   ("shortcut", 6302)]
 
+# Development blocked layouts (seeds below the evaluation base, so no ledger entry),
+# chosen before the first run that includes them.
+BLOCKED_SEEDS = [("blocked", 6400), ("blocked", 6401), ("blocked", 6402)]
+DEFAULT_CASES = ("object_scope", "phase_scope", "ordering", "ordering_start", "clearance", "multi_turn",
+                 "ambiguous", "unsupported")
+PLANNER_CONFIG = None   # set from --rotation-penalty in main()
+
 CASES = {
+    "blocked_refusal": dict(
+        title="Blocked layout: the corrected rule cannot be met; the planner refuses instead of spilling",
+        scene="blocked", turns=["Keep the cup upright the whole time it is carried."],
+        kind="blocked", watch=["cup_0"], seeds=BLOCKED_SEEDS),
     "object_scope": dict(
         title="Object-specific scope: only the cup must stay upright while carried",
         scene="shortcut", turns=["Only the cup has to stay upright while it is carried; the marker can tilt."],
@@ -92,6 +109,15 @@ def _scene(name):
     return reference_scene(name)
 
 
+def _layout(family, seed):
+    return sample_layout(seed, "blocked") if family == "blocked" else sample_layout(seed, "dev", family)
+
+
+def _planner(spec, scene):
+    from mirror.plan import plan
+    return plan(spec, scene, config=PLANNER_CONFIG)
+
+
 def _rule_rows(report):
     return [dict(rule_id=r.rule_id, kind=r.kind, status=r.status.value, enforced=r.enforced, verdict=r.verdict,
                  detail=r.detail) for r in report.rule_results if r.enforced or r.kind != "goal"]
@@ -122,8 +148,10 @@ def _measures(scene, log, watch):
 
 def _run(scene, spec, condition, watch):
     t0 = time.time()
-    ro, log, plan = execute_trial(scene, spec, condition=condition)
+    from mirror.plan.outcome import planning_outcome
+    ro, log, plan = execute_trial(scene, spec, condition=condition, planner=_planner)
     rep = ro.report
+    po = planning_outcome(plan)
     return ro, log, dict(
         scene_id=scene.scene_id, seed=scene.seed, spec_version=spec.version, condition=condition,
         status=rep.status, plan_status=plan.status, plan_reason=plan.reason[:400],
@@ -132,6 +160,7 @@ def _run(scene, spec, condition, watch):
         rules=_rule_rows(rep), violations=[v.model_dump() for v in rep.violations],
         beads=[(o.object_id, o.beads_in_container, o.beads_total) for o in rep.outcomes if o.beads_total],
         measures=_measures(scene, log, watch), infeasibility=plan.infeasibility,
+        planning_outcome=dict(kind=po["kind"], headline=po["headline"]),
         execution_time_s=rep.execution_time_s, wall_time_s=round(time.time() - t0, 2))
 
 
@@ -182,8 +211,8 @@ def run_case(name, cfg, base: TaskSpec, out: Path, seeds, log_fn):
     new_ro, new_log, rec["new"] = _run(scene, final, f"new_v{final.version}", watch)
     (case_dir / "rollout_new.json").write_text(new_ro.model_dump_json())
     transfer = []
-    for fam, seed in seeds:
-        sc = sample_layout(seed, "dev", fam)
+    for fam, seed in cfg.get("seeds", seeds):
+        sc = _layout(fam, seed)
         log_fn(f"[{name}] transfer {sc.scene_id}")
         _, la, a = _run(sc, start, f"old_v{start.version}", watch)
         _, _, b = _run(sc, final, f"new_v{final.version}", watch)
@@ -204,6 +233,12 @@ def _line(rec):
     tr_new = [x["new"]["status"] for x in rec["transfer"]]
     tr_oun = [x["old_under_new"]["status"] for x in rec["transfer"]]
     n = len(tr_new)
+    if rec["kind"] == "blocked":
+        proven = sum(x["new"]["planning_outcome"]["kind"] == "proven_infeasible" for x in rec["transfer"])
+        new = f"{rec['new']['status']} ({rec['new']['planning_outcome']['headline']})"
+        return (f"| {rec['case']} | {rec['old']['status']} | {rc['status']} | {new} | "
+                f"{sum(s == 'constraint_violated' for s in tr_oun)}/{n} | "
+                f"0/{n} succeed; {proven}/{n} refused with a proof |")
     return (f"| {rec['case']} | {rec['old']['status']} | {rc['status']} | {rec['new']['status']} | "
             f"{sum(s == 'constraint_violated' for s in tr_oun)}/{n} | {sum(s == 'success' for s in tr_new)}/{n} |")
 
@@ -211,9 +246,17 @@ def _line(rec):
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "results" / "dev_v2" / "demo_corrections"))
-    ap.add_argument("--cases", default=",".join(CASES))
+    ap.add_argument("--cases", default=",".join(DEFAULT_CASES))
     ap.add_argument("--quick", action="store_true", help="two transfer layouts instead of six")
+    ap.add_argument("--rotation-penalty", type=float, default=None,
+                    help="PlannerConfig.rotation_penalty in m/rad (default: planner default)")
     a = ap.parse_args(argv)
+    global PLANNER_CONFIG
+    from dataclasses import replace
+
+    from mirror.plan.config import DEFAULT_CONFIG
+    PLANNER_CONFIG = (DEFAULT_CONFIG if a.rotation_penalty is None
+                      else replace(DEFAULT_CONFIG, rotation_penalty=a.rotation_penalty))
     out = Path(a.out)
     if out.exists() and any(out.iterdir()):
         raise SystemExit(f"{out} exists and is not empty; choose a new --out (evidence is never overwritten)")
@@ -229,7 +272,11 @@ def main(argv=None):
                     numpy=np.__version__, base_spec=dict(source=prov["source"], version=base.version,
                                                          sha256=hashlib.sha256(base.model_dump_json().encode()).hexdigest()),
                     transfer_seeds=seeds, split="dev", wall_time_s=round(time.time() - t0, 1),
-                    model_calls=0, interpreter="offline-rules")
+                    model_calls=0, interpreter="offline-rules",
+                    planner_config=dict(rotation_penalty=PLANNER_CONFIG.rotation_penalty,
+                                        clearance_tracking_margin=PLANNER_CONFIG.clearance_tracking_margin),
+                    platform=dict(system=platform.system(), machine=platform.machine(),
+                                  platform=platform.platform(), processor=platform.processor()))
     try:
         import mujoco
         manifest["mujoco"] = mujoco.__version__
@@ -237,6 +284,8 @@ def main(argv=None):
         pass
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1))
     lines = ["# Correction capability demonstrations (development layouts)", "",
+             f"Planner rotation price {PLANNER_CONFIG.rotation_penalty:g} m/rad. Platform: "
+             f"{platform.system()} {platform.machine()} ({platform.platform()}).", "",
              "Offline interpreter (no model call), MuJoCo execution, independent checker. Development seeds only. "
              "On each unseen development layout the old specification and the new one are both executed; the "
              "old rollout is then re-checked under the new specification. Columns: old rollouts that violate the "

@@ -44,6 +44,11 @@ class PlannerConfig:
     tray_wall_clearance: float = 0.006
     place_grid_step: float = 0.010
     slot_extra_clearance: float = 0.005  # added to rotation clearance in front of a slot
+    # Execution tolerance added to every keep_clearance min_m when planning (m). The planned
+    # route then keeps min_m + this; the checker still judges against min_m. 0 (default)
+    # plans at exactly min_m, as before; a backend that tracks its plan with an error
+    # (the articulated arm lags 2-3 mm) sets it.
+    clearance_tracking_margin: float = 0.0
     modes: tuple = DEFAULT_MODES
     level_dedupe: float = 0.008
     lazy_iterations: int = 300
