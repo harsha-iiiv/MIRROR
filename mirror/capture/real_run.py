@@ -114,6 +114,9 @@ def _run(cmd: list, timeout: int = 1800):
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 
+LOCK_WAIT_S = [0.0]       # time spent waiting for the shared lock (excluded from compute time)
+
+
 @contextlib.contextmanager
 def heavy_lock():
     """Shared CPU: hold the night render lock (if configured) for heavy work."""
@@ -122,7 +125,9 @@ def heavy_lock():
         return
     import fcntl
     with open(LOCK, "a") as f:
+        tw = time.time()
         fcntl.flock(f, fcntl.LOCK_EX)
+        LOCK_WAIT_S[0] += time.time() - tw
         try:
             yield
         finally:
@@ -383,7 +388,8 @@ class RealRun:
                  prior_usd: float = 0.0, cassettes: Optional[Path] = None, intrinsics: Optional[Path] = None,
                  seed_t: Optional[float] = None, answers: Optional[Path] = None, rehearse_correction: Optional[str] = None,
                  render: bool = True, label_extra: Optional[list] = None, dev_clip: Optional[str] = None,
-                 media_cache: Optional[Path] = None, log=print):
+                 media_cache: Optional[Path] = None, publish_dir: Optional[Path] = None,
+                 answers_firebase: Optional[str] = None, log=print):
         self.out = Path(out)
         self.out.mkdir(parents=True, exist_ok=True)
         self.state_path = self.out / "real_run.json"
@@ -407,18 +413,23 @@ class RealRun:
         self.cassettes = Path(cassettes or inp.get("cassettes") or (self.out / "cassettes"))
         self.ledger = Ledger(self.out / "spend.jsonl", cap_usd, prior_usd)
         self.seed_t = seed_t if seed_t is not None else inp.get("seed_t")
-        self.answers_path = Path(answers) if answers else self.out / "answers.json"
-        self.rehearse = rehearse_correction
+        self.answers_path = Path(answers) if answers else (Path(inp["answers"]) if inp.get("answers") else self.out / "answers.json")
+        self.rehearse = rehearse_correction or inp.get("rehearse_correction")
         self.render_on = render
         self.dev_clip = dev_clip if dev_clip is not None else inp.get("dev_clip")
         self.label_extra = list(label_extra or inp.get("label_extra") or [])
         self.media_cache = Path(media_cache) if media_cache else None
+        self.publish_dir = Path(publish_dir) if publish_dir else (Path(inp["publish_dir"]) if inp.get("publish_dir") else None)
+        self.answers_firebase = answers_firebase or inp.get("answers_firebase")
         self.log = log
         self.state = st or {"version": VERSION, "stages": {}, "created_at": _now_ms()}
         self.state["inputs"] = {"take": str(self.take), "lens": str(self.lens) if self.lens else None,
                                 "intrinsics": str(self.intrinsics_in) if self.intrinsics_in else None,
                                 "measurements": str(meas_p), "cassettes": str(self.cassettes), "seed_t": self.seed_t,
-                                "dev_clip": self.dev_clip, "label_extra": self.label_extra}
+                                "dev_clip": self.dev_clip, "label_extra": self.label_extra,
+                                "answers": str(self.answers_path), "rehearse_correction": self.rehearse,
+                                "publish_dir": str(self.publish_dir) if self.publish_dir else None,
+                                "answers_firebase": self.answers_firebase}
         self.state["mode"] = mode
         self.state["cap_usd"] = cap_usd
         self._meta = None
@@ -438,7 +449,10 @@ class RealRun:
         return self.state["stages"].get(stage, {})
 
     def mark(self, stage: str, t0: float, **info):
-        self.state["stages"][stage] = {**info, "status": "done", "wall_s": round(time.time() - t0, 2), "at": _now_ms()}
+        lw = LOCK_WAIT_S[0] - getattr(self, "_lock_mark", 0.0)
+        self._lock_mark = LOCK_WAIT_S[0]
+        self.state["stages"][stage] = {**info, "status": "done", "wall_s": round(time.time() - t0, 2),
+                                       "lock_wait_s": round(lw, 1), "at": _now_ms()}
         self._save()
         self.log(f"[{stage}] done in {time.time() - t0:.1f} s")
 
@@ -545,6 +559,7 @@ class RealRun:
             for st in STAGES:
                 if self.done(st):
                     continue
+                self._lock_mark = LOCK_WAIT_S[0]
                 getattr(self, "stage_" + st)()
                 if until and st == until:
                     break
@@ -623,14 +638,13 @@ class RealRun:
         det = cv2.aruco.ArucoDetector(SPEC.dictionary_obj(), cv2.aruco.DetectorParameters())
         ts, fs, vis, boards = [], [], [], []
         BSTEP, SC = 2, 0.5
-        with heavy_lock():
-            for i, t, h in _scaled_gray_frames(m, SC):
-                _, ids, _ = det.detectMarkers(h)
-                ts.append(t); fs.append(i)
-                vis.append(ids is not None and SPEC.sync_marker_id in ids.ravel())
-                if i % BSTEP == 0:
-                    d = C.detect(h, SPEC, frame_index=i, pts_s=t)
-                    boards.append((i, t, {int(k): (p[0] / SC, p[1] / SC) for k, p in zip(d.corner_ids, d.corners_px)}))
+        for i, t, h in _scaled_gray_frames(m, SC):
+            _, ids, _ = det.detectMarkers(h)
+            ts.append(t); fs.append(i)
+            vis.append(ids is not None and SPEC.sync_marker_id in ids.ravel())
+            if i % BSTEP == 0:
+                d = C.detect(h, SPEC, frame_index=i, pts_s=t)
+                boards.append((i, t, {int(k): (p[0] / SC, p[1] / SC) for k, p in zip(d.corner_ids, d.corners_px)}))
         sync = [e.model_dump() for e in Y.card_events(m, SPEC, states=(ts, fs, vis))]
         # board windows: visible (>= 6 corners) and at rest (median corner motion < BOARD_STEADY_PX per frame)
         rows = []
@@ -875,6 +889,7 @@ class RealRun:
                    source=src_txt)
         t.notes.append(json.dumps(info, default=_json_default))
         PT.save_tracks(t, self.p("tracks_proxy.json.gz"))
+        t_up = time.time()
         # full-resolution copy for the capture (nearest upscale; static obstacles held for every frame)
         up = {}
         for lab, fr in masks.items():
@@ -897,12 +912,12 @@ class RealRun:
             v.get("cassette") for kk, v in info["sam"].items() if kk.endswith("_static")) and \
             all(r.get("sam", {}).get("cassette", True) for r in info["reseed"])
         cov = {lab: round(len(fr) / N, 3) if lab not in walls else 1.0 for lab, fr in masks.items()}
-        self.mark("track", t0, coverage=cov, proxy=[pw, ph], reseed=len(info["reseed"]),
+        self.mark("track", t0, coverage=cov, proxy=[pw, ph], reseed=len(info["reseed"]), upscale_s=round(time.time() - t_up, 1),
                   origin="recorded_replay" if self.mode == "replay" or all_cas else "fresh_model_call",
                   sam={k2: {kk: v[kk] for kk in ("frames", "cassette") if kk in v} for k2, v in info["sam"].items()})
 
     # ----------------------------------------------------------- session
-    def _build_session(self, confirmed=frozenset(), rejected=frozenset(), corrections=(), extra_notes=()):
+    def _build_session(self, confirmed=frozenset(), rejected=frozenset(), corrections=(), extra_notes=(), tray=None):
         from mirror.capture import calibrate as C, events as EV, session as SE, track as TR, media as M
         m = self.clip(self.take)
         sc = self.info("scan")
@@ -915,7 +930,7 @@ class RealRun:
             ts = TR.from_perception_tracks(m, self.p("tracks_full.json.gz"), camera="top", origin=origin)
             tsf.write_text(ts.model_dump_json())
         with self._session_patches():
-            s = self._build(SE, C, m, sc, intr, ts, confirmed, rejected, corrections)
+            s = self._build(SE, C, m, sc, intr, ts, confirmed, rejected, corrections, tray)
         s.notes.append("built by mirror.capture.real_run (board search and end-board placement found automatically: "
                        + sc.get("end_board_reason", "") + ")")
         s.notes += list(extra_notes)
@@ -984,8 +999,8 @@ class RealRun:
                 for f in fs:
                     f.result()
 
-    def _build(self, SE, C, m, sc, intr, ts, confirmed, rejected, corrections):
-        return SE.build_session(take={"top": str(self.take)}, intrinsics={"top": intr},
+    def _build(self, SE, C, m, sc, intr, ts, confirmed, rejected, corrections, tray=None):
+        return SE.build_session(tray=tray, take={"top": str(self.take)}, intrinsics={"top": intr},
                              print_check=C.PrintCheck(**self.meas["print_check"]), prompts=[],
                              mappings=mappings_from(self.meas, set(confirmed), set(rejected)), tracker="model",
                              model_tracks={"top": ts}, corrections=list(corrections),
@@ -1409,7 +1424,7 @@ class RealRun:
                     if isinstance(fc.get("value"), (int, float)) else str(fc)
             page["gate"] = {"passed": ok, "blocking": len(blocking), "session_id": s.session_id, "evidence_kind": s.evidence_kind,
                             "blocking_items": [{"code": b.code, "message": b.message} for b in blocking]}
-        for k in ("task", "scene", "run", "correct"):
+        for k in ("answers", "task", "scene", "run", "correct"):
             if k in st:
                 page[k] = {kk: vv for kk, vv in st[k].items() if kk not in ("status",)}
         paths = {}
@@ -1434,6 +1449,10 @@ class RealRun:
             man["corrections"].append({"name": c.get("candidate"), "label": c.get("label"), "rehearsal": c.get("rehearsal"),
                                        "rollout": "correct/rollout_after.json", "spec": "correct/spec_after.json"})
         _jdump(self.p("manifest.json"), man)
+        try:
+            self._publish_copy()
+        except OSError as e:
+            self.log(f"[publish] copy failed: {e}")
         _jdump(self.p("page.json"), page)
         return page
 
@@ -1455,8 +1474,89 @@ class RealRun:
                     + ("The gate is closed until they are answered" if not page["gate"]["passed"] else "The gate is open") + ".")
         return "Running."
 
+
+    def _tray_from_outline(self, s):
+        """Tray centre and yaw from its SAM outline at rest on the seed frame, back-projected to the rim plane
+        (single view, approximate); the inside size stays the person's ruler measurement. None if unavailable."""
+        import cv2
+        from mirror.capture import events as EV
+        from mirror.perception.masks import rle_decode
+        tm = next((m for m in s.mappings if m.proxy == "tray" and m.confirmed_by_person), None)
+        if tm is None or "top" not in s.poses or not s.poses["top"].accepted:
+            return None, None
+        w, d = tm.real_dims.get("width"), tm.real_dims.get("depth")
+        if not (w and d):
+            return None, None
+        rim = tm.real_dims["height"].value_m if "height" in tm.real_dims else 0.02
+        PT = __import__('importlib').import_module('mirror.perception.track')
+        tr = PT.load_tracks(self.p("tracks_proxy.json.gz"))
+        fr = tr.masks["top"].get(tm.track_label) or {}
+        seed = self.info("seed")["frame"]
+        if not fr:
+            return None, None
+        mask = rle_decode(fr.get(seed) or fr[min(fr)]).astype(np.uint8)
+        cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        if not cnts:
+            return None, None
+        pw, ph = tr.size["top"]
+        intr, pose = s.intrinsics["top"], s.poses["top"]
+        sx, sy = intr.image_size[0] / pw, intr.image_size[1] / ph
+        px = max(cnts, key=cv2.contourArea).reshape(-1, 2).astype(float) * [sx, sy] + [0.5 * (sx - 1), 0.5 * (sy - 1)]
+        und = cv2.undistortPoints(px.reshape(-1, 1, 2), intr.Km, intr.dm).reshape(-1, 2)
+        R = np.asarray(pose.R, float); t = np.asarray(pose.t, float).reshape(3); C = -R.T @ t
+        dirs = (R.T @ np.c_[und, np.ones(len(und))].T).T
+        lam = (rim - C[2]) / dirs[:, 2]
+        P = C + lam[:, None] * dirs
+        (cx, cy), (rw, rh), ang = cv2.minAreaRect((P[:, :2] * 1000).astype(np.float32))
+        long_ang = ang if rw >= rh else ang + 90.0
+        yaw = long_ang if w.value_m >= d.value_m else long_ang - 90.0
+        yaw = (yaw + 90.0) % 180.0 - 90.0
+        reg = EV.TrayRegion(center_xy=(cx / 1000.0, cy / 1000.0), inner_half=(w.value_m / 2, d.value_m / 2), yaw_deg=float(yaw),
+                            source="tracked_tray_at_rest", footprint_source="measured_ruler")
+        info = {"centre_xy_m": [round(cx / 1000.0, 4), round(cy / 1000.0, 4)], "yaw_deg": round(float(yaw), 2),
+                "outline_outer_m": [round(max(rw, rh) / 1000.0, 3), round(min(rw, rh) / 1000.0, 3)],
+                "method": f"SAM tray outline at rest (frame {seed}), back-projected to the rim plane z = {rim:.3f} m, minimum-area "
+                          "rectangle; single view, approximate. Inside size from the ruler, not from the outline.",
+                "previous": None if s.tray is None else {"centre_xy_m": [round(v, 4) for v in s.tray.center_xy],
+                                                         "yaw_deg": s.tray.yaw_deg, "source": s.tray.source}}
+        return reg, info
+
     # ========================================================== ANSWERS
+    PUBLISH = ("page.json", "manifest.json", "questions.json", "questions_spec.json", "timeline.json", "timeline.png",
+               "overlay.mp4", "session.json", "session_answered.json", "review.md", "review_answered.md", "spec.json",
+               "table_to_sim.json", "scan.json", "grounding.json", "summary.md", "real_run.json", "scene/scene.json",
+               "run/report.json", "run/plan.json", "run/sim_run.mp4", "correct/report_after.json", "correct/recheck_before.json",
+               "correct/spec_after.json", "correct/sim_after.mp4", "correct/before_after.mp4", "lens/intrinsics.json")
+
+    def _publish_copy(self):
+        """Copy the light outputs (no tracks, no rollouts) to --publish-dir, e.g. a /cloudspace folder the page reads."""
+        if getattr(self, "publish_dir", None) is None:
+            return
+        files = list(self.PUBLISH) + [str(p.relative_to(self.out)) for p in self.out.glob("evidence/*.jpg")]
+        for rel in files:
+            src_, dst = self.out / rel, self.publish_dir / rel
+            if not src_.exists():
+                continue
+            if dst.exists() and dst.stat().st_size == src_.stat().st_size and dst.stat().st_mtime >= src_.stat().st_mtime:
+                continue
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(src_, dst)
+
+    def _fetch_firebase_answers(self):
+        """Answers the page wrote to Firebase (sandbox only): copied to the answers file, then used like any answers file."""
+        if not getattr(self, "answers_firebase", None):
+            return
+        try:
+            from firebase_helper import firebase
+        except ImportError:
+            self.log("[answers] firebase_helper not available; using the answers file")
+            return
+        node = firebase.read(self.answers_firebase)
+        if node:
+            _jdump(self.answers_path, {"source": f"firebase:{self.answers_firebase}", "fetched_at": _now_ms(), "answers": node})
+
     def _load_answers(self) -> Optional[dict]:
+        self._fetch_firebase_answers()
         if not self.answers_path.exists():
             return None
         d = json.loads(self.answers_path.read_text())
@@ -1519,8 +1619,12 @@ class RealRun:
                               at=float(a.get("at", time.time() * 1000)) / 1000.0, seconds_spent=a.get("seconds_spent"))
             ev_corr.append(c)
             applied[qid] = f"event {e.id} ({e.t_lo:.2f}-{e.t_hi:.2f} s) " + ("confirmed" if inside else f"moved to {x:.2f} s") + " by person"
-        if ev_corr:
-            s = self._build_session(confirmed, rejected, corrections + ev_corr, notes)
+        tray, tray_info = self._tray_from_outline(s)
+        if tray is not None:
+            notes.append("tray centre and yaw from its outline at rest (single view, approximate); inside size from the ruler")
+            applied["tray_region"] = tray_info
+        if ev_corr or tray is not None:
+            s = self._build_session(confirmed, rejected, corrections + ev_corr, notes, tray=tray)
         if "intent" in ans:
             applied["intent"] = ans["intent"]["answer"]
             _jdump(self.p("intent.json"), {"answer": ans["intent"]["answer"], "by": "person", "at": ans["intent"].get("at"),
@@ -1918,9 +2022,11 @@ class RealRun:
         st = self.state["stages"]
         lines = ["# MIRROR real run", "", "Labels: " + "; ".join(self.labels()), "",
                  f"Mode: {self.mode}. Spend this directory: ${self.ledger.spent():.4f} of ${self.ledger.cap:.2f} cap.", "",
-                 "| stage | wall s |", "|---|---|"]
-        lines += [f"| {k} | {v.get('wall_s')} |" for k, v in st.items()]
-        lines.append(f"| total | {round(sum(float(v.get('wall_s') or 0) for v in st.values()), 1)} |")
+                 "| stage | wall s | waiting for the shared CPU lock s |", "|---|---|---|"]
+        lines += [f"| {k} | {v.get('wall_s')} | {v.get('lock_wait_s', 0)} |" for k, v in st.items()]
+        tot = sum(float(v.get('wall_s') or 0) for v in st.values())
+        lw = sum(float(v.get('lock_wait_s') or 0) for v in st.values())
+        lines.append(f"| total | {tot:.1f} | {lw:.1f} (compute {tot - lw:.1f}) |")
         if "task" in st:
             lines += ["", f"Task: {st['task'].get('summary')}", f"Spec: {st['task'].get('spec_summary')}"]
         if "scene" in st:
@@ -1962,6 +2068,8 @@ def main(argv=None) -> int:
     ap.add_argument("--dev-clip", help="label the take as a development clip with this name (never scored)")
     ap.add_argument("--label", action="append", default=[], help="extra honest label shown with every output")
     ap.add_argument("--media-cache", type=Path, help="directory with already-derived media (proxy/subclips) to reuse")
+    ap.add_argument("--publish-dir", type=Path, help="also copy the light outputs here (e.g. /cloudspace/mirror/capture/<id>/pipeline)")
+    ap.add_argument("--answers-firebase", help="Firebase path of the page's answers node (copied to the answers file each run)")
     ap.add_argument("--until", choices=STAGES, help="stop after this stage")
     ap.add_argument("--redo", choices=STAGES, help="forget this stage and every later one, then continue")
     a = ap.parse_args(argv)
@@ -1979,7 +2087,8 @@ def main(argv=None) -> int:
     r = RealRun(a.out, take=a.take, lens=a.lens, measurements=a.measurements, mode=mode, cap_usd=cap,
                 prior_usd=a.prior_usd, cassettes=a.cassettes, intrinsics=a.intrinsics, seed_t=a.seed_t,
                 answers=a.answers, rehearse_correction=a.rehearse_correction, render=not a.no_render,
-                label_extra=a.label, dev_clip=a.dev_clip, media_cache=a.media_cache)
+                label_extra=a.label, dev_clip=a.dev_clip, media_cache=a.media_cache, publish_dir=a.publish_dir,
+                answers_firebase=a.answers_firebase)
     st = r.run(until=a.until)
     print(json.dumps({"status": st.get("status"), "waiting_for": st.get("waiting_for"), "spend_usd": st.get("spend_usd"),
                       "stages": {k: v.get("wall_s") for k, v in st["stages"].items()}}, indent=1))
