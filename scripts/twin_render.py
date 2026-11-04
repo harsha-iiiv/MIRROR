@@ -102,6 +102,8 @@ def main(argv=None):
     ap.add_argument("--correction-json", type=Path, help="correction summary: text, diff, old_run_recheck/recheck violations")
     ap.add_argument("--no-render", action="store_true", help="plate, checks and twin.json only")
     ap.add_argument("--only", choices=["main", "before_after"], help="render one film (shorter lock holds)")
+    ap.add_argument("--arm", action="store_true",
+                    help="pipeline mode: also run the task on the arm backend (scene + spec from DIR) and render it to DIR/twin_arm")
     ap.add_argument("--upload", help="also copy outputs to this directory (e.g. /cloudspace/mirror/capture/D1/twin)")
     a = ap.parse_args(argv)
 
@@ -127,6 +129,21 @@ def main(argv=None):
                   labels=list(dict.fromkeys(cfg.get("labels", []) + a.label)),
                   after_labels=list(dict.fromkeys(cfg.get("after_labels", []) + a.after_label)), render=not a.no_render, only=a.only, fps=a.fps,
                   correction=json.loads(a.correction_json.read_text()) if a.correction_json else cfg.get("correction"))
+    if a.arm and a.pipeline:
+        import importlib.util
+        d = a.pipeline
+        man = json.loads((d / "manifest.json").read_text()) if (d / "manifest.json").exists() else {}
+        scene = d / (man.get("scene") or "scene/scene.json")
+        spec = d / (man.get("spec") or "spec.json")
+        arm_dir = d / "arm"
+        spec_m = importlib.util.spec_from_file_location("twin_d1_arm", Path(__file__).with_name("twin_d1_arm.py"))
+        mod = importlib.util.module_from_spec(spec_m)
+        spec_m.loader.exec_module(mod)
+        mod.main(["--out", str(arm_dir), "--scene", str(scene), "--spec", str(spec)])
+        job.rollouts = [("arm", arm_dir / "rollout.json")]
+        job.out = (a.out or d / "twin_arm") if a.out else d / "twin_arm"
+        job.labels = list(dict.fromkeys(job.labels + ["Arm backend"]))
+        job.only = "main"
     m = run(job)
     print(json.dumps({"out": str(job.out), "files": m["files"], "timings_s": m["timings_s"],
                       "registration": m["registration"], "time_map": m["time_map"]["anchors"]}, indent=1))

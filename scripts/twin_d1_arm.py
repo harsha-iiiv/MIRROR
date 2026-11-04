@@ -30,13 +30,13 @@ def main(argv=None):
     spec = TaskSpec.model_validate_json(a.spec.read_text())
     arm = get_backend("arm")
     t0 = time.time()
-    rollout, _, plan = execute_trial(scene, spec, condition="phone D1 layout, arm backend", planner=arm.plan, env_factory=arm.env)
+    rollout, _, plan = execute_trial(scene, spec, condition="phone capture layout, arm backend", planner=arm.plan, env_factory=arm.env)
     a.out.mkdir(parents=True, exist_ok=True)
     (a.out / "rollout.json").write_text(rollout.model_dump_json())
     rep = rollout.report
     info = {"status": rep.status, "plan_status": rep.plan_status, "plan_reason": rep.plan_reason, "wall_s": round(time.time() - t0, 1),
             "notes": rep.notes[:10], "backend": "arm (UR10e, ceiling mount, collision shapes drawn)",
-            "what": "Development only: D1 scene and Harsha's stated spec on the arm backend, for the twin view."}
+            "what": "The capture's scene and spec on the arm backend, for the twin view (development)."}
     (a.out / "arm.json").write_text(json.dumps(info, indent=1, default=str))
     print(json.dumps(info, indent=1, default=str))
 

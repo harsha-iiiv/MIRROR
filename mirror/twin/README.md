@@ -4,7 +4,9 @@
 it makes no measurement, calls no model and uses no network.
 
 ```
-python scripts/twin_render.py --pipeline OUT_DIR                  # after mirror.capture.real_run
+python scripts/twin_render.py --pipeline OUT_DIR --only main      # after mirror.capture.real_run
+python scripts/twin_render.py --pipeline OUT_DIR --only before_after   # when OUT has a correction
+python scripts/twin_render.py --pipeline OUT_DIR --arm            # same task on the UR10e arm backend -> OUT/twin_arm
 python scripts/twin_render.py --session S.json --video TAKE.MOV --tracks TRACKS.json.gz \
     --rollout before=R.json [--rollout after=R2.json --correction-json C.json] \
     [--placement P.json] --label "Development clip D1, never scored" --out DIR
@@ -43,6 +45,13 @@ python scripts/twin_render.py --session S.json --video TAKE.MOV --tracks TRACKS.
    shown on screen. Anchors whose order disagrees are dropped.
 6. **Table twin.** A plane homography of the undistorted plate onto a virtual top-down camera.
 
+## D1 results (development clip, never scored)
+
+Storage `mirror/capture/D1/twin/` (README there). From the pipeline's replayed D1 run with the tray placed from the
+footage: simulated tray vs real tray 0.1 cm / 0.2 deg (it was 3.3 cm / 3.6 deg when the tray was assumed aligned with
+the board; the twin's registration check found it). Arm backend on the same scene: the checker flags one cup tilt of
+16.2 deg (rule 15) for 1.3 s, shown in the film.
+
 ## Limits (say them on screen, they are in the caption)
 
 * One camera and whatever calibration labels the session carries (D1: calibration reuse flagged).
@@ -50,6 +59,7 @@ python scripts/twin_render.py --session S.json --video TAKE.MOV --tracks TRACKS.
   IoU 0.82; object bases 9-11 px at 540x960. Not a 3-D accuracy figure.
 * Proxies are simulator stand-ins sized from the person's measurements, not their objects
   (D1: a 4 cm cube for an 11 cm carton, an upright marker for a lying one).
-* The robot is a simulated free-floating gripper. It never touched the table.
+* The robot is a simulated free-floating gripper (or, with `--arm`, a UR10e on a simulated ceiling mount drawn with its
+  collision shapes). It never touched the table.
 * The top-down view is exact only on the table plane; anything taller is smeared.
 * The occluder test is per geom (centre side of the wall plane), not per pixel depth.
