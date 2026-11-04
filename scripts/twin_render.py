@@ -116,7 +116,7 @@ def main(argv=None):
     ap.add_argument("--only", choices=["main", "before_after"], help="render one film (shorter lock holds)")
     ap.add_argument("--arm", action="store_true",
                     help="pipeline mode: also run the task on the arm backend (scene + spec from DIR) and render it to DIR/twin_arm")
-    ap.add_argument("--upload", help="also copy outputs to this directory (e.g. /cloudspace/mirror/capture/D1/twin)")
+    ap.add_argument("--upload", help="also copy outputs to this directory (e.g. a folder a review page reads)")
     a = ap.parse_args(argv)
 
     from mirror.twin.build import TwinJob, run
@@ -148,7 +148,7 @@ def main(argv=None):
         scene = d / (man.get("scene") or "scene/scene.json")
         spec = d / (man.get("spec") or "spec.json")
         arm_dir = d / "arm"
-        spec_m = importlib.util.spec_from_file_location("twin_d1_arm", Path(__file__).with_name("twin_d1_arm.py"))
+        spec_m = importlib.util.spec_from_file_location("twin_arm", Path(__file__).with_name("twin_arm.py"))
         mod = importlib.util.module_from_spec(spec_m)
         spec_m.loader.exec_module(mod)
         mod.main(["--out", str(arm_dir), "--scene", str(scene), "--spec", str(spec)])
@@ -167,7 +167,7 @@ def main(argv=None):
             if p.is_file():
                 q = dst / p.relative_to(job.out)
                 q.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(p, q)   # contents only: /cloudspace (FUSE) refuses chmod/utime
+                shutil.copyfile(p, q)   # contents only: some network file systems refuse chmod/utime
         print("copied to", dst)
 
 

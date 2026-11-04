@@ -1,9 +1,9 @@
-"""D1 with the articulated arm backend (UR10e from the ceiling mount), for the twin view (development only).
+"""A capture's scene and spec on the articulated arm backend (UR10e from the ceiling mount), for the twin view.
 
 Same scene, same person-stated spec, same planner and checker as the gripper run; only the robot
 differs. Writes DIR/rollout.json and DIR/arm.json (status, backend info, wall time).
 
-  python scripts/twin_d1_arm.py --out DIR [--spec spec.json]
+  python scripts/twin_arm.py --out DIR --scene scene.json --spec spec.json
 """
 from __future__ import annotations
 
@@ -14,14 +14,13 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-P2 = Path("/workspace/mirror-team/v2/phone_real/out/phase2")
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", type=Path, required=True)
-    ap.add_argument("--scene", type=Path, default=P2 / "scene.json")
-    ap.add_argument("--spec", type=Path, default=P2 / "spec_intent.json")
+    ap.add_argument("--scene", type=Path, required=True, help="scene.json (e.g. a real_run output's scene/scene.json)")
+    ap.add_argument("--spec", type=Path, required=True, help="the task spec to run")
     a = ap.parse_args(argv)
     from mirror.backends import get_backend
     from mirror.contracts import SceneState, TaskSpec
