@@ -740,8 +740,8 @@ def write_index(root: Path) -> list[dict]:
     for p in sorted(Path(root).glob("*/table.json")):
         t = json.loads(p.read_text())
         rows.append({"id": t["id"], "title": t.get("title"), "labels": t.get("labels", []), "built_at": t.get("built_at"),
-                     "path": f"{p.parent.name}/table.json"})
-    rows.sort(key=lambda r: r.get("built_at") or "", reverse=True)
+                     "featured": bool(t.get("featured")), "path": f"{p.parent.name}/table.json"})
+    rows.sort(key=lambda r: (r["featured"], r.get("built_at") or ""), reverse=True)   # the page opens the first
     (Path(root) / "index.json").write_text(json.dumps({"tables": rows}, indent=1))
     return rows
 
@@ -762,11 +762,15 @@ def main(argv=None) -> int:
         p.add_argument("--no-video", action="store_true", help="keep an existing media/take.mp4")
         p.add_argument("--site", type=Path, default=None, help="also add the result to this exported static site")
         p.add_argument("--title", default=None, help="page title for this capture")
+        p.add_argument("--feature", action="store_true", help="open this capture first on the page")
     args = ap.parse_args(argv)
     src = d1_source(args.root, args.cloud, args.twin) if args.cmd == "d1" else pipeline_source(args.dir, args.id)
     if args.title:
         src.title = args.title
-    build(src, args.out, simulate_runs=not args.no_sim, video=not args.no_video)
+    t = build(src, args.out, simulate_runs=not args.no_sim, video=not args.no_video)
+    if args.feature:
+        t["featured"] = True
+        (Path(args.out) / "table.json").write_text(json.dumps(t, indent=1))
     write_index(Path(args.out).parent)
     if args.site:
         import importlib.util
