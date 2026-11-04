@@ -1837,12 +1837,23 @@ class RealRun:
         """Answers the page wrote to Firebase (sandbox only): copied to the answers file, then used like any answers file."""
         if not getattr(self, "answers_firebase", None):
             return
+        node = None
         try:
             from firebase_helper import firebase
+            node = firebase.read(self.answers_firebase)
         except ImportError:
-            self.log("[answers] firebase_helper not available; using the answers file")
-            return
-        node = firebase.read(self.answers_firebase)
+            # MIRROR's venv lacks the sandbox's Firebase helper: ask the sandbox's own Python (read only)
+            py = os.environ.get("MANA_PYTHON") or "/workspace/.venv/bin/python"
+            if not Path(py).exists():
+                self.log("[answers] no Firebase helper available; using the answers file")
+                return
+            r = subprocess.run([py, "-c", "import json, sys; sys.path.append('/opt/sandbox_libs'); "
+                                "from firebase_helper import firebase; print(json.dumps(firebase.read(sys.argv[1])))",
+                                self.answers_firebase], capture_output=True, text=True, timeout=60, stdin=subprocess.DEVNULL)
+            if r.returncode != 0:
+                self.log("[answers] Firebase read failed; using the answers file")
+                return
+            node = json.loads(r.stdout.strip().splitlines()[-1] or "null")
         if node:
             _jdump(self.answers_path, {"source": f"firebase:{self.answers_firebase}", "fetched_at": _now_ms(), "answers": node})
 
