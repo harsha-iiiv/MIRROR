@@ -25,6 +25,7 @@ import { Fallback2D } from './viz/fallback2d.js';
 import { injectStyles } from './viz/style.js';
 import { tiltOf } from './viz/geom.js';
 import { attachArm } from './viz/arm.js';
+import { RulePanel } from './viz/rulehud.js';
 
 const Z_UP = new THREE.Vector3(0, 0, 1);
 const tmpA = new THREE.Quaternion(), tmpB = new THREE.Quaternion();
@@ -100,6 +101,7 @@ export class Viewer {
     Object.assign(this.labels.domElement.style, { position: 'absolute', left: '0px', top: '0px', pointerEvents: 'none' });
     el.appendChild(this.labels.domElement);
     this.hud = makeHud(el);
+    this.rulePanel = new RulePanel(el);
 
     this.scene = new THREE.Scene();
     if (!this.software) {
@@ -145,6 +147,7 @@ export class Viewer {
     this.showMeasure = true;
     this.showTableTexture = true;
     this.showCollision = false;
+    this.showRulePanel = opts.rulePanel ?? !isSmallDevice(el);
     this.editMode = null;
     this.dirty = true;
     this.view = '3d';
@@ -618,6 +621,7 @@ export class Viewer {
     this.rules.build({ scene: this.sceneState, spec: this.spec, report, payload: this.payload, tol: this.tol, compact: (this.el.clientWidth || 1000) < 560 });
     this.rules.group.visible = this.showRules;
     this.clearanceRule = (this.spec?.constraints || []).find((c) => c.type === 'keep_clearance');
+    this.rulePanel?.update(this);
     this.dirty = true;
   }
 
@@ -685,6 +689,7 @@ export class Viewer {
     if (this.trace) this.trace.visible = this.showTrace && (this.ribbons?.length || 0) > 0;
     if (this.showGhost) this.ghostLayer.setTime(this.t);
     this._updateMeasure();
+    this.rulePanel.update(this);
     this.timeline?.draw();
     this.dirty = true;
   }
@@ -843,7 +848,8 @@ export class Viewer {
     this.ghostSpilled = spilled.length;
   }
 
-  setOptions({ labels, trace, ghost, rules, measure, table, fps, collision } = {}) {
+  setOptions({ labels, trace, ghost, rules, measure, table, fps, collision, panel } = {}) {
+    if (panel !== undefined) { this.showRulePanel = panel; this.rulePanel.update(this); }
     if (collision !== undefined) { this.showCollision = collision; this.world.traverse((o) => { if (o.userData?.collision) o.visible = collision; }); }
     if (labels !== undefined && labels !== this.showLabels) {
       this.showLabels = labels;
@@ -865,7 +871,7 @@ export class Viewer {
   }
 
   getOptions() {
-    return { labels: this.showLabels, trace: this.showTrace, ghost: this.showGhost, rules: this.showRules, measure: this.showMeasure, table: this.showTableTexture, collision: this.showCollision };
+    return { labels: this.showLabels, trace: this.showTrace, ghost: this.showGhost, rules: this.showRules, measure: this.showMeasure, table: this.showTableTexture, collision: this.showCollision, panel: this.showRulePanel };
   }
 
   // ------------------------------------------------------------ capture
@@ -1065,7 +1071,7 @@ export class Viewer {
     const views = { 1: 'follow', 2: '3d', 3: 'top', 4: 'side', 5: 'phone' };
     if (views[k]) { this._userMoved = true; this.setView(views[k]); this.onViewChange?.(views[k]); return true; }
     const o = this.getOptions();
-    const toggles = { r: 'rules', g: 'ghost', p: 'trace', m: 'measure', l: 'labels', x: 'table', c: 'collision' };
+    const toggles = { r: 'rules', g: 'ghost', p: 'trace', m: 'measure', l: 'labels', x: 'table', c: 'collision', h: 'panel' };
     const key = toggles[k.toLowerCase()];
     if (key) { this.setOptions({ [key]: !o[key] }); this.onOptionsChange?.(this.getOptions()); return true; }
     if (k === '?') { this.hud.help.hidden = !this.hud.help.hidden; return true; }

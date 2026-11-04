@@ -2,7 +2,7 @@
 export const SHORTCUTS = [
   ['Space', 'play / pause'], [', .', 'previous / next frame'], ['← →', 'step 1 s (Shift: 5 s)'],
   ['[ ]', 'previous / next event'], ['1 2 3 4', 'follow · 3D · top · side'], ['5', "phone's viewpoint (captures)"],
-  ['R', 'rule geometry'], ['G', 'ghost of the previous run'], ['P', 'paths'], ['M', 'measure on hover'],
+  ['R', 'rule geometry'], ['H', 'rule panel (live values)'], ['G', 'ghost of the previous run'], ['P', 'paths'], ['M', 'measure on hover'],
   ['L', 'labels'], ['C', 'collision geometry (arm)'], ['X', 'real table texture (captures)'], ['?', 'this sheet'],
 ];
 

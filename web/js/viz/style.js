@@ -29,6 +29,24 @@ const CSS = `
 .viz-timeline canvas:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .viz-tl-tip { position: absolute; top: -26px; max-width: 420px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: 500 10px/1.8 var(--mono, monospace);
   background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; color: var(--text); pointer-events: none; }
+
+.viz-rules { position: absolute; z-index: 4; right: 12px; top: 52px; max-width: min(460px, calc(100% - 24px)); pointer-events: auto;
+  background: color-mix(in srgb, var(--surface, #fff) 90%, transparent); border: 1px solid var(--line); border-radius: var(--r-md, 6px);
+  padding: 6px 9px; font: 500 var(--fs-xs, 11px)/1.5 var(--font); color: var(--text); backdrop-filter: blur(6px); font-variant-numeric: tabular-nums; }
+.viz-rules .h, .viz-rules .f { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); }
+.viz-rules .f { color: var(--faint); border-top: 1px solid var(--line); margin-top: 3px; padding-top: 3px; display: block; }
+.viz-rules .r { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) 64px 62px 58px; gap: 8px; align-items: baseline; padding: 1px 0; }
+.viz-rules .r .id { font-family: var(--mono, monospace); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.viz-rules .r .id i { font-style: normal; color: var(--warn); }
+.viz-rules .r .sc, .viz-rules .r .lim { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.viz-rules .r b { font-family: var(--mono, monospace); text-align: right; }
+.viz-rules .r .vd { text-align: right; color: var(--muted); }
+.viz-rules .r .vd.violated, .viz-rules .bad-t { color: var(--bad); }
+.viz-rules .r .vd.advisory, .viz-rules .warn-t { color: var(--warn); }
+.viz-rules .r .vd.held { color: var(--ok, #2f7d4f); }
+.viz-rules .r.bad { box-shadow: inset 2px 0 0 var(--bad); padding-left: 6px; }
+.viz-rules .r.warn { box-shadow: inset 2px 0 0 var(--warn); padding-left: 6px; }
+@media (max-width: 560px) { .viz-rules .r { grid-template-columns: minmax(0, 1fr) 60px 56px; } .viz-rules .r .sc, .viz-rules .r .lim { display: none; } }
 `;
 let done = false;
 export function injectStyles() {
