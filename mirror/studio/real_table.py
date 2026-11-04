@@ -432,6 +432,8 @@ class Source:
     placement_note: str = ""
     placement_file: Optional[Path] = None   # json with origin_xy_m + yaw_deg (simulator placement of the table frame)
     recorded_corrections: list = field(default_factory=list)   # corrections the capture run itself compiled and ran
+    questions: Optional[Path] = None         # questions.json the capture run asked the person
+    answers: Optional[Path] = None           # the person's answers ({id: {answer, by, at, seconds_spent}})
 
 
 # The D1 development capture's folders come from the environment (they are local to the machine that made it):
@@ -535,7 +537,8 @@ def pipeline_source(d: Path, capture_id: Optional[str] = None) -> Source:
                   placement_file=f(man.get("table_to_sim"), "table_to_sim.json"),
                   placement_note=man.get("placement_note") or (json.loads(f(man.get("table_to_sim"), "table_to_sim.json").read_text()).get("label")
                                                                if f(man.get("table_to_sim"), "table_to_sim.json") else ""),
-                  recorded_corrections=recorded)
+                  recorded_corrections=recorded, questions=f(man.get("questions"), "questions.json"),
+                  answers=f(man.get("answers"), "answers.json"))
 
 
 # ------------------------------------------------------------------ build
@@ -599,6 +602,20 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
     events.sort(key=lambda x: x["t"])
     review = [{"code": r.code, "severity": r.severity, "message": r.message, "object": r.object, "event": r.event,
                "resolved": r.resolved, "resolution": r.resolution} for r in sess.review]
+
+    # ---- the questions the capture run asked, with the person's answers (never MIRROR's)
+    questions = None
+    if src.questions and src.questions.exists():
+        qj = json.loads(src.questions.read_text())
+        ans = json.loads(src.answers.read_text()) if src.answers and src.answers.exists() else {}
+        questions = []
+        for q in qj.get("questions") or []:
+            a = ans.get(q.get("id")) or {}
+            person = a if a.get("by") == "person" else None
+            questions.append({k: q.get(k) for k in ("id", "kind", "question", "options", "proposal", "resolves")} |
+                             {"t_s": (q.get("evidence") or {}).get("t_s"),
+                              "answer": person.get("answer") if person else None,
+                              "seconds_spent": person.get("seconds_spent") if person else None})
 
     # ---- media
     t0 = time.time()
@@ -719,7 +736,7 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
         "built_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "labels": labels_for(sess, src.labels), "notes": src.notes,
         "synthetic": bool(sess.synthetic), "evidence_kind": sess.evidence_kind, "session_id": sess.session_id,
         "video": {"file": "media/take.mp4", **take_info} if take_info else None,
-        "calibration": src.calibration, "objects": objects, "events": events, "review": review,
+        "calibration": src.calibration, "objects": objects, "events": events, "review": review, "questions": questions,
         "contours": "contours.json" if contours else None, "gate": gate, "task": task, "robot": robot, "twin": twin, "twin_meta": twin_meta, "sim_video": sim_video,
         "spend": src.spend, "model_calls_on_build": 0, "timings": timings,
         "honesty": ("Real footage from one phone. Object outlines come from SAM 3.1 masks (recorded); events come from object "

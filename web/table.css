@@ -226,3 +226,8 @@
 .yt-refuse { border-color: color-mix(in srgb, var(--warn) 45%, transparent); background: var(--warn-soft); }
 .yt-refuse .faint { margin-top: 4px; }
 .yt-pick { font: inherit; font-size: var(--fs-xs); text-transform: none; letter-spacing: 0; border: 1px solid var(--line-strong); border-radius: var(--r-pill); background: var(--surface); padding: 1px 6px; color: var(--text); }
+.yt-qs { margin: 0 0 var(--s4); }
+.yt-qs ol { margin: 0; padding-left: 18px; font-size: var(--fs-sm); }
+.yt-qs li { padding: 8px 0; border-top: 1px solid var(--line); }
+.yt-qs li p { margin: 2px 0; }
+.yt-qs .q { font-weight: 550; }

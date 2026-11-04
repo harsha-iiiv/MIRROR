@@ -419,6 +419,10 @@ function StepConfirm({ table, dir }) {
           : html`<p class="yt-wait">Waiting for you</p>`}
         ${(o.unsupported || []).length ? html`<p class="faint">Not modelled: ${o.unsupported.join(', ')}</p>` : ''}
       </div></article>`)}</div>
+    ${(table.questions || []).length ? html`<div class="yt-qs"><p class="yt-spec-h">What MIRROR asked you <span class="num faint">${table.questions.filter((q) => q.answer).length} / ${table.questions.length} answered</span></p>
+      <ol>${table.questions.map((q) => html`<li><p class="q">${q.question}</p>
+        <p class="faint">MIRROR's proposal: ${q.proposal}</p>
+        ${q.answer ? html`<p class="yt-yes">You: “${q.answer}”${q.seconds_spent != null ? html` <span class="faint num">${fmt(q.seconds_spent, 1)} s</span>` : ''}</p>` : html`<p class="yt-wait">Waiting for you</p>`}</li>`)}</ol></div>` : ''}
     ${open.length ? html`<div class="callout bad" role="note"><b>Still open (${open.length})</b>${open.map((r) => html`<div>${human(r.code)}: ${r.message}</div>`)}</div>`
       : html`<div class="callout ok">Nothing left to review.</div>`}
   </div>`;
