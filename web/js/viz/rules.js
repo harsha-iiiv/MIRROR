@@ -21,11 +21,14 @@ function selects(sel, obj) {
   return true;
 }
 
-function label(text, cls = '') {
+// `short` is shown where space is tight (phone view, narrow panes); the full text stays in the
+// rule panel and as the label's title.
+function label(text, cls = '', short = null) {
   const div = document.createElement('div');
   div.className = 'label3d viz-rule ' + cls;
   const span = document.createElement('span');
   span.textContent = text;
+  if (short && short !== text) { span.dataset.full = text; span.dataset.short = short; span.title = text; }
   div.appendChild(span);
   const o = new CSS2DObject(div);
   o.userData.isLabel = true;
@@ -79,7 +82,8 @@ export class RuleLayer {
       const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineDashedMaterial({ color: accent, dashSize: 0.008, gapSize: 0.005, transparent: true, opacity: 0.85 }));
       e.computeLineDistances();
       m.add(e);
-      const lab = label(compact ? `goal · ${t.id}` : `goal · inside ${t.id} · ${(2 * hx * 100).toFixed(1)} × ${(2 * hy * 100).toFixed(1)} cm`, 'goal');
+      const gShort = `goal · ${t.id}`;
+      const lab = label(compact ? gShort : `goal · inside ${t.id} · ${(2 * hx * 100).toFixed(1)} × ${(2 * hy * 100).toFixed(1)} cm`, 'goal', gShort);
       lab.position.set(0, -hy - 0.012, hz);
       m.add(lab);
       m.userData.ruleKind = 'goal';
@@ -107,7 +111,8 @@ export class RuleLayer {
       }
       if (boxes.length) {
         const top = boxes.reduce((a, b) => (b.center[2] + b.half[2] > a.center[2] + a.half[2] ? b : a));
-        const lab = label(compact ? `clearance ≥ ${(r * 100).toFixed(1)} cm` : `${c.id} · clearance ≥ ${(r * 100).toFixed(1)} cm`, 'clear');
+        const cShort = `clearance ≥ ${(r * 100).toFixed(1)} cm`;
+        const lab = label(compact ? cShort : `${c.id} · ${cShort}`, 'clear', cShort);
         lab.position.set(top.center[0], top.center[1], top.center[2] + top.half[2] + r + 0.015);
         this.group.add(lab);
       }
@@ -154,7 +159,8 @@ export class RuleLayer {
       dot.position.copy(at.pos); dot.renderOrder = 6;
       const what = v.constraint_id + (v.kind === 'advisory' ? ' (advisory: rule not enforced in this version)' : v.kind === 'contact' ? ' (shown at the nearest point; the contact point is not recorded)' : '');
       const val = /clear/i.test(v.constraint_id) || v.kind === 'contact' ? `${(v.peak * 100).toFixed(1)} cm` : `${v.peak.toFixed(1)}°`;
-      const lab = label(compact ? `${v.kind === 'advisory' ? 'advisory' : 'violated'} · peak ${val}` : `${what} · peak ${val} · ${v.t_start.toFixed(2)}–${v.t_end.toFixed(2)} s`, v.kind === 'advisory' ? 'warn' : 'bad');
+      const vShort = `${v.kind === 'advisory' ? 'advisory' : 'violated'} · ${val} · ${v.t_start.toFixed(1)}–${v.t_end.toFixed(1)} s`;
+      const lab = label(compact ? vShort : `${what} · peak ${val} · ${v.t_start.toFixed(2)}–${v.t_end.toFixed(2)} s`, v.kind === 'advisory' ? 'warn' : 'bad', vShort);
       lab.position.copy(at.pos).add(new THREE.Vector3(0, 0, 0.03));
       lab.userData.isViolationLabel = true;
       this.group.add(ring, dot, lab);
@@ -221,7 +227,9 @@ export class RuleLayer {
       const s = active ? 1 + 0.35 * (0.5 + 0.5 * Math.sin(now / 160)) : 1;
       m.ring.scale.setScalar(s);
       m.ring.material.opacity = inside ? 1 : 0.55;
-      m.lab.visible = inside || this.showAllMarkers;
+      const vis = inside || !!this.showAllMarkers;
+      // A visibility flip needs a frame: the label renderer applies it only when it draws.
+      if (m.lab.visible !== vis) { m.lab.visible = vis; animating = true; }
       animating = animating || active;
     }
     return animating;

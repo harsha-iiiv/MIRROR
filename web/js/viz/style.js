@@ -15,6 +15,7 @@ const CSS = `
 .label3d.viz-rule.bad > span { border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); }
 .label3d.viz-rule.warn > span { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
 .label3d.viz-rule.goal > span, .label3d.viz-rule.clear > span { color: var(--muted); }
+.label3d .viz-sw { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: -0.5px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 18%, transparent); }
 .label3d.viz-measure > span { font-family: var(--mono, monospace); background: var(--surface); }
 .label3d.viz-phone > span { color: var(--muted); }
 .viz-help { position: absolute; z-index: 6; right: 12px; bottom: 12px; background: color-mix(in srgb, var(--surface, #fff) 95%, transparent);
@@ -33,6 +34,9 @@ const CSS = `
 .viz-rules { position: absolute; z-index: 4; right: 12px; top: 52px; max-width: min(460px, calc(100% - 24px)); pointer-events: auto;
   background: color-mix(in srgb, var(--surface, #fff) 90%, transparent); border: 1px solid var(--line); border-radius: var(--r-md, 6px);
   padding: 6px 9px; font: 500 var(--fs-xs, 11px)/1.5 var(--font); color: var(--text); backdrop-filter: blur(6px); font-variant-numeric: tabular-nums; }
+.viz-rules { transition: opacity .16s ease; }
+.viz-rules.dock-bottom { top: auto; bottom: 52px; }
+@media (prefers-reduced-motion: reduce) { .viz-rules { transition: none; } }
 .viz-rules .h, .viz-rules .f { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); }
 .viz-rules .f { color: var(--faint); border-top: 1px solid var(--line); margin-top: 3px; padding-top: 3px; display: block; }
 .viz-rules .r { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) 64px 62px 58px; gap: 8px; align-items: baseline; padding: 1px 0; }

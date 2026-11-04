@@ -1,6 +1,7 @@
 // Top-down 2D view used when WebGL is unavailable. Same public surface as Viewer for what the
 // studio calls; 3D-only features are no-ops. Draws the table, obstacles, trays, objects at the
 // current playback pose and the traced object's path coloured by the checker's verdict.
+import { OBJECT_COLORS } from './palette.js';
 import { sceneBoxes, tiltOf } from './geom.js';
 import { intervalsFor, verdictAt } from './verdict.js';
 import { cssVar } from './look.js';
@@ -72,9 +73,9 @@ export class Fallback2D {
     g.fillStyle = cssVar('--bg', '#f4f3f0'); g.fillRect(X(-0.45), Y(0.4), 0.9 * s, 0.8 * s);
     const sc = this.scene;
     if (!sc) return;
-    g.strokeStyle = cssVar('--muted', '#6b6b70'); g.fillStyle = 'rgba(120,120,120,0.35)';
+    g.strokeStyle = OBJECT_COLORS.obstacle; g.fillStyle = 'rgba(178,95,217,0.35)';
     for (const b of sceneBoxes(sc)) this._rect(g, X, Y, b.center, b.half, b.quat, s);
-    for (const t of sc.trays || []) { g.strokeStyle = cssVar('--accent', '#2f54d9'); g.strokeRect(X(t.pose.pos[0] - t.inner_half[0]), Y(t.pose.pos[1] + t.inner_half[1]), 2 * t.inner_half[0] * s, 2 * t.inner_half[1] * s); }
+    for (const t of sc.trays || []) { g.strokeStyle = OBJECT_COLORS.tray; g.strokeRect(X(t.pose.pos[0] - t.inner_half[0]), Y(t.pose.pos[1] + t.inner_half[1]), 2 * t.inner_half[0] * s, 2 * t.inner_half[1] * s); }
     const p = this.payload, i = p ? this.frameIndex() : 0;
     if (p && this.showTrace && this.traceObject) {
       const arr = p.bodies[this.traceObject], ints = intervalsFor(this.report, this.traceObject);
@@ -89,7 +90,10 @@ export class Fallback2D {
     for (const o of sc.objects || []) {
       const st = p?.bodies?.[o.id]?.[i] || this.frame?.[o.id] || [...o.pose.pos, ...o.pose.quat];
       const half = o.kind === 'cup' ? o.size.outer_half : o.kind === 'block' ? o.size.half : [o.size.radius, o.size.radius, o.size.half_length];
-      g.fillStyle = o.kind === 'cup' && tiltOf(st.slice(3, 7)) > this.tol ? cssVar('--bad', '#c8372d') : cssVar('--text', '#333');
+      const over = o.kind === 'cup' && tiltOf(st.slice(3, 7)) > this.tol;
+      g.fillStyle = OBJECT_COLORS[o.kind] || cssVar('--text', '#333');
+      g.strokeStyle = over ? cssVar('--bad', '#c8372d') : cssVar('--text', '#333');
+      g.lineWidth = over ? 2.5 : 1;
       this._rect(g, X, Y, st.slice(0, 3), half, st.slice(3, 7), s);
     }
   }

@@ -2,6 +2,8 @@
 // the measured tabletop (1 cm grid, 10 cm rulers, world frame triad). No decorative effects.
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { colorFor } from './palette.js';
+export { OBJECT_COLORS, setObjectColors } from './palette.js';
 
 export function cssVar(name, fallback = '') {
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -65,10 +67,13 @@ export function bodyRole(bodyName, scene) {
 }
 
 // One physically based material per (role, colour). Colours come from the VisualScene.
-export function materialFor(role, rgba, { translucent = false } = {}) {
+// Objects, trays and obstacles take the studio palette (viz/palette.js) so the 3D view matches
+// the page, the evidence images and the overlay video; other bodies keep the VisualScene colour.
+export function materialFor(role, rgba, { translucent = false, bodyName = null } = {}) {
   const [r, g, b, a0] = rgba || [0.7, 0.7, 0.7, 1];
   const a = translucent ? Math.min(a0, 0.32) : a0;
-  const col = new THREE.Color().setRGB(r, g, b, THREE.SRGBColorSpace);
+  const hex = colorFor(role, bodyName);
+  const col = hex ? new THREE.Color(hex) : new THREE.Color().setRGB(r, g, b, THREE.SRGBColorSpace);
   const key = `${role}:${col.getHexString()}:${a.toFixed(3)}`;
   return mat(key, () => {
     const base = { color: col, transparent: a < 0.999, opacity: a, depthWrite: a >= 0.999 };

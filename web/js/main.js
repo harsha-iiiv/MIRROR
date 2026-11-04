@@ -172,6 +172,37 @@ function App() {
     viewerRef.current?.applyTheme();
   };
 
+  // Phones: the step bar scrolls sideways; keep the active item fully in view (one eased glide,
+  // instant under reduced motion).
+  const navRef = useRef(null);
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return undefined;
+    let raf = 0;
+    const reveal = () => {
+      const b = nav.querySelector('button[aria-current="step"]');
+      if (!b || nav.scrollWidth <= nav.clientWidth + 1) return;
+      const nr = nav.getBoundingClientRect(), br = b.getBoundingClientRect(), pad = 12;
+      let to = nav.scrollLeft;
+      if (br.left < nr.left + pad) to += br.left - nr.left - pad;
+      else if (br.right > nr.right - pad) to += br.right - nr.right + pad;
+      to = Math.max(0, Math.min(nav.scrollWidth - nav.clientWidth, to));
+      if (Math.abs(to - nav.scrollLeft) < 1) return;
+      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { nav.scrollLeft = to; return; }
+      const from = nav.scrollLeft, t0 = performance.now(), dur = 420;
+      cancelAnimationFrame(raf);
+      const tick = (now) => {
+        const k = Math.min(1, (now - t0) / dur);
+        nav.scrollLeft = from + (to - from) * (0.5 - 0.5 * Math.cos(Math.PI * k));
+        if (k < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    };
+    const id = setTimeout(reveal, 60);
+    window.addEventListener('resize', reveal);
+    return () => { clearTimeout(id); cancelAnimationFrame(raf); window.removeEventListener('resize', reveal); };
+  }, [step, !!snap]);
+
   if (!snap) {
     const msg = { connecting: 'Connecting to the live simulation…', waking: 'Live server waking up… this can take up to a minute.' }[liveStatus.state];
     return html`<div class="boot">${error ? html`<span class="err">Could not load the studio: ${error}</span>` : (msg || 'Loading studio…')}
@@ -198,7 +229,7 @@ function App() {
     <div class="app">
       <header class="top">
         <div class="brand"><b>MIRROR</b><span>task authoring and correction testing</span></div>
-        <nav class="steps" aria-label="Story steps">
+        <nav class="steps" aria-label="Story steps" ref=${navRef}>
           ${hasStory ? html`<button aria-current=${cur === 'overview' ? 'step' : null} class="start" onClick=${() => ctx.setStep('overview')}
             title="What happened, in one screen" aria-label="Overview"><span class="ix" aria-hidden="true">·</span><span class="lbl">Overview</span></button>` : ''}
           ${STEPS.map((s, i) => html`
@@ -468,7 +499,7 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
       <div class="viewer" ref=${el} tabindex="0" aria-label="3D view. Drag to orbit, scroll to zoom. Space plays or pauses; arrow keys step one second.">
         <div class="v-head">
           ${display.title ? html`<div class="v-title"><div class="t1">${display.title}</div><div class="t2">${display.sub}</div></div>` : html`<span></span>`}
-          <div class="v-tools">
+          <div class="v-tools" data-viz-avoid>
             ${['follow', '3d', 'top', 'side'].map((k) => (k === 'follow' && display.kind === 'scene') ? '' : html`<button class="iconbtn" aria-pressed=${v?.view === k}
               title=${k === 'follow' ? 'Camera follows the cup' : ''}
               onClick=${() => { userView.current = true; viewerRef.current.setView(k); setOpts({ ...opts }); }}>${{ follow: 'Follow', '3d': '3D', top: 'Top', side: 'Side' }[k]}</button>`)}
@@ -483,7 +514,7 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
         ${loadErr ? html`<div class="v-empty err">${loadErr}</div>` : ''}
         ${loading ? html`<div class="v-loading" role="status">Loading recorded rollout ${loading.total ? `${Math.round((100 * loading.got) / loading.total)}%` : `${(loading.got / 1e6).toFixed(1)} MB`}
           <div class="progress"><div style=${`width:${loading.total ? (100 * loading.got) / loading.total : 30}%`}></div></div></div>` : ''}
-        ${payload?.t?.length ? html`<div class="v-legend">
+        ${payload?.t?.length ? html`<div class="v-legend" data-viz-avoid>
           ${viewerRef.current?.verdictMode === 'verdict'
             ? html`<span><i style="background:var(--accent)"></i><span class="long">paths by the checker's verdict: OK</span><span class="short">verdict OK</span></span><span><i style="background:var(--warn)"></i>advisory</span><span><i style="background:var(--bad)"></i>violated</span>`
             : html`<span><i class="grad"></i><span class="long">container path by tilt: within ${15}° → over</span><span class="short">cup path by tilt</span></span>`}
