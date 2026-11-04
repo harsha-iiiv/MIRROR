@@ -358,6 +358,16 @@ def run(job: TwinJob, log=print) -> dict:
             old.unlink()
     W, H = job.size
 
+    rolls = [(lbl, load_rollout(p)) for lbl, p in job.rollouts]
+    skipped = {lbl: f"{r_.report.status}: {r_.report.plan_reason or ''}".strip(": ") for lbl, r_ in rolls
+               if r_.visual is None or not r_.frames}
+    if lbl0 := next((l for l, _ in rolls if l in skipped), None):
+        if lbl0 == rolls[0][0]:
+            # nothing was executed (e.g. a proven refusal): no robot to draw; say so instead of failing
+            (out / "twin.json").write_text(json.dumps({"kind": "mirror.twin/v1", "files": {}, "skipped": skipped,
+                                                       "note": "No executed run to draw (planning refused or failed)."}, indent=1))
+            return {"files": {}, "skipped": skipped, "timings_s": {}, "registration": {}, "time_map": {"anchors": []}}
+        rolls = [x for x in rolls if x[0] not in skipped]
     # -- capture
     s = CaptureSession.load(job.session)
     cam_key = job.camera if job.camera in s.intrinsics else sorted(s.intrinsics)[0]
@@ -372,8 +382,10 @@ def run(job: TwinJob, log=print) -> dict:
     codes = [b.code for b in blocking]
     if "recalibration_required" in codes or (s.recalibration and len(s.recalibration)):
         labels.append("Calibration reuse flagged")
-    labels = list(dict.fromkeys(labels + [x for x in job.labels if x.lower() not in {l.lower() for l in labels}]))
-    rolls = [(lbl, load_rollout(p)) for lbl, p in job.rollouts]
+    extra = [x for x in job.labels if x]
+    # a caller's more specific label replaces our short one ("One camera (single view, reduced)" over "One camera")
+    labels = [l for l in labels if not any(x.lower().startswith(l.lower()) for x in extra)]
+    labels = list(dict.fromkeys(labels + extra))
     has_arm = any(b_.name.startswith("arm/") for b_ in rolls[0][1].visual.bodies)
     robot_words = ("Simulated UR10e arm (simulated ceiling mount, drawn with its collision shapes)" if has_arm
                    else "Simulated gripper")
@@ -829,6 +841,7 @@ def run(job: TwinJob, log=print) -> dict:
                                             "after_labels": job.after_labels},
         "timings_s": {**timings, "total_s": round(time.time() - t_start, 1)},
         "robot": "arm" if has_arm else "gripper",
+        "skipped_rollouts": skipped,
         "honesty": ["Display only: no new measurement is made here.",
                     "Proxies are simulator stand-ins sized from your measurements; their colours are sampled from your footage.",
                     ("The robot is a simulated UR10e arm on a simulated ceiling mount; it never touched your table." if has_arm

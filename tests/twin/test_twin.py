@@ -257,3 +257,15 @@ def test_tray_from_mask_recovers_pose():
     assert abs(est["outer_long_m"] - L) < 0.006 and abs(est["outer_short_m"] - S) < 0.006
     cmp = compare_tray(est, (cx + 0.03, cy), (0.18, 0.12), 0.0)
     assert abs(cmp["centre_offset_cm"] - 3.0) < 0.5 and abs(cmp["yaw_offset_deg"] - yaw) < 0.6
+
+
+def test_refused_run_writes_a_note_not_a_crash(tmp_path):
+    from mirror.contracts import Rollout, RolloutReport
+    from mirror.twin.build import TwinJob, run
+    rep = RolloutReport(rollout_id="x", scene_id="s", spec_id="p", spec_version=1, condition="c", status="planning_failed",
+                        plan_status="infeasible", plan_reason="no route keeps the mug 6 cm clear (proven)")
+    p = tmp_path / "r.json"
+    p.write_text(Rollout(report=rep).model_dump_json())
+    m = run(TwinJob(session=tmp_path / "missing.json", video=tmp_path / "v.MOV", tracks=None, rollouts=[("run", p)], out=tmp_path / "o"))
+    assert m["files"] == {} and "planning_failed" in m["skipped"]["run"]
+    assert json.loads((tmp_path / "o" / "twin.json").read_text())["note"].startswith("No executed run")
