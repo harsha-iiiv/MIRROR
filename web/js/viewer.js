@@ -287,6 +287,19 @@ export class Viewer {
     this.camera.projectionMatrixInverse.copy(this.camera.projectionMatrix).invert();
     if (this.phone.backdrop) this.phone.backdrop.visible = true;
     this.phone.group.children.forEach((c) => { if (c !== this.phone.backdrop) c.visible = false; });
+    // The real frame replaces the simulated table: hide table, floor and table photo; a shadow
+    // catcher keeps the objects' contact shadows on the real surface.
+    this._hiddenForPhone = [];
+    for (const [, grp] of this.bodies) if (grp.userData.role === 'world' && grp.visible) { grp.visible = false; this._hiddenForPhone.push(grp); }
+    if (this.phone.ground?.visible) { this.phone.ground.visible = false; this._hiddenForPhone.push(this.phone.ground); }
+    if (this.triad.visible) { this.triad.visible = false; this._hiddenForPhone.push(this.triad); }
+    if (!this._catcher) {
+      this._catcher = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2), new THREE.ShadowMaterial({ opacity: 0.28 }));
+      this._catcher.receiveShadow = true; this._catcher.position.z = 0.0002;
+      this.scene.add(this._catcher);
+    }
+    this._catcher.visible = true;
+    this.labels.domElement.style.overflow = 'visible';
     this.dirty = true;
   }
 
@@ -296,6 +309,10 @@ export class Viewer {
     this.controls.enabled = true;
     if (this.phone.backdrop) this.phone.backdrop.visible = false;
     this.phone.group.children.forEach((c) => { if (c !== this.phone.backdrop) c.visible = true; });
+    for (const o of this._hiddenForPhone || []) o.visible = true;
+    this._hiddenForPhone = [];
+    if (this._catcher) this._catcher.visible = false;
+    this.labels.domElement.style.overflow = 'hidden';
     this.view = this._prevView || '3d';
     this.resize();
     this.camera.aspect = this._w / this._h; this.camera.updateProjectionMatrix();
@@ -400,6 +417,7 @@ export class Viewer {
       this.bodies.set(b.name, grp);
     }
     if (this.phone.ground) this.world.add(this.phone.ground), (this.phone.ground.visible = this.showTableTexture);
+    if (this.view === 'phone') { this.view = this._prevView || '3d'; this._enterPhone(); }
     this.dirty = true;
   }
 
@@ -439,7 +457,7 @@ export class Viewer {
       const r = o.element.getBoundingClientRect();
       if (r.width) items.push({ span, x0: r.left, x1: r.right, y0: r.top, y1: r.bottom });
     });
-    collect(this.world); collect(this.rules.group);
+    collect(this.world); collect(this.rules.group); collect(this.measureGroup); collect(this.phone.group);
     items.sort((a, b) => b.y0 - a.y0);
     const placed = [];
     for (const it of items) {

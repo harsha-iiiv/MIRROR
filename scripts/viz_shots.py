@@ -32,7 +32,7 @@ with sync_playwright() as p:
         if js:
             pg.evaluate(js)
         pg.wait_for_timeout(600)
-        pg.evaluate("() => { const v = window.__lab.v; for (let i = 0; i < 40; i++) v.glide.step(0.05); v.rules.update(v.t, v.frameIndex(), v.bodies, 0); v.controls.update(); v._render(); }")
+        pg.evaluate("() => { const v = window.__lab.v; for (let i = 0; i < 40; i++) v.glide.step(0.05); v.rules.update(v.t, v.frameIndex(), v.bodies, 0); if (v.view !== 'phone') v.controls.update(); v._render(); }")
         pg.wait_for_timeout(400)
         pg.screenshot(path=f"{out}/{name}.png", timeout=120000)
         st = pg.evaluate("() => window.__lab.v.getState ? window.__lab.v.getState() : null")

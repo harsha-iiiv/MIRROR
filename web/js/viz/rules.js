@@ -95,11 +95,11 @@ export class RuleLayer {
       if (!(r > 0)) continue;
       for (const bx of boxes) {
         const geo = new RoundedBoxGeometry(2 * (bx.half[0] + r), 2 * (bx.half[1] + r), 2 * (bx.half[2] + r), 4, r);
-        const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: warn, transparent: true, opacity: 0.12, depthWrite: false, roughness: 0.9, side: THREE.DoubleSide }));
+        const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: warn, transparent: true, opacity: 0.07, depthWrite: false, roughness: 0.9, side: THREE.DoubleSide }));
         m.position.set(...bx.center);
         m.quaternion.set(bx.quat[1], bx.quat[2], bx.quat[3], bx.quat[0]);
         m.renderOrder = 3;
-        const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), new THREE.LineBasicMaterial({ color: warn, transparent: true, opacity: 0.5 }));
+        const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), new THREE.LineBasicMaterial({ color: warn, transparent: true, opacity: 0.35 }));
         m.add(e);
         m.userData = { ruleKind: 'clearance', constraint: c.id, min_m: r, box: bx };
         this.volumes.push(m);

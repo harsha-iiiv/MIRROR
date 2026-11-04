@@ -62,18 +62,22 @@
       let session = null;
       try { session = await get(data + 'session.json'); } catch (e) { console.warn('no session.json', e); }
       if (session?.specs) v.setSpecs?.(session.specs);
-      const run = q.get('run') || 'r003';
-      const ghostId = q.get('ghost') || (run === 'r003' ? 'r002' : '');
-      const p = await get(`${data}rollouts/${encodeURIComponent(run)}.json`);
-      const g = ghostId ? await get(`${data}rollouts/${encodeURIComponent(ghostId)}.json`) : null;
+      // ?pack=DIR/ : a capture pack written by scripts/viz_export_capture.py (rollouts + capture view).
+      const pack = q.get('pack');
+      const run = q.get('run') || (pack ? 'after' : 'r003');
+      const rolloutUrl = (id) => new URL(pack ? `${pack}rollouts/${encodeURIComponent(id)}.json` : `${data}rollouts/${encodeURIComponent(id)}.json`, location.href).href;
+      const p = await get(rolloutUrl(run));
+      const ghostId = q.has('ghost') ? q.get('ghost') : (p.ghost_run || (run === 'r003' ? 'r002' : ''));
+      const g = ghostId ? await get(rolloutUrl(ghostId)) : null;
       let spec = null;
       if (q.get('spec')) spec = await get(q.get('spec'));
       if (p.spec) spec = p.spec;
-      const capUrl = q.get('capture') || p.capture_view || '';
+      const capUrl = q.get('capture') || (p.capture_view ? new URL(p.capture_view, rolloutUrl(run)).href : '');
       if (capUrl) { const cv = await get(capUrl); await v.setCapture(cv, capUrl.replace(/[^/]*$/, '')); showCapture(cv); }
       // ?recheck=V: show this run judged by its re-check under spec version V (old run, new rule).
       let report = null;
-      if (q.get('recheck') && session?.rechecks) {
+      if (q.get('recheck') && p.recheck_report) { report = p.recheck_report; spec = p.recheck_spec || spec; }
+      else if (q.get('recheck') && session?.rechecks) {
         const rc = session.rechecks.find((x) => x.rollout_id === run && String(x.spec_version) === q.get('recheck'));
         if (rc) report = rc.report;
       }
