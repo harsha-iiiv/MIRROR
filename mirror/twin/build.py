@@ -320,6 +320,71 @@ def resize(img, size):
     return cv2.resize(img, size, interpolation=interp)
 
 
+# --------------------------------------------------------------------- labels
+DEFAULT_ORIGIN_XY_M = (-0.075, 0.105)   # mirror.capture.proxy.WorkspacePlacement default (board centred on the sim table)
+
+
+def calibration_flag_open(session) -> bool:
+    """'Calibration reuse flagged' only while the session has an unresolved ``recalibration_required`` review item.
+    ``session.recalibration`` is filled on every capture (checks that passed included), so it is not a flag."""
+    return any(getattr(r, "code", None) == "recalibration_required" and not getattr(r, "resolved", False)
+               for r in getattr(session, "review", None) or [])
+
+
+def _get(obj, key, default=None):
+    if obj is None:
+        return default
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
+
+def placement_labels(table_to_sim: Optional[dict], session_placement=None) -> list:
+    """On-screen label(s) for where the layout sits in the simulator, from the pipeline's ``table_to_sim.json``
+    (keys: ``source``, ``origin_xy_m``, ``fell_back.shift_cm``, ``fell_back.still``), else the session's placement.
+    Nothing for ``default_centred`` (the real table frame, board at the simulator table's centre)."""
+    src = table_to_sim if table_to_sim else session_placement
+    source = _get(src, "source") or _get(_get(src, "placement"), "source")
+    if not source or source == "default_centred":
+        return []
+    fb = _get(src, "fell_back") or {}
+    shift = fb.get("shift_cm") if isinstance(fb, dict) else None
+    if not shift:
+        o = _get(src, "origin_xy_m") or _get(_get(src, "placement"), "origin_xy_m")
+        if o is not None and len(o) >= 2:
+            shift = [round((float(o[0]) - DEFAULT_ORIGIN_XY_M[0]) * 100, 1), round((float(o[1]) - DEFAULT_ORIGIN_XY_M[1]) * 100, 1)]
+    xy = f" ({float(shift[0]):+.1f} cm, {float(shift[1]):+.1f} cm)" if shift else ""
+    if source == "auto_layout_centred":
+        out = [f"Layout shifted by software{xy} to fit the robot's reach"]
+    elif source == "user_supplied":
+        out = [f"Layout placed by hand{xy} from the real table frame, not measured"]
+    else:
+        out = [f"Layout shifted by software{xy} ({source}), not measured"]
+    still = fb.get("still") if isinstance(fb, dict) else None
+    if still:
+        out.append("Still outside the robot's reach after the shift: " + "; ".join(str(x) for x in still))
+    return out
+
+
+def tray_agreement(reg: dict, tray_source: Optional[str], size) -> dict:
+    """What the tray numbers in ``registration`` mean. The pipeline places the simulated tray from the tray's own SAM
+    outline (``TrayRegion.source == 'tracked_tray_at_rest'``); the twin then measures it against the same outline with
+    the same single-view method, so that agreement is by construction. The object bases stay independent."""
+    W, H = size
+    bases = sorted((reg.get("object_base_offset_px") or {}).values())
+    base_txt = (f"{bases[0]:.0f}-{bases[-1]:.0f} px" if len(bases) > 1 else f"{bases[0]:.0f} px") if bases else "not available"
+    by_c = tray_source == "tracked_tray_at_rest"
+    if by_c:
+        note = ("The simulated tray is placed from the tray's own outline (same single-view method: SAM outline "
+                "back-projected to the rim plane), so the tray agreement (tray_iou, tray_table_frame offsets) is "
+                "by construction, not an accuracy measurement. The independent check is the object bases "
+                f"({base_txt} at {W}x{H}).")
+    else:
+        note = (f"The simulated tray was not placed from this outline (source: {tray_source}), so the tray agreement is an "
+                f"independent image-space check; object bases {base_txt} at {W}x{H}.")
+    return {"tray_placed_from": tray_source, "agreement_by_construction": by_c, "tray_note": note}
+
+
 # --------------------------------------------------------------------- build
 @dataclass
 class TwinJob:
@@ -380,12 +445,15 @@ def run(job: TwinJob, log=print) -> dict:
         labels.append("Real phone footage")
     labels.append("One camera" if len(s.intrinsics) == 1 else f"{len(s.intrinsics)} cameras")
     codes = [b.code for b in blocking]
-    if "recalibration_required" in codes or (s.recalibration and len(s.recalibration)):
+    if calibration_flag_open(s):
         labels.append("Calibration reuse flagged")
     extra = [x for x in job.labels if x]
     # a caller's more specific label replaces our short one ("One camera (single view, reduced)" over "One camera")
     labels = [l for l in labels if not any(x.lower().startswith(l.lower()) for x in extra)]
     labels = list(dict.fromkeys(labels + extra))
+    for pl_lbl in placement_labels(job.placement, s.placement):
+        if not any(x.lower().startswith(pl_lbl.split(" (")[0].lower()) for x in labels):
+            labels.append(pl_lbl)
     has_arm = any(b_.name.startswith("arm/") for b_ in rolls[0][1].visual.bodies)
     robot_words = ("Simulated UR10e arm (simulated ceiling mount, drawn with its collision shapes)" if has_arm
                    else "Simulated gripper")
@@ -539,6 +607,8 @@ def run(job: TwinJob, log=print) -> dict:
                                            **compare_tray(est, c_tab[:2], fl.size[:2], yaw_sim)}
     reg["note"] = ("Image-space agreement between the simulator's placement and your footage at "
                    f"{W}x{H}; not a 3-D accuracy measurement.")
+    # where the simulated tray came from decides what the tray agreement means
+    reg.update(tray_agreement(reg, getattr(getattr(s, "tray", None), "source", None), (W, H)))
 
     # -- time map
     tmap = build_time_map(frames, s, obj_to_label, video_dur, job.speed)
@@ -673,8 +743,20 @@ def run(job: TwinJob, log=print) -> dict:
     fs = FrameStream(job.video, (W, H), start_s=0.0, pts=s.clips[0].__dict__.get("pts_s") if s.clips else None,
                      fps=(s.clips[0].n_frames / s.clips[0].duration_s) if s.clips and s.clips[0].duration_s else 30.0)
     CW, CH = 1280, 720
-    head = 48
-    pw, ph = 378, 672
+    SBW = 2 * 378 + 3 * 8                    # side-by-side film width (unchanged); panels shrink to fit the header
+    t_sbs = job.title + " · your table"
+    t_3p = job.title + " · your table, your phone, the robot"
+    # every honesty chip and the whole caption sit in the header (wrapped, never truncated); panels are built to the
+    # height that is left so their own text keeps its size
+    head_sbs = TX.header_height(SBW, t_sbs, caption, labels)
+    head_3p = TX.header_height(CW, t_3p, caption, labels)
+
+    def geom3(hd):
+        ph_ = CH - hd - 8
+        pw_ = min(378, int(round(ph_ * 378 / 672)))
+        return pw_, ph_, CW - 2 * pw_ - 4 * 8
+    pw_s, ph_s = min(378, int(round((CH - head_sbs - 8) * 378 / 672))), CH - head_sbs - 8
+    pw, ph, tdw = geom3(head_3p)
     class _Null:
         def write(self, img):
             pass
@@ -683,7 +765,7 @@ def run(job: TwinJob, log=print) -> dict:
             pass
     if do_main:
         w_ov = Mp4(out / "overlay.mp4", (W, H), job.fps)
-        w_sbs = Mp4(out / "side_by_side.mp4", (2 * pw + 3 * 8, CH), job.fps)
+        w_sbs = Mp4(out / "side_by_side.mp4", (SBW, CH), job.fps)
         w_3p = Mp4(out / "twin_3panel.mp4", (CW, CH), job.fps)
     else:
         w_ov = w_sbs = w_3p = _Null()
@@ -708,11 +790,15 @@ def run(job: TwinJob, log=print) -> dict:
                 st0 = ["your objects", "become simulator stand-ins"] if u < 0.5 else ["simulator stand-ins", "sized from your measurements"]
                 ov = TX.panel_label(mix(start_img, ar0), "The robot on your table", "seen from your phone", st0, caption, labels)
                 w_ov.write(ov)
-                hp = TX.panel_label(resize(start_img, (pw, ph)), "Your hands", "your video", [f"t = {ts:4.1f} s"], None, None, small=True)
-                rp = TX.panel_label(resize(mix(start_img, ar0), (pw, ph)), "The robot on your table", "simulated", st0, None, None, small=True)
-                tdp = TX.topdown_panel(mix(td_real, td0), (492, ph), "Table twin", "top-down from your phone · dashed: simulated tray", ppm)
-                w_sbs.write(TX.canvas([hp, rp], (2 * pw + 3 * 8, CH), head, job.title + " · your table", caption))
-                w_3p.write(TX.canvas([hp, rp, tdp], (CW, CH), head, job.title + " · your table, your phone, the robot", caption))
+                mixed = mix(start_img, ar0)
+                hp_s, rp_s, hp, rp = (TX.panel_label(resize(im_, sz), *args, None, None, small=True)
+                                      for im_, sz, args in ((start_img, (pw_s, ph_s), ("Your hands", "your video", [f"t = {ts:4.1f} s"])),
+                                                            (mixed, (pw_s, ph_s), ("The robot on your table", "simulated", st0)),
+                                                            (start_img, (pw, ph), ("Your hands", "your video", [f"t = {ts:4.1f} s"])),
+                                                            (mixed, (pw, ph), ("The robot on your table", "simulated", st0))))
+                tdp = TX.topdown_panel(mix(td_real, td0), (tdw, ph), "Table twin", "top-down from your phone · dashed: simulated tray", ppm)
+                w_sbs.write(TX.canvas([hp_s, rp_s], (SBW, CH), head_sbs, t_sbs, caption, labels=labels))
+                w_3p.write(TX.canvas([hp, rp, tdp], (CW, CH), head_3p, t_3p, caption, labels=labels))
             cv2.imwrite(str(out / "stills" / "intro_objects.png"), cv2.cvtColor(start_img, cv2.COLOR_RGB2BGR))
             cv2.imwrite(str(out / "stills" / "intro_standins.png"), cv2.cvtColor(ar0, cv2.COLOR_RGB2BGR))
         for i in range(n_out):
@@ -742,14 +828,18 @@ def run(job: TwinJob, log=print) -> dict:
                                 caption, labels)
             w_ov.write(ov)
             # panels
-            hp = TX.panel_label(resize(hands, (pw, ph)), "Your hands", f"your video · ×{rate:.2f}" if abs(rate - 1) > 0.05 else "your video · real time",
-                                [f"t = {T:4.1f} s"], None, None, small=True)
-            rp = TX.panel_label(resize(ar, (pw, ph)), "The robot on your table", f"simulated · ×{tmap.speed:g}",
-                                st + ([sync_line] if sync_line else []), None, None, small=True)
-            tdp = TX.topdown_panel(td, (492, ph), "Table twin", "top-down from your phone · dashed: simulated tray", ppm)
-            sbs = TX.canvas([hp, rp], (2 * pw + 3 * 8, CH), head, job.title + " · your table", caption)
+            hands_sub = f"your video · ×{rate:.2f}" if abs(rate - 1) > 0.05 else "your video · real time"
+            robot_st = st + ([sync_line] if sync_line else [])
+            hp_s = TX.panel_label(resize(hands, (pw_s, ph_s)), "Your hands", hands_sub, [f"t = {T:4.1f} s"], None, None, small=True)
+            rp_s = TX.panel_label(resize(ar, (pw_s, ph_s)), "The robot on your table", f"simulated · ×{tmap.speed:g}", robot_st,
+                                  None, None, small=True)
+            hp = TX.panel_label(resize(hands, (pw, ph)), "Your hands", hands_sub, [f"t = {T:4.1f} s"], None, None, small=True)
+            rp = TX.panel_label(resize(ar, (pw, ph)), "The robot on your table", f"simulated · ×{tmap.speed:g}", robot_st,
+                                None, None, small=True)
+            tdp = TX.topdown_panel(td, (tdw, ph), "Table twin", "top-down from your phone · dashed: simulated tray", ppm)
+            sbs = TX.canvas([hp_s, rp_s], (SBW, CH), head_sbs, t_sbs, caption, labels=labels)
             w_sbs.write(sbs)
-            three = TX.canvas([hp, rp, tdp], (CW, CH), head, job.title + " · your table, your phone, the robot", caption)
+            three = TX.canvas([hp, rp, tdp], (CW, CH), head_3p, t_3p, caption, labels=labels)
             w_3p.write(three)
             if any(abs(s_now - x) < 0.5 * tmap.speed / job.fps for x in still_times):
                 pth = out / "stills" / f"twin_{s_now:06.2f}.png"
@@ -799,6 +889,10 @@ def run(job: TwinJob, log=print) -> dict:
             for x in after_rules:
                 ln.append(f"new rule: {x.get('verdict')} (checked from the run)")
             return ln
+        ba_labels = list(dict.fromkeys(labels + [x for x in job.after_labels if x]))
+        t_ba = job.title + f" · {la} vs {lb}, on your table"
+        head_ba = TX.header_height(CW, t_ba, caption, ba_labels)
+        pw_b, ph_b, tdw_b = geom3(head_ba)
         bw = Mp4(out / "before_after.mp4", (CW, CH), job.fps)
         try:
             for i in range(n_ba):
@@ -810,12 +904,11 @@ def run(job: TwinJob, log=print) -> dict:
                 tdimg = trails_on(tdimg, pbb, vc, width=3)
                 tdimg, _ = tdb.composite(tdimg, f2, shadow_strength=0.6)
                 l1 = before_lines(f1, sn) if sn < da else ["done", verdict(ra)] + ([f"re-checked under the new rule: {len(viol)} violation" + ("s" if len(viol) > 1 else "")] if viol else [])
-                p1 = TX.panel_label(resize(a1, (pw, ph)), la.capitalize(), f"simulated · ×{sp:g}", l1, None, None, small=True)
-                p2 = TX.panel_label(resize(a2, (pw, ph)), lb.capitalize(), (rule_text[:44] + "…") if len(rule_text) > 45 else (rule_text or f"simulated · ×{sp:g}"),
+                p1 = TX.panel_label(resize(a1, (pw_b, ph_b)), la.capitalize(), f"simulated · ×{sp:g}", l1, None, None, small=True)
+                p2 = TX.panel_label(resize(a2, (pw_b, ph_b)), lb.capitalize(), rule_text or f"simulated · ×{sp:g}",   # wrapped, not cut
                                     after_lines(f2, sn) if sn < db else ["done", verdict(rb)], None, None, small=True)
-                p3 = TX.topdown_panel(tdimg, (492, ph), "Table twin", f"grey: {la} · colour: {lb}", ppm)
-                cap2 = caption + ("" if not job.after_labels else " " + " · ".join(job.after_labels) + ".")
-                img = TX.canvas([p1, p2, p3], (CW, CH), head, job.title + f" · {la} vs {lb}, on your table", cap2)
+                p3 = TX.topdown_panel(tdimg, (tdw_b, ph_b), "Table twin", f"grey: {la} · colour: {lb}", ppm)
+                img = TX.canvas([p1, p2, p3], (CW, CH), head_ba, t_ba, caption, labels=ba_labels)
                 bw.write(img)
                 if i in (int(n_ba * 0.5), n_ba - 1):
                     cv2.imwrite(str(out / "stills" / f"before_after_{i:05d}.png"), cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
@@ -868,7 +961,8 @@ def run(job: TwinJob, log=print) -> dict:
                     "Proxies are simulator stand-ins sized from your measurements; their colours are sampled from your footage.",
                     ("The robot is a simulated UR10e arm on a simulated ceiling mount; it never touched your table." if has_arm
                      else "The robot is a simulated free-floating gripper; it never touched your table."),
-                    "Registration is limited by one camera and the capture's calibration labels."],
+                    "Registration is limited by one camera and the capture's calibration labels.",
+                    reg.get("tray_note", "")],
     }
     prev = out / "twin.json"
     if job.only and prev.exists():
