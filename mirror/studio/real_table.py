@@ -572,6 +572,19 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
         else:
             info = transcode(p, dst, height=720)
         twin.append({"name": name, "file": f"media/{dst.name}", **info})
+    twin_meta = None
+    tj_path = next((p.parent / "twin.json" for p in src.twin.values() if (p.parent / "twin.json").exists()), None)
+    if tj_path:
+        tj = json.loads(tj_path.read_text())
+        twin_meta = {k: tj.get(k) for k in ("caption", "labels", "registration", "honesty", "before_after")}
+        td = tj.get("topdown") or {}
+        img = tj_path.parent / (td.get("image") or "")
+        if td.get("corners_sim_xy") and img.is_file():
+            import cv2
+            im = cv2.imread(str(img))
+            cv2.imwrite(str(media / "twin_topdown.jpg"), im, [cv2.IMWRITE_JPEG_QUALITY, 84])
+            twin_meta["topdown"] = {"file": "media/twin_topdown.jpg", "size": [int(im.shape[1]), int(im.shape[0])],
+                                    "corners_sim_xy": td["corners_sim_xy"], "note": td.get("note")}
     sim_video = None
     if src.sim_video and src.sim_video.exists():
         shutil.copyfile(src.sim_video, media / "sim_run.mp4")
@@ -629,7 +642,7 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
         "synthetic": bool(sess.synthetic), "evidence_kind": sess.evidence_kind, "session_id": sess.session_id,
         "video": {"file": "media/take.mp4", **take_info} if take_info else None,
         "calibration": src.calibration, "objects": objects, "events": events, "review": review,
-        "contours": "contours.json" if contours else None, "gate": gate, "task": task, "robot": robot, "twin": twin, "sim_video": sim_video,
+        "contours": "contours.json" if contours else None, "gate": gate, "task": task, "robot": robot, "twin": twin, "twin_meta": twin_meta, "sim_video": sim_video,
         "spend": src.spend, "model_calls_on_build": 0, "timings": timings,
         "honesty": ("Real footage from one phone. Object outlines come from SAM 3.1 masks (recorded); events come from object "
                     "motion in one view, not contact sensing. The robot runs in MuJoCo on simulated proxies placed from the "

@@ -258,7 +258,7 @@ function LineChart({ title, unit, lines, threshold, thresholdLabel, t, onSeek, h
 // ------------------------------------------------------------------ plan view (simulator frame, metres)
 function quatYaw(q) { const [w, x, y, z] = q; return Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)); }
 
-function PlanView({ table, run, ghost, t, clearance }) {
+function PlanView({ table, dir, run, ghost, t, clearance }) {
   const carryW = useMemo(() => carries(table.events), [table]);
   const box = useRef(null);
   const W = useWidth(box);
@@ -266,7 +266,9 @@ function PlanView({ table, run, ghost, t, clearance }) {
   const [hands, setHands] = useState(true);
   const scene = table.robot?.scene, plan = table.robot?.plan;
   if (!scene) return '';
-  const xr = [-0.48, 0.48], yr = [-0.36, 0.30];
+  const xr = [-0.48, 0.48], yr = [-0.36, 0.34];
+  const td = table.twin_meta?.topdown;
+  const [photo, setPhoto] = useState(true);
   const H = Math.round(W * (yr[1] - yr[0]) / (xr[1] - xr[0]));
   const sx = (x) => ((x - xr[0]) / (xr[1] - xr[0])) * W;
   const sy = (y) => H - ((y - yr[0]) / (yr[1] - yr[0])) * H;
@@ -284,9 +286,16 @@ function PlanView({ table, run, ghost, t, clearance }) {
   return html`<figure class="yt-plan" ref=${box}>
     <figcaption><span>From above: your hands and the robot</span>
       <span class="num faint">${hover ? `x ${fmt(hover[0] * 100, 1)} cm · y ${fmt(hover[1] * 100, 1)} cm` : 'simulator frame'}</span></figcaption>
-    <svg width=${W} height=${H} onPointerMove=${move} onPointerLeave=${() => setHover(null)} role="img" aria-label="Top view of the table">
+    <svg class=${td && photo ? 'has-photo' : ''} width=${W} height=${H} onPointerMove=${move} onPointerLeave=${() => setHover(null)} role="img" aria-label="Top view of the table">
       <defs><pattern id="ytgrid" width=${k * 0.05} height=${k * 0.05} patternUnits="userSpaceOnUse"><path d=${`M ${k * 0.05} 0 L 0 0 0 ${k * 0.05}`} class="g5" /></pattern></defs>
       <rect x=${sx(-0.45)} y=${sy(0.4)} width=${0.9 * k} height=${0.8 * k} class="ws" />
+      ${td && photo ? (() => {
+        const C = td.corners_sim_xy, [iw, ih] = td.size;
+        const ux = [(C.top_right[0] - C.top_left[0]) / iw, (C.top_right[1] - C.top_left[1]) / iw];
+        const vy = [(C.bottom_left[0] - C.top_left[0]) / ih, (C.bottom_left[1] - C.top_left[1]) / ih];
+        const m = [k * ux[0], -k * ux[1], k * vy[0], -k * vy[1], sx(C.top_left[0]), sy(C.top_left[1])].map((v) => v.toFixed(4)).join(' ');
+        return html`<image href=${urlOf(dir, td.file)} width=${iw} height=${ih} transform=${`matrix(${m})`} class="photo" preserveAspectRatio="none" />`;
+      })() : ''}
       <rect x="0" y="0" width=${W} height=${H} fill="url(#ytgrid)" />
       ${tray ? rectAt(tray.pose.pos[0], tray.pose.pos[1], tray.inner_half[0], tray.inner_half[1], quatYaw(tray.pose.quat), 'tray') : ''}
       ${wall && clearance ? html`<g transform=${`translate(${sx(wall.pose.pos[0]).toFixed(1)} ${sy(wall.pose.pos[1]).toFixed(1)}) rotate(${(-quatYaw(wall.pose.quat) * 180) / Math.PI})`}>
@@ -308,6 +317,7 @@ function PlanView({ table, run, ghost, t, clearance }) {
     </svg>
     <div class="yt-plan-key">
       <label><input type="checkbox" checked=${hands} onChange=${(e) => setHands(e.target.checked)} /> <i class="hand-k"></i> your hands (from the video, approx.)</label>
+      ${td ? html`<label title=${td.note || ''}><input type="checkbox" checked=${photo} onChange=${(e) => setPhoto(e.target.checked)} /> your table, rectified from the phone</label>` : ''}
       <span><i class="robot-k"></i> robot${ghost ? html` · <i class="ghost-k"></i> before` : ''}</span>
       ${clearance ? html`<span><i class="band-k"></i> ${fmt(clearance * 100, 0)} cm clearance</span>` : ''}
     </div>
@@ -448,16 +458,16 @@ function StepRobot({ table, dir, t, seek }) {
   return html`<div>
     <${Metrics} s=${r.summary} />
     <p class="faint num yt-routes">${(r.summary.routes || []).map((x) => human(x).replace(/:/g, ' · ')).join('   ')}</p>
-    <${PlanView} table=${table} run=${r} t=${t} />
+    <${PlanView} table=${table} dir=${dir} run=${r} t=${t} />
     ${r.series?.gap_cm ? html`<${LineChart} title="Mug proxy to divider (approx.)" unit="cm" t=${t} onSeek=${seek}
       lines=${[{ name: 'run', color: 'var(--accent)', t: r.series.t, y: r.series.gap_cm }]} yMin=${0} yMax=${20}
       note="Horizontal gap from the cup proxy's surface to the divider box, drawn from recorded frames; the checker's verdicts use solid shapes." />` : ''}
     ${r.series?.tilt ? html`<${LineChart} title="Mug proxy tilt" unit="°" t=${t} onSeek=${seek} threshold=${15} thresholdLabel="15° limit" badAbove=${true} yMax=${20}
       lines=${[{ name: 'run', color: 'var(--accent)', t: r.series.t, y: r.series.tilt }]} yMin=${0} />` : ''}
     ${(table.twin || []).length ? html`<div class="yt-twin"><p class="yt-spec-h">The robot on your table, from your phone</p>
-      ${table.twin.map((v) => html`<figure class="yt-tw"><figcaption>${TWIN_TITLE[v.name] || human(v.name)} <span class="num faint">${v.width}×${v.height}</span></figcaption>
+      ${table.twin.filter((v) => v.name !== 'before_after').map((v) => html`<figure class="yt-tw"><figcaption>${TWIN_TITLE[v.name] || human(v.name)} <span class="num faint">${v.width}×${v.height}</span></figcaption>
         <video controls muted playsinline preload="metadata" src=${urlOf(dir, v.file)}></video></figure>`)}
-      <p class="yt-note">Approximate: one camera, calibration reuse flagged.</p></div>` : ''}
+      <p class="yt-note">${table.twin_meta?.caption || 'Approximate: one camera, calibration reuse flagged.'}${table.twin_meta?.registration ? ` Registration in the image: tray overlap ${Math.round(100 * table.twin_meta.registration.tray_iou)}%, object bases within ${Math.round(Math.max(...Object.values(table.twin_meta.registration.object_base_offset_px || { a: 0 })))} px at 540×960.` : ''}</p></div>` : ''}
     ${table.sim_video ? html`<details class="yt-det"><summary>Rendered video of this run</summary><video controls muted playsinline preload="none" src=${urlOf(dir, table.sim_video.file)}></video></details>` : ''}
     <p class="yt-note">${table.robot.placement_note}</p>
   </div>`;
@@ -514,7 +524,7 @@ function StepCorrect({ ctx, table, pick, setPick, go, extra, addExtra }) {
 const VERDICT = { satisfied: ['holds', 'ok'], violated: ['broken', 'bad'], not_verified: ['not verified', 'warn'], not_applicable: ['n/a', ''] };
 function Verdict({ v }) { const [l, c] = VERDICT[v] || [human(v), '']; return html`<span class=${'yt-v ' + c}>${l}</span>`; }
 
-function StepCompare({ table, pick, t, seek, extra }) {
+function StepCompare({ table, dir, pick, t, seek, extra }) {
   const c = [...(table.robot?.corrections || []), ...extra].find((x) => x.id === pick);
   if (!c) return html`<p class="muted">Choose a correction first.</p>`;
   if (c.outcome === 'question' || c.outcome === 'refused') return html`<div>
@@ -538,7 +548,10 @@ function StepCompare({ table, pick, t, seek, extra }) {
       threshold=${thr != null ? thr * 100 : null} thresholdLabel=${thr != null ? `${thr * 100} cm rule` : ''}
       lines=${[{ name: 'before', color: 'var(--faint)', t: base.series.t, y: base.series.gap_cm, dash: true }, { name: 'after', color: 'var(--accent)', t: after.series.t, y: after.series.gap_cm }]}
       note="Drawing aid from recorded frames (centre distance minus the proxy radius). Verdicts in the table come from the checker on the dense step log." />` : ''}
-    <${PlanView} table=${table} run=${after} ghost=${base} t=${t} clearance=${thr} />
+    <${PlanView} table=${table} dir=${dir} run=${after} ghost=${base} t=${t} clearance=${thr} />
+    ${(() => { const ba = (table.twin || []).find((v) => v.name === 'before_after'); const rule = table.twin_meta?.before_after?.rule;
+      return ba && rule && rule.trim() === (c.text || '').trim() ? html`<figure class="yt-tw"><figcaption>Before and after, on your table <span class="num faint">${ba.width}×${ba.height}</span></figcaption>
+        <video controls muted playsinline preload="metadata" src=${urlOf(dir, ba.file)}></video><p class="yt-note">${table.twin_meta.caption}</p></figure>` : ''; })()}
     <${Metrics} s=${after?.summary} />
   </div>`;
 }
@@ -590,7 +603,7 @@ export function TablePanel({ ctx }) {
     task: html`<${StepTask} table=${table} />`,
     robot: html`<${StepRobot} table=${table} dir=${st.dir} t=${rt} seek=${rseek} />`,
     correct: html`<${StepCorrect} ctx=${ctx} table=${table} pick=${pick} setPick=${setPick} go=${() => setStep('compare')} extra=${extra} addExtra=${(it) => setExtra((x) => [...x, it])} />`,
-    compare: html`<${StepCompare} table=${table} pick=${pick} t=${rt} seek=${rseek} extra=${extra} />`,
+    compare: html`<${StepCompare} table=${table} dir=${st.dir} pick=${pick} t=${rt} seek=${rseek} extra=${extra} />`,
   }[step];
   const rdur = run3d?.duration_s || 0;
 
