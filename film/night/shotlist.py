@@ -61,7 +61,7 @@ def main(argv=None):
                      f"{m.get('max_scale_change', '-')}, {m.get('max_text_flow_p99_px', '-')} {'pass' if m.get('pass') else 'FAIL'} |")
         t += dur
     lines += ["", "## Approximate (on screen)", "- " + "; ".join(d["labels"]),
-              "- simulation proxies sized from ruler measurements (4 cm cube for the 11 cm carton; upright cylinder for the lying marker); "
+              "- simulation proxies sized from ruler measurements (catalogue shapes, so they differ from the real objects); "
               "proxy colours neutralised in the 3-D view", "- layout centred on the simulator table by software",
               "- the correction sentence was chosen for the film from MIRROR's suggested corrections; the owner has not chosen one"]
     Path(a.out).write_text("\n".join(lines) + "\n")
