@@ -51,7 +51,7 @@
     const get = async (u) => { const r = await fetch(u); if (!r.ok) throw new Error(`${r.status} ${u}`); return r.json(); };
     const el = document.getElementById('viewer');
     const playBtn = document.getElementById('play');
-    const v = new Viewer(el, { onTick: (t, p) => { playBtn.textContent = p ? 'Pause' : 'Play'; } });
+    const v = new Viewer(el, { quality: q.get('quality') || undefined, force2d: q.has('force2d'), onTick: (t, p) => { playBtn.textContent = p ? 'Pause' : 'Play'; } });
     window.__lab = { v, ready: false };
     v.mountTimeline?.(document.getElementById('tl'));
     playBtn.onclick = () => v.toggle();

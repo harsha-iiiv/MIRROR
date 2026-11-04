@@ -84,7 +84,16 @@ export class Viewer {
     this.onHover = opts.onHover || (() => {});
     this.small = isSmallDevice(el);
     this.renderer = renderer;
-    setupRenderer(renderer, this.small);
+    // Software rasterisers (SwiftShader, llvmpipe): keep every frame cheap so the page stays responsive.
+    try {
+      const gl = renderer.getContext();
+      const ext = gl.getExtension('WEBGL_debug_renderer_info');
+      const name = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+      this.software = /swiftshader|llvmpipe|software|softpipe/i.test(name);
+    } catch { this.software = false; }
+    if (opts.quality === 'high') this.software = false;   // screenshots on software GL: full look
+    setupRenderer(renderer, this.small || this.software);
+    if (this.software) renderer.setPixelRatio(1);
     el.appendChild(renderer.domElement);
     renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.contextLost = true; });
     this.labels = new CSS2DRenderer();
@@ -93,7 +102,9 @@ export class Viewer {
     this.hud = makeHud(el);
 
     this.scene = new THREE.Scene();
-    try { this.scene.environment = makeEnvironment(renderer); this.scene.environmentIntensity = 0.6; } catch (e) { console.warn('environment light unavailable', e); }
+    if (!this.software) {
+      try { this.scene.environment = makeEnvironment(renderer); this.scene.environmentIntensity = 0.6; } catch (e) { console.warn('environment light unavailable', e); }
+    }
     this.camera = new THREE.PerspectiveCamera(36, 1, 0.01, 20);
     this.camera.up.copy(Z_UP);
     this.controls = new OrbitControls(this.camera, renderer.domElement);
@@ -107,8 +118,9 @@ export class Viewer {
     this.glide = new Glide(this.camera, this.controls);
     this._followPos = new THREE.Vector3();
 
-    const L = makeLights(this.scene, this.small);
+    const L = makeLights(this.scene, this.small || this.software);
     this.hemi = L.hemi; this.sun = L.key;
+    if (this.software) { this.hemi.intensity = 1.0; this.sun.shadow.mapSize.set(1024, 1024); }
 
     this.world = new THREE.Group();   // static + dynamic bodies
     this.overlay = new THREE.Group(); // ribbons, ghost paths
@@ -147,6 +159,12 @@ export class Viewer {
 
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(el);
+    // Render only while on screen (time still advances, so playback stays in sync).
+    this._onScreen = true;
+    if (window.IntersectionObserver) {
+      this.io = new IntersectionObserver((es) => { const v = es.some((e) => e.isIntersecting); if (v && !this._onScreen) this.dirty = true; this._onScreen = v; });
+      this.io.observe(el);
+    }
     this.resize();
     this._last = performance.now();
     const loop = (now) => {
@@ -171,7 +189,7 @@ export class Viewer {
     if (this.view === 'follow') this._follow(dt);
     const animating = this.showRules && this.rules.update(this.t, this.frameIndex(), this.bodies, now);
     const moved = this.view !== 'phone' && this.controls.update();
-    if (moved || this.dirty || animating) this._render();
+    if ((moved || this.dirty || animating) && this._onScreen && !document.hidden) this._render();
   }
 
   _render() {
@@ -202,6 +220,7 @@ export class Viewer {
   dispose() {
     cancelAnimationFrame(this._raf);
     this.ro.disconnect();
+    this.io?.disconnect();
     this.timeline?.dispose();
     window.removeEventListener('keydown', this._winKey);
     this.renderer.dispose();
@@ -236,7 +255,7 @@ export class Viewer {
   applyTheme() {
     this.scene.background = new THREE.Color(cssVar('--viewer') || '#eceae6');
     const dark = isDark();
-    this.hemi.intensity = dark ? 0.25 : 0.35;
+    this.hemi.intensity = this.software ? (dark ? 0.8 : 1.0) : dark ? 0.25 : 0.35;
     if (this.tableTop) { this.tableTop.map?.dispose(); this.tableTop.map = tableTexture(this._tableHalf[0], this._tableHalf[1], this.renderer); this.tableTop.needsUpdate = true; }
     if (this.floorMat) this.floorMat.color.set(dark ? '#17171a' : '#dedcd6');
     if (this.edgeMat) this.edgeMat.color.set(cssVar('--muted'));
@@ -1026,7 +1045,7 @@ export class Viewer {
     return { view: this.view, t: this.t, frame: this.frameIndex(), playing: this.playing, fps: this._fps.value, glide: !!this.glide.active,
       ribbons: (this.ribbons || []).map((r) => r.object), rules: { cones: this.rules.cones.length, volumes: this.rules.volumes.length, markers: this.rules.markers.length },
       ghostBodies: this.ghostLayer.bodies.size, capture: !!this.phone.view, arm: this.armModel || null, spec: this.spec ? `${this.spec.spec_id}@v${this.spec.version}` : null, report: this.report ? `${this.report.rollout_id} (${this.report.status})` : null,
-      options: this.getOptions(), verdictMode: this.verdictMode || null, fallback: null };
+      options: this.getOptions(), verdictMode: this.verdictMode || null, fallback: null, software: !!this.software };
   }
 
   snapshotPNG() { this._render(); return this.renderer.domElement.toDataURL('image/png'); }

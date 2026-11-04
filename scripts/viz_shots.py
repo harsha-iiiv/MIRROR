@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright
 
 out = sys.argv[1]
 specs = sys.argv[2:]
-BASE = "http://127.0.0.1:8765/js/viz/lab.html?"
+BASE = "http://127.0.0.1:8765/js/viz/lab.html?quality=high&"
 with sync_playwright() as p:
     b = p.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
     for s in specs:
