@@ -464,7 +464,8 @@ def d1_source(root: Path = D1_ROOT, cloud: Path = D1_CLOUD, twin_dir: Optional[P
     for tdir in [p for p in (twin_dir, cloud / "twin") if p]:
         if tdir.exists() and not twin:
             for p in sorted(tdir.glob("*.mp4")):
-                twin[p.stem] = p
+                if not p.stem.startswith("arm_"):     # arm films come from a different run (the UR10e variant)
+                    twin[p.stem] = p
     spend = None
     if (rd / "spend.json").exists():
         try:
@@ -490,7 +491,7 @@ def d1_source(root: Path = D1_ROOT, cloud: Path = D1_CLOUD, twin_dir: Optional[P
         placement_file=pick("phase2_summary.json"))
 
 
-def pipeline_source(d: Path, capture_id: Optional[str] = None) -> Source:
+def pipeline_source(d: Path, capture_id: Optional[str] = None, twin_override: Optional[Path] = None) -> Source:
     """A ``mirror.capture.real_run`` output directory (its manifest.json and page.json)."""
     d = Path(d)
     man = json.loads((d / "manifest.json").read_text()) if (d / "manifest.json").exists() else {}
@@ -514,7 +515,7 @@ def pipeline_source(d: Path, capture_id: Optional[str] = None) -> Source:
     spec_source = "inferred" if (gate_ok or (man.get("gate") or {}).get("passed")) and "stated" not in ss else "person_stated_intent"
     cands = [{"id": c["id"], "text": c.get("compile_text") or c.get("text") or c.get("label"), "label": c.get("label"),
               "why": c.get("why")} for c in page.get("correction_candidates") or []] or list(DEFAULT_CANDIDATES)
-    twin_dir = f(man.get("twin_dir"), "twin")
+    twin_dir = Path(twin_override) if twin_override else f(man.get("twin_dir"), "twin")
     ev_dir = f(man.get("evidence_dir"), "evidence")
     sp = man.get("spend") or {}
     spend = sp.get("usd") if sp else page.get("spend_usd")
@@ -529,7 +530,7 @@ def pipeline_source(d: Path, capture_id: Optional[str] = None) -> Source:
                   session=session, take=take, tracks=f(man.get("tracks"), "tracks_full.json.gz", "tracks_proxy.json.gz"),
                   scene=f(man.get("scene"), "scene/scene.json", "scene.json"), spec=spec, spec_source=spec_source,
                   evidence={p.stem: p for p in sorted(ev_dir.glob("*.jpg"))} if ev_dir else {},
-                  twin={p.stem: p for p in sorted(twin_dir.glob("*.mp4"))} if twin_dir else {},
+                  twin={p.stem: p for p in sorted(twin_dir.glob("*.mp4")) if not p.stem.startswith("arm_")} if twin_dir and twin_dir.exists() else {},
                   sim_video=f(man.get("sim_video"), "run/sim_run.mp4"), candidates=cands, labels=man.get("labels") or page.get("labels") or [],
                   notes=(man.get("notes") or []) + ([page["headline"]] if page.get("headline") else []),
                   spend={"spent_usd": spend, "cap_usd": sp.get("cap_usd") or page.get("cap_usd"), "mode": sp.get("mode")} if spend is not None else None,
@@ -775,6 +776,7 @@ def main(argv=None) -> int:
     b = sub.add_parser("pipeline", help="a mirror.capture.real_run output directory")
     b.add_argument("dir", type=Path)
     b.add_argument("--id", default=None)
+    b.add_argument("--twin", type=Path, default=None, help="folder with the twin films rendered from this run (overrides the manifest's twin_dir)")
     for p in (a, b):
         p.add_argument("--out", type=Path, required=True)
         p.add_argument("--no-sim", action="store_true", help="skip the simulator runs")
@@ -783,7 +785,7 @@ def main(argv=None) -> int:
         p.add_argument("--title", default=None, help="page title for this capture")
         p.add_argument("--feature", action="store_true", help="open this capture first on the page")
     args = ap.parse_args(argv)
-    src = d1_source(args.root, args.cloud, args.twin) if args.cmd == "d1" else pipeline_source(args.dir, args.id)
+    src = d1_source(args.root, args.cloud, args.twin) if args.cmd == "d1" else pipeline_source(args.dir, args.id, args.twin)
     if args.title:
         src.title = args.title
     t = build(src, args.out, simulate_runs=not args.no_sim, video=not args.no_video)
