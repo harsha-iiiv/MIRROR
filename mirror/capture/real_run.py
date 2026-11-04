@@ -305,7 +305,17 @@ class Ledger:
 
 class CountingTransport:
     """httpx transport wrapper counting billable requests (everything except file uploads), so attempts that a
-    client retried internally, or that failed before their usage was logged, can be charged conservatively."""
+    client retried internally, or that failed before their usage was logged, can be charged conservatively.
+
+    The Meta and LLM clients open a short-lived ``httpx.Client`` per request (``with self._http() as http``),
+    which enters and exits its transport each time. The wrapper is shared across those clients, so entering is a
+    no-op and exiting keeps the inner pool open; ``close()`` closes it explicitly."""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return None
 
     def __init__(self, inner=None):
         import httpx
