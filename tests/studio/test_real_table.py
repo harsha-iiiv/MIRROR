@@ -113,7 +113,7 @@ def test_build_d1_end_to_end(tmp_path, monkeypatch):
     assert (tmp_path / "D1/rollouts/base.json").exists() and (tmp_path / "D1/contours.json").exists()
 
 
-PIPE = Path("/workspace/mirror-team/v2/night/pipeline/D1/out")
+PIPE = Path(os.environ.get("MIRROR_PIPELINE_OUT", "pipeline_out"))
 
 
 @pytest.mark.skipif(not (PIPE / "manifest.json").exists(), reason="pipeline D1 output not on this machine")

@@ -28,6 +28,7 @@ import argparse
 import gzip
 import json
 import math
+import os
 import shutil
 import subprocess
 import sys
@@ -37,7 +38,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 TABLE_FORMAT = "mirror-studio-table/1"
-LOCK = "/workspace/mirror-team/v2/night/render.lock"
+LOCK = os.environ.get("MIRROR_RENDER_LOCK", "")   # optional: serialise heavy encodes with other jobs (flock)
 
 # Object colours on the page (also used for contours): restrained, distinguishable in both themes.
 PALETTE = ["#d9622b", "#2f7fd1", "#2e9e6a", "#8a63d2", "#b08a2e", "#c2457a", "#5b8a99"]
@@ -74,7 +75,7 @@ def transcode(src: Path, dst: Path, *, height: int = 960, crf: int = 30, lock: b
     cmd = ["ffmpeg", "-nostdin", "-y", "-loglevel", "error", "-i", str(src), "-an",
            "-vf", f"scale=-2:'min({height},ih)'", "-c:v", "libx264", "-preset", "veryfast", "-crf", str(crf),
            "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(dst)]
-    if lock and Path(LOCK).exists():
+    if lock and LOCK and Path(LOCK).exists():
         cmd = ["flock", LOCK] + cmd
     _run(cmd)
     return probe(dst)
@@ -392,8 +393,11 @@ class Source:
     placement_file: Optional[Path] = None   # json with origin_xy_m + yaw_deg (simulator placement of the table frame)
 
 
-D1_ROOT = Path("/workspace/mirror-team/v2/phone_real")
-D1_CLOUD = Path("/cloudspace/mirror/capture/D1")
+# The D1 development capture's folders come from the environment (they are local to the machine that made it):
+# MIRROR_D1_ROOT (phase 1 + 2 working folder: D1/session.json, D1/IMG_0815.MOV, out/phase2/) and
+# MIRROR_D1_STORE (the published copy: real-demo/, lens-IMG_0806/, twin/).
+D1_ROOT = Path(os.environ.get("MIRROR_D1_ROOT", "phone_real"))
+D1_CLOUD = Path(os.environ.get("MIRROR_D1_STORE", "capture/D1"))
 D1_CANDIDATES = [
     {"id": "mug_clearance", "text": "Keep the mug at least 6 cm away from the divider while carrying it.",
      "label": "Keep the mug 6 cm clear of the divider",
@@ -407,14 +411,14 @@ D1_CANDIDATES = [
 ]
 
 
-def d1_source(root: Path = D1_ROOT, cloud: Path = D1_CLOUD) -> Source:
+def d1_source(root: Path = D1_ROOT, cloud: Path = D1_CLOUD, twin_dir: Optional[Path] = None) -> Source:
     rd = cloud / "real-demo"
     p2 = rd / "phase2"
     loc = root / "out" / "phase2"
     pick = lambda name: (loc / name) if (loc / name).exists() else (p2 / name)
     ev = {p.stem: p for p in sorted((rd / "evidence").glob("*.jpg"))} if (rd / "evidence").exists() else {}
     twin = {}
-    for tdir in (cloud / "twin", Path("/workspace/mirror-team/v2/night/twin/D1")):
+    for tdir in [p for p in (twin_dir, cloud / "twin") if p]:
         if tdir.exists() and not twin:
             for p in sorted(tdir.glob("*.mp4")):
                 twin[p.stem] = p
@@ -444,8 +448,7 @@ def d1_source(root: Path = D1_ROOT, cloud: Path = D1_CLOUD) -> Source:
 
 
 def pipeline_source(d: Path, capture_id: Optional[str] = None) -> Source:
-    """A ``mirror.capture.real_run`` output directory (its manifest.json and page.json; see
-    /workspace/mirror-team/v2/night/status/pipeline.md for the contract)."""
+    """A ``mirror.capture.real_run`` output directory (its manifest.json and page.json)."""
     d = Path(d)
     man = json.loads((d / "manifest.json").read_text()) if (d / "manifest.json").exists() else {}
     page = json.loads((d / (man.get("page") or "page.json")).read_text()) if (d / (man.get("page") or "page.json")).exists() else {}
@@ -691,6 +694,7 @@ def main(argv=None) -> int:
     a = sub.add_parser("d1", help="the D1 development capture")
     a.add_argument("--root", type=Path, default=D1_ROOT)
     a.add_argument("--cloud", type=Path, default=D1_CLOUD)
+    a.add_argument("--twin", type=Path, default=None, help="folder with the twin films (overlay.mp4, ... , twin.json)")
     b = sub.add_parser("pipeline", help="a mirror.capture.real_run output directory")
     b.add_argument("dir", type=Path)
     b.add_argument("--id", default=None)
@@ -699,7 +703,7 @@ def main(argv=None) -> int:
         p.add_argument("--no-sim", action="store_true", help="skip the simulator runs")
         p.add_argument("--no-video", action="store_true", help="keep an existing media/take.mp4")
     args = ap.parse_args(argv)
-    src = d1_source(args.root, args.cloud) if args.cmd == "d1" else pipeline_source(args.dir, args.id)
+    src = d1_source(args.root, args.cloud, args.twin) if args.cmd == "d1" else pipeline_source(args.dir, args.id)
     build(src, args.out, simulate_runs=not args.no_sim, video=not args.no_video)
     write_index(Path(args.out).parent)
     return 0

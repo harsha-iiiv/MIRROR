@@ -65,6 +65,11 @@
     Cache-Control = "public, max-age=86400"
 
 [[headers]]
+  for = "/data/table/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
   for = "/js/*"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
