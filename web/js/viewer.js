@@ -582,9 +582,12 @@ export class Viewer {
       ring.sort((a, b) => Math.hypot(0.8 * a[0], a[1]) - Math.hypot(0.8 * b[0], b[1]));
       const cands = [[0, 0], ...(it.span._slot ? [it.span._slot] : []), ...ring];
       let best = null;
+      // Offsets start from the anchor brought inside the view (an anchor off screen, e.g. the
+      // phone, would otherwise clamp every candidate to the same edge slot).
+      const hx = Math.max(M + it.w / 2, Math.min(W - M - it.w / 2, it.cx)), hy = Math.max(M + it.h / 2, Math.min(H - M - it.h / 2, it.cy));
       for (const [dx0, dy0] of cands) {
-        const x0 = Math.max(M, Math.min(W - M - it.w, it.cx + dx0 - it.w / 2));
-        const y0 = Math.max(M, Math.min(H - M - it.h, it.cy + dy0 - it.h / 2));
+        const x0 = Math.max(M, Math.min(W - M - it.w, hx + dx0 - it.w / 2));
+        const y0 = Math.max(M, Math.min(H - M - it.h, hy + dy0 - it.h / 2));
         const rc = { x0, y0, x1: x0 + it.w, y1: y0 + it.h };
         let ov = 0;
         for (const p of placed) ov += area(rc, p);
@@ -598,7 +601,8 @@ export class Viewer {
       const tf = dx || dy ? `translate(${Math.round(dx)}px, ${Math.round(dy)}px)` : '';
       if (it.span.style.transform !== tf) it.span.style.transform = tf;
       placed.push(rc);
-      if (Math.hypot(dx, dy) > 6) {
+      const onScreen = it.cx >= 0 && it.cx <= W && it.cy >= 0 && it.cy <= H;
+      if (onScreen && Math.hypot(dx, dy) > 6) {
         const ex = Math.max(rc.x0, Math.min(rc.x1, it.cx)), ey = Math.max(rc.y0, Math.min(rc.y1, it.cy));
         lines.push({ x1: it.cx, y1: it.cy, x2: ex, y2: ey, bad: it.bad });
       }
