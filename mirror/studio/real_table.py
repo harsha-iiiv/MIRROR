@@ -704,10 +704,17 @@ def main(argv=None) -> int:
         p.add_argument("--out", type=Path, required=True)
         p.add_argument("--no-sim", action="store_true", help="skip the simulator runs")
         p.add_argument("--no-video", action="store_true", help="keep an existing media/take.mp4")
+        p.add_argument("--site", type=Path, default=None, help="also add the result to this exported static site")
     args = ap.parse_args(argv)
     src = d1_source(args.root, args.cloud, args.twin) if args.cmd == "d1" else pipeline_source(args.dir, args.id)
     build(src, args.out, simulate_runs=not args.no_sim, video=not args.no_video)
     write_index(Path(args.out).parent)
+    if args.site:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("export_static", Path(__file__).resolve().parents[2] / "scripts" / "export_static.py")
+        ex = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(ex)
+        log(f"added {ex.copy_tables(args.site, [args.out])} to {args.site}")
     return 0
 
 
