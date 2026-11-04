@@ -631,7 +631,9 @@ export function TablePanel({ ctx }) {
 
   return html`<div class="yt">
     <header class="yt-hd">
-      <div><p class="kicker">Your table</p><h2>${table.title}</h2></div>
+      <div><p class="kicker">Your table${(st.rows || []).length > 1 ? html` · <select class="yt-pick" aria-label="Capture" value=${table.id}
+        onChange=${(e) => { const u = new URL(location.href); u.searchParams.set('table', e.target.value); u.searchParams.set('ts', 'watch'); location.href = u.toString(); }}>
+        ${st.rows.map((r) => html`<option value=${r.id}>${r.id}${r.built_at ? ' · built ' + r.built_at.slice(0, 16).replace('T', ' ') : ''}</option>`)}</select>` : ''}</p><h2>${table.title}</h2></div>
       <${Labels} table=${table} />
     </header>
     <nav class="yt-steps" aria-label="Your table steps">${TABLE_STEPS.map((s) => html`<button aria-current=${s.key === step ? 'step' : null} class=${TABLE_STEPS.findIndex((x) => x.key === s.key) < i ? 'done' : ''}

@@ -225,3 +225,4 @@
 .yt-tw figcaption { margin-top: 4px; color: var(--muted); }
 .yt-refuse { border-color: color-mix(in srgb, var(--warn) 45%, transparent); background: var(--warn-soft); }
 .yt-refuse .faint { margin-top: 4px; }
+.yt-pick { font: inherit; font-size: var(--fs-xs); text-transform: none; letter-spacing: 0; border: 1px solid var(--line-strong); border-radius: var(--r-pill); background: var(--surface); padding: 1px 6px; color: var(--text); }
