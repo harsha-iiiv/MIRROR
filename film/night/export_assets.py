@@ -183,15 +183,14 @@ def build_copy(d, names, placement_label, gate_note=None):
     F = d["film"]; spec = d["spec"]; g = d["gate"]
     nm = lambda kind: names.get(kind, kind)
     oid = lambda o: nm(o.split("_")[0]) if o else o
-    blocking = g.get("blocking") or g.get("blocking_items") or []
-    if isinstance(blocking, int):
-        blocking = []
+    blocking = g.get("blocking_items") if isinstance(g.get("blocking"), int) or not g.get("blocking") else g.get("blocking")
+    blocking = [b if isinstance(b, dict) else {"code": str(b), "message": ""} for b in (blocking or [])]
     passed = bool(g.get("passed"))
     msg = (blocking[0].get("message", "") if blocking else "")
     msg = msg.split(": ", 1)[-1].split(" (")[0]
     gate = dict(passed=passed,
                 headline="Yes. The gate passed." if passed else "Not yet. The gate refused.",
-                code=(blocking[0].get("code") if blocking else "gate passed"), detail=msg, evidence_kind=g.get("evidence_kind", ""),
+                code=(blocking[0].get("code") if blocking else ("gate passed" if passed else "refused")), detail=msg, evidence_kind=g.get("evidence_kind", ""),
                 note=gate_note or ("MIRROR may propose the task from this take; it is shown below for confirmation." if passed else
                       "One camera; the flag stays open until a lens clip with the same phone settings. No bypass exists, and none was used."),
                 spec_intro=("the task MIRROR proposed from the take" if passed and spec.get("goals") and

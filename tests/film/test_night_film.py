@@ -129,3 +129,18 @@ def test_correction_sources_reproduce_phase2(tmp_path):
     assert mc["old_rechecked"]["status"] == "constraint_violated" and mc["new"]["status"] == "success"
     assert mc["new"]["measures"]["cup_0"]["min_transport_clearance_m"] >= 0.06 > C["old"]["measures"]["cup_0"]["min_transport_clearance_m"]
     assert C["model_calls"] == 0
+
+
+def test_gate_card_reads_both_gate_shapes():
+    ea = _load("export_assets")
+    base = {"film": {"rule_id": "c", "applies_obj": "cup_0", "min_m": 0.06, "rule_type": "keep_clearance", "applies_kind": "cup",
+                     "phase": "transport", "unchanged": {}, "others": [], "rows": {"new": []}},
+            "spec": {"spec_id": "s", "version": 1, "goals": [], "ordering": [], "constraints": []}}
+    msg = "top: focal length re-estimated 7.1% different from one oblique board view (a single-view estimate cannot prove which)"
+    for g in ({"passed": False, "blocking": [{"code": "recalibration_required", "message": msg}]},
+              {"passed": False, "blocking": 1, "blocking_items": [{"code": "recalibration_required", "message": msg}]}):
+        cp = ea.build_copy({**base, "gate": g}, {"wall": "divider"}, "x")
+        assert cp["gate"]["code"] == "recalibration_required" and cp["gate"]["headline"].startswith("Not yet")
+        assert cp["gate"]["detail"].startswith("focal length re-estimated 7.1%")
+    cp = ea.build_copy({**base, "gate": {"passed": True, "blocking": 0, "blocking_items": []}}, {}, "x")
+    assert cp["gate"]["headline"].startswith("Yes") and cp["gate"]["code"] == "gate passed"

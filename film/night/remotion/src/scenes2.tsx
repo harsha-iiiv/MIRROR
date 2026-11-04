@@ -265,7 +265,7 @@ export const Table: React.FC<{dur: number}> = ({dur}) => {
         ))}
         <div style={{fontSize: 22, color: C.muted, marginTop: 18, lineHeight: 1.4, ...rise(f, 100)}}>A correction that changes nothing says so.</div>
       </div>
-      <Labels items={['rule from Muse Spark + offline interpreter (identical)', 'MuJoCo · independent checker', 'development clip D1 · never scored']} x={96} y={1012} size={18} />
+      <Labels items={[DATA.spark?.same_scoped_rule ? 'rule from Muse Spark + offline interpreter (identical)' : 'offline rule interpreter · 0 model calls', 'MuJoCo · independent checker', REAL_LABELS[REAL_LABELS.length - 1]]} x={96} y={1012} size={18} />
     </Frame>
   );
 };
