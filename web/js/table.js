@@ -159,7 +159,10 @@ function TakePlayer({ table, contours, dir, t, setT, playing, setPlaying, focus,
       ${table.objects.map((o) => html`<button role="listitem" class=${'yt-chip' + (focus === o.label ? ' on' : '')}
         onMouseEnter=${() => setFocus(o.label)} onMouseLeave=${() => setFocus(null)} onFocus=${() => setFocus(o.label)} onBlur=${() => setFocus(null)}
         onClick=${() => { const w = (carry[o.label] || [])[0]; if (w) setT(w.from - 0.6, true); }}
-        title=${o.identity}><i style=${{ background: o.color }}></i>${o.name}</button>`)}
+        title=${o.identity}><i style=${{ background: o.color }}></i><span class="nm">${o.name}</span>${(() => {
+          const w = (carry[o.label] || []).find((x) => t >= x.from && t <= x.to);
+          return w ? html`<span class="st on num">carried ${fmt(t - w.from, 1)} s</span>` : html`<span class="st num">${(carry[o.label] || []).some((x) => x.to < t) ? 'placed' : 'at rest'}</span>`;
+        })()}</button>`)}
       <label class="yt-toggle"><input type="checkbox" checked=${outlines} onChange=${(e) => setOutlines(e.target.checked)} /> Outlines</label>
     </div>
   </div>`;

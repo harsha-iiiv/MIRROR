@@ -32,6 +32,9 @@
 .yt-src { position: absolute; left: 8px; bottom: 8px; font: var(--fs-xs) var(--mono); color: rgba(255,255,255,.82); background: rgba(0,0,0,.42); padding: 2px 7px; border-radius: var(--r-pill); }
 .yt-legend { display: flex; flex-direction: column; gap: 4px; padding-top: 2px; }
 .yt-chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid transparent; background: none; border-radius: var(--r-pill); padding: 5px 10px 5px 6px; cursor: pointer; color: var(--text); font-size: var(--fs-sm); text-align: left; transition: background .2s, border-color .2s; }
+.yt-chip { display: grid; grid-template-columns: 10px auto; column-gap: 8px; min-width: 150px; }
+.yt-chip .st { grid-column: 2; font-size: var(--fs-xs); color: var(--faint); transition: color .2s; }
+.yt-chip .st.on { color: var(--accent); }
 .yt-chip i, .sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
 .sw { margin-right: 8px; vertical-align: -1px; }
 .yt-chip:hover, .yt-chip.on { background: var(--surface); border-color: var(--line); }
