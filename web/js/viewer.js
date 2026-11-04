@@ -578,7 +578,7 @@ export class Viewer {
   _buildRules() {
     const report = this.payload ? this.report : null;
     this.spec = this._loadSpec || this._specFor(report);
-    this.rules.build({ scene: this.sceneState, spec: this.spec, report, payload: this.payload, tol: this.tol });
+    this.rules.build({ scene: this.sceneState, spec: this.spec, report, payload: this.payload, tol: this.tol, compact: (this.el.clientWidth || 1000) < 560 });
     this.rules.group.visible = this.showRules;
     this.clearanceRule = (this.spec?.constraints || []).find((c) => c.type === 'keep_clearance');
     this.dirty = true;

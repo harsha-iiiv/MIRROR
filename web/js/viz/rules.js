@@ -57,7 +57,7 @@ export class RuleLayer {
     this.cones = []; this.markers = []; this.volumes = []; this.closest = null;
   }
 
-  build({ scene, spec, report, payload, tol = 15 }) {
+  build({ scene, spec, report, payload, tol = 15, compact = false }) {
     this.clear();
     this.scene = scene; this.payload = payload; this.report = report;
     if (!scene) return;
@@ -79,7 +79,7 @@ export class RuleLayer {
       const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineDashedMaterial({ color: accent, dashSize: 0.008, gapSize: 0.005, transparent: true, opacity: 0.85 }));
       e.computeLineDistances();
       m.add(e);
-      const lab = label(`goal · inside ${t.id} · ${(2 * hx * 100).toFixed(1)} × ${(2 * hy * 100).toFixed(1)} cm`, 'goal');
+      const lab = label(compact ? `goal · ${t.id}` : `goal · inside ${t.id} · ${(2 * hx * 100).toFixed(1)} × ${(2 * hy * 100).toFixed(1)} cm`, 'goal');
       lab.position.set(0, -hy - 0.012, hz);
       m.add(lab);
       m.userData.ruleKind = 'goal';
@@ -107,7 +107,7 @@ export class RuleLayer {
       }
       if (boxes.length) {
         const top = boxes.reduce((a, b) => (b.center[2] + b.half[2] > a.center[2] + a.half[2] ? b : a));
-        const lab = label(`${c.id} · clearance ≥ ${(r * 100).toFixed(1)} cm`, 'clear');
+        const lab = label(compact ? `clearance ≥ ${(r * 100).toFixed(1)} cm` : `${c.id} · clearance ≥ ${(r * 100).toFixed(1)} cm`, 'clear');
         lab.position.set(top.center[0], top.center[1], top.center[2] + top.half[2] + r + 0.015);
         this.group.add(lab);
       }
@@ -154,7 +154,7 @@ export class RuleLayer {
       dot.position.copy(at.pos); dot.renderOrder = 6;
       const what = v.constraint_id + (v.kind === 'advisory' ? ' (advisory: rule not enforced in this version)' : '');
       const val = /clear/i.test(v.constraint_id) || v.kind === 'contact' ? `${(v.peak * 100).toFixed(1)} cm` : `${v.peak.toFixed(1)}°`;
-      const lab = label(`${what} · peak ${val} · ${v.t_start.toFixed(2)}–${v.t_end.toFixed(2)} s`, v.kind === 'advisory' ? 'warn' : 'bad');
+      const lab = label(compact ? `${v.kind === 'advisory' ? 'advisory' : 'violated'} · peak ${val}` : `${what} · peak ${val} · ${v.t_start.toFixed(2)}–${v.t_end.toFixed(2)} s`, v.kind === 'advisory' ? 'warn' : 'bad');
       lab.position.copy(at.pos).add(new THREE.Vector3(0, 0, 0.03));
       lab.userData.isViolationLabel = true;
       this.group.add(ring, dot, lab);

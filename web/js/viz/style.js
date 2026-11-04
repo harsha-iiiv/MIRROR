@@ -11,7 +11,7 @@ const CSS = `
 .viz-card .viz-card-h span { color: var(--muted); }
 .viz-card .viz-card-f { display: block; color: var(--faint); margin-top: 4px; border-top: 1px solid var(--line); padding-top: 4px; }
 .viz-card .bad-t, .label3d.bad > span { color: var(--bad); }
-.label3d.viz-rule > span { font-family: var(--mono, monospace); font-variant-numeric: tabular-nums; }
+.label3d.viz-rule > span { font-family: var(--mono, monospace); font-variant-numeric: tabular-nums; max-width: min(420px, 70vw); overflow: hidden; text-overflow: ellipsis; }
 .label3d.viz-rule.bad > span { border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); }
 .label3d.viz-rule.warn > span { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
 .label3d.viz-rule.goal > span, .label3d.viz-rule.clear > span { color: var(--muted); }
