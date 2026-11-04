@@ -307,6 +307,8 @@ def simulate(scene, spec, candidates: list[dict], rollout_dir: Path, *, client=N
         added = {d.get("target_id") for d in item["diff"]}
         old_ok = all(r["verdict"] != "violated" for r in item["recheck"]["rules"] if r["rule_id"] in added)
         item["outcome"] = "already_held" if old_ok else "changed"
+        if after.rollout.report.status == "planning_failed":
+            item["outcome"] = "no_plan"          # the planner refuses: no motion keeps every rule; nothing was executed
         item["spec"] = spec_view(new_spec)
         item["wall_s"] = round(time.time() - t1, 1)
         log(f"{item['id']}: {item['outcome']} (old run {recheck.get('status')}, new run {item['after']['summary']['status']}) {item['wall_s']} s")
@@ -571,7 +573,20 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
             shutil.copyfile(p, dst)
         else:
             info = transcode(p, dst, height=720)
-        twin.append({"name": name, "file": f"media/{dst.name}", **info})
+        item = {"name": name, "file": f"media/{dst.name}", **info}
+        # A poster frame, so the player is not a black box before it plays (twin stills when present, else frame 40%).
+        poster = media / f"twin_{name}.jpg"
+        stills = sorted((p.parent / "stills").glob(f"{ {'twin_3panel': 'twin', 'before_after': 'before_after'}.get(name, name) }_*.png")) if (p.parent / "stills").exists() else []
+        try:
+            if stills:
+                small_jpeg(stills[len(stills) // 2], poster, width=720)
+            else:
+                _run(["ffmpeg", "-nostdin", "-y", "-loglevel", "error", "-ss", str(round(0.4 * (info.get("duration_s") or 0), 2)), "-i", str(dst),
+                      "-frames:v", "1", "-vf", "scale='min(720,iw)':-2", str(poster)], timeout=60)
+            item["poster"] = f"media/{poster.name}"
+        except Exception as exc:  # posters are optional
+            log(f"poster for {name} skipped: {exc}")
+        twin.append(item)
     twin_meta = None
     tj_path = next((p.parent / "twin.json" for p in src.twin.values() if (p.parent / "twin.json").exists()), None)
     if tj_path:

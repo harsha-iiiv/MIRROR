@@ -218,3 +218,10 @@
 [data-theme="dark"] .yt-plan .photo { opacity: .8; }
 .yt-plan svg.has-photo .g5 { opacity: .35; }
 .yt-plan svg.has-photo .ws { opacity: 0; }
+.yt-twin { margin: var(--s4) 0; }
+.yt-twin-h { display: flex; justify-content: space-between; align-items: center; gap: var(--s2); flex-wrap: wrap; margin-bottom: var(--s2); }
+.yt-twin-h .yt-spec-h { margin: 0; }
+.yt-tw video { max-height: 62vh; width: 100%; object-fit: contain; display: block; }
+.yt-tw figcaption { margin-top: 4px; color: var(--muted); }
+.yt-refuse { border-color: color-mix(in srgb, var(--warn) 45%, transparent); background: var(--warn-soft); }
+.yt-refuse .faint { margin-top: 4px; }

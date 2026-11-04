@@ -464,20 +464,32 @@ function StepRobot({ table, dir, t, seek }) {
       note="Horizontal gap from the cup proxy's surface to the divider box, drawn from recorded frames; the checker's verdicts use solid shapes." />` : ''}
     ${r.series?.tilt ? html`<${LineChart} title="Mug proxy tilt" unit="°" t=${t} onSeek=${seek} threshold=${15} thresholdLabel="15° limit" badAbove=${true} yMax=${20}
       lines=${[{ name: 'run', color: 'var(--accent)', t: r.series.t, y: r.series.tilt }]} yMin=${0} />` : ''}
-    ${(table.twin || []).length ? html`<div class="yt-twin"><p class="yt-spec-h">The robot on your table, from your phone</p>
-      ${table.twin.filter((v) => v.name !== 'before_after').map((v) => html`<figure class="yt-tw"><figcaption>${TWIN_TITLE[v.name] || human(v.name)} <span class="num faint">${v.width}×${v.height}</span></figcaption>
-        <video controls muted playsinline preload="metadata" src=${urlOf(dir, v.file)}></video></figure>`)}
-      <p class="yt-note">${table.twin_meta?.caption || 'Approximate: one camera, calibration reuse flagged.'}${table.twin_meta?.registration ? ` Registration in the image: tray overlap ${Math.round(100 * table.twin_meta.registration.tray_iou)}%, object bases within ${Math.round(Math.max(...Object.values(table.twin_meta.registration.object_base_offset_px || { a: 0 })))} px at 540×960.` : ''}</p></div>` : ''}
+    ${(table.twin || []).filter((v) => v.name !== 'before_after').length ? html`<${TwinFilms} table=${table} dir=${dir} films=${table.twin.filter((v) => v.name !== 'before_after')} />` : ''}
     ${table.sim_video ? html`<details class="yt-det"><summary>Rendered video of this run</summary><video controls muted playsinline preload="none" src=${urlOf(dir, table.sim_video.file)}></video></details>` : ''}
     <p class="yt-note">${table.robot.placement_note}</p>
   </div>`;
 }
 
+function TwinFilms({ table, dir, films }) {
+  const [k, setK] = useState(0);
+  const v = films[Math.min(k, films.length - 1)];
+  const reg = table.twin_meta?.registration;
+  return html`<div class="yt-twin">
+    <div class="yt-twin-h"><span class="yt-spec-h">The robot on your table, from your phone</span>
+      ${films.length > 1 ? html`<div class="seg" role="tablist" aria-label="Films">${films.map((f, i) => html`<button role="tab" aria-selected=${i === k} aria-pressed=${i === k} class="r" onClick=${() => setK(i)}>${TWIN_SHORT[f.name] || human(f.name)}</button>`)}</div>` : ''}</div>
+    <figure class="yt-tw"><video key=${v.file} controls muted playsinline preload="none" poster=${v.poster ? urlOf(dir, v.poster) : undefined} src=${urlOf(dir, v.file)}
+      style=${{ aspectRatio: `${v.width} / ${v.height}` }}></video>
+      <figcaption>${TWIN_TITLE[v.name] || human(v.name)} <span class="num faint">${v.width}×${v.height} · ${fmt(v.duration_s, 1)} s</span></figcaption></figure>
+    <p class="yt-note">${table.twin_meta?.caption || 'Approximate: one camera, calibration reuse flagged.'}${reg ? ` Registration in the image: tray overlap ${Math.round(100 * reg.tray_iou)}%, object bases within ${Math.round(Math.max(...Object.values(reg.object_base_offset_px || { a: 0 })))} px at 540×960.` : ''}</p>
+  </div>`;
+}
+
+const TWIN_SHORT = { overlay: 'Overlay', side_by_side: 'Side by side', twin_3panel: 'Three views' };
 const TWIN_TITLE = { overlay: 'The robot on your table, from your phone', side_by_side: 'Your hands · the robot', twin_3panel: 'Video · table twin · simulator', before_after: 'Before and after the example correction' };
 
 const OUTCOME = {
   changed: ['Changes the run', 'ok'], already_held: ['Already true', ''], question: ['Needs your answer', 'warn'],
-  refused: ['Not supported', 'bad'], no_change: ['No change', ''],
+  refused: ['Not supported', 'bad'], no_change: ['No change', ''], no_plan: ['Refuses: no compliant plan', 'warn'],
 };
 
 function OwnCorrection({ ctx, table, onItem }) {
@@ -521,7 +533,7 @@ function StepCorrect({ ctx, table, pick, setPick, go, extra, addExtra }) {
   </div>`;
 }
 
-const VERDICT = { satisfied: ['holds', 'ok'], violated: ['broken', 'bad'], not_verified: ['not verified', 'warn'], not_applicable: ['n/a', ''] };
+const VERDICT = { satisfied: ['holds', 'ok'], violated: ['broken', 'bad'], not_verified: ['not verified', 'warn'], not_applicable: ['n/a', ''], not_run: ['not run', ''] };
 function Verdict({ v }) { const [l, c] = VERDICT[v] || [human(v), '']; return html`<span class=${'yt-v ' + c}>${l}</span>`; }
 
 function StepCompare({ table, dir, pick, t, seek, extra }) {
@@ -532,27 +544,31 @@ function StepCompare({ table, dir, pick, t, seek, extra }) {
     <p class="yt-note">Nothing was changed and nothing was run. This is the correct answer to an instruction that cannot hold as written.</p></div>`;
   const base = table.robot.run, after = c.after;
   const added = new Set((c.diff || []).map((d) => d.target_id));
-  const rows = (after?.rules || []).map((r) => ({ ...r, old: (c.recheck?.rules || []).find((x) => x.rule_id === r.rule_id) }));
+  const noPlan = c.outcome === 'no_plan' || after?.summary?.status === 'planning_failed';
+  const rows = (noPlan ? (c.recheck?.rules || []).map((o) => ({ rule_id: o.rule_id, verdict: 'not_run', old: o }))
+    : (after?.rules || []).map((r) => ({ ...r, old: (c.recheck?.rules || []).find((x) => x.rule_id === r.rule_id) })));
   rows.sort((a, b) => (added.has(b.rule_id) ? 1 : 0) - (added.has(a.rule_id) ? 1 : 0));
   const thr = (c.diff || []).map((d) => d.value?.params?.min_m).find((x) => x != null);
   return html`<div>
     <div class="yt-diff">${(c.diff || []).map((d) => html`<div><span class="plus">+</span> <b>${d.value?.type}</b> · ${d.value?.applies_to?.kind} · ${d.value?.phase}${d.value?.params ? ' · ' + Object.entries(d.value.params).map(([k, v]) => `${k} ${v}`).join(', ') : ''}<div class="faint">${d.value?.description}</div></div>`)}
       <div class="faint num">v${table.task?.version} → v${c.version} · ${c.compiler}</div></div>
-    ${c.outcome === 'already_held' ? html`<div class="callout">The old run already kept this rule; the re-check confirms it from the step log. The robot does the same thing.</div>`
+    ${noPlan ? html`<div class="callout yt-refuse"><b>MIRROR refuses to run it.</b> ${after?.summary?.plan_reason || 'No plan keeps every rule on this layout.'}
+      <div class="faint">Nothing was executed. The old run, re-checked under the new rule: ${c.recheck?.status === 'success' ? 'it holds' : 'it breaks it'}.</div></div>`
+    : c.outcome === 'already_held' ? html`<div class="callout">The old run already kept this rule; the re-check confirms it from the step log. The robot does the same thing.</div>`
       : html`<div class="callout ok"><b>The old run breaks the new rule; the new run keeps it.</b> ${(c.recheck?.violations || []).length} violation window${(c.recheck?.violations || []).length === 1 ? '' : 's'} in the old run, ${after?.summary?.violations ?? 0} in the new one.</div>`}
     <table class="yt-table yt-recheck"><thead><tr><th>Rule</th><th>Old run, re-checked</th><th>New run</th></tr></thead><tbody>
       ${rows.map((r) => html`<tr class=${added.has(r.rule_id) ? 'new' : ''}><td><span class="num">${r.rule_id}</span>${added.has(r.rule_id) ? html` <span class="yt-new">new</span>` : ''}${r.old?.detail && r.old.verdict === 'violated' ? html`<div class="faint">${r.old.detail.split(';')[0]}</div>` : ''}</td>
         <td><${Verdict} v=${r.old?.verdict} /></td><td><${Verdict} v=${r.verdict} /></td></tr>`)}
     </tbody></table>
-    ${base.series?.gap_cm && after?.series?.gap_cm ? html`<${LineChart} title="Mug proxy to divider, before and after (approx.)" unit="cm" t=${t} onSeek=${seek} yMin=${0} yMax=${20} height=${190}
+    ${base.series?.gap_cm && (after?.series?.gap_cm || noPlan) ? html`<${LineChart} title="Mug proxy to divider, before and after (approx.)" unit="cm" t=${t} onSeek=${seek} yMin=${0} yMax=${20} height=${190}
       threshold=${thr != null ? thr * 100 : null} thresholdLabel=${thr != null ? `${thr * 100} cm rule` : ''}
-      lines=${[{ name: 'before', color: 'var(--faint)', t: base.series.t, y: base.series.gap_cm, dash: true }, { name: 'after', color: 'var(--accent)', t: after.series.t, y: after.series.gap_cm }]}
+      lines=${[{ name: 'before', color: 'var(--faint)', t: base.series.t, y: base.series.gap_cm, dash: true }, ...(noPlan ? [] : [{ name: 'after', color: 'var(--accent)', t: after.series.t, y: after.series.gap_cm }])]}
       note="Drawing aid from recorded frames (centre distance minus the proxy radius). Verdicts in the table come from the checker on the dense step log." />` : ''}
-    <${PlanView} table=${table} dir=${dir} run=${after} ghost=${base} t=${t} clearance=${thr} />
+    <${PlanView} table=${table} dir=${dir} run=${noPlan ? base : after} ghost=${noPlan ? null : base} t=${t} clearance=${thr} />
     ${(() => { const ba = (table.twin || []).find((v) => v.name === 'before_after'); const rule = table.twin_meta?.before_after?.rule;
       return ba && rule && rule.trim() === (c.text || '').trim() ? html`<figure class="yt-tw"><figcaption>Before and after, on your table <span class="num faint">${ba.width}×${ba.height}</span></figcaption>
-        <video controls muted playsinline preload="metadata" src=${urlOf(dir, ba.file)}></video><p class="yt-note">${table.twin_meta.caption}</p></figure>` : ''; })()}
-    <${Metrics} s=${after?.summary} />
+        <video controls muted playsinline preload="none" poster=${ba.poster ? urlOf(dir, ba.poster) : undefined} src=${urlOf(dir, ba.file)}></video><p class="yt-note">${table.twin_meta.caption}</p></figure>` : ''; })()}
+    ${noPlan ? '' : html`<${Metrics} s=${after?.summary} />`}
   </div>`;
 }
 
@@ -594,8 +610,9 @@ export function TablePanel({ ctx }) {
   const S = TABLE_STEPS[i];
   const onVideo = VIDEO_STEPS.has(step);
   const corr = [...(table.robot?.corrections || []), ...extra].find((x) => x.id === pick);
-  const run3d = step === 'compare' && corr?.after ? corr.after : table.robot?.run;
-  const ghost3d = step === 'compare' && corr?.after ? table.robot?.run : null;
+  const corrRan = corr?.after && corr.outcome !== 'no_plan' && corr.after.summary?.status !== 'planning_failed';
+  const run3d = step === 'compare' && corrRan ? corr.after : table.robot?.run;
+  const ghost3d = step === 'compare' && corrRan ? table.robot?.run : null;
   const body = {
     watch: html`<${StepWatch} table=${table} carry=${carry} seek=${seek} />`,
     moments: html`<${StepMoments} table=${table} seek=${seek} t=${t} />`,
