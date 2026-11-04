@@ -561,6 +561,7 @@ export class Viewer {
       items.push({ span, pr, n: order++, bad: pr === 0, cx: (r.left + r.right) / 2 - host.left, cy: (r.top + r.bottom) / 2 - host.top, w: r.width, h: r.height });
     });
     collect(this.world); collect(this.rules.group); collect(this.measureGroup); collect(this.phone.group);
+    this._dockRulePanel(host);
     const avoid = [];
     const scope = this.el.parentElement || this.el;
     for (const e of scope.querySelectorAll('.viz-rules, [data-viz-avoid]')) {
@@ -574,11 +575,12 @@ export class Viewer {
     const lines = [];
     for (const it of items) {
       const stepY = it.h + P, stepX = it.w / 2 + 14;
-      const cands = [];
-      if (it.span._slot) cands.push(it.span._slot);
-      cands.push([0, 0]);
-      for (let k = 1; k <= 7; k++) cands.push([0, -k * stepY], [0, k * stepY]);
-      for (let k = 0; k <= 5; k++) for (const sx of [1, -1]) cands.push([sx * stepX, -k * stepY], ...(k ? [[sx * stepX, k * stepY]] : []));
+      // Home first, then the previous slot (no hopping), then the nearest free slot.
+      const ring = [];
+      for (let k = 1; k <= 7; k++) ring.push([0, -k * stepY], [0, k * stepY]);
+      for (let k = 0; k <= 5; k++) for (const sx of [1, -1]) ring.push([sx * stepX, -k * stepY], ...(k ? [[sx * stepX, k * stepY]] : []));
+      ring.sort((a, b) => Math.hypot(0.8 * a[0], a[1]) - Math.hypot(0.8 * b[0], b[1]));
+      const cands = [[0, 0], ...(it.span._slot ? [it.span._slot] : []), ...ring];
       let best = null;
       for (const [dx0, dy0] of cands) {
         const x0 = Math.max(M, Math.min(W - M - it.w, it.cx + dx0 - it.w / 2));
@@ -606,14 +608,44 @@ export class Viewer {
     this._leaderKey = key;
     const NS = 'http://www.w3.org/2000/svg';
     svg.replaceChildren(...lines.flatMap((l) => {
-      const col = l.bad ? 'var(--bad)' : 'var(--muted)';
-      const ln = document.createElementNS(NS, 'line');
-      for (const [k, val] of Object.entries({ x1: l.x1, y1: l.y1, x2: l.x2, y2: l.y2 })) ln.setAttribute(k, val.toFixed(1));
-      ln.setAttribute('stroke', col); ln.setAttribute('stroke-width', '1'); ln.setAttribute('opacity', '0.75');
+      const col = l.bad ? 'var(--bad)' : 'var(--text)';
+      const mk = (stroke, w, op) => {
+        const ln = document.createElementNS(NS, 'line');
+        for (const [k, val] of Object.entries({ x1: l.x1, y1: l.y1, x2: l.x2, y2: l.y2 })) ln.setAttribute(k, val.toFixed(1));
+        ln.style.stroke = stroke; ln.setAttribute('stroke-width', w); ln.setAttribute('opacity', op); ln.setAttribute('stroke-linecap', 'round');
+        return ln;
+      };
       const dot = document.createElementNS(NS, 'circle');
-      dot.setAttribute('cx', l.x1.toFixed(1)); dot.setAttribute('cy', l.y1.toFixed(1)); dot.setAttribute('r', '2.25'); dot.setAttribute('fill', col);
-      return [ln, dot];
+      dot.setAttribute('cx', l.x1.toFixed(1)); dot.setAttribute('cy', l.y1.toFixed(1)); dot.setAttribute('r', '2.5');
+      dot.style.fill = col; dot.style.stroke = 'var(--surface)'; dot.setAttribute('stroke-width', '1');
+      // A thin halo keeps the line readable over the real video frame.
+      return [mk('var(--surface)', '3', '0.55'), mk(col, '1.25', '0.85'), dot];
     }));
+  }
+
+  // The rule panel never sits on the object being judged: when the traced object's screen
+  // position stays under the panel for a moment, the panel moves to the other end of the view
+  // (a short fade, no slide). Hysteresis keeps it from flipping back and forth.
+  _dockRulePanel(host) {
+    const el = this.rulePanel?.el;
+    if (!el || el.hidden) return;
+    const g = this.traceObject && this.bodies.get(this.traceObject);
+    if (!g || !g.visible) return;
+    const p = new THREE.Vector3(); g.getWorldPosition(p); p.project(this.camera);
+    if (p.z < -1 || p.z > 1) return;
+    const x = (p.x * 0.5 + 0.5) * host.width, y = (-p.y * 0.5 + 0.5) * host.height;
+    const r = el.getBoundingClientRect(), pad = 28;
+    const under = x > r.left - host.left - pad && x < r.right - host.left + pad && y > r.top - host.top - pad && y < r.bottom - host.top + pad;
+    const now = performance.now();
+    if (!under) { this._dockSince = 0; return; }
+    if (!this._dockSince) { this._dockSince = now; this.dirty = true; return; }
+    if (now - this._dockSince < 400) { this.dirty = true; return; }
+    this._dockSince = 0;
+    const bottom = !el.classList.contains('dock-bottom');
+    const flip = () => { el.classList.toggle('dock-bottom', bottom); el.style.opacity = ''; };
+    if (prefersReducedMotion()) { flip(); return; }
+    el.style.opacity = '0';
+    setTimeout(() => { flip(); this.dirty = true; }, 160);
   }
 
   _halfHeight(o) {

@@ -34,6 +34,9 @@ const CSS = `
 .viz-rules { position: absolute; z-index: 4; right: 12px; top: 52px; max-width: min(460px, calc(100% - 24px)); pointer-events: auto;
   background: color-mix(in srgb, var(--surface, #fff) 90%, transparent); border: 1px solid var(--line); border-radius: var(--r-md, 6px);
   padding: 6px 9px; font: 500 var(--fs-xs, 11px)/1.5 var(--font); color: var(--text); backdrop-filter: blur(6px); font-variant-numeric: tabular-nums; }
+.viz-rules { transition: opacity .16s ease; }
+.viz-rules.dock-bottom { top: auto; bottom: 52px; }
+@media (prefers-reduced-motion: reduce) { .viz-rules { transition: none; } }
 .viz-rules .h, .viz-rules .f { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); }
 .viz-rules .f { color: var(--faint); border-top: 1px solid var(--line); margin-top: 3px; padding-top: 3px; display: block; }
 .viz-rules .r { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) 64px 62px 58px; gap: 8px; align-items: baseline; padding: 1px 0; }
