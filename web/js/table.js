@@ -167,13 +167,13 @@ function Ticks({ dur, every = 5 }) {
 function Scrub({ dur, t, onSeek, children, label }) {
   const el = useRef(null);
   const drag = useRef(false);
-  const at = (e) => { const r = el.current.getBoundingClientRect(); return Math.max(0, Math.min(dur, ((e.clientX - r.left) / r.width) * dur)); };
+  const at = (e) => { const r = el.current.getBoundingClientRect(); const lab = parseFloat(getComputedStyle(el.current).getPropertyValue('--lab')) || 0; return Math.max(0, Math.min(dur, ((e.clientX - r.left - lab) / Math.max(1, r.width - lab)) * dur)); };
   return html`<div class="yt-scrub" ref=${el} role="slider" tabindex="0" aria-label=${label} aria-valuemin="0" aria-valuemax=${dur} aria-valuenow=${t.toFixed(1)}
     onPointerDown=${(e) => { drag.current = true; e.currentTarget.setPointerCapture(e.pointerId); onSeek(at(e)); }}
     onPointerMove=${(e) => drag.current && onSeek(at(e))} onPointerUp=${() => { drag.current = false; }}
     onKeyDown=${(e) => { if (e.key === 'ArrowRight') { onSeek(Math.min(dur, t + (e.shiftKey ? 5 : 1))); e.preventDefault(); } if (e.key === 'ArrowLeft') { onSeek(Math.max(0, t - (e.shiftKey ? 5 : 1))); e.preventDefault(); } }}>
     ${children}
-    <div class="yt-head" style=${{ left: `${(100 * t) / (dur || 1)}%` }}></div>
+    <div class="yt-head" style=${{ left: `calc(var(--lab) + (100% - var(--lab)) * ${(t / (dur || 1)).toFixed(5)})` }}></div>
   </div>`;
 }
 
@@ -201,7 +201,7 @@ function useWidth(ref) {
   return w;
 }
 
-function LineChart({ title, unit, lines, threshold, thresholdLabel, t, onSeek, height = 150, yMin, yMax, digits = 1, note }) {
+function LineChart({ title, unit, lines, threshold, thresholdLabel, t, onSeek, height = 150, yMin, yMax, badAbove = false, digits = 1, note }) {
   const box = useRef(null);
   const W = useWidth(box);
   const [hover, setHover] = useState(null);
@@ -220,7 +220,7 @@ function LineChart({ title, unit, lines, threshold, thresholdLabel, t, onSeek, h
   let lo = yMin ?? Math.min(...all, threshold ?? Infinity), hi = yMax ?? Math.max(...all, threshold ?? -Infinity);
   if (!isFinite(lo) || !isFinite(hi)) { lo = 0; hi = 1; }
   if (hi - lo < 1e-6) hi = lo + 1;
-  const span = hi - lo; lo -= span * 0.06; hi += span * 0.08;
+  const span = hi - lo; if (yMin == null) lo -= span * 0.06; if (yMax == null) hi += span * 0.08;
   const X = (x) => pad.l + ((W - pad.l - pad.r) * x) / tMax;
   const Y = (y) => pad.t + (height - pad.t - pad.b) * (1 - (Math.min(hi, Math.max(lo, y)) - lo) / (hi - lo));
   const ticks = (() => { const n = 4, step = (hi - lo) / n; return Array.from({ length: n + 1 }, (_, i) => lo + i * step); })();
@@ -233,7 +233,7 @@ function LineChart({ title, unit, lines, threshold, thresholdLabel, t, onSeek, h
     <svg width=${W} height=${height} role="img" aria-label=${title}
       onPointerMove=${move} onPointerLeave=${() => setHover(null)} onClick=${() => hover != null && onSeek && onSeek(hover)}>
       ${ticks.map((v) => html`<g><line x1=${pad.l} x2=${W - pad.r} y1=${Y(v)} y2=${Y(v)} class="grid" /><text x=${pad.l - 6} y=${Y(v) + 3.5} class="axis" text-anchor="end">${v.toFixed(Math.abs(hi - lo) < 5 ? 1 : 0)}</text></g>`)}
-      ${threshold != null ? html`<g><rect x=${pad.l} y=${Y(threshold)} width=${W - pad.l - pad.r} height=${Math.max(0, height - pad.b - Y(threshold))} class="bad-zone" />
+      ${threshold != null ? html`<g><rect x=${pad.l} y=${badAbove ? pad.t : Y(threshold)} width=${W - pad.l - pad.r} height=${Math.max(0, badAbove ? Y(threshold) - pad.t : height - pad.b - Y(threshold))} class="bad-zone" />
         <line x1=${pad.l} x2=${W - pad.r} y1=${Y(threshold)} y2=${Y(threshold)} class="thr" /><text x=${W - pad.r - 4} y=${Y(threshold) - 4} text-anchor="end" class="thr-t">${thresholdLabel}</text></g>` : ''}
       ${lines.map((l) => html`<path d=${path(l)} class="ln" style=${{ stroke: l.color, strokeDasharray: l.dash ? '4 3' : null }} />`)}
       ${t != null ? html`<line x1=${X(t)} x2=${X(t)} y1=${pad.t} y2=${height - pad.b} class="now" />` : ''}
@@ -379,7 +379,7 @@ function StepRobot({ table, dir, t, seek }) {
     ${r.series?.gap_cm ? html`<${LineChart} title="Mug proxy to divider (approx.)" unit="cm" t=${t} onSeek=${seek}
       lines=${[{ name: 'run', color: 'var(--accent)', t: r.series.t, y: r.series.gap_cm }]} yMin=${0} yMax=${20}
       note="Horizontal gap from the cup proxy's surface to the divider box, drawn from recorded frames; the checker's verdicts use solid shapes." />` : ''}
-    ${r.series?.tilt ? html`<${LineChart} title="Mug proxy tilt" unit="°" t=${t} onSeek=${seek} threshold=${15} thresholdLabel="15° limit"
+    ${r.series?.tilt ? html`<${LineChart} title="Mug proxy tilt" unit="°" t=${t} onSeek=${seek} threshold=${15} thresholdLabel="15° limit" badAbove=${true} yMax=${20}
       lines=${[{ name: 'run', color: 'var(--accent)', t: r.series.t, y: r.series.tilt }]} yMin=${0} />` : ''}
     ${(table.twin || []).length ? html`<div class="yt-twin"><p class="yt-spec-h">The robot on your table, from your phone</p>
       ${table.twin.map((v) => html`<video controls muted playsinline preload="metadata" src=${urlOf(dir, v.file)}></video>`)}
