@@ -134,7 +134,10 @@ def _stub_run(tmp_path, answers=None):
     r.answers_path = tmp_path / "answers.json"
     if answers is not None:
         r.answers_path.write_text(json.dumps(answers))
-    r.state = {"stages": {"seed": {"frame": 375, "t": 12.5}}}
+    r.state = {"stages": {"seed": {"frame": 375, "t": 12.5}, "probe": {"take": {"sha256": "a" * 64}}}, "inputs": {}}
+    r.answers_firebase = None
+    r.legacy_d1 = False
+    r.log = lambda *a: None
     return r
 
 
@@ -159,9 +162,12 @@ def test_questions_cover_objects_events_calibration_and_intent(tmp_path):
 
 
 def test_only_answers_by_the_person_are_applied(tmp_path):
-    r = _stub_run(tmp_path, {"answers": {"mug": {"answer": "Yes, that's the mug", "by": "person", "at": 1},
-                                         "box": {"answer": "Yes", "by": "mana", "at": 1},
-                                         "pen": {"answer": None, "by": "person"}}})
+    b = {"session_id": "cap_1", "take_sha256": "a" * 64, "question_set_sha256": "q" * 64}
+    r = _stub_run(tmp_path, {"answers": {"mug": {"answer": "Yes, that's the mug", "by": "person", "at": 5, **b},
+                                         "box": {"answer": "Yes", "by": "mana", "at": 5, **b},
+                                         "pen": {"answer": None, "by": "person", **b}}})
+    (tmp_path / "questions.json").write_text(json.dumps({**b, "created_at_ms": 1,
+                                                         "questions": [{"id": x} for x in ("mug", "box", "pen")]}))
     assert list(r._load_answers()) == ["mug"]
 
 
@@ -221,6 +227,8 @@ def _robot_stub(tmp_path):
     r.render_on = False
     r.rehearse = None
     r._meta = r._llm = None
+    r.answers_firebase = r.publish_firebase = r.publish_dir = None
+    r.legacy_d1 = False
     r.log = lambda *a: None
     return r
 
@@ -243,10 +251,12 @@ def test_gate_passed_branch_waits_for_rule_review_then_plans_and_runs(tmp_path):
     except RR.StageStop as e:
         waited = True
         assert "review" in str(e)
-        qs = json.loads((tmp_path / "questions_spec.json").read_text())["questions"]
-        ids = [q["id"].removeprefix("rule:") for q in qs]
-        (tmp_path / "answers.json").write_text(json.dumps({"spec_review": {"answer": {"confirm": ids, "reject": []},
-                                                                           "by": "person", "at": 1}}))
+        qd = json.loads((tmp_path / "questions_spec.json").read_text())
+        rules = {q["id"]: {"decision": "accept", "by": "person", "uid": "u", "at": qd["created_at_ms"] + 1}
+                 for q in qd["questions"]}
+        (tmp_path / "answers.json").write_text(json.dumps({"spec_review": {"spec_sha256": qd["spec_sha256"],
+                                                                           "session_id": qd["session_id"],
+                                                                           "take_sha256": qd["take_sha256"], "rules": rules}}))
         r.stage_task()
     t = r.info("task")
     assert t["gate_passed"] and "MIRROR's proposal" in t["spec_source"]

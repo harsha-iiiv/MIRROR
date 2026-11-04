@@ -447,8 +447,8 @@ function StepTask({ table }) {
     ${task ? html`<div class="yt-spec">
       <p class="yt-spec-h">${stated ? 'The task you stated, run as written' : 'The task MIRROR inferred'} <span class="num faint">${task.spec_id} · v${task.version}</span></p>
       <p class="yt-lead">${task.summary}</p>
-      <ul>${task.rules.map((r) => html`<li><span class=${'yt-kind ' + r.kind}>${r.kind}</span><span>${r.text}</span><span class="faint yt-src2">${r.source === 'manual' ? 'you' : human(r.source)}</span></li>`)}</ul>
-      ${stated ? html`<p class="yt-note">Written from your answers on the capture page (order mug, box, marker; into the tray; around the divider; mug upright). Not a model output.</p>` : ''}
+      <ul>${task.rules.map((r) => html`<li><span class=${'yt-kind ' + r.kind}>${r.kind}</span><span>${r.text}</span><span class="faint yt-src2">${({ manual: 'you', default: 'MIRROR default', rehearsal: 'rehearsal, not you' })[r.source] || human(r.source)}</span></li>`)}</ul>
+      ${stated ? html`<p class="yt-note">Written from your answer${task.stated?.answer ? html` "<b>${task.stated.answer}</b>"` : ''}${task.stated?.proposal ? html` to MIRROR's proposal "${task.stated.proposal}"` : ''}. Rules marked "MIRROR default" are thresholds MIRROR chose for that wording, not your words. Not a model output.</p>` : ''}
     </div>` : html`<p class="muted">No task yet.</p>`}
   </div>`;
 }

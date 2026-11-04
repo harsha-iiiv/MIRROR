@@ -23,6 +23,17 @@ def _first(*paths):
     return None
 
 
+def rehearsal_flag(item: dict, where: str) -> bool:
+    """The manifest's ``corrections[].rehearsal``: True (rehearsed by the pipeline, not chosen by the person) or False.
+    Missing or None is an error, never False: a correction of unknown origin must not be shown as the person's."""
+    v = item.get("rehearsal") if isinstance(item, dict) else None
+    if not isinstance(v, bool):
+        name = (item.get("name") or item.get("id")) if isinstance(item, dict) else None
+        raise ValueError(f"{where}: correction {name!r} has rehearsal={v!r}; the manifest must say true (rehearsed, not "
+                         "chosen by the person) or false (the person's correction). Re-run the pipeline's correct stage.")
+    return v
+
+
 def from_pipeline(d: Path, args) -> dict:
     """Read mirror.capture.real_run's output directory (manifest.json; filename fallbacks)."""
     man = {}
@@ -49,13 +60,14 @@ def from_pipeline(d: Path, args) -> dict:
         c = [dict(v, name=k) if isinstance(v, dict) else {"name": k, "rollout": v} for k, v in c.items()]
     for item in c or []:
         item = item if isinstance(item, dict) else {"rollout": item}
+        rehearsal_flag(item, str(d / "manifest.json"))       # raises when the flag is missing
         p = rel(item.get("rollout"))
         if p and p.exists():
             corr.append((item.get("name") or item.get("id") or p.parent.name, p, item))
     if (d / "corrections").exists():
         for p in sorted((d / "corrections").glob("*/rollout*.json*")):
             if all(p != q for _, q, _ in corr):
-                corr.append((p.parent.name, p, {}))
+                corr.append((p.parent.name, p, {"name": p.parent.name}))   # no manifest entry: no rehearsal flag
     if args.correction:
         corr = [x for x in corr if x[0] == args.correction] or corr
     rolls = [("run", base)]
@@ -77,7 +89,7 @@ def from_pipeline(d: Path, args) -> dict:
                 old = {x.get("rule_id") for x in json.loads(r0.read_text()).get("rule_results") or []}
                 correction["diff"] = [{"target_id": x.get("rule_id")} for x in json.loads(ra.read_text()).get("rule_results") or []
                                       if x.get("rule_id") not in old]
-        if item.get("rehearsal"):
+        if rehearsal_flag(item, f"{d}: corrections/{name}" if not item.get("rollout") else str(d / "manifest.json")):
             after_labels.append("Rehearsal correction, not chosen by you")
     return dict(session=session, video=video, tracks=tracks, rollouts=rolls, placement=placement, out=d / "twin",
                 correction=correction, labels=[x for x in man.get("labels") or [] if isinstance(x, str)],

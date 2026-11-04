@@ -437,6 +437,7 @@ class Source:
     recorded_corrections: list = field(default_factory=list)   # corrections the capture run itself compiled and ran
     questions: Optional[Path] = None         # questions.json the capture run asked the person
     answers: Optional[Path] = None           # the person's answers ({id: {answer, by, at, seconds_spent}})
+    stated_intent: Optional[dict] = None     # {answer, proposal} when the spec is the person's stated task
 
 
 # The D1 development capture's folders come from the environment (they are local to the machine that made it):
@@ -494,6 +495,17 @@ def d1_source(root: Path = D1_ROOT, cloud: Path = D1_CLOUD, twin_dir: Optional[P
         placement_file=pick("phase2_summary.json"))
 
 
+def rehearsal_flag(c, where: str) -> bool:
+    """A manifest correction's ``rehearsal`` flag. Missing, None or not a bool raises: a correction of unknown origin
+    must never be shown as the person's own (it would lose its "rehearsal, not chosen by you" badge)."""
+    v = c.get("rehearsal") if isinstance(c, dict) else None
+    if not isinstance(v, bool):
+        name = c.get("name") if isinstance(c, dict) else None
+        raise ValueError(f"{where}: correction {name!r} has rehearsal={v!r}; expected true (rehearsed by the pipeline, "
+                         "not chosen by the person) or false (the person's correction)")
+    return v
+
+
 def pipeline_source(d: Path, capture_id: Optional[str] = None, twin_override: Optional[Path] = None) -> Source:
     """A ``mirror.capture.real_run`` output directory (its manifest.json and page.json)."""
     d = Path(d)
@@ -524,11 +536,12 @@ def pipeline_source(d: Path, capture_id: Optional[str] = None, twin_override: Op
     spend = sp.get("usd") if sp else page.get("spend_usd")
     recorded = []
     for c in man.get("corrections") or []:
+        rehearsal = rehearsal_flag(c, str(d / "manifest.json"))     # missing or None is an error, never False
         paths = {k: f(c.get(k)) for k in ("rollout", "spec", "report", "recheck", "before_after", "video")}
         if paths["rollout"] and paths["spec"] and paths["recheck"]:
             recorded.append({"id": c.get("name"), "text": c.get("text") or c.get("label"), "label": c.get("label"),
-                             "rehearsal": bool(c.get("rehearsal")), "compiler": c.get("compiler"), **{k + "_path": v for k, v in paths.items()}})
-    return Source(capture_id=capture_id or man.get("capture_id") or d.parent.name if d.name == "out" else (capture_id or d.name),
+                             "rehearsal": rehearsal, "compiler": c.get("compiler"), **{k + "_path": v for k, v in paths.items()}})
+    return Source(capture_id=capture_id or man.get("capture_id") or (d.parent.name if d.name == "out" else d.name),
                   title=man.get("title") or "Your table",
                   session=session, take=take, tracks=f(man.get("tracks"), "tracks_full.json.gz", "tracks_proxy.json.gz"),
                   scene=f(man.get("scene"), "scene/scene.json", "scene.json"), spec=spec, spec_source=spec_source,
@@ -542,7 +555,7 @@ def pipeline_source(d: Path, capture_id: Optional[str] = None, twin_override: Op
                   placement_note=man.get("placement_note") or (json.loads(f(man.get("table_to_sim"), "table_to_sim.json").read_text()).get("label")
                                                                if f(man.get("table_to_sim"), "table_to_sim.json") else ""),
                   recorded_corrections=recorded, questions=f(man.get("questions"), "questions.json"),
-                  answers=f(man.get("answers"), "answers.json"))
+                  answers=f(man.get("answers"), "answers.json"), stated_intent=man.get("stated_intent"))
 
 
 # ------------------------------------------------------------------ build
@@ -692,6 +705,8 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
         spec = TaskSpec.model_validate_json(src.spec.read_text())
         scene = SceneState.model_validate_json(src.scene.read_text())
         task = {"source": src.spec_source, **spec_view(spec)}
+        if src.stated_intent:      # the person's literal answer and the proposal it answered (shown instead of a fixed sentence)
+            task["stated"] = {k: src.stated_intent.get(k) for k in ("answer", "proposal")}
         if simulate_runs:
             t0 = time.time()
             rec_ids = {r["id"] for r in src.recorded_corrections}

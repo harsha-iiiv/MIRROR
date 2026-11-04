@@ -57,6 +57,9 @@ STAGES = ("probe", "lens", "scan", "seed", "ground", "track", "session", "report
           "answers", "task", "scene", "run", "render", "correct", "publish")
 WATCH_STAGES = STAGES[:8]
 LABELS_REAL = ["Real phone footage", "One camera (single view, reduced)"]
+FIREBASE_RUNS_BASE = "dQmURmmZYmQI8u8P7ctOVTYCLFM2/file-system/wiki/mirror/phone-capture/viewer/runs"
+D1_TAKE_SHA256 = "6cc4955b90608dd4f154b69011b72321e510ecb5b22b21e06be6bd213c995bfe"   # IMG_0815 (D1)
+GATE_PROCEED_CODES = {"recalibration_required"}   # open gate items a stated-task layout run may proceed under (labelled)
 STOP_FRACTION = 0.95                    # stop before any call that could cross 95 % of the cap
 LOCK = os.environ.get("MIRROR_RENDER_LOCK", "")
 PROXY_CRF = 18                          # proxy video for SAM (D1 recording settings)
@@ -109,6 +112,100 @@ def _json_default(o):
     raise TypeError(type(o).__name__)
 
 
+def working_copy_plan(width: int, height: int, fps: Optional[float]) -> Optional[dict]:
+    """None for a take MIRROR can use as filmed (short side <= 1350 px and <= 40 fps; 1080p30 is the recommended mode);
+    otherwise the 1080p30-equivalent working copy to make (short side 1080, even dimensions, 30 fps if above 40)."""
+    short = min(width, height)
+    big, fast = short > 1350, bool(fps and fps > 40)
+    if not (big or fast):
+        return None
+    k = 1080 / short if big else 1.0
+    W2, H2 = int(round(width * k / 2)) * 2, int(round(height * k / 2)) * 2
+    why = ", ".join(x for x in ((f"{width}x{height} is above 1080p" if big else ""), (f"{fps:.0f} fps is above 30" if fast else "")) if x)
+    return {"size": [W2, H2], "fps": 30 if fast else None, "reason": why}
+
+
+def _safe_key(s: str) -> str:
+    """A Firebase/Storage-safe key (no . $ # [ ] / and no spaces)."""
+    return re.sub(r"[.$#\[\]/\s]+", "_", str(s)).strip("_") or "_"
+
+
+def _strip_abs(obj):
+    """Published copies carry no absolute sandbox paths: /cloudspace/<p> becomes the Storage-relative <p>, any other
+    absolute path its file name (marked 'local:')."""
+    if isinstance(obj, dict):
+        return {k: _strip_abs(v) for k, v in obj.items() if k != "error_trace"}
+    if isinstance(obj, list):
+        return [_strip_abs(v) for v in obj]
+    if isinstance(obj, str) and obj.startswith("/") and "\n" not in obj and len(obj) < 400:
+        if obj.startswith("/cloudspace/"):
+            return obj[len("/cloudspace/"):]
+        if re.match(r"^/(workspace|tmp|home|root|opt|var|usr)/", obj):
+            return "local:" + Path(obj).name
+    return obj
+
+
+def _canon_sha(obj) -> str:
+    return hashlib.sha256(json.dumps(obj, sort_keys=True, separators=(",", ":"), default=_json_default).encode()).hexdigest()
+
+
+def _fb_clean(obj):
+    """JSON for Firebase: keys made safe (no . $ # [ ] /), NaN/inf -> None."""
+    if isinstance(obj, dict):
+        return {_safe_key(k): _fb_clean(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_fb_clean(v) for v in obj]
+    if isinstance(obj, float) and not math.isfinite(obj):
+        return None
+    if isinstance(obj, (np.integer, np.floating, np.ndarray, Path)):
+        return _fb_clean(json.loads(json.dumps(obj, default=_json_default)))
+    return obj
+
+
+_FB_SCRIPT = (
+    "import json, logging, sys\n"
+    "sys.path.append('/opt/sandbox_libs')\n"
+    "for n in ('httpx', 'httpcore', 'urllib3'):\n"
+    "    logging.getLogger(n).setLevel(logging.WARNING)\n"
+    "from firebase_helper import firebase\n"
+    "op, path, f = sys.argv[1], sys.argv[2], sys.argv[3]\n"
+    "data = json.load(open(f)) if f != '-' else None\n"
+    "r = firebase.read(path) if op == 'read' else (firebase.update(path, data) if op == 'update' else "
+    "(firebase.delete(path) if op == 'delete' else firebase.write(path, data)))\n"
+    "print(json.dumps(r if op == 'read' else None))\n")
+
+
+def _fb(op: str, path: str, data=None):
+    """Firebase read/update/write/delete through the sandbox's helper (MIRROR's venv lacks it: a short subprocess
+    of the sandbox Python is used; its HTTP loggers are set to WARNING so no URL with a token reaches a log)."""
+    import logging
+    for n in ("httpx", "httpcore", "urllib3"):
+        logging.getLogger(n).setLevel(logging.WARNING)
+    try:
+        from firebase_helper import firebase      # noqa: F401 (sandbox Python)
+        if op == "read":
+            return firebase.read(path)
+        return {"update": firebase.update, "write": firebase.write}[op](path, data) if op != "delete" else firebase.delete(path)
+    except ImportError:
+        pass
+    py = os.environ.get("MANA_PYTHON") or "/workspace/.venv/bin/python"
+    if not Path(py).exists():
+        raise RuntimeError("no Firebase helper available (set MANA_PYTHON to the sandbox Python)")
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tf:
+        json.dump(data, tf, default=_json_default)
+        fname = tf.name
+    try:
+        env = {k: v for k, v in os.environ.items() if k not in ("PYTHONPATH", "VIRTUAL_ENV")}
+        r = subprocess.run([py, "-c", _FB_SCRIPT, op, path, fname if data is not None else "-"], capture_output=True, text=True,
+                           timeout=120, stdin=subprocess.DEVNULL, env=env)
+    finally:
+        os.unlink(fname)
+    if r.returncode != 0:
+        raise RuntimeError(f"Firebase {op} failed: " + (r.stderr.strip().splitlines() or ["?"])[-1][:300])
+    return json.loads((r.stdout.strip().splitlines() or ["null"])[-1])
+
+
 def _run(cmd: list, timeout: int = 1800):
     return subprocess.run(cmd, check=True, timeout=timeout, stdin=subprocess.DEVNULL,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -136,37 +233,118 @@ def heavy_lock():
 
 
 # ------------------------------------------------------------- spend ledger
-class Ledger:
-    """Append-only spend ledger with a hard cap checked BEFORE each call."""
+PROJECT_CAP_USD = float(os.environ.get("MIRROR_PROJECT_CAP_USD", "30"))
+DEFAULT_PROJECT_LEDGER = "/workspace/mirror-team/v2/spend_project.jsonl"
 
-    def __init__(self, path: Path, cap_usd: float, prior_usd: float = 0.0):
+
+def _ledger_sum(path: Path) -> float:
+    if not path.exists():
+        return 0.0
+    return sum(float(json.loads(l).get("est_cost_usd", 0.0)) for l in path.read_text().splitlines() if l.strip())
+
+
+class Ledger:
+    """Append-only spend ledger with a hard cap checked BEFORE each call.
+
+    Two caps are checked: this output directory's ``cap_usd`` (with ``prior_usd``
+    already used against it elsewhere) and the project-wide ledger
+    (``MIRROR_PROJECT_LEDGER``, default /workspace/mirror-team/v2/spend_project.jsonl,
+    cap ``MIRROR_PROJECT_CAP_USD`` = $30): every charge is appended to both, so a
+    second output directory for the same take cannot start again from $0."""
+
+    def __init__(self, path: Path, cap_usd: float, prior_usd: float = 0.0, project: Optional[Path] = None,
+                 project_cap_usd: Optional[float] = None, track: str = "real_run"):
         self.path, self.cap, self.prior = Path(path), float(cap_usd), float(prior_usd)
+        if project is None:
+            pe = os.environ.get("MIRROR_PROJECT_LEDGER", DEFAULT_PROJECT_LEDGER)
+            project = Path(pe) if pe and pe.lower() != "none" else None
+        self.project = Path(project) if project else None
+        self.project_cap = float(PROJECT_CAP_USD if project_cap_usd is None else project_cap_usd)
+        self.track = track
 
     def spent(self) -> float:
-        if not self.path.exists():
-            return self.prior
-        return self.prior + sum(json.loads(l).get("est_cost_usd", 0.0)
-                                for l in self.path.read_text().splitlines() if l.strip())
+        return self.prior + _ledger_sum(self.path)
+
+    def project_spent(self) -> Optional[float]:
+        return None if self.project is None else _ledger_sum(self.project)
 
     def guard(self, worst_usd: float, what: str) -> None:
         s = self.spent()
         if s + worst_usd > STOP_FRACTION * self.cap:
             raise SpendCapReached(f"stopped before {what}: spent ${s:.4f} + worst case ${worst_usd:.4f} would cross "
                                   f"{int(STOP_FRACTION * 100)}% of the ${self.cap:.2f} cap")
+        ps = self.project_spent()
+        if ps is not None and ps + worst_usd > STOP_FRACTION * self.project_cap:
+            raise SpendCapReached(f"stopped before {what}: the project has spent ${ps:.4f} (ledger {self.project}); worst case "
+                                  f"${worst_usd:.4f} would cross {int(STOP_FRACTION * 100)}% of the ${self.project_cap:.2f} project cap")
+
+    def _append(self, row: dict) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.path, "a") as f:
+            f.write(json.dumps(row) + "\n")
+        if self.project is not None:
+            import fcntl
+            self.project.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.project, "a") as f:
+                fcntl.flock(f, fcntl.LOCK_EX)
+                try:
+                    f.write(json.dumps({**row, "track": self.track, "out": str(self.path.parent)}) + "\n")
+                finally:
+                    fcntl.flock(f, fcntl.LOCK_UN)
 
     def charge(self, rec: dict) -> float:
         from mirror.evaluate.costs import record_cost
         if rec.get("from_cassette"):
             return 0.0
         c = float(record_cost(rec))
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.path, "a") as f:
-            f.write(json.dumps({"time": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "model": rec.get("model"),
-                                "call": rec.get("call") or rec.get("name"), "est_cost_usd": round(c, 6),
-                                "cassette_key": (rec.get("key") or "")[:24],
-                                "usage": {k: v for k, v in (rec.get("usage") or {}).items() if not isinstance(v, dict)}})
-                    + "\n")
+        self._append({"time": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "model": rec.get("model"),
+                      "call": rec.get("call") or rec.get("name"), "est_cost_usd": round(c, 6),
+                      "cassette_key": (rec.get("key") or "")[:24],
+                      "usage": {k: v for k, v in (rec.get("usage") or {}).items() if not isinstance(v, dict)}})
         return c
+
+    def charge_worst(self, usd: float, what: str) -> float:
+        """Conservative charge for billable attempts whose usage was never logged (retries, failed streams)."""
+        if usd <= 0:
+            return 0.0
+        self._append({"time": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "model": None, "call": what,
+                      "est_cost_usd": round(float(usd), 6), "conservative": True})
+        return float(usd)
+
+
+class CountingTransport:
+    """httpx transport wrapper counting billable requests (everything except file uploads), so attempts that a
+    client retried internally, or that failed before their usage was logged, can be charged conservatively."""
+
+    def __init__(self, inner=None):
+        import httpx
+        self.inner = inner or httpx.HTTPTransport()
+        self.count = 0
+
+    def handle_request(self, request):
+        if request.method == "POST" and not request.url.path.rstrip("/").endswith("/files"):
+            self.count += 1
+        return self.inner.handle_request(request)
+
+    def close(self):
+        self.inner.close()
+
+
+def _billed_call(transport, ledger, worst: float, what: str, fn):
+    """Run one guarded model call; charge worst-case for every extra (retried) billable attempt, and for every
+    attempt if the call failed after sending (its usage never reached the ledger)."""
+    n0 = transport.count if transport is not None else 0
+    try:
+        out = fn()
+    except (SpendCapReached, LiveCallInReplay):
+        raise
+    except Exception:
+        if transport is not None:
+            ledger.charge_worst(worst * (transport.count - n0), f"{what}: failed attempt(s), charged at worst case")
+        raise
+    if transport is not None and transport.count - n0 > 1:
+        ledger.charge_worst(worst * (transport.count - n0 - 1), f"{what}: retried attempt(s), charged at worst case")
+    return out
 
 
 def _no_network_transport():
@@ -190,8 +368,9 @@ class GuardedMeta:
     """MetaClient wrapper: spend guard before each call, ledger after, and a
     record of every responses() result (the grounding passes are read back)."""
 
-    def __init__(self, client, ledger: Ledger, n_frames_hint: int = 1500):
+    def __init__(self, client, ledger: Ledger, n_frames_hint: int = 1500, transport: Optional[CountingTransport] = None):
         self.c, self.ledger, self.results, self.n_hint = client, ledger, [], n_frames_hint
+        self.transport = transport
         orig = client._log
 
         def _log(name, endpoint, model, usage, latency, *, from_cassette, key):
@@ -213,7 +392,10 @@ class GuardedMeta:
     def responses(self, *a, **k):
         if self.c.mode in ("record", "live"):
             self.ledger.guard(WORST_GROUNDING_CALL, "a Muse Spark call")
-        r = self.c.responses(*a, **k)
+            r = _billed_call(self.transport, self.ledger, WORST_GROUNDING_CALL, "muse-spark responses",
+                             lambda: self.c.responses(*a, **k))
+        else:
+            r = self.c.responses(*a, **k)
         self.results.append(r)
         return r
 
@@ -226,9 +408,13 @@ class GuardedMeta:
                     n = M.probe(media).n_frames
                 except Exception:
                     pass
-                self.ledger.guard(_worst_sam_video(n), f"a SAM 3.1 video request ({n} frames)")
+                worst = _worst_sam_video(n)
+                self.ledger.guard(worst, f"a SAM 3.1 video request ({n} frames)")
             else:
-                self.ledger.guard(WORST_SAM_IMAGE, "a SAM 3.1 image request")
+                worst = WORST_SAM_IMAGE
+                self.ledger.guard(worst, "a SAM 3.1 image request")
+            return _billed_call(self.transport, self.ledger, worst, "sam-3.1 segment",
+                                lambda: self.c.sam_segment(media, prompt, video=video, **k))
         return self.c.sam_segment(media, prompt, video=video, **k)
 
     def upload_file(self, src, *a, **k):
@@ -581,13 +767,16 @@ class RealRun:
                  seed_t: Optional[float] = None, answers: Optional[Path] = None, rehearse_correction: Optional[str] = None,
                  render: bool = True, label_extra: Optional[list] = None, dev_clip: Optional[str] = None,
                  media_cache: Optional[Path] = None, publish_dir: Optional[Path] = None,
-                 answers_firebase: Optional[str] = None, log=print):
+                 answers_firebase: Optional[str] = None, publish_firebase: Optional[str] = None,
+                 legacy_answers_d1: Optional[bool] = None, log=print):
         self.out = Path(out)
         self.out.mkdir(parents=True, exist_ok=True)
         self.state_path = self.out / "real_run.json"
         st = json.loads(self.state_path.read_text()) if self.state_path.exists() else {}
         inp = st.get("inputs", {})
         self.take = Path(take or inp.get("take") or "")
+        if inp.get("take_original") and (not take or Path(take) == Path(inp["take_original"])):
+            self.take = Path(inp["take"])          # the 1080p30-equivalent working copy made by the probe stage
         self.lens = Path(lens) if lens else (Path(inp["lens"]) if inp.get("lens") else None)
         self.intrinsics_in = Path(intrinsics) if intrinsics else (Path(inp["intrinsics"]) if inp.get("intrinsics") else None)
         meas_p = Path(measurements or inp.get("measurements") or "")
@@ -595,6 +784,8 @@ class RealRun:
             raise SystemExit(f"take clip not found: {self.take}")
         if not meas_p.exists():
             raise SystemExit(f"measurements file not found: {meas_p}")
+        if inp.get("lens_original") and lens and Path(lens) == Path(inp["lens_original"]) and inp.get("lens"):
+            self.lens = Path(inp["lens"])
         if self.lens is None and self.intrinsics_in is None:
             raise SystemExit("give --lens LENS.MOV (or --intrinsics for an already accepted lens calibration)")
         self.meas_path = meas_p
@@ -602,7 +793,11 @@ class RealRun:
         self.mode = mode
         if mode not in ("record", "replay", "offline", "live"):
             raise SystemExit("mode must be record, replay or offline")
-        self.cassettes = Path(cassettes or inp.get("cassettes") or (self.out / "cassettes"))
+        # cassettes: default to one directory per take (keyed by its sha256, set after the probe stage), so a second
+        # output directory for the same take replays the first one's recordings instead of paying again
+        self.cassettes = Path(cassettes) if cassettes else (Path(inp["cassettes"]) if inp.get("cassettes") else None)
+        prior_usd = float(prior_usd if prior_usd else (inp.get("prior_usd") or 0.0))
+        self.prior_usd = prior_usd
         self.ledger = Ledger(self.out / "spend.jsonl", cap_usd, prior_usd)
         self.seed_t = seed_t if seed_t is not None else inp.get("seed_t")
         self.answers_path = Path(answers) if answers else (Path(inp["answers"]) if inp.get("answers") else self.out / "answers.json")
@@ -613,15 +808,22 @@ class RealRun:
         self.media_cache = Path(media_cache) if media_cache else None
         self.publish_dir = Path(publish_dir) if publish_dir else (Path(inp["publish_dir"]) if inp.get("publish_dir") else None)
         self.answers_firebase = answers_firebase or inp.get("answers_firebase")
+        self.publish_firebase = publish_firebase or inp.get("publish_firebase")
+        if self.publish_firebase and self.publish_dir is None:
+            self.publish_dir = Path("/cloudspace/mirror/capture") / _safe_key(self.publish_firebase) / "pipeline"
+        self.legacy_d1 = bool(legacy_answers_d1 if legacy_answers_d1 is not None else inp.get("legacy_answers_d1"))
         self.log = log
         self.state = st or {"version": VERSION, "stages": {}, "created_at": _now_ms()}
         self.state["inputs"] = {"take": str(self.take), "lens": str(self.lens) if self.lens else None,
                                 "intrinsics": str(self.intrinsics_in) if self.intrinsics_in else None,
-                                "measurements": str(meas_p), "cassettes": str(self.cassettes), "seed_t": self.seed_t,
+                                "measurements": str(meas_p), "cassettes": str(self.cassettes) if self.cassettes else None,
+                                "prior_usd": prior_usd, "seed_t": self.seed_t,
                                 "dev_clip": self.dev_clip, "label_extra": self.label_extra,
                                 "answers": str(self.answers_path), "rehearse_correction": self.rehearse,
                                 "publish_dir": str(self.publish_dir) if self.publish_dir else None,
-                                "answers_firebase": self.answers_firebase}
+                                "answers_firebase": self.answers_firebase, "publish_firebase": self.publish_firebase,
+                                "legacy_answers_d1": self.legacy_d1,
+                                "take_original": inp.get("take_original"), "lens_original": inp.get("lens_original")}
         self.state["mode"] = mode
         self.state["cap_usd"] = cap_usd
         self._meta = None
@@ -654,16 +856,38 @@ class RealRun:
         return q
 
     def labels(self) -> list[str]:
+        """Every honest label that applies to THIS capture (one per open gate item, the placement shift, the stated
+        task, the drift check, legacy answers, development clip, replay)."""
         out = list(LABELS_REAL)
         s = self._session_quick()
-        if s is not None and any(r.code == "recalibration_required" and not r.resolved for r in s.review):
-            out.append("Calibration reuse flagged")
+        if s is not None:
+            ok, blocking = s.gate()
+            for b in blocking:
+                out.append("Calibration reuse flagged" if b.code == "recalibration_required"
+                           else f"Gate open: {b.code.replace('_', ' ')}")
+            if any((s.recalibration.get(c) or {}).get("end_drift_used") is False for c in s.recalibration):
+                why = str(self.state.get("stages", {}).get("answers", {}).get("applied", {}).get("end_of_take_drift_check", ""))
+                out.append("End-of-take drift check not used (board re-laid"
+                           + ("; D1 legacy setting from video review, not a person's answer" if "legacy" in why
+                              or (self.legacy_d1 and "answers" not in self.state.get("stages", {})) else "") + ")")
+        st = self.state.get("stages", {})
+        ts = st.get("task", {})
+        if ts.get("status") == "done" and "stated" in str(ts.get("spec_source", "")):
+            out.append("Stated task (gate refused): not inferred from the video")
+        sc = st.get("scene", {})
+        if sc.get("status") == "done" and sc.get("placement") not in (None, "default_centred"):
+            sh = sc.get("shift_cm") or [0, 0]
+            out.append(f"Layout shifted by software ({sh[0]:+.1f} cm, {sh[1]:+.1f} cm) to fit the robot's reach")
+            if sc.get("still_out_of_reach"):
+                out.append("Still partly out of reach after the shift: " + "; ".join(sc["still_out_of_reach"]))
+        if self.state.get("legacy_answers"):
+            out.append("Answers carried over from D1's own page (legacy, same take)")
         if self.dev_clip:
             out.append(f"Development clip {self.dev_clip}, never scored")
         out += self.label_extra
         if self.mode == "replay":
             out.append("Model outputs replayed from recordings (no new model calls)")
-        return out
+        return list(dict.fromkeys(out))
 
     def _session_quick(self):
         from mirror.capture.session import CaptureSession
@@ -697,13 +921,22 @@ class RealRun:
         return m
 
     # ---------------------------------------------------------- clients
+    def cassette_dir(self) -> Path:
+        if self.cassettes is None:
+            sha = self.take_sha() or self.clip(self.take).sha256
+            root = Path(os.environ.get("MIRROR_CASSETTE_ROOT", "/workspace/mirror-team/v2/cassettes"))
+            self.cassettes = root / f"take_{sha[:16]}"
+            self.state["inputs"]["cassettes"] = str(self.cassettes)
+            self._save()
+        return self.cassettes
+
     def meta(self):
         if self._meta is None:
             from mirror.meta import MetaClient
             if self.mode == "offline":
                 raise SystemExit("offline mode cannot ground or track objects: use --mode record (live Meta models, "
                                  "recorded) or --mode replay with the recorded cassettes")
-            kw = dict(mode="replay" if self.mode == "replay" else "record", cassette_dir=self.cassettes,
+            kw = dict(mode="replay" if self.mode == "replay" else "record", cassette_dir=self.cassette_dir(),
                       usage_log=self.out / "meta_usage.jsonl")
             if self.mode == "replay":
                 kw.update(api_key=None, transport=_no_network_transport())
@@ -712,10 +945,10 @@ class RealRun:
                 if not key:
                     raise SystemExit("record mode needs MODEL_API_KEY in the environment (never written to files)")
                 kw["api_key"] = key
-                if os.environ.get("MIRROR_FORBID_NETWORK"):      # rehearse record mode on existing cassettes only
-                    kw["transport"] = _no_network_transport()
+                inner = _no_network_transport() if os.environ.get("MIRROR_FORBID_NETWORK") else None
+                kw["transport"] = CountingTransport(inner)        # retries and failed attempts are charged too
             n = self.info("probe").get("take", {}).get("n_frames", 1500)
-            self._meta = GuardedMeta(MetaClient(**kw), self.ledger, n)
+            self._meta = GuardedMeta(MetaClient(**kw), self.ledger, n, transport=kw.get("transport") if self.mode != "replay" else None)
         return self._meta
 
     def llm(self):
@@ -725,27 +958,33 @@ class RealRun:
             if self.mode == "offline":
                 self._llm = LLMClient.offline_client()
             else:
-                kw = dict(mode="replay" if self.mode == "replay" else "record", cassette_dir=self.cassettes / "llm",
+                kw = dict(mode="replay" if self.mode == "replay" else "record", cassette_dir=self.cassette_dir() / "llm",
                           usage_log_path=self.out / "llm_usage.jsonl")
                 if self.mode == "replay":
                     kw.update(api_key=None, transport=_no_network_transport())
                 else:
                     kw["api_key"] = os.environ.get("MODEL_API_KEY")
-                    if os.environ.get("MIRROR_FORBID_NETWORK"):
-                        kw["transport"] = _no_network_transport()
+                    inner = _no_network_transport() if os.environ.get("MIRROR_FORBID_NETWORK") else None
+                    kw["transport"] = CountingTransport(inner)
                 c = LLMClient(**kw)
                 led = self.ledger
                 orig = c.complete_json
+                ctr = kw.get("transport") if self.mode != "replay" else None
 
                 def complete_json(*a, **k):
-                    if c.mode in ("record", "live"):
-                        led.guard(WORST_LLM_CALL, "a Muse Spark interpretation call")
-                    n0 = len(c.usage)
+                    if c.mode not in ("record", "live"):
+                        return orig(*a, **k)
+                    led.guard(WORST_LLM_CALL, "a Muse Spark interpretation call")
+                    n0, t0 = len(c.usage), (ctr.count if ctr else 0)
                     try:
                         return orig(*a, **k)
                     finally:
-                        for rec in c.usage[n0:]:
+                        logged = c.usage[n0:]
+                        for rec in logged:
                             led.charge({**rec, "model": rec.get("model") or c.model})
+                        if ctr is not None:     # billable attempts beyond the logged ones: worst case each
+                            extra = (ctr.count - t0) - sum(1 for r in logged if not r.get("from_cassette"))
+                            led.charge_worst(WORST_LLM_CALL * max(0, extra), "muse-spark interpretation: unlogged attempt(s)")
                 c.complete_json = complete_json
                 self._llm = c
         return self._llm
@@ -754,10 +993,12 @@ class RealRun:
     def run(self, until: Optional[str] = None) -> dict:
         t_all = time.time()
         try:
+            self._reopen_for_person()
             for st in STAGES:
                 if self.done(st):
                     continue
                 self._lock_mark = LOCK_WAIT_S[0]
+                self._fb_status(st, f"running {st}")
                 getattr(self, "stage_" + st)()
                 if until and st == until:
                     break
@@ -798,9 +1039,60 @@ class RealRun:
 
 
     # ============================================================ WATCH
+    def _make_working_copies(self, notes: list) -> Optional[dict]:
+        """A 4K or high-frame-rate take is converted ONCE to a 1080p30-equivalent working copy (short side 1080, 30 fps)
+        before anything else (SAM cost and memory scale with pixels x frames); the lens clip gets the same scale when it
+        has the take's original size, so the intrinsics match the working copy. The decision is recorded."""
+        tm = self.clip(self.take)
+        plan = working_copy_plan(tm.width, tm.height, tm.nominal_fps)
+        if plan is None:
+            return None
+        W2, H2 = plan["size"]
+        vf = f"scale={W2}:{H2}:flags=lanczos" + (f",fps={plan['fps']}" if plan.get("fps") else "")
+        dst = self.p("work", "take_working.mp4")
+        if not dst.exists():
+            with heavy_lock():
+                _run(["ffmpeg", "-y", "-v", "error", "-i", str(self.take), "-map", "0:v:0", "-vf", vf, "-an", "-c:v", "libx264",
+                      "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(dst) + ".tmp.mp4"], timeout=3600)
+            os.replace(str(dst) + ".tmp.mp4", dst)
+        dec = {**plan, "original": {"path": str(self.take), "sha256": tm.sha256, "size": [tm.width, tm.height],
+                                     "fps": tm.nominal_fps, "n_frames": tm.n_frames},
+               "working_copy": str(dst.relative_to(self.out)), "filter": vf}
+        self.state["inputs"]["take_original"] = str(self.take)
+        self.take = dst
+        self.state["inputs"]["take"] = str(dst)
+        if self.lens is not None:
+            lm = self.clip(self.lens)
+            if (lm.width, lm.height) == (tm.width, tm.height) and (W2, H2) != (tm.width, tm.height):
+                ldst = self.p("work", "lens_working.mp4")
+                if not ldst.exists():
+                    with heavy_lock():
+                        _run(["ffmpeg", "-y", "-v", "error", "-i", str(self.lens), "-map", "0:v:0", "-vf",
+                              f"scale={W2}:{H2}:flags=lanczos", "-an", "-c:v", "libx264", "-crf", "14", "-preset", "veryfast",
+                              "-pix_fmt", "yuv420p", str(ldst) + ".tmp.mp4"], timeout=3600)
+                    os.replace(str(ldst) + ".tmp.mp4", ldst)
+                self.state["inputs"]["lens_original"] = str(self.lens)
+                self.lens = ldst
+                self.state["inputs"]["lens"] = str(ldst)
+                dec["lens_working_copy"] = str(ldst.relative_to(self.out))
+            elif (lm.width, lm.height) != (W2, H2):
+                notes.append(f"lens clip is {lm.width}x{lm.height} but the working take is {W2}x{H2}: the lens calibration "
+                             "will not match; film both at the same resolution")
+        notes.append(f"take converted to a working copy {W2}x{H2}" + (f" at {plan['fps']} fps" if plan.get("fps") else "")
+                     + f" ({plan['reason']}); the original is kept and its sha256 binds the answers")
+        self._save()
+        return dec
+
+    def take_sha(self) -> Optional[str]:
+        """sha256 of the take as filmed (the original when a working copy was made): binds answers to this take."""
+        p = self.info("probe")
+        return (p.get("working_copy") or {}).get("original", {}).get("sha256") or p.get("take", {}).get("sha256")
+
     def stage_probe(self):
         from mirror.capture import media as M
         t0 = time.time()
+        pre_notes: list = []
+        wc = self._make_working_copies(pre_notes)
         if self.lens is not None:
             from concurrent.futures import ThreadPoolExecutor
             with ThreadPoolExecutor(2) as ex:
@@ -810,12 +1102,19 @@ class RealRun:
         out = {"take": {"path": str(self.take), "sha256": tm.sha256, "n_frames": tm.n_frames, "duration_s": tm.duration_s,
                         "fps": tm.nominal_fps, "size": [tm.width, tm.height], "variable_frame_rate": tm.variable_frame_rate,
                         "fingerprint": tm.fingerprint.model_dump()}}
-        notes = []
+        notes = list(pre_notes)
+        if wc:
+            out["working_copy"] = wc
         if self.lens is not None:
             lm = self.clip(self.lens)
             out["lens"] = {"path": str(self.lens), "sha256": lm.sha256, "n_frames": lm.n_frames, "duration_s": lm.duration_s,
                            "fps": lm.nominal_fps, "size": [lm.width, lm.height], "fingerprint": lm.fingerprint.model_dump()}
-            diff = lm.fingerprint.differences(tm.fingerprint)
+            if wc:      # camera settings are compared on the clips as filmed
+                lo = self.clip(Path(self.state["inputs"].get("lens_original") or self.lens))
+                to = self.clip(Path(self.state["inputs"]["take_original"]))
+                diff = lo.fingerprint.differences(to.fingerprint)
+            else:
+                diff = lm.fingerprint.differences(tm.fingerprint)
             out["fingerprint_differences"] = diff
             if diff:
                 notes.append("lens clip and take differ in recorded camera settings: " + "; ".join(diff))
@@ -896,7 +1195,7 @@ class RealRun:
         first_rest = rest[0] if rest else None
         board_search_s = max(3.0, round(first_rest["t1"] - pts0 + 1.5, 2)) if first_rest else 3.0
         # was the board laid down differently at the end? (orientation of the printed grid in the image)
-        same_placement, why = True, "one board window or no board at the end: end-of-take drift check applies as usual"
+        same_placement, why, rot_deg = True, "one board window or no board at the end: end-of-take drift check applies as usual", None
         if len(rest) >= 2 and rest[-1]["t0"] - first_rest["t1"] > 5.0:
             def angle(f):
                 cs = next(c for i, _, c in boards if i == f)
@@ -908,17 +1207,19 @@ class RealRun:
             try:
                 ia, ja, aa = angle(fa); ib, jb, ab = angle(fb)
                 dd = abs((ab - aa + 180) % 360 - 180)
+                if (ia, ja) == (ib, jb):
+                    rot_deg = round(float(dd), 1)
                 if (ia, ja) == (ib, jb) and dd > 45:
                     same_placement = False
-                    why = (f"the board at {rest[-1]['t0']:.1f}-{rest[-1]['t1']:.1f} s lies rotated {dd:.0f} deg relative to "
-                           f"{first_rest['t0']:.1f}-{first_rest['t1']:.1f} s: laid down differently, so its pose difference is "
-                           "not camera motion (the image-border shift check still guards against a moved phone)")
+                    why = (f"the board at {rest[-1]['t0']:.1f}-{rest[-1]['t1']:.1f} s looks rotated {dd:.0f} deg relative to "
+                           f"{first_rest['t0']:.1f}-{first_rest['t1']:.1f} s: a SUGGESTION only; the drift check is switched off "
+                           "only if the person answers that they laid it down differently")
                 else:
                     why = f"end board orientation within {dd:.0f} deg of the start: drift check applies"
             except StopIteration:
                 pass
         out = {"sync_events": sync, "board_visible": visible, "board_rest": rest, "board_search_s": board_search_s,
-               "end_board_same_placement": same_placement, "end_board_reason": why,
+               "end_board_rotated_suggestion": not same_placement, "end_board_rotated_deg": rot_deg, "end_board_reason": why,
                "method": f"aruco sync marker every frame and ChArUco board every {BSTEP}nd frame at {SC}x resolution"}
         _jdump(self.p("scan.json"), {**out, "board_samples": rows})
         self.mark("scan", t0, **out)
@@ -1046,7 +1347,7 @@ class RealRun:
         warmer.start()
         g = json.loads(self.p("grounding.json").read_text())
         seed = g["seed_frame"]
-        k = 2 if W >= 1000 else 1
+        k = max(1, min(W, H) // 540)            # working proxy short side about 540 px (D1: 1080x1920 -> 540x960)
         pw, ph = W // k // 2 * 2, H // k // 2 * 2
         s = W / pw
 
@@ -1200,8 +1501,9 @@ class RealRun:
             tsf.write_text(ts.model_dump_json())
         with self._session_patches():
             s = self._build(SE, C, m, sc, intr, ts, confirmed, rejected, corrections, tray)
-        s.notes.append("built by mirror.capture.real_run (board search and end-board placement found automatically: "
-                       + sc.get("end_board_reason", "") + ")")
+        s.notes.append("built by mirror.capture.real_run (board search found automatically; end-of-take drift check "
+                       + ("used" if self._end_board_same() else "NOT used (board re-laid: person's answer or D1 legacy setting)")
+                       + "; scan: " + sc.get("end_board_reason", "") + ")")
         s.notes += list(extra_notes)
         return s
 
@@ -1303,7 +1605,15 @@ class RealRun:
                              mappings=mappings_from(self.meas, set(confirmed), set(rejected)), tracker="model",
                              model_tracks={"top": ts}, corrections=list(corrections),
                              board_search_s=float(sc.get("board_search_s", 3.0)),
-                             end_board_same_placement=bool(sc.get("end_board_same_placement", True)))
+                             end_board_same_placement=self._end_board_same())
+
+    def _end_board_same(self) -> bool:
+        """False (end-of-take drift check not used) only on the person's answer 'Yes, I laid it down differently', or
+        for D1 under --legacy-answers-d1 (the D1 capture config's setting from the video review, labelled)."""
+        a = (getattr(self, "_answers_now", None) or {}).get("end_board")
+        if a is not None:
+            return not str(a.get("answer", "")).startswith("Yes")
+        return not self._legacy_ok()
 
     def stage_session(self):
         from mirror.capture import session as SE
@@ -1354,8 +1664,9 @@ class RealRun:
             if cnts:
                 hull = cv2.convexHull(max(cnts, key=cv2.contourArea))
                 tray_ref = np.zeros_like(tm); cv2.fillPoly(tray_ref, [hull], 1); tray_ref = tray_ref.astype(bool)
-        pix_s = 60.0 * pw / 1080
-        min_disp = 15.0 * pw / 540
+        ref = min(pw, ph)                          # scale with the short side, so landscape and portrait match
+        pix_s = 60.0 * ref / 1080
+        min_disp = 15.0 * ref / 540
         events, jitter, speed = [], [], {}
         for l in labels:
             c = cent[l]
@@ -1387,7 +1698,7 @@ class RealRun:
                 else:
                     merged.append(sgm)
             big = [sg for sg in merged
-                   if np.nansum([np.hypot(*(c[min(sg[1] + 3, N - 1)] - c[max(sg[0] - 3, 0)]))]) > 25.0 * pw / 540
+                   if np.nansum([np.hypot(*(c[min(sg[1] + 3, N - 1)] - c[max(sg[0] - 3, 0)]))]) > 25.0 * ref / 540
                    or pts[sg[1]] - pts[sg[0]] > 0.5]
             for a, b in big:
                 pre = next((q for q in range(a - 1, -1, -1) if ok[q]), None)
@@ -1557,16 +1868,16 @@ class RealRun:
             cnts, _ = cv2.findContours(a, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             cv2.drawContours(g, cnts, -1, (255, 120, 40), 2)
             ys, xs = np.nonzero(a)
-            pad = int(60 * pw / 540)
+            pad = int(60 * min(pw, ph) / 540)
             X0, Y0, X1, Y1 = max(0, xs.min() - pad), max(0, ys.min() - pad), min(pw, xs.max() + pad), min(ph, ys.max() + pad)
             pth = self.p("evidence", f"{l}_seed.jpg")
             Image.fromarray(g[Y0:Y1, X0:X1]).save(pth, quality=88)
             out[l] = str(pth.relative_to(self.out))
-        fps = float(self.clip(self.take).nominal_fps or 30)
+        tm_ = self.clip(self.take)
         for l, (short, main) in self._pick_ambiguities(tl).items():
             tiles = []
             for tt in (short["from_s"], (short["from_s"] + main["from_s"]) / 2, main["from_s"], main["from_s"] + 0.6):
-                k = min(int(round(tt * fps)), self.clip(self.take).n_frames - 1)
+                k = tm_.frame_at(float(tt))         # by timestamp (VFR- and start-offset-safe), not round(t * fps)
                 g = rd.get_data(k).copy()
                 mm = masks[l].get(k)
                 if mm is not None:
@@ -1584,11 +1895,11 @@ class RealRun:
             out[f"{l}_pickup"] = str(pth.relative_to(self.out))
         last = self.clip(self.take).n_frames - 1
         end_t = max([e["to_s"] for e in tl["events"]] + [0]) + 1.5
-        k = min(last, int(round(end_t * fps)))
+        k = min(last, tm_.frame_at(float(end_t)))
         pth = self.p("evidence", "end.jpg")
         Image.fromarray(rd.get_data(k)).save(pth, quality=86)
         out["end"] = str(pth.relative_to(self.out))
-        out["end_t"] = round(k / fps, 2)
+        out["end_t"] = round(float(tm_.pts_s[k]), 2)
         rd.close()
         return out
 
@@ -1648,6 +1959,20 @@ class RealRun:
                       "proposal": "The calibration flag stays either way (" + msg + "); only a new lens clip that passes clears it.",
                       "evidence": {"image": None, "t_s": (s.poses.get("top").pts_s if s.poses.get("top") else None)},
                       "resolves": "recorded only; recalibration_required stays open unless a new lens clip passes"})
+        sc = self.info("scan")
+        if sc.get("end_board_rotated_deg") is not None or len(sc.get("board_rest", [])) >= 2:
+            rot = sc.get("end_board_rotated_deg")
+            q.append({"id": "end_board", "kind": "setup",
+                      "question": "At the end of the take, did you lay the printed board down differently (moved or turned) "
+                                  "than at the start?",
+                      "options": ["Yes, I laid it down differently", "No, same place and orientation", "Not sure"],
+                      "proposal": (f"The end board looks turned about {rot:.0f} deg relative to the start; if you laid it down "
+                                   "differently, its pose difference is not camera motion and the end-of-take drift check is "
+                                   "not used (the image-border shift check still runs). Only your 'Yes' turns it off."
+                                   if rot is not None else "If you did, its pose difference is not camera motion. Only your "
+                                   "'Yes' turns the end-of-take drift check off."),
+                      "evidence": {"image": None, "t_s": (sc["board_rest"][-1]["t0"] if sc.get("board_rest") else None)},
+                      "resolves": "end-of-take drift check (applied only on your answer)"})
         into = [e for e in tl["events"] if e["in_tray"]]
         order, seen = [], set()
         for e in sorted(into, key=lambda e: e["to_s"]):
@@ -1704,9 +2029,14 @@ class RealRun:
             self._overlay(tl)
         timings["overlay_s"] = round(time.time() - ts, 1)
         qs = self._questions(s, tl, ev)
-        _jdump(self.p("questions.json"), {"about": "Questions for the person. Answer in answers.json as "
-                                                   "{id: {answer, by: 'person', at: epoch_ms, seconds_spent}} (the page writes the "
-                                                   "same shape). MIRROR never answers these itself.",
+        take_sha = self.take_sha()
+        _jdump(self.p("questions.json"), {"about": "Questions for the person. Each answer must carry this file's session_id, "
+                                                   "take_sha256 and question_set_sha256 and be written after created_at_ms: "
+                                                   "answers/<id> = {answer, by: 'person', uid, at: epoch_ms, seconds_spent, "
+                                                   "session_id, take_sha256, question_set_sha256} (the page writes exactly this). "
+                                                   "Anything else is refused. MIRROR never answers these itself.",
+                                          "session_id": s.session_id, "take_sha256": take_sha,
+                                          "question_set_sha256": _canon_sha(qs), "created_at_ms": _now_ms(),
                                           "questions": qs, "correction_candidates": self.correction_candidates()})
         self.mark("report", t0, n_questions=len(qs), events_2d=len(tl["events"]), **timings)
         self._write_page()
@@ -1745,7 +2075,10 @@ class RealRun:
                 page.setdefault("calibration", {})["focal_check"] = (f"{100 * fc['value']:+.1f}% (limit {100 * fc['threshold']:.0f}%): "
                                                                      + ("passed" if fc.get("passed") else "recalibration required stays open")) \
                     if isinstance(fc.get("value"), (int, float)) else str(fc)
-            page["gate"] = {"passed": ok, "blocking": len(blocking), "session_id": s.session_id, "evidence_kind": s.evidence_kind,
+            bsid = self._binding().get("session_id")
+            page["gate"] = {"passed": ok, "blocking": len(blocking), "session_id": bsid or s.session_id,
+                            "session_id_rebuilt": s.session_id if bsid and bsid != s.session_id else None,
+                            "evidence_kind": s.evidence_kind,
                             "blocking_items": [{"code": b.code, "message": b.message} for b in blocking]}
         for k in ("answers", "task", "scene", "run", "correct"):
             if k in st:
@@ -1772,23 +2105,128 @@ class RealRun:
                "notes": list(self.state.get("problems", [])), "spend": {"usd": round(self.ledger.spent(), 4), "cap_usd": self.ledger.cap,
                                                                         "mode": self.mode},
                "calibration": page.get("calibration"), "placement_note": st.get("scene", {}).get("label"),
-               "gate": page.get("gate"), "questions": "questions.json", "answers": str(self.answers_path)}
-        if (self.out / "run" / "rollout.json").exists():
+               "placement": ({"source": st["scene"].get("placement"), "shift_cm": st["scene"].get("shift_cm"),
+                              "still_out_of_reach": st["scene"].get("still_out_of_reach") or []}
+                             if st.get("scene", {}).get("status") == "done" else None),
+               "stated_intent": self._stated_intent_view(),
+               "capture_id": self.dev_clip or self.publish_firebase,
+               "gate": page.get("gate"), "questions": "questions.json",
+               "answers": "answers_firebase.json" if self.answers_firebase else self.answers_path.name}
+        if st.get("run", {}).get("status") == "done" and (self.out / "run" / "rollout.json").exists():
             man["rollouts"]["run"] = "run/rollout.json"
-        if (self.out / "correct" / "rollout_after.json").exists():
-            c = st.get("correct", {})
-            man["corrections"].append({"name": c.get("candidate"), "label": c.get("label"), "rehearsal": c.get("rehearsal"),
+        c = st.get("correct", {})
+        if c.get("status") == "done" and (self.out / "correct" / "rollout_after.json").exists():
+            if not isinstance(c.get("rehearsal"), bool):
+                raise RuntimeError("correct stage record lacks its rehearsal flag; refusing to publish the correction")
+            man["corrections"].append({"name": c.get("candidate"), "label": c.get("label"), "rehearsal": c["rehearsal"],
                                        "rollout": "correct/rollout_after.json", "spec": "correct/spec_after.json",
                                        "report": "correct/report_after.json", "recheck": "correct/recheck_before.json",
                                        "video": "correct/sim_after.mp4", "before_after": "correct/before_after.mp4",
                                        "compiler": c.get("compiler"), "text": c.get("compile_text")})
+        page["stated_intent"] = man["stated_intent"]
+        page["placement"] = man["placement"]
+        page["answers_refused"] = self.state.get("answers_refused") or []
+        sr = self.out / "questions_spec.json"
+        if sr.exists() and st.get("task", {}).get("status") == "waiting":
+            qd2 = json.loads(sr.read_text())
+            page["spec_review_request"] = {k: qd2.get(k) for k in ("spec_sha256", "session_id", "take_sha256", "created_at_ms",
+                                                                      "interpreter", "summary")}
+            page["spec_review_request"]["rules"] = {q["id"]: {"text": q["question"].removeprefix("Keep this rule? "),
+                                                              "kind": (q.get("rule") or {}).get("type")}
+                                                    for q in qd2.get("questions", [])}
+        tj = self.out / "twin" / "twin.json"
+        if tj.exists():
+            films = [{"path": f"twin/{n}", "title": t, "caption": c} for n, t, c in (
+                ("overlay.mp4", "The robot on your table, from your phone", "Simulated robot and proxies composited over your footage"),
+                ("side_by_side.mp4", "Your hands / the robot", "Your take next to the simulated run"),
+                ("twin_3panel.mp4", "Phone view, top-down twin, simulator", "Approximate: one camera"),
+                ("before_after.mp4", "Before / after the correction", "First run vs the replanned run"))
+                     if (self.out / "twin" / n).exists()]
+            page["twin"] = {"label": "; ".join(page["labels"]), "films": films}
         _jdump(self.p("manifest.json"), man)
+        _jdump(self.p("page.json"), page)
         try:
             self._publish_copy()
         except OSError as e:
             self.log(f"[publish] copy failed: {e}")
-        _jdump(self.p("page.json"), page)
+        self._publish_firebase(page)
         return page
+
+    def _storage_rel(self) -> Optional[str]:
+        """The publish directory as a Storage path relative to the owner's bucket prefix (None if not under /cloudspace)."""
+        if self.publish_dir is None:
+            return None
+        p = str(Path(self.publish_dir).resolve() if Path(self.publish_dir).exists() else self.publish_dir)
+        return p[len("/cloudspace/"):].strip("/") if p.startswith("/cloudspace/") else None
+
+    def _fb_status(self, stage: str, message: str) -> None:
+        if not getattr(self, "publish_firebase", None):
+            return
+        try:
+            _fb("write", f"{self._fb_base(self.publish_firebase)}/status",
+                {"stage": stage, "updated_at_ms": _now_ms(), "message": message})
+        except Exception as e:      # noqa: BLE001: the run goes on; the page just shows older status
+            self.log(f"[publish] Firebase status failed: {type(e).__name__}: {e}")
+
+    def _questions_node(self, storage: Optional[str]) -> Optional[dict]:
+        qf = self.out / "questions.json"
+        if not qf.exists():
+            return None
+        qd = json.loads(qf.read_text())
+        img = lambda rel: (f"{storage}/{rel}" if storage and rel else None)
+        items = {}
+        for i, q in enumerate(qd.get("questions", [])):
+            ev = q.get("evidence") or {}
+            items[_safe_key(q["id"])] = {"id": q["id"], "order": i, "kind": q.get("kind"), "question": q.get("question"),
+                                         "proposal": q.get("proposal"), "options": list(q.get("options", [])),
+                                         "evidence": {"time_s": ev.get("t_s"), "image_path": img(ev.get("image"))}}
+        return {k: qd.get(k) for k in ("session_id", "take_sha256", "question_set_sha256", "created_at_ms")} | {"items": items}
+
+    def _publish_firebase(self, page: dict) -> None:
+        """page / questions / status under viewer/runs/<RUN_ID> for the review page (schema: night/FIX_CONTRACT.md).
+        Media are Storage-relative paths under the publish directory; no absolute sandbox paths, no token URLs."""
+        if not getattr(self, "publish_firebase", None):
+            return
+        base = self._fb_base(self.publish_firebase)
+        storage = self._storage_rel()
+        pub = set(self.PUBLISH) | {str(p.relative_to(self.out)) for p in self.out.glob("evidence/*.jpg")} \
+            | {str(p.relative_to(self.out)) for p in self.out.glob("twin/*.mp4")}
+        pg = _strip_abs(json.loads(json.dumps(page, default=_json_default)))
+        pg["run_id"] = self.publish_firebase
+        pg["storage_base"] = storage
+        pg["media"] = {k: f"{storage}/{v}" for k, v in (page.get("paths") or {}).items() if storage and v in pub}
+        for q in pg.get("confirmations_needed") or []:
+            ev = q.get("evidence") or {}
+            if ev.get("image"):
+                ev["image_path"] = f"{storage}/{ev['image']}" if storage else None
+        twin = self.out / "twin" / "twin.json"
+        if twin.exists() and storage:
+            pg["media"]["twin_dir"] = f"{storage}/twin"
+        try:
+            _fb("write", f"{base}/page", _fb_clean(pg))
+            qn = self._questions_node(storage)
+            if qn is not None and self.state.get("fb_questions_sha") != qn["question_set_sha256"]:
+                _fb("write", f"{base}/questions", _fb_clean(qn))
+                self.state["fb_questions_sha"] = qn["question_set_sha256"]
+            st = self.state.get("status") or "running"
+            stage = next((s for s in reversed(STAGES) if self.done(s)), "start")
+            _fb("write", f"{base}/status", {"stage": stage, "updated_at_ms": _now_ms(),
+                                            "message": f"{st}: {self.state.get('waiting_for') or page.get('headline') or ''}"[:500]})
+            self.state["published_firebase"] = {"base": base, "at": _now_ms()}
+            _jdump(self.state_path, self.state)
+        except Exception as e:      # noqa: BLE001
+            self.log(f"[publish] Firebase write failed: {type(e).__name__}: {e}")
+            self.state.setdefault("problems", [])
+            msg = f"Firebase publish failed: {type(e).__name__}"
+            if msg not in self.state["problems"]:
+                self.state["problems"].append(msg)
+
+    def _stated_intent_view(self) -> Optional[dict]:
+        f = self.out / "intent.json"
+        if not f.exists() or "stated" not in str(self.state.get("stages", {}).get("task", {}).get("spec_source", "")):
+            return None
+        d = json.loads(f.read_text())
+        return {"answer": d.get("answer"), "answer_as_given": d.get("answer_as_given"), "proposal": d.get("proposal")}
 
     def _headline(self, page) -> str:
         st = self.state["stages"]
@@ -1804,8 +2242,14 @@ class RealRun:
         if "task" in st:
             return st["task"].get("summary", "")
         if page.get("gate") is not None:
-            return (f"MIRROR watched the clip and has {len(page.get('confirmations_needed', []))} question(s) for you. "
-                    + ("The gate is closed until they are answered" if not page["gate"]["passed"] else "The gate is open") + ".")
+            g = page["gate"]
+            reasons = "; ".join(f"{b['code']} ({b['message']})" for b in g.get("blocking_items", []))
+            answered = "answers" in st
+            if g["passed"]:
+                return f"MIRROR watched the clip and has {len(page.get('confirmations_needed', []))} question(s) for you. The gate is open."
+            return ((f"Your answers are applied; the gate is still closed: {reasons}." if answered else
+                     f"MIRROR watched the clip and has {len(page.get('confirmations_needed', []))} question(s) for you. "
+                     f"The gate is closed: {reasons}."))
         return "Running."
 
 
@@ -1866,50 +2310,154 @@ class RealRun:
         """Copy the light outputs (no tracks, no rollouts) to --publish-dir, e.g. a /cloudspace folder the page reads."""
         if getattr(self, "publish_dir", None) is None:
             return
-        files = list(self.PUBLISH) + [str(p.relative_to(self.out)) for p in self.out.glob("evidence/*.jpg")]
+        files = list(self.PUBLISH) + [str(p.relative_to(self.out)) for p in self.out.glob("evidence/*.jpg")] \
+            + [str(p.relative_to(self.out)) for p in list(self.out.glob("twin/*.mp4")) + list(self.out.glob("twin/twin.json"))]
         for rel in files:
             src_, dst = self.out / rel, self.publish_dir / rel
             if not src_.exists():
+                continue
+            if rel in ("manifest.json", "real_run.json", "page.json"):     # no absolute sandbox paths in published copies
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                _jdump(dst, _strip_abs(json.loads(src_.read_text())))
                 continue
             if dst.exists() and dst.stat().st_size == src_.stat().st_size and dst.stat().st_mtime >= src_.stat().st_mtime:
                 continue
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src_, dst)
 
-    def _fetch_firebase_answers(self):
-        """Answers the page wrote to Firebase (sandbox only): copied to the answers file, then used like any answers file."""
+    # ------------------------------------------------------ Firebase (sandbox only)
+    def _fb_base(self, run_id: str) -> str:
+        """Firebase node of a run: <base>/<run_id> (an argument containing '/' is taken as the full node path)."""
+        if "/" in str(run_id):
+            return str(run_id).rstrip("/")
+        return f"{FIREBASE_RUNS_BASE}/{_safe_key(run_id)}"
+
+    def _fetch_firebase_answers(self) -> Optional[Path]:
+        """The person's answers, spec review and correction the page wrote under the run's Firebase node, saved to
+        OUT/answers_firebase.json (never over the local answers file). Returns that file, or None."""
         if not getattr(self, "answers_firebase", None):
-            return
-        node = None
+            return None
+        base = self._fb_base(self.answers_firebase)
         try:
-            from firebase_helper import firebase
-            node = firebase.read(self.answers_firebase)
-        except ImportError:
-            # MIRROR's venv lacks the sandbox's Firebase helper: ask the sandbox's own Python (read only)
-            py = os.environ.get("MANA_PYTHON") or "/workspace/.venv/bin/python"
-            if not Path(py).exists():
-                self.log("[answers] no Firebase helper available; using the answers file")
-                return
-            r = subprocess.run([py, "-c", "import json, sys; sys.path.append('/opt/sandbox_libs'); "
-                                "from firebase_helper import firebase; print(json.dumps(firebase.read(sys.argv[1])))",
-                                self.answers_firebase], capture_output=True, text=True, timeout=60, stdin=subprocess.DEVNULL)
-            if r.returncode != 0:
-                self.log("[answers] Firebase read failed; using the answers file")
-                return
-            node = json.loads(r.stdout.strip().splitlines()[-1] or "null")
-        if node:
-            _jdump(self.answers_path, {"source": f"firebase:{self.answers_firebase}", "fetched_at": _now_ms(), "answers": node})
+            node = {k: _fb("read", f"{base}/{k}") for k in ("answers", "spec_review", "correction")}
+        except Exception as e:      # noqa: BLE001: unattended; the run reports it and waits
+            self.log(f"[answers] Firebase read failed ({type(e).__name__}: {e}); no answers read")
+            self.state.setdefault("problems", []).append(f"Firebase answers read failed: {type(e).__name__}")
+            return None
+        dst = self.out / "answers_firebase.json"
+        _jdump(dst, {"source": f"firebase:{base}", "fetched_at": _now_ms(), **{k: v for k, v in node.items() if v}})
+        if self.answers_path.exists() and self.answers_path.resolve() != dst.resolve():
+            note = f"local answers file {self.answers_path.name} not used: --answers-firebase is set (answers from {base})"
+            if note not in self.state.setdefault("problems", []):
+                self.state["problems"].append(note)
+        return dst
+
+    def _spec_sha(self) -> Optional[str]:
+        f = self.out / "spec_proposed.json"
+        return _canon_sha(json.loads(f.read_text())) if f.exists() else None
+
+    def _binding(self) -> dict:
+        qf = self.out / "questions.json"
+        q = json.loads(qf.read_text()) if qf.exists() else {}
+        return {k: q.get(k) for k in ("session_id", "take_sha256", "question_set_sha256", "created_at_ms")}
+
+    def _legacy_ok(self) -> bool:
+        if not self.legacy_d1:
+            return False
+        sha = self.take_sha()
+        if sha != D1_TAKE_SHA256:
+            raise SystemExit(f"--legacy-answers-d1 applies only to D1's take IMG_0815 (sha256 {D1_TAKE_SHA256[:12]}...); "
+                             f"this take is {str(sha)[:12]}...")
+        return True
+
+    def _check_bound(self, rec: dict, b: dict, fields=("session_id", "take_sha256", "question_set_sha256")) -> Optional[str]:
+        """Why this answer record may not be applied to this run (None if it may)."""
+        if not isinstance(rec, dict):
+            return "not a record"
+        if rec.get("by") != "person":
+            return f"by={rec.get('by')!r}, not 'person'"
+        legacy = self._legacy_ok() and not any(rec.get(f) for f in fields)
+        if legacy:
+            return None
+        for f in fields:
+            if rec.get(f) != b.get(f):
+                return f"{f} {str(rec.get(f))[:16]!r} does not match this run's {str(b.get(f))[:16]!r}"
+        at = rec.get("at")
+        if not isinstance(at, (int, float)) or (b.get("created_at_ms") and at < b["created_at_ms"]):
+            return f"answered at {at}, before these questions were written ({b.get('created_at_ms')})"
+        return None
 
     def _load_answers(self) -> Optional[dict]:
-        self._fetch_firebase_answers()
-        if not self.answers_path.exists():
+        """The person's answers that are bound to THIS run (session id, take sha256, question set sha256, written
+        after the questions). Anything else is refused and reported, never applied. Returns {item_id: record} plus
+        normalised 'spec_review' {answer: {confirm, reject}, ...} and 'correction' {answer, ...}; None if no file."""
+        fb = self._fetch_firebase_answers()
+        src = fb if fb is not None else self.answers_path
+        if not src.exists():
             return None
-        d = json.loads(self.answers_path.read_text())
-        d = d.get("answers", d)
-        out = {}
-        for k, v in d.items():
-            if isinstance(v, dict) and v.get("by") == "person" and v.get("answer") is not None:
+        d = json.loads(src.read_text())
+        items = d.get("answers") if isinstance(d.get("answers"), dict) else {k: v for k, v in d.items()
+                                                                              if k not in ("source", "fetched_at", "spec_review", "correction")}
+        b = self._binding()
+        qids = {q["id"] for q in json.loads((self.out / "questions.json").read_text()).get("questions", [])} \
+            if (self.out / "questions.json").exists() else set()
+        by_safe = {_safe_key(q): q for q in qids}
+        out, refused = {}, []
+        for k, v in list((items or {}).items()):
+            k = by_safe.get(k, k)
+            if k in ("spec_review", "correction") or not isinstance(v, dict):
+                continue
+            if v.get("answer") is None:
+                continue
+            why = "not a question of this run" if qids and k not in qids else self._check_bound(v, b)
+            if why:
+                refused.append({"item": k, "reason": why})
+            else:
                 out[k] = v
+        cor = d.get("correction")
+        if isinstance(cor, dict) and (cor.get("choice_id") or cor.get("text") or cor.get("answer")):
+            why = self._check_bound(cor, b, fields=("session_id", "take_sha256"))
+            if why:
+                refused.append({"item": "correction", "reason": why})
+            else:
+                out["correction"] = {**cor, "answer": cor.get("choice_id") or cor.get("text") or cor.get("answer"),
+                                     "kind": "choice" if cor.get("choice_id") else "text"}
+        rev = d.get("spec_review")
+        if isinstance(rev, dict) and rev:
+            why = None
+            if isinstance(rev.get("rules"), dict):
+                want = self._spec_sha()
+                if rev.get("spec_sha256") != want:
+                    why = f"spec_sha256 {str(rev.get('spec_sha256'))[:12]!r} does not match MIRROR's proposal {str(want)[:12]!r}"
+                for f in ("session_id", "take_sha256"):
+                    if not why and rev.get(f) != b.get(f):
+                        why = f"{f} does not match this run"
+                conf, rej = [], []
+                if not why:
+                    sq = self.out / "questions_spec.json"
+                    rmap = {_safe_key(q["id"]): q["id"] for q in json.loads(sq.read_text()).get("questions", [])} if sq.exists() else {}
+                    for rid, r in rev["rules"].items():
+                        rid = rmap.get(rid, rid)
+                        w2 = self._check_bound({**r, "session_id": rev.get("session_id"), "take_sha256": rev.get("take_sha256")},
+                                               b, fields=("session_id", "take_sha256"))
+                        if w2 or r.get("decision") not in ("accept", "reject"):
+                            refused.append({"item": f"spec_review/{rid}", "reason": w2 or f"decision {r.get('decision')!r}"})
+                        else:
+                            (conf if r["decision"] == "accept" else rej).append(rid)
+                    if conf or rej:
+                        out["spec_review"] = {"answer": {"confirm": conf, "reject": rej}, "by": "person",
+                                              "spec_sha256": want, "at": max(float(r.get("at") or 0) for r in rev["rules"].values())}
+            else:
+                why = "old spec_review shape without spec_sha256 and per-rule records"
+            if why:
+                refused.append({"item": "spec_review", "reason": why})
+        self.state.pop("legacy_answers", None)
+        if self.legacy_d1 and out:
+            self.state["legacy_answers"] = ("answers carried over from D1's own page (3 Nov 2026, same take IMG_0815) without "
+                                            "this run's binding fields: --legacy-answers-d1")
+        self.state["answers_refused"] = refused
+        if refused:
+            self.log(f"[answers] refused {len(refused)}: " + "; ".join(f"{r['item']}: {r['reason']}" for r in refused))
         return out
 
     def stage_answers(self):
@@ -1917,8 +2465,12 @@ class RealRun:
         from mirror.capture.session import CaptureSession
         t0 = time.time()
         ans = self._load_answers()
-        if ans is None:
-            raise StageStop(f"answers: waiting for the person's answers in {self.answers_path} (questions in questions.json)")
+        refused = self.state.get("answers_refused") or []
+        if not ans:
+            src = (f"Firebase run {self.answers_firebase}" if self.answers_firebase else self.answers_path.name)
+            raise StageStop(f"answers: waiting for the person's answers ({src}; questions in questions.json)"
+                            + (f"; refused {len(refused)} not bound to this run" if refused else ""))
+        self._answers_now = ans
         qs = {q["id"]: q for q in json.loads(self.p("questions.json").read_text())["questions"]}
         confirmed, rejected, corrections, applied, notes = set(), set(), [], {}, []
         for o in self.meas["objects"]:
@@ -1937,9 +2489,18 @@ class RealRun:
         applied["objects_confirmed"] = sorted(confirmed)
         applied["objects_rejected"] = sorted(rejected)
         if "camera_settings" in ans:
-            notes.append("camera settings (person): " + str(ans["camera_settings"]["answer"])
+            cs = ans["camera_settings"]
+            who = ("Mana's record of the person's chat message (not a click on the page)" if cs.get("source") == "chat"
+                   else "person")
+            notes.append(f"camera settings ({who}): " + str(cs["answer"])
                          + "; recorded only, the calibration flag is not resolved by an answer")
-            applied["camera_settings"] = ans["camera_settings"]["answer"]
+            applied["camera_settings"] = cs["answer"]
+            applied["camera_settings_source"] = who
+        if "end_board" in ans:
+            applied["end_board"] = ans["end_board"]["answer"]
+        applied["end_of_take_drift_check"] = ("used" if self._end_board_same() else
+                                              ("not used: the person laid the board down differently" if "end_board" in ans
+                                               else "not used: D1 legacy setting from the video review (not a person's answer)"))
         s = self._build_session(confirmed, rejected, corrections, notes)
         # event answers: map the answered time onto the capture's own pick event
         ev_corr = []
@@ -1971,14 +2532,33 @@ class RealRun:
         if ev_corr or tray is not None:
             s = self._build_session(confirmed, rejected, corrections + ev_corr, notes, tray=tray)
         if "intent" in ans:
-            applied["intent"] = ans["intent"]["answer"]
-            _jdump(self.p("intent.json"), {"answer": ans["intent"]["answer"], "by": "person", "at": ans["intent"].get("at"),
+            opts = list(qs.get("intent", {}).get("options", []))
+            raw = str(ans["intent"]["answer"]).strip()
+            chosen = raw if raw in opts else None
+            if chosen is None and raw.startswith("Something else") and "Something else" in opts:
+                chosen = raw          # "Something else: <text>": recorded; the task stage asks for it in words, never guesses
+            legacy_note = None
+            if chosen is None and self._legacy_ok():
+                head = raw.split(" (")[0]
+                chosen = next((o for o in opts if o.split(" (")[0] == head), None)
+                if chosen:
+                    legacy_note = f"D1 page wording '{raw}' matched to the option '{chosen}' (--legacy-answers-d1)"
+            if chosen is None:
+                raise StageStop(f"answers: the intent answer {raw!r} is not one of the offered options {opts}; "
+                                "MIRROR does not interpret free text as a task")
+            applied["intent"] = chosen
+            if legacy_note:
+                applied["intent_note"] = legacy_note
+            _jdump(self.p("intent.json"), {"answer": chosen, "answer_as_given": raw, "by": "person", "at": ans["intent"].get("at"),
                                            "seconds_spent": ans["intent"].get("seconds_spent"),
                                            "proposal": qs.get("intent", {}).get("proposal"),
                                            "order_seen": qs.get("intent", {}).get("order_seen", [])})
         if "correction" in ans:
             applied["correction"] = ans["correction"]["answer"]
         applied["seconds_spent_total"] = round(sum(float(v.get("seconds_spent") or 0) for v in ans.values()), 1)
+        applied["refused"] = refused
+        if self.state.get("legacy_answers"):
+            applied["legacy"] = self.state["legacy_answers"]
         s.save(self.p("session_answered.json"))
         lines = SE.summary_lines(s)
         self.p("review_answered.md").write_text("# Capture review (answers applied)\n\n"
@@ -1992,8 +2572,10 @@ class RealRun:
 
     # ============================================================= TASK
     def _stated_spec(self, s, intent: dict):
-        """The task the person said they meant (answers 'intent'), written as a spec.
-        Provenance 'manual', confirmed by the person; never presented as MIRROR's inference."""
+        """The task the person said they meant (answers 'intent'), written as a spec. Provenance 'manual' only for what
+        the chosen option literally says (into the tray; the order with 'Order mattered too'); MIRROR's default
+        thresholds for the proposal's wording ('keeping the mug upright', 'going around the divider') are provenance
+        'default'. Never presented as MIRROR's inference. Only the exact offered options are accepted."""
         from mirror.contracts import TaskSpec
         from mirror.interpret import validate_spec
         ans = str(intent["answer"])
@@ -2001,11 +2583,19 @@ class RealRun:
         movers = [l for l in _movers(self.meas) if kinds_by_label.get(l) in ("cup", "block", "marker")]
         if not movers:
             raise StageStop("stated task: no confirmed objects to move")
-        if ans.lower().startswith("something else"):
-            raise StageStop("stated task: 'Something else' needs the task in words; MIRROR will not guess it")
+        if ans.startswith("Something else"):
+            said = ans.partition(":")[2].strip()
+            raise StageStop("stated task: 'Something else'" + (f" ({said!r})" if said else "") + ": MIRROR does not turn free "
+                            "text into a task spec; choose 'As proposed' / 'Order mattered too' or run with a reviewed spec")
+        if not (ans == "As proposed" or ans.startswith("Order mattered too (")):
+            raise StageStop(f"stated task: {ans!r} is not one of the offered options; MIRROR does not interpret free text")
         order = [l for l in intent.get("order_seen", []) if l in movers] or movers
-        ev = f"your stated intent (answers/intent: '{ans}' on top of the proposal '{intent.get('proposal')}')"
-        prov = {"source": "manual", "evidence": ev, "version_introduced": 1, "model": None}
+        said = f"your answer '{ans}' to the proposal '{intent.get('proposal')}'"
+        prov = {"source": "manual", "evidence": said, "version_introduced": 1, "model": None}
+
+        def dflt(what):
+            return {"source": "default", "version_introduced": 1, "model": None,
+                    "evidence": f"MIRROR default for {what}, accepted with {said}; the threshold is not your words"}
         sel = lambda k: {"kind": k, "role": None, "ids": None}
         kinds = []
         for l in order:
@@ -2013,21 +2603,29 @@ class RealRun:
                 kinds.append(kinds_by_label[l])
         goals = [{"id": f"g_inside_{k}", "type": "inside", "object": sel(k), "status": "confirmed", "provenance": prov} for k in kinds]
         ordering = []
-        if ans.lower().startswith("order mattered"):
+        if ans.startswith("Order mattered too ("):
             ordering = [{"id": f"o_{a}_before_{b}", "before": sel(a), "after": sel(b), "status": "confirmed", "provenance": prov}
                         for a, b in zip(kinds, kinds[1:])]
         cons = []
+        prop = str(intent.get("proposal") or "")
         if "cup" in kinds:
+            cup = _nice(self.meas, next(l for l in order if kinds_by_label[l] == "cup"))
             for ph in ("transport", "final"):
+                what = (f"'keeping the {cup} upright' (15 degrees)" if ph == "transport" and "upright" in prop
+                        else f"the {cup} staying upright {'while carried' if ph == 'transport' else 'once placed'} (15 degrees; "
+                             "not in the proposal's words)")
                 cons.append({"id": f"c_upright_{ph}_cup", "type": "upright", "applies_to": sel("cup"), "phase": ph,
-                             "params": {"max_tilt_deg": 15.0}, "status": "confirmed", "provenance": prov,
-                             "description": f"Keep the cup ({_nice(self.meas, next(l for l in order if kinds_by_label[l] == 'cup'))}) "
-                                            f"within 15 degrees of upright {'while carried' if ph == 'transport' else 'once placed'}."})
+                             "params": {"max_tilt_deg": 15.0}, "status": "confirmed", "provenance": dflt(what),
+                             "description": f"Keep the cup ({cup}) within 15 degrees of upright "
+                                            f"{'while carried' if ph == 'transport' else 'once placed'} (MIRROR default threshold)."})
         walls = [l for l in _walls(self.meas) if kinds_by_label.get(l) == "wall"]
         if walls:
+            wn = _nice(self.meas, walls[0])
             cons.append({"id": "c_no_contact_obstacle", "type": "forbidden_contact", "applies_to": {"kind": None, "role": None, "ids": None},
-                         "phase": "always", "params": {"with": ["obstacle"]}, "status": "confirmed", "provenance": prov,
-                         "description": f"Go around the {_nice(self.meas, walls[0])}: nothing touches it."})
+                         "phase": "always", "params": {"with": ["obstacle"]}, "status": "confirmed",
+                         "provenance": dflt(f"'going around the {wn}' (nothing touches it)" if "around" in prop
+                                            else f"not touching the {wn} (not in the proposal's words)"),
+                         "description": f"Go around the {wn}: nothing touches it (MIRROR default reading)."})
         names = [_nice(self.meas, l) for l in order]
         summary = ("Pack the " + ", ".join(names) + " into the tray" + (" in that order" if ordering else "")
                    + (f", around the {_nice(self.meas, walls[0])}" if walls else "") + (", cup upright" if "cup" in kinds else "") + ".")
@@ -2066,26 +2664,17 @@ class RealRun:
             rev = ans.get("spec_review")
             items = [r for r in list(spec.constraints) + list(spec.ordering) if getattr(r, "status", None) == "proposed"]
             if rev is None and items:
-                said = str((intent or {}).get("answer", "")).lower()
-
-                def agrees(r):
-                    """Does the person's stated intent (answered before MIRROR interpreted the clip) say the same?"""
-                    if not said:
-                        return None
-                    t = getattr(r, "type", None)
-                    if r in spec.ordering:
-                        return said.startswith("order mattered")
-                    if t == "upright":
-                        return not said.startswith("something else")
-                    if t == "forbidden_contact":
-                        return bool(_walls(self.meas)) and not said.startswith("something else")
-                    return None
-                qs = [{"id": f"rule:{r.id}", "kind": "rule", "question": f"Keep this rule? {getattr(r, 'description', '') or r.id}",
-                       "options": ["Keep it", "Drop it"], "rule": r.model_dump(mode="json"), "agrees_with_your_stated_intent": agrees(r)}
-                      for r in items]
-                _jdump(self.p("questions_spec.json"), {"about": "Review of MIRROR's proposed rules. Answer in answers.json as "
-                                                       "spec_review: {answer: {confirm: [ids], reject: [ids]}, by: 'person', at}.",
-                                                       "interpreter": interp, "summary": spec.summary, "questions": qs})
+                b = self._binding()
+                qs = [{"id": r.id, "kind": "rule", "question": f"Keep this rule? {getattr(r, 'description', '') or r.id}",
+                       "options": ["accept", "reject"], "rule": r.model_dump(mode="json")} for r in items]
+                _jdump(self.p("questions_spec.json"), {"about": "Review of MIRROR's proposed rules. The page writes spec_review = "
+                                                       "{spec_sha256, session_id, take_sha256, rules: {<rule_id>: {decision: "
+                                                       "'accept'|'reject', by: 'person', uid, at, seconds_spent}}}; any other "
+                                                       "spec_sha256/session/take is refused.",
+                                                       "spec_sha256": self._spec_sha(), "session_id": b.get("session_id"),
+                                                       "take_sha256": b.get("take_sha256"), "created_at_ms": _now_ms(),
+                                                       "interpreter": interp, "summary": spec.summary, "questions": qs,
+                                                       "stated_intent": (intent or {}).get("answer")})
                 info.update(summary=f"MIRROR proposed a task from your video ({interp}); waiting for your review of "
                                     f"{len(items)} proposed rule(s).", interpreter=interp)
                 self.state["stages"]["task"] = {"status": "waiting", **info}
@@ -2094,8 +2683,16 @@ class RealRun:
             a = (rev or {}).get("answer") or {}
             spec = confirm_items(spec, confirm=list(a.get("confirm", [])), reject=list(a.get("reject", [])),
                                  text="person's review of MIRROR's proposal")[0] if rev else spec
-            source = f"MIRROR's proposal from your video ({interp}), reviewed by you"
+            source = (f"MIRROR's proposal from your video ({interp}), reviewed by you" if rev else
+                      f"MIRROR's proposal from your video ({interp}), not reviewed (nothing was proposed for review)")
         else:
+            geometry = [b.code for b in blocking if b.code not in GATE_PROCEED_CODES]
+            if geometry:
+                info["summary"] = ("The gate refused and the capture's geometry is not usable for a layout run: "
+                                   + "; ".join(f"{b.code}: {b.message}" for b in blocking if b.code in geometry))
+                self.state["stages"]["task"] = {"status": "waiting", **info}
+                self._save(); self._write_page()
+                raise StageStop("task: geometry refused (" + ", ".join(geometry) + "); no layout scene is built from this capture")
             try:
                 T.propose_offline_from_capture(s)
                 refusal = "UNEXPECTED: proposal allowed with blocking items"
@@ -2108,7 +2705,8 @@ class RealRun:
                 self._save(); self._write_page()
                 raise StageStop("task: gate refused (" + "; ".join(b.code for b in blocking) + ") and no stated task (answers 'intent')")
             spec = self._stated_spec(s, intent)
-            source = "your stated task (the gate refused a proposal, so nothing was inferred from the video)"
+            source = ("your stated task (the gate refused a proposal: " + ", ".join(b.code for b in blocking)
+                      + "; nothing was inferred from the video)")
             interp = "none (gate closed)"
         errs = validate_spec(spec)
         self.p("spec.json").write_text(spec.model_dump_json(indent=1))
@@ -2213,7 +2811,10 @@ class RealRun:
                 pts += [tc + th, tc - th]
             for wn in wall_notes:
                 pts += [np.array(wn["endpoints_table_m"][0][:2]), np.array(wn["endpoints_table_m"][1][:2])]
-            pts = np.array(pts); c = (pts.min(0) + pts.max(0)) / 2
+            if not pts:
+                raise StageStop("scene: the layout is out of the robot's reach (" + "; ".join(probs) + ") and no confirmed "
+                                "object or tray position is available to centre it; nothing is moved by guesswork")
+            pts = np.array(pts, float).reshape(-1, 2); c = (pts.min(0) + pts.max(0)) / 2
             alt = PX.WorkspacePlacement(origin_xy_m=(float(-c[0]), float(-c[1])), yaw_deg=0.0, source="auto_layout_centred")
             scene2, wall_notes2 = self._scene_for(s, alt)
             probs2 = self.reach_problems(scene2)
@@ -2221,7 +2822,8 @@ class RealRun:
             fell_back = {"why": probs, "shift_cm": (shift * 100).round(1).tolist(), "still": probs2}
             placement, scene, wall_notes = alt, scene2, wall_notes2
             label = (f"shifted by software ({shift[0] * 100:+.1f} cm, {shift[1] * 100:+.1f} cm) so the layout fits the robot's reach "
-                     f"({'; '.join(probs)} in the real table frame); distances between objects and directions are kept")
+                     f"({'; '.join(probs)} in the real table frame); distances between objects and directions are kept"
+                     + (f". STILL out of reach after the shift: {'; '.join(probs2)}" if probs2 else ""))
         scene = scene.model_copy(update={"notes": scene.notes + " Placement: " + label + "."
                                          + (" Wall orientation from its mask (single view, approximate)." if wall_notes else "")})
         self.p("scene", "scene.json").write_text(scene.model_dump_json(indent=1))
@@ -2239,6 +2841,7 @@ class RealRun:
                "wall": wall_notes}
         _jdump(self.p("table_to_sim.json"), tts)
         self.mark("scene", t0, placement=placement.source, label=label, reach_problems=self.reach_problems(scene),
+                  shift_cm=(fell_back or {}).get("shift_cm"), still_out_of_reach=(fell_back or {}).get("still") or [],
                   objects={o.id: [round(v, 3) for v in o.pose.pos] for o in scene.objects},
                   trays={t.id: [round(v, 3) for v in t.pose.pos] for t in scene.trays},
                   obstacles={o.id: [round(v, 3) for v in o.pose.pos] for o in scene.obstacles})
@@ -2304,6 +2907,9 @@ class RealRun:
             for c in cands:
                 if txt in (c["id"], c["label"], c["compile_text"]):
                     return c, False, a
+            if a.get("kind") == "choice":
+                raise StageStop(f"correction: the chosen candidate {txt!r} is not one of this run's candidates "
+                                f"{[c['id'] for c in cands]}")
             return {"id": "custom", "label": txt, "compile_text": txt, "rule": "as compiled", "why": "your own words"}, False, a
         if self.rehearse:
             c = next((c for c in cands if c["id"] == self.rehearse), None)
@@ -2311,6 +2917,93 @@ class RealRun:
                 raise SystemExit(f"--rehearse-correction: no candidate {self.rehearse!r}; candidates: {[c['id'] for c in cands]}")
             return c, True, None
         return None, None, None
+
+    @staticmethod
+    def _mark_rehearsal(sess, spec, rec, cand):
+        """A rehearsed correction (run by MIRROR to show the check, chosen by no person): every rule it added or changed
+        gets provenance source 'rehearsal' (evidence 'REHEARSAL (not the person's words): candidate <id>'), the diff's
+        rationale is prefixed 'Rehearsal, not the person:', and the spec summary says so. The rule is still enforced
+        for this one run so its effect can be checked."""
+        ev = f"REHEARSAL (not the person's words): candidate {cand['id']}"
+        touched = set()
+        for o in rec.diff:
+            v = getattr(o, "value", None) or {}
+            rid = (v.get("id") if isinstance(v, dict) else None) or getattr(o, "target_id", None)
+            if rid:
+                touched.add(rid)
+
+        def fix(item):
+            if item.id in touched or getattr(item.provenance, "source", None) == "user_correction" \
+                    and item.provenance.version_introduced == spec.version:
+                return item.model_copy(update={"provenance": item.provenance.model_copy(
+                    update={"source": "rehearsal", "evidence": ev})})
+            return item
+        new = spec.model_copy(update={
+            "constraints": [fix(c) for c in spec.constraints], "ordering": [fix(o) for o in spec.ordering],
+            "summary": (spec.summary or "") + f" [Rehearsal correction '{cand['label']}', not chosen by the person.]"})
+        diff = []
+        for o in rec.diff:
+            upd = {}
+            if hasattr(o, "rationale"):
+                upd["rationale"] = "Rehearsal, not the person: " + str(getattr(o, "rationale", "") or "").removeprefix("User: ")
+            v = getattr(o, "value", None)
+            if isinstance(v, dict) and isinstance(v.get("provenance"), dict):
+                upd["value"] = {**v, "provenance": {**v["provenance"], "source": "rehearsal", "evidence": ev}}
+            diff.append(o.model_copy(update=upd) if upd else o)
+        rec = rec.model_copy(update={"diff": diff, "text": "REHEARSAL (not the person's words): " + str(rec.text)})
+        if sess.specs and sess.specs[-1].version == new.version:
+            sess.specs[-1] = new
+        return new, rec
+
+    def _reopen_for_person(self) -> None:
+        """A rehearsal never blocks the person's choice: if the recorded correction was a rehearsal and the person has
+        since chosen one, the correction (and publish) stages run again; the rehearsal's outputs move to OUT/stale/."""
+        c = self.info("correct")
+        if c.get("status") != "done" or not c.get("rehearsal"):
+            return
+        ans = self._load_answers() or {}
+        if ans.get("correction") is None:
+            return
+        self.log("[correct] the person chose a correction after the rehearsal: running it")
+        self.forget("correct", reason="the person's correction replaces the rehearsal")
+
+    STAGE_OUTPUTS = {
+        "session": ["session.json", "review.md"],
+        "report": ["questions.json", "timeline.json", "timeline.png", "evidence", "overlay.mp4"],
+        "answers": ["session_answered.json", "review_answered.md", "intent.json"],
+        "task": ["spec.json", "spec_proposed.json", "questions_spec.json", "demo_trace.json"],
+        "scene": ["scene", "table_to_sim.json"],
+        "run": ["run"],
+        "render": [],
+        "correct": ["correct"],
+        "publish": ["summary.md"],
+    }
+
+    def forget(self, stage: str, reason: str = "--redo") -> Optional[Path]:
+        """Forget this stage and every later one AND move their outputs to OUT/stale/<ts>/ so nothing stale (intent,
+        corrections, rollouts) can re-enter the manifest or a later stage."""
+        k = STAGES.index(stage)
+        stale = self.out / "stale" / time.strftime("%Y%m%d-%H%M%S")
+        moved = []
+        for s2 in STAGES[k:]:
+            self.state["stages"].pop(s2, None)
+            for rel in self.STAGE_OUTPUTS.get(s2, []):
+                src_ = self.out / rel
+                if src_.exists():
+                    dst = stale / rel
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.move(str(src_), str(dst))
+                    moved.append(rel)
+        if stage in ("render",) and (self.out / "run" / "sim_run.mp4").exists():
+            dst = stale / "run" / "sim_run.mp4"
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(self.out / "run" / "sim_run.mp4"), str(dst))
+            moved.append("run/sim_run.mp4")
+        self.state.setdefault("forgotten", []).append({"stage": stage, "at": _now_ms(), "reason": reason,
+                                                       "moved_to": str(stale.relative_to(self.out)) if moved else None,
+                                                       "moved": moved})
+        self._save()
+        return stale if moved else None
 
     def stage_correct(self):
         from mirror.contracts import SceneState
@@ -2327,13 +3020,30 @@ class RealRun:
         sess = Session.load_state(self.p("run", "session_state", "x").parent)
         client = self.llm()
         compiler = "offline rules" if client.offline else f"{client.model} ({client.mode})"
+        from mirror.interpret.types import CorrectionRejected, NeedsClarification
+
+        def refuse(e):
+            self.state["stages"]["correct"] = {"status": "refused", "candidate": cand["id"], "label": cand["label"],
+                                               "rehearsal": bool(rehearsal), "compiler": compiler,
+                                               "reason": f"{type(e).__name__}: {e}"}
+            self._save(); self._write_page()
+            raise StageStop(f"correction: MIRROR could not turn '{cand['compile_text']}' into a rule ({type(e).__name__}: {e}); "
+                            "choose another candidate or say it differently")
         try:
             sess.client = client
             new_spec, rec = sess.correct(cand["compile_text"])
-        except CassetteMiss:
+        except (CassetteMiss, CorrectionRejected, NeedsClarification) as e:
+            if client.offline or not (isinstance(e, CassetteMiss) or isinstance(e.__context__, CassetteMiss)):
+                refuse(e)
+            sess = Session.load_state(self.p("run", "session_state", "x").parent)
             sess.client = LLMClient.offline_client()
-            new_spec, rec = sess.correct(cand["compile_text"])
             compiler = "offline rules (replay had no Muse Spark recording for this correction)"
+            try:
+                new_spec, rec = sess.correct(cand["compile_text"])
+            except (CorrectionRejected, NeedsClarification) as e2:
+                refuse(e2)
+        if rehearsal:       # never recorded as the person's words: provenance 'rehearsal', rationale and summary say so
+            new_spec, rec = self._mark_rehearsal(sess, new_spec, rec, cand)
         before_id = run["rollout_id"]
         after = sess.run(condition="after correction: " + cand["label"])
         recheck = sess.recheck(before_id, spec_version=new_spec.version)
@@ -2436,7 +3146,12 @@ def main(argv=None) -> int:
     ap.add_argument("--label", action="append", default=[], help="extra honest label shown with every output")
     ap.add_argument("--media-cache", type=Path, help="directory with already-derived media (proxy/subclips) to reuse")
     ap.add_argument("--publish-dir", type=Path, help="also copy the light outputs here (e.g. /cloudspace/mirror/capture/<id>/pipeline)")
-    ap.add_argument("--answers-firebase", help="Firebase path of the page's answers node (copied to the answers file each run)")
+    ap.add_argument("--answers-firebase", metavar="RUN_ID", help="read the person's answers, spec review and correction from "
+                    "the page's Firebase run node viewer/runs/RUN_ID (saved to OUT/answers_firebase.json; bound to this run)")
+    ap.add_argument("--publish-firebase", metavar="RUN_ID", help="publish page/questions/status to viewer/runs/RUN_ID for the "
+                    "review page (media to /cloudspace/mirror/capture/RUN_ID/pipeline unless --publish-dir)")
+    ap.add_argument("--legacy-answers-d1", action="store_true", help="D1 replay only: accept D1's page answers (3 Nov) that "
+                    "predate the binding fields; refused for any other take; labelled everywhere")
     ap.add_argument("--until", choices=STAGES, help="stop after this stage")
     ap.add_argument("--redo", choices=STAGES, help="forget this stage and every later one, then continue")
     a = ap.parse_args(argv)
@@ -2446,16 +3161,14 @@ def main(argv=None) -> int:
     cap = a.cap_usd if a.cap_usd is not None else prev.get("cap_usd", 10.0)
     if mode == "replay":
         os.environ.pop("MODEL_API_KEY", None)
-    if a.redo and prev:
-        k = STAGES.index(a.redo)
-        for s2 in STAGES[k:]:
-            prev.get("stages", {}).pop(s2, None)
-        _jdump(st_path, prev)
     r = RealRun(a.out, take=a.take, lens=a.lens, measurements=a.measurements, mode=mode, cap_usd=cap,
                 prior_usd=a.prior_usd, cassettes=a.cassettes, intrinsics=a.intrinsics, seed_t=a.seed_t,
                 answers=a.answers, rehearse_correction=a.rehearse_correction, render=not a.no_render,
                 label_extra=a.label, dev_clip=a.dev_clip, media_cache=a.media_cache, publish_dir=a.publish_dir,
-                answers_firebase=a.answers_firebase)
+                answers_firebase=a.answers_firebase, publish_firebase=a.publish_firebase,
+                legacy_answers_d1=True if a.legacy_answers_d1 else None)
+    if a.redo and prev:
+        r.forget(a.redo)
     st = r.run(until=a.until)
     print(json.dumps({"status": st.get("status"), "waiting_for": st.get("waiting_for"), "spend_usd": st.get("spend_usd"),
                       "stages": {k: v.get("wall_s") for k, v in st["stages"].items()}}, indent=1))
