@@ -37,3 +37,12 @@ def truth_camera_models(cams: dict, origin=(-0.075, 0.105)):
                          distance_m=float(np.linalg.norm(centre)), centre_sigma_mm=0.0, accepted=True)
         out[n] = CameraModel(name=n, intrinsics=intr, pose=pose)
     return out
+
+
+import pytest as _pytest_ledger
+
+
+@_pytest_ledger.fixture(autouse=True)
+def _no_project_ledger(monkeypatch):
+    """Tests never write to the real project spend ledger."""
+    monkeypatch.setenv("MIRROR_PROJECT_LEDGER", "none")
