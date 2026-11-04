@@ -16,17 +16,17 @@ def main(argv=None):
     a = ap.parse_args(argv)
     d = json.loads(Path(a.data).read_text()); F = d["film"]
     shots = json.loads(Path(a.shots).read_text()); mo = {s["name"]: s for s in json.loads(Path(a.motion).read_text())["shots"]}
-    ev = [e for e in d["timeline"]["events"] if e["image_displacement_px_540"] > 100]
+    ev = [dict(object=e["object"], moved_from_s=e["from_s"], moved_to_s=e["to_s"]) for e in d.get("events", []) if e["carry"]]
     tw = d.get("twin") or {}
     sp = d.get("spark") or {}
     desc = {
-        "title": ("IMG_0815 2.3-12.8 s at 2.6x (board and sync card) beside the title.", "phone footage (owner's take)"),
-        "watch": ("IMG_0815 12.8-32.1 s at 1.75x with SAM 3.1 outlines per frame; event bars grow on the take's clock: "
+        "title": (f"the take {d['segments']['title_src0']}-{d['segments']['watch_src0']} s at {d['segments']['title_rate']}x beside the title.", "phone footage (owner's take)"),
+        "watch": (f"the take from {d['segments']['watch_src0']} s at {d['segments']['watch_rate']}x with SAM 3.1 outlines per frame; event bars grow on the take's clock: "
                   + "; ".join(f"{e['object']} {e['moved_from_s']:.2f}-{e['moved_to_s']:.2f} s" for e in ev) + ".",
                   "tracks_sam_540x960.json.gz (recorded 3 Nov), timeline.json"),
-        "gate": (f"Gate refusal: {d['gate']['blocking'][0]['code']} (focal check +7.1 %, limit 6 %); the task shown is the person's stated "
-                 f"spec ({d['spec']['spec_id']} v{d['spec']['version']}, provenance manual).", "phase2_summary.json, spec_intent.json"),
-        "run": (f"three.js drawing of the recorded MuJoCo rollout (recorded poses only) at 8x; mug path ribbon; checker success, "
+        "gate": (f"{d['copy']['gate']['headline']} {d['copy']['gate']['code']}: {d['copy']['gate']['detail']}; the task shown is "
+                 f"{d['copy']['gate']['spec_intro']} ({d['spec']['spec_id']} v{d['spec']['version']}).", "gate result, spec json"),
+        "run": (f"three.js drawing of the recorded MuJoCo rollout (recorded poses only) at 8x; {d['copy']['obj']} path ribbon; checker {F['old_status']}, "
                 f"beads {F['beads_old'][0][1]}/{F['beads_old'][0][2]}, max carried tilt {F['tilt'][0]} deg.",
                 "film/night/make_correction.py rollout_old.json (reproduces the phase-2 report)"),
         "twin": (f"Twin track overlay (first 10 s at 2x; robot at {2 * (tw.get('time_map') or {}).get('sim_speed', 1)}x real time): "
@@ -38,7 +38,7 @@ def main(argv=None):
                      "corrections.json, spark.json (cassette in night/motion_cassettes)"),
         "rejudge": (f"Top view: old path re-judged {F['old_rechecked_status']} (closest {F['old_clear_m'] * 100:.2f} cm at {F['old_clear_t']:.2f} s), "
                     f"new path {F['new_status']} (closest {F['new_clear_m'] * 100:.2f} cm at {F['new_clear_t']:.2f} s); 6 cm band; footprints at the "
-                    f"closest frames; red box {F['unchanged']['block_0'][1] * 100:.1f} cm and marker {F['unchanged']['marker_0'][1] * 100:.1f} cm unchanged.",
+                    f"closest frames; " + ", ".join(f"{u[0]} {u[1] * 100:.1f} cm" for u in d['copy']['unchanged']) + " unchanged.",
                     "corrections.json (checker detail: " + F["old_detail"] + ")"),
         "ghosts": ("Both recorded rollouts on one clock (old as a ghost, corrected solid), divider box grown by 6 cm drawn translucent.",
                    "rollout_old.json, rollout_mug_clearance.json"),
@@ -55,13 +55,15 @@ def main(argv=None):
              "| # | Shot | Time | On screen | Source | Motion check (scale change, text px/frame) |", "|---|---|---|---|---|---|"]
     for k, s in enumerate(shots):
         dur = s["frames"] / 30; m = mo.get(s["name"], {})
+        if s["name"] not in desc:
+            continue
         lines.append(f"| {k + 1} | {s['name']} | {t:.1f}-{t + dur:.1f} s | {desc[s['name']][0]} | {desc[s['name']][1]} | "
                      f"{m.get('max_scale_change', '-')}, {m.get('max_text_flow_p99_px', '-')} {'pass' if m.get('pass') else 'FAIL'} |")
         t += dur
     lines += ["", "## Approximate (on screen)", "- one camera; calibration reuse flagged (focal check +7.1 %, phone moved afterwards)",
               "- simulation proxies sized from ruler measurements (4 cm cube for the 11 cm carton; upright cylinder for the lying marker); "
               "proxy colours neutralised in the 3-D view", "- layout centred on the simulator table by software",
-              "- the correction sentence was chosen for the film from the D1 page's candidates; the owner has not chosen one"]
+              "- the correction sentence was chosen for the film from MIRROR's suggested corrections; the owner has not chosen one"]
     Path(a.out).write_text("\n".join(lines) + "\n")
     print(a.out)
 

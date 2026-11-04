@@ -3,16 +3,16 @@ import {OffthreadVideo, Img, staticFile, useCurrentFrame, Sequence} from 'remoti
 import {C, MONO, prog, rise} from './theme';
 import {MASKS, DATA} from './data';
 
-export const NAMES: Record<string, string> = {mug: 'mug', red_box: 'red box', marker: 'marker', tray: 'tray', divider: 'divider'};
-const EVENTS: any[] = DATA.timeline.events.filter((e: any) => e.image_displacement_px_540 > 100); // the three carries
-export const activeAt = (t: number) => EVENTS.filter((e) => t >= e.moved_from_s && t <= e.moved_to_s).map((e) => e.object);
+export const NAMES: Record<string, string> = new Proxy({} as Record<string, string>, {get: (_t, k: string) => String(k).replace(/_/g, ' ')});
+const EVENTS: any[] = DATA.events.filter((e: any) => e.carry); // carries (image displacement >= 100 px at 540x960)
+export const activeAt = (t: number) => EVENTS.filter((e) => t >= e.from_s && t <= e.to_s).map((e) => e.object);
 
 // mask outlines for source time t (seconds), drawn in the 540x960 image coordinates of the tracks
 export const MaskLayer: React.FC<{t: number; drawAt?: number; w: number; h: number; labels?: boolean; dim?: number}> = ({t, drawAt = -999, w, h, labels = true, dim = 1}) => {
   const f = useCurrentFrame();
   const i = Math.max(0, Math.min(MASKS.n_frames - 1, Math.round(t * MASKS.fps)));
   const act = activeAt(t);
-  const order = ['tray', 'divider', 'mug', 'red_box', 'marker'];
+  const order = ['tray', ...Object.keys(MASKS.objects).filter((k) => MASKS.objects[k].static), ...Object.keys(MASKS.objects).filter((k) => k !== 'tray' && !MASKS.objects[k].static)];
   return (
     <svg width={w} height={h} viewBox="0 0 540 960" style={{position: 'absolute', left: 0, top: 0}}>
       {order.map((lab, k) => {
@@ -32,8 +32,8 @@ export const MaskLayer: React.FC<{t: number; drawAt?: number; w: number; h: numb
           <g key={lab} opacity={dim}>
             {on && <path d={d} fill="rgba(109,139,255,0.18)" />}
             <path d={d} fill="none" stroke={stroke} strokeWidth={on ? 2.6 : 1.6} pathLength={1}
-              strokeDasharray={lab === 'divider' ? '0.012 0.008' : '1 0'} strokeDashoffset={lab === 'divider' ? 0 : 1 - draw}
-              opacity={lab === 'divider' ? draw : 1} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+              strokeDasharray={o.static ? '0.012 0.008' : '1 0'} strokeDashoffset={o.static ? 0 : 1 - draw}
+              opacity={o.static ? draw : 1} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
             {labels && <g opacity={prog(f, drawAt + 18 + k * 5, 12)}>
               <rect x={lx - 5} y={ly - 18} width={NAMES[lab].length * 10.4 + 12} height={23} rx={11.5} fill="rgba(17,17,19,0.78)" />
               <text x={lx + 1} y={ly - 1} fontFamily="JetBrains Mono" fontSize={16} fill={on ? C.accent : C.text}>{NAMES[lab]}</text>
@@ -71,11 +71,11 @@ export const PhonePanel: React.FC<{x: number; y: number; h: number; srcStart: nu
 // event timeline on the take's own clock (0 to 49.8 s)
 export const Timeline: React.FC<{x: number; y: number; w: number; t: number; at?: number}> = ({x, y, w, t, at = 0}) => {
   const f = useCurrentFrame();
-  const T = 49.8;
+  const T = MASKS.n_frames / MASKS.fps;
   const X = (s: number) => (s / T) * w;
-  const rows = ['mug', 'red_box', 'marker', 'tray', 'divider'];
+  const rows = [...Object.keys(MASKS.objects).filter((k) => !MASKS.objects[k].static && k !== 'tray'), 'tray', ...Object.keys(MASKS.objects).filter((k) => MASKS.objects[k].static)];
   const rowH = 54;
-  const ev: any[] = DATA.timeline.events;
+  const ev: any[] = DATA.events;
   return (
     <div style={{position: 'absolute', left: x, top: y, width: w}}>
       <div style={{...rise(f, at), fontFamily: MONO, fontSize: 17, color: C.muted, marginBottom: 18}}>
@@ -95,10 +95,10 @@ export const Timeline: React.FC<{x: number; y: number; w: number; t: number; at?
             return (
               <g key={r} opacity={prog(f, at + 8 + k * 3, 14)}>
                 <text x={-16} y={yy + 7} fill={C.text} fontFamily="Inter" fontSize={21} textAnchor="end">{NAMES[r]}</text>
-                <line x1={0} x2={w} y1={yy} y2={yy} stroke={C.line2} strokeDasharray={r === 'divider' ? '3 6' : undefined} />
+                <line x1={0} x2={w} y1={yy} y2={yy} stroke={C.line2} strokeDasharray={MASKS.objects[r]?.static ? '3 6' : undefined} />
                 {rowEv.map((e, j) => {
-                  const big = e.image_displacement_px_540 > 100;
-                  const a = e.moved_from_s, b = e.moved_to_s;
+                  const big = e.carry;
+                  const a = e.from_s, b = e.to_s;
                   const vis = Math.max(0, Math.min(b, t) - a);
                   if (t < a) return null;
                   return (
@@ -110,8 +110,8 @@ export const Timeline: React.FC<{x: number; y: number; w: number; t: number; at?
                     </g>
                   );
                 })}
-                {r === 'tray' && <text x={w} y={yy - 10} fill={C.faint} fontFamily="JetBrains Mono" fontSize={14} textAnchor="end">stationary</text>}
-                {r === 'divider' && <text x={w} y={yy - 10} fill={C.faint} fontFamily="JetBrains Mono" fontSize={14} textAnchor="end">one static mask (video track discarded)</text>}
+                {(r === 'tray' || MASKS.objects[r]?.static) && r === 'tray' && <text x={w} y={yy - 10} fill={C.faint} fontFamily="JetBrains Mono" fontSize={14} textAnchor="end">stationary</text>}
+                {MASKS.objects[r]?.static && <text x={w} y={yy - 10} fill={C.faint} fontFamily="JetBrains Mono" fontSize={14} textAnchor="end">one static mask (held for every frame)</text>}
               </g>
             );
           })}

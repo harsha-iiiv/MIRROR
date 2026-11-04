@@ -5,8 +5,10 @@ import {Frame, Header, Labels, Caption} from './common';
 import {RobotScene, poseAt, Cam} from './robot';
 import {DATA, FILM, RUN_OLD, RUN_NEW} from './data';
 import {REAL_LABELS, SIM_LABELS} from './scenes1';
+const CP = DATA.copy;
+const OBJ_ID: string = FILM.applies_obj;
 
-const OBJ: Record<string, string> = {cup_0: 'mug', block_0: 'red box', marker_0: 'marker'};
+const OBJ: Record<string, string> = Object.fromEntries(Object.entries(CP.names).map(([k, v]) => [`${k}_0`, v as string]));
 export const phaseText = (ph: string) => {
   if (!ph) return '';
   const [a, b] = ph.split(':');
@@ -16,22 +18,26 @@ const tiltDeg = (q: number[]) => {
   const zz = 1 - 2 * (q[4] * q[4] + q[5] * q[5]); // pose = [x,y,z,w,qx,qy,qz]
   return (Math.acos(Math.max(-1, Math.min(1, zz))) * 180) / Math.PI;
 };
-export const CAM_A: Cam = {pos: [0.74, 0.1, 0.86], look: [-0.03, 0.0, 0.0], fov: 38};
-export const CAM_B: Cam = {pos: [0.69, -0.14, 0.88], look: [-0.03, 0.0, 0.0], fov: 38};
+const CEN = (DATA.copy.center ?? [-0.03, 0]) as number[];
+const FOC = (DATA.copy.focus ?? CEN) as number[];
+const at = (base: number[], d: number[]): [number, number, number] => [base[0] + d[0], base[1] + d[1], (base[2] ?? 0) + d[2]];
+export const CAM_A: Cam = {pos: at(CEN, [0.77, 0.13, 0.86]), look: at(CEN, [0, 0, 0]), fov: 38};
+export const CAM_B: Cam = {pos: at(CEN, [0.72, -0.11, 0.88]), look: at(CEN, [0, 0, 0]), fov: 38};
+const GL = [(CEN[0] + FOC[0]) / 2, (CEN[1] + FOC[1]) / 2, 0.04];
 
 // 3 · the robot on the person's layout (recorded MuJoCo rollout, 5× replay)
 export const Run: React.FC<{dur: number; speed?: number; lead?: number; header?: boolean}> = ({dur, speed = 5, lead = 30, header = true}) => {
   const f = useCurrentFrame();
   const simT = Math.max(0, (f - lead) / 30) * speed;
   const i = Math.min(RUN_OLD.n - 1, Math.round(simT * RUN_OLD.frame_hz));
-  const p = poseAt(RUN_OLD, 'cup_0', i);
+  const p = poseAt(RUN_OLD, OBJ_ID, i);
   const done = i >= RUN_OLD.n - 1;
   const W = 1300, H = 820;
   return (
     <Frame>
       <div style={{position: 'absolute', left: 60, top: 150, width: W, height: H, borderRadius: 18, overflow: 'hidden', boxShadow: `0 0 0 1px ${C.line}`}}>
         <RobotScene width={W} height={H} run={RUN_OLD} i={i} camA={CAM_A} camB={CAM_B} camP={prog(f, 0, 110)}
-          ribbon={[{body: 'cup_0', i0: 0, color: C.accent}]} grid />
+          ribbon={[{body: OBJ_ID, i0: 0, color: C.accent}]} grid />
         <div style={{position: 'absolute', left: 16, top: 14, fontFamily: MONO, fontSize: 15, color: C.text, background: 'rgba(17,17,19,0.72)', padding: '4px 10px', borderRadius: 999}}>
           MuJoCo · recorded rollout · replay {speed}×
         </div>
@@ -41,12 +47,12 @@ export const Run: React.FC<{dur: number; speed?: number; lead?: number; header?:
         <div style={{...rise(f, 10), border: `1px solid ${C.line}`, borderRadius: 14, overflow: 'hidden', width: 220}}>
           <Img src={staticFile('phone_end.jpg')} style={{width: 220, display: 'block'}} />
         </div>
-        <div style={{...rise(f, 14), fontFamily: MONO, fontSize: 15, color: C.faint, marginTop: 8}}>your take at 32.4 s</div>
+        <div style={{...rise(f, 14), fontFamily: MONO, fontSize: 15, color: C.faint, marginTop: 8}}>your take at {CP.end_still_s} s</div>
         <div style={{marginTop: 30, ...rise(f, 20)}}>
           {[
             ['sim time', `${simT > RUN_OLD.t[RUN_OLD.n - 1] ? RUN_OLD.t[RUN_OLD.n - 1].toFixed(1) : simT.toFixed(1)} s`],
             ['phase', phaseText(RUN_OLD.phase[i]) + ''],
-            ['mug tilt', p ? `${tiltDeg(p).toFixed(1)}°` : '–'],
+            [`${CP.obj} tilt`, p ? `${tiltDeg(p).toFixed(1)}°` : '–'],
           ].map(([k, v]) => (
             <div key={k} style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderTop: `1px solid ${C.line}`}}>
               <span style={{fontFamily: MONO, fontSize: 19, color: C.faint}}>{k}</span>
@@ -55,12 +61,9 @@ export const Run: React.FC<{dur: number; speed?: number; lead?: number; header?:
           ))}
         </div>
         <div style={{marginTop: 22, opacity: prog(f, (RUN_OLD.n / RUN_OLD.frame_hz / speed) * 30 + lead, 14)}}>
-          <div style={{fontSize: 26, fontWeight: 600}}>Checker: success</div>
+          <div style={{fontSize: 26, fontWeight: 600}}>{CP.run_head}</div>
           <div style={{fontFamily: MONO, fontSize: 20, color: C.muted, lineHeight: 1.7, marginTop: 6}}>
-            <div>order mug → red box → marker ✓</div>
-            <div>beads kept {RUN_OLD.beads[0][1]} / {RUN_OLD.beads[0][2]}</div>
-            <div>max mug tilt carried {FILM.tilt[0]}°</div>
-            <div>0 violations</div>
+            {CP.run_lines.map((l: string) => <div key={l}>{l}</div>)}
           </div>
         </div>
       </div>
@@ -78,15 +81,12 @@ export const Sentence: React.FC<{dur: number}> = ({dur}) => {
   const typed = n >= text.length;
   const tEnd = 12 + text.length / 1.6;
   const mc = DATA.film;
-  const rows: [string, string][] = [
-    ['type', 'keep_clearance'], ['applies to', 'cup (the mug)'], ['phase', 'transport (while carried)'],
-    ['min distance', '0.06 m from obstacles'], ['source', 'user_correction'],
-  ];
+  const rows: [string, string][] = CP.rule_rows;
   return (
     <Frame>
       <Header n="04 · ONE SENTENCE" title="Say what was wrong" x={96} y={64} />
       <div style={{position: 'absolute', left: 96, top: 270, width: 1720}}>
-        <div style={{fontFamily: MONO, fontSize: 18, color: C.faint, marginBottom: 12, ...rise(f, 4)}}>correction</div>
+        <div style={{fontFamily: MONO, fontSize: 18, color: C.faint, marginBottom: 12, ...rise(f, 4)}}>correction · chosen for this film from MIRROR's suggested corrections</div>
         <div style={{fontSize: 52, fontWeight: 500, letterSpacing: -0.6, lineHeight: 1.22, minHeight: 140, width: 1500, textWrap: 'balance'} as any}>
           “{shown}{typed ? '”' : <span style={{opacity: Math.floor(f / 8) % 2 ? 1 : 0.25, color: C.accent}}>▍</span>}
         </div>
@@ -105,7 +105,7 @@ export const Sentence: React.FC<{dur: number}> = ({dur}) => {
       <div style={{position: 'absolute', left: 1080, top: 570, width: 740, ...rise(f, tEnd + 40)}}>
         <div style={{fontSize: 30, lineHeight: 1.4}}>Specification v1 → v2: <span style={{color: C.accent}}>+1 constraint</span>.</div>
         <div style={{fontSize: 26, color: C.muted, lineHeight: 1.5, marginTop: 14}}>
-          Goals, order and the other three rules are unchanged. The rule names the mug only, so the red box and marker keep their own paths.
+          {`Goals, order and the other rules are unchanged. The rule names the ${CP.obj} only, so the ${CP.unchanged.map((u: any) => u[0]).join(' and ')} keep their own paths.`}
         </div>
         <div style={{marginTop: 26, paddingTop: 16, borderTop: `1px solid ${C.line}`}}>
           <div style={{fontFamily: MONO, fontSize: 19, color: C.muted}}>{DATA.spark ? `Muse Spark (1 recorded call, $${DATA.spark.est_cost_usd.toFixed(3)}) and the offline rule interpreter compile the same rule` : 'offline rule interpreter · 0 model calls'}</div>
@@ -144,8 +144,9 @@ const closest = (A: V[], B: V[]): [V, V, number] => {
 // 5 · re-judged from the old run's step log, then re-planned
 export const Rejudge: React.FC<{dur: number; header?: boolean; tOld?: number; tNew?: number}> = ({dur, header = true, tOld = 20, tNew = 150}) => {
   const f = useCurrentFrame();
-  const S = 1160; // px per metre; screen x = sim y, screen y = sim x (sim viewed from above, rotated to match the phone)
-  const O = {x: 560, y: 600};
+  const VW = DATA.copy.view ?? {S: 1160, Ox: 560, Oy: 600};
+  const S = VW.S; // px per metre; screen x = sim y, screen y = sim x (sim viewed from above, rotated to match the phone)
+  const O = {x: VW.Ox, y: VW.Oy};
   const P = (v: V) => [O.x + v[1] * S, O.y + v[0] * S];
   const pts = (A: V[]) => A.map((v) => P(v).join(',')).join(' ');
   const wallG = RUN_OLD.bodies.find((b: any) => b.name === 'wall_0').geoms[0];
@@ -156,7 +157,8 @@ export const Rejudge: React.FC<{dur: number; header?: boolean; tOld?: number; tN
   const tray = rect(trayG.pos[0], trayG.pos[1], trayG.size[0], trayG.size[1], 0);
   const path = (pp: V[], pr: number) => { const n = Math.max(2, Math.round(pp.length * pr)); return pp.slice(0, n).map((v) => P(v).join(',')).join(' '); };
   const pOld = prog(f, tOld, 70), pNew = prog(f, tNew, 70);
-  const cupAt = (run: any, k: number): V[] => { const p = run.poses.cup_0[k]; return rect(p[0], p[1], 0.03, 0.03, yawOf(p.slice(3))); };
+  const half = (() => { const b = RUN_OLD.bodies.find((x: any) => x.name === OBJ_ID); const gs = (b?.geoms ?? []).filter((g: any) => g.type === 'box'); return gs.length ? Math.max(...gs.map((g: any) => Math.max(Math.abs(g.pos[0]) + g.size[0], Math.abs(g.pos[1]) + g.size[1]))) : 0.03; })();
+  const cupAt = (run: any, k: number): V[] => { const p = run.poses[OBJ_ID][k]; return rect(p[0], p[1], half, half, yawOf(p.slice(3))); };
   const cOld = cupAt(RUN_OLD, FILM.old_clear_frame), cNew = cupAt(RUN_NEW, FILM.new_clear_frame);
   const [aO, bO] = closest(cOld, wall), [aN, bN] = closest(cNew, wall);
   const Dim: React.FC<{a: V; b: V; label: string; at: number; color: string}> = ({a, b, label, at, color}) => {
@@ -173,9 +175,9 @@ export const Rejudge: React.FC<{dur: number; header?: boolean; tOld?: number; tN
     <Frame>
       {header && <Header n="05 · CHECK" title="The old run, re-judged from its step log" x={96} y={50} />}
       <div style={{position: 'absolute', left: 96, top: 945, display: 'flex', gap: 28, fontFamily: MONO, fontSize: 16, color: C.muted}}>
-        <span style={{opacity: prog(f, tOld, 14)}}><span style={{display: 'inline-block', width: 28, height: 2, background: C.text, opacity: 0.75, verticalAlign: 'middle', marginRight: 8}} />mug path, old run (v1)</span>
-        <span style={{opacity: prog(f, tOld + 50, 14)}}><span style={{display: 'inline-block', width: 22, height: 12, border: `1px dashed ${C.accent}`, background: C.accentSoft, verticalAlign: 'middle', marginRight: 8}} />6 cm around the divider</span>
-        <span style={{opacity: prog(f, tNew, 14)}}><span style={{display: 'inline-block', width: 28, height: 3, background: C.accent, verticalAlign: 'middle', marginRight: 8}} />mug path, new run (v2)</span>
+        <span style={{opacity: prog(f, tOld, 14)}}><span style={{display: 'inline-block', width: 28, height: 2, background: C.text, opacity: 0.75, verticalAlign: 'middle', marginRight: 8}} />{CP.obj} path, old run (v1)</span>
+        <span style={{opacity: prog(f, tOld + 50, 14)}}><span style={{display: 'inline-block', width: 22, height: 12, border: `1px dashed ${C.accent}`, background: C.accentSoft, verticalAlign: 'middle', marginRight: 8}} />{`${FILM.min_m * 100} cm around the ${CP.obstacle}`}</span>
+        <span style={{opacity: prog(f, tNew, 14)}}><span style={{display: 'inline-block', width: 28, height: 3, background: C.accent, verticalAlign: 'middle', marginRight: 8}} />{CP.obj} path, new run (v2)</span>
         <span style={{opacity: prog(f, 0, 14), color: C.faint}}>top view · footprints at the closest point</span>
       </div>
       <svg width={1120} height={1080} style={{position: 'absolute', left: 0, top: 0}}>
@@ -198,7 +200,7 @@ export const Rejudge: React.FC<{dur: number; header?: boolean; tOld?: number; tN
       <div style={{position: 'absolute', left: 1180, top: 200, width: 660}}>
         <div style={{...rise(f, tOld)}}>
           <div style={{fontFamily: MONO, fontSize: 18, color: C.faint}}>old run (v1) under the new rule (v2)</div>
-          <div style={{fontSize: 27, color: C.muted, lineHeight: 1.45, marginTop: 8}}>Nothing re-runs. The checker reads the recorded physics state of every step while the mug was carried.</div>
+          <div style={{fontSize: 27, color: C.muted, lineHeight: 1.45, marginTop: 8}}>{`Nothing re-runs. The checker reads the recorded physics state of every step while the ${CP.obj} was carried.`}</div>
         </div>
         <div style={{...rise(f, showOld + 8), marginTop: 24, paddingTop: 16, borderTop: `1px solid ${C.line}`}}>
           <div style={{fontSize: 40, fontWeight: 600}}>violated</div>
@@ -214,7 +216,7 @@ export const Rejudge: React.FC<{dur: number; header?: boolean; tOld?: number; tN
           <div style={{fontSize: 40, fontWeight: 600, color: C.accent}}>satisfied</div>
           <div style={{fontFamily: MONO, fontSize: 21, color: C.muted, marginTop: 6, lineHeight: 1.6}}>
             closest {(FILM.new_clear_m * 100).toFixed(2)} cm at t = {FILM.new_clear_t.toFixed(2)} s<br />
-            red box {(FILM.unchanged.block_0[1] * 100).toFixed(1)} cm · marker {(FILM.unchanged.marker_0[1] * 100).toFixed(1)} cm: unchanged, out of scope
+            {CP.unchanged.map((u: any) => `${u[0]} ${(u[1] * 100).toFixed(1)} cm`).join(' · ')}: unchanged, out of scope
           </div>
         </div>
       </div>
@@ -228,22 +230,12 @@ const V_ = (rows: any[], id: string) => rows.find((r: any) => r.rule_id === id)?
 export const Table: React.FC<{dur: number}> = ({dur}) => {
   const f = useCurrentFrame();
   const R = FILM.rows;
-  const lines: [string, string][] = [
-    ['mug in the tray', 'g_inside_cup'], ['red box in the tray', 'g_inside_block'], ['marker in the tray', 'g_inside_marker'],
-    ['order mug → red box', 'o_cup_before_block'], ['order red box → marker', 'o_block_before_marker'],
-    ['mug upright while carried', 'c_upright_transport_cup'], ['mug upright once placed', 'c_upright_final_cup'],
-    ['nothing touches the divider', 'c_no_contact_divider'], ['NEW · mug ≥ 6 cm from the divider', 'c_keep_clearance_transport_cup'],
-  ];
+  const lines: [string, string][] = CP.table;
   const cell = (v: string, hi: boolean) => (
     <span style={{fontFamily: MONO, fontSize: 21, color: v === 'violated' ? C.text : v === 'satisfied' ? (hi ? C.accent : C.muted) : C.faint,
       fontWeight: v === 'violated' ? 600 : 400, textDecoration: v === 'violated' ? 'underline' : 'none', textUnderlineOffset: 5}}>{v === '—' ? 'not in v1' : v}</span>
   );
-  const oth = FILM.others;
-  const say: Record<string, string> = {
-    box_upright: 'already satisfied by the old run · re-planned: same routes',
-    no_table_contact: 'MIRROR asks a question instead of guessing',
-    marker_first: 'refused: it contradicts the order the person stated',
-  };
+  const oth = CP.others;
   return (
     <Frame>
       <Header n="06 · WHAT CHANGED" title="Every rule, before and after" x={96} y={50} />
@@ -252,7 +244,7 @@ export const Table: React.FC<{dur: number}> = ({dur}) => {
           {['rule', 'old run (v1)', 'old run re-judged (v2)', 'new run (v2)'].map((h) => <span key={h} style={{fontFamily: MONO, fontSize: 18, color: C.faint}}>{h}</span>)}
         </div>
         {lines.map(([name, id], j) => {
-          const last = id === 'c_keep_clearance_transport_cup';
+          const last = id === FILM.rule_id;
           return (
             <div key={id} style={{display: 'grid', gridTemplateColumns: '440px 200px 260px 200px', padding: '13px 0', borderTop: `1px solid ${last ? C.line2 : C.line}`, ...rise(f, 10 + j * 3)}}>
               <span style={{fontSize: 25, color: last ? C.accent : C.text}}>{name}</span>
@@ -265,11 +257,11 @@ export const Table: React.FC<{dur: number}> = ({dur}) => {
         </div>
       </div>
       <div style={{position: 'absolute', left: 1290, top: 200, width: 560}}>
-        <div style={{fontFamily: MONO, fontSize: 16, color: C.faint, ...rise(f, 60)}}>three other sentences, same layout</div>
-        {oth.map((o: any, j: number) => (
-          <div key={o.id} style={{padding: '16px 0', borderTop: `1px solid ${C.line}`, marginTop: j ? 0 : 12, ...rise(f, 66 + j * 10)}}>
-            <div style={{fontSize: 25}}>“{o.text}”</div>
-            <div style={{fontFamily: MONO, fontSize: 19, color: C.muted, marginTop: 6}}>{say[o.id] ?? o.outcome}</div>
+        <div style={{fontFamily: MONO, fontSize: 16, color: C.faint, ...rise(f, 60)}}>{`${['no', 'one', 'two', 'three', 'four', 'five'][oth.length] ?? oth.length} other sentence${oth.length === 1 ? '' : 's'}, same layout`}</div>
+        {oth.slice(0, 4).map((o: any, j: number) => (
+          <div key={j} style={{padding: '16px 0', borderTop: `1px solid ${C.line}`, marginTop: j ? 0 : 12, ...rise(f, 66 + j * 10)}}>
+            <div style={{fontSize: 25}}>“{o[0]}”</div>
+            <div style={{fontFamily: MONO, fontSize: 19, color: C.muted, marginTop: 6}}>{o[1]}</div>
           </div>
         ))}
         <div style={{fontSize: 22, color: C.muted, marginTop: 18, lineHeight: 1.4, ...rise(f, 100)}}>A correction that changes nothing says so.</div>
@@ -332,24 +324,24 @@ export const Ghosts: React.FC<{dur: number; speed?: number; t0?: number; header?
   const simT = t0 + Math.max(0, (f - 20) / 30) * speed;
   const i = Math.round(simT * 30);
   const W = 1300, H = 820;
-  const camA: Cam = {pos: [0.56, 0.2, 1.08], look: [-0.16, -0.03, 0.04], fov: 36};
-  const camB: Cam = {pos: [0.53, -0.02, 1.1], look: [-0.16, -0.03, 0.04], fov: 36};
+  const camA: Cam = {pos: at(GL, [0.72, 0.23, 1.04]), look: at(GL, [0, 0, 0]), fov: 36};
+  const camB: Cam = {pos: at(GL, [0.69, 0.01, 1.06]), look: at(GL, [0, 0, 0]), fov: 36};
   return (
     <Frame>
       <div style={{position: 'absolute', left: 60, top: 150, width: W, height: H, borderRadius: 18, overflow: 'hidden', boxShadow: `0 0 0 1px ${C.line}`}}>
         <RobotScene width={W} height={H} run={RUN_NEW} i={Math.min(RUN_NEW.n - 1, i)} camA={camA} camB={camB} camP={prog(f, 0, 120)}
-          ribbon={[{body: 'cup_0', i0: 0, color: C.accent}]} ghost={{run: RUN_OLD, i: Math.min(RUN_OLD.n - 1, i), ribbon: '#e8e8e6'}}
+          ribbon={[{body: OBJ_ID, i0: 0, color: C.accent}]} ghost={{run: RUN_OLD, i: Math.min(RUN_OLD.n - 1, i), ribbon: '#e8e8e6', body: OBJ_ID}}
           clearance={{m: FILM.min_m, opacity: prog(f, 10, 20)}} grid />
         <div style={{position: 'absolute', left: 16, top: 14, fontFamily: MONO, fontSize: 16, color: C.text, background: 'rgba(17,17,19,0.72)', padding: '4px 10px', borderRadius: 999}}>
           MuJoCo · two recorded rollouts on one clock · replay {speed}× · sim {simT.toFixed(1)} s
         </div>
       </div>
-      {header && <Header n="05 · SAME LAYOUT, BOTH RUNS" title="The corrected run keeps its distance" x={60} y={50} />}
+      {header && <Header n="05 · BOTH RUNS, ONE CLOCK" title="The corrected run keeps its distance" x={60} y={50} />}
       <div style={{position: 'absolute', left: 1410, top: 170, width: 440}}>
         {[
-          ['ghost', 'old run (v1)', `closest ${(FILM.old_clear_m * 100).toFixed(2)} cm`, '#e8e8e6'],
+          ['ghost', 'old run (v1) · ghost', `closest ${(FILM.old_clear_m * 100).toFixed(2)} cm`, '#e8e8e6'],
           ['solid', 'new run (v2)', `closest ${(FILM.new_clear_m * 100).toFixed(2)} cm`, C.accent],
-          ['box', 'divider + 6 cm on every side', 'the region the rule forbids', C.accent],
+          ['box', `${CP.obstacle} + ${FILM.min_m * 100} cm on every side`, 'the region the rule forbids', C.accent],
         ].map(([k, a, b, col], j) => (
           <div key={k} style={{padding: '16px 0', borderTop: `1px solid ${C.line}`, ...rise(f, 16 + j * 8)}}>
             <div style={{fontSize: 26, color: col as string}}>{a}</div>
@@ -357,7 +349,7 @@ export const Ghosts: React.FC<{dur: number; speed?: number; t0?: number; header?
           </div>
         ))}
         <div style={{fontSize: 24, color: C.muted, lineHeight: 1.45, marginTop: 20, ...rise(f, 50)}}>
-          The red box and the marker still pass at {(FILM.unchanged.block_0[1] * 100).toFixed(1)} and {(FILM.unchanged.marker_0[1] * 100).toFixed(1)} cm: the rule names the mug only.
+          {`The ${CP.unchanged.map((u: any) => u[0]).join(' and the ')} still pass at ${CP.unchanged.map((u: any) => (u[1] * 100).toFixed(1)).join(' and ')} cm: the rule names the ${CP.obj} only.`}
         </div>
       </div>
       <Labels items={SIM_LABELS} x={60} y={1000} size={18} />

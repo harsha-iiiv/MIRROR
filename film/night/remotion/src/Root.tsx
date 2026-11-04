@@ -1,6 +1,7 @@
 import React from 'react';
 import {Composition, Sequence, AbsoluteFill, useCurrentFrame, interpolate} from 'remotion';
 import {loadFonts} from './fonts';
+import {DATA} from './data';
 import {C} from './theme';
 import {Title, Watch, Gate} from './scenes1';
 import {Run, Sentence, Rejudge, Table, End, Twin, Ghosts} from './scenes2';
@@ -16,12 +17,14 @@ const Shot: React.FC<{dur: number; children: React.ReactNode; fin?: number; fout
   return <AbsoluteFill style={{background: C.bg}}><AbsoluteFill style={{opacity: o}}>{children}</AbsoluteFill></AbsoluteFill>;
 };
 
-const WatchF: React.FC<{dur: number}> = ({dur}) => <Watch dur={dur} src0={12.8} rate={1.75} />;
+const WatchF: React.FC<{dur: number}> = ({dur}) => <Watch dur={dur} />;
 const RunF: React.FC<{dur: number}> = ({dur}) => <Run dur={dur} speed={8} lead={20} />;
 export const SHOTS: [string, number, React.FC<{dur: number}>][] = [
   ['title', 120, Title], ['watch', 330, WatchF], ['gate', 210, Gate], ['run', 345, RunF], ['twin', 150, Twin],
   ['sentence', 210, Sentence], ['rejudge', 285, Rejudge], ['ghosts', 210, Ghosts], ['table', 240, Table], ['end', 120, End],
 ];
+// the twin shot is included only when a twin overlay was exported
+if (!DATA.twin) SHOTS.splice(SHOTS.findIndex((s) => s[0] === 'twin'), 1);
 export const FILM_FRAMES = SHOTS.reduce((a, s) => a + s[1], 0);
 
 const Film: React.FC = () => {
@@ -45,7 +48,7 @@ const Loop: React.FC<{children: React.ReactNode}> = ({children}) => (
     <div style={{position: 'absolute', left: 0, top: 0, width: 1920, height: 1080, transform: 'scale(0.6666667)', transformOrigin: '0 0'}}>{children}</div>
   </Shot>
 );
-const LoopWatch = () => <Loop><Watch dur={240} src0={14.0} rate={2} /></Loop>;
+const LoopWatch = () => <Loop><Watch dur={240} src0={DATA.segments.watch_src0 + 1.2} rate={Math.round(((DATA.segments.watch_rate * 11) - 1.2) / 8 * 100) / 100} /></Loop>;
 const LoopRun = () => <Loop><Run dur={240} speed={9.5} lead={2} /></Loop>;
 const LoopRejudge = () => <Loop><Rejudge dur={240} tOld={8} tNew={90} /></Loop>;
 const LoopGhosts = () => <Loop><Ghosts dur={240} speed={5} t0={4} /></Loop>;

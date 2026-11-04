@@ -128,7 +128,7 @@ const CamRig: React.FC<{a: Cam; b: Cam; p: number}> = ({a, b, p}) => {
 };
 
 export const RobotScene: React.FC<{width: number; height: number; run: any; i: number; camA: Cam; camB: Cam; camP: number;
-  ribbon?: {body: string; i0: number; color: string}[]; ghost?: {run: any; i: number; ribbon?: string}; accentBody?: string; grid?: boolean;
+  ribbon?: {body: string; i0: number; color: string}[]; ghost?: {run: any; i: number; ribbon?: string; body?: string}; accentBody?: string; grid?: boolean;
   clearance?: {m: number; opacity: number}}> =
   ({width, height, run, i, camA, camB, camP, ribbon = [], ghost, accentBody, grid = false, clearance}) => (
   <ThreeCanvas width={width} height={height} shadows gl={{antialias: true, preserveDrawingBuffer: true}} camera={{fov: camA.fov ?? 32, near: 0.02, far: 20}}
@@ -142,7 +142,7 @@ export const RobotScene: React.FC<{width: number; height: number; run: any; i: n
     <directionalLight position={[0.8, 0.6, 0.9]} intensity={0.35} />
     <Bodies run={run} i={i} accentBody={accentBody} />
     {ghost && <Bodies run={ghost.run} i={ghost.i} ghost skipStatic />}
-    {ghost?.ribbon && <Ribbon run={ghost.run} body="cup_0" i0={0} i={ghost.i} color={ghost.ribbon} width={0.004} opacity={0.7} />}
+    {ghost?.ribbon && <Ribbon run={ghost.run} body={ghost.body ?? "cup_0"} i0={0} i={ghost.i} color={ghost.ribbon} width={0.004} opacity={0.7} />}
     {clearance && <ClearanceVolume run={run} m={clearance.m} opacity={clearance.opacity} />}
     {ribbon.map((r) => <Ribbon key={r.body + r.color + 'g'} run={run} body={r.body} i0={r.i0} i={i} color={r.color} z={0.0012} opacity={0.35} />)}
     {ribbon.map((r) => <Ribbon key={r.body + r.color} run={run} body={r.body} i0={r.i0} i={i} color={r.color} width={0.005} />)}

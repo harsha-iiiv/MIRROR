@@ -6,7 +6,11 @@ candidate shown on the D1 page with the OFFLINE rule interpreter (no model call)
 run from its step log under the new spec, and plans + executes the new spec. Every result is written;
 none is filtered.
 
-    python film/night/make_correction.py --phase2 DIR --out DIR
+    python film/night/make_correction.py --phase2 DIR --out DIR          # D1 phase-2 artefacts
+    python film/night/make_correction.py --pipeline DIR --out DIR        # a mirror.capture.real_run output dir
+
+With --pipeline the scene, the spec and the reference report come from the run's manifest (scene/scene.json, spec.json,
+run/report.json) and the sentences from page.json correction_candidates (compile_text), the manifest's corrections first.
 """
 from __future__ import annotations
 import argparse, json, platform, subprocess, sys, time
@@ -71,16 +75,35 @@ def summ(entry):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--phase2", required=True)
+    ap.add_argument("--phase2", default=None)
+    ap.add_argument("--pipeline", default=None)
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
-    p2, out = Path(a.phase2), Path(a.out)
+    out = Path(a.out)
     if out.exists() and any(out.iterdir()):
         raise SystemExit(f"{out} is not empty; evidence is never overwritten")
+    candidates = list(CANDIDATES)
+    if a.pipeline:
+        pd = Path(a.pipeline)
+        man = json.loads((pd / "manifest.json").read_text())
+        scene = SceneState.model_validate_json((pd / man.get("scene", "scene/scene.json")).read_text())
+        spec = TaskSpec.model_validate_json((pd / man.get("spec", "spec.json")).read_text())
+        recorded = json.loads((pd / "run" / "report.json").read_text())
+        page = json.loads((pd / man.get("page", "page.json")).read_text()) if (pd / man.get("page", "page.json")).exists() else {}
+        seen, candidates = set(), []
+        for c in man.get("corrections", []) + (page.get("correction_candidates") or []):
+            t = c.get("compile_text") or c.get("text") or c.get("label")
+            cid = c.get("id") or c.get("name")
+            if t and t not in seen:
+                seen.add(t); candidates.append((cid, t))
+    elif a.phase2:
+        p2 = Path(a.phase2)
+        scene = SceneState.model_validate_json((p2 / "scene.json").read_text())
+        spec = TaskSpec.model_validate_json((p2 / "spec_intent.json").read_text())
+        recorded = json.loads((p2 / "report.json").read_text())
+    else:
+        raise SystemExit("give --phase2 or --pipeline")
     out.mkdir(parents=True, exist_ok=True)
-    scene = SceneState.model_validate_json((p2 / "scene.json").read_text())
-    spec = TaskSpec.model_validate_json((p2 / "spec_intent.json").read_text())
-    recorded = json.loads((p2 / "report.json").read_text())
     t0 = time.time()
     s = Session(scene=scene, client=LLMClient.offline_client())
     s.specs = [spec]
@@ -94,9 +117,9 @@ def main(argv=None):
                planner="mirror.plan default config (as the D1 phase-2 run)", backend="gripper",
                labels=["real phone footage", "one camera", "calibration reuse flagged", "development clip D1, never scored",
                        "simulation proxies, layout centred by software"],
-               old=o, reproduces_phase2=repro, candidates=[])
+               old=o, reproduces_phase2=repro, reproduces_reference=repro, source=str(a.pipeline or a.phase2), candidates=[])
     base_v = spec.version
-    for cid, text in CANDIDATES:
+    for cid, text in candidates:
         c = dict(id=cid, text=text)
         try:
             new, r = s.preview_correction(text)

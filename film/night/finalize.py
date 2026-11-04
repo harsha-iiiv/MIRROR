@@ -53,7 +53,7 @@ def main(argv=None):
     dur = acc / 30
     bed = music_bed(dur)
     # cue frames: gate card enters at +14; re-judge verdicts at tOld+80 and tNew+80 (scenes2.tsx Rejudge defaults 20 / 150)
-    cues = [(start["gate"] + 14, 196.0, -26), (start["rejudge"] + 100, 174.6, -24), (start["rejudge"] + 230, 220.0, -24)]
+    cues = [(start["gate"] + 14, 196.0, -26), (start["rejudge"] + 100, 174.6, -24), (start["rejudge"] + 230, 220.0, -24)]  # see Rejudge tOld/tNew
     for fr, f, db in cues:
         k = knock(f) * 10 ** (db / 20)
         i = int(fr / 30 * SR)
@@ -71,6 +71,8 @@ def main(argv=None):
     picks = {"watch": 0.62, "gate": 0.8, "run": 0.7, "twin": 0.7, "sentence": 0.9, "rejudge": 0.93, "ghosts": 0.6, "table": 0.9}
     (out / "stills").mkdir(exist_ok=True)
     for nm, q in picks.items():
+        if nm not in start:
+            continue
         fr = start[nm] + int(q * next(s["frames"] for s in shots if s["name"] == nm))
         p = out / "stills" / f"{nm}.png"
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", a.video, "-vf", f"select=eq(n\\,{fr})", "-frames:v", "1", str(p)],
