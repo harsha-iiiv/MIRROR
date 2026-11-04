@@ -733,6 +733,11 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
             return FileResponse(p, media_type={".pdf": "application/pdf", ".png": "image/png",
                                                ".json": "application/json"}[p.suffix])
 
+    table_dir = Path(os.environ.get("MIRROR_TABLE_DIR") or Path(__file__).resolve().parents[2] / "data" / "table")
+    if serve_web and table_dir.is_dir():
+        # Real captures for the "Your table" step (built by mirror/studio/real_table.py), read-only.
+        app.mount("/data/table", StaticFiles(directory=str(table_dir)), name="table")
+
     if serve_web and WEB_DIR.exists():
         @app.get("/")
         def index():

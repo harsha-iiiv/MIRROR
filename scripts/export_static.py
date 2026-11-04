@@ -148,6 +148,30 @@ def copy_capture_sample(out: Path, sample: Path) -> None:
     (dst / "synthetic_session.json").write_text(json.dumps(s, indent=1) + "\n")
 
 
+def copy_tables(out: Path, tables: list) -> list[str]:
+    """Ship real captures built by mirror/studio/real_table.py under <site>/data/table/<id>/ (the "Your table" step).
+
+    Only folders holding a table.json in the expected format are accepted; their labels travel with them."""
+    from mirror.studio.real_table import TABLE_FORMAT, write_index
+    root = Path(out) / "data" / "table"
+    names = []
+    for src in tables or []:
+        src = Path(src)
+        meta = json.loads((src / "table.json").read_text())
+        if meta.get("format") != TABLE_FORMAT:
+            raise SystemExit(f"{src}: not a {TABLE_FORMAT} folder")
+        if not meta.get("labels"):
+            raise SystemExit(f"{src}: a real capture must carry its labels")
+        dst = root / meta["id"]
+        if dst.exists():
+            shutil.rmtree(dst)
+        shutil.copytree(src, dst)
+        names.append(meta["id"])
+    if names:
+        write_index(root)
+    return names
+
+
 def write_site(svc: StudioService, out: Path, steps: list[dict], extra: dict) -> None:
     if out.exists():
         shutil.rmtree(out)
@@ -294,6 +318,7 @@ def header_rules(index_html: str, api_base: str = "", ws_base: str = "", generic
         ("/data/tour/record.json", {"Cache-Control": REVALIDATE}),
         ("/data/tour/rollouts/*", {"Cache-Control": IMMUTABLE}),
         ("/data/media/*", {"Cache-Control": "public, max-age=86400"}),
+        ("/data/table/*", {"Cache-Control": REVALIDATE}),
         ("/js/*", {"Cache-Control": REVALIDATE}),
         ("/styles.css", {"Cache-Control": REVALIDATE}),
     ]
@@ -395,6 +420,10 @@ def main(argv=None) -> int:
                     help="only rewrite SITE/config.js with --api-base/--ws-base, then exit")
     ap.add_argument("--capture-sample", type=Path, default=None,
                     help="a SYNTHETIC capture session.json (python -m mirror.capture.ingest demo DIR) shown as the review sample")
+    ap.add_argument("--table", type=Path, action="append", default=[],
+                    help="a folder built by python -m mirror.studio.real_table, shown in the 'Your table' step (repeatable)")
+    ap.add_argument("--add-tables-to", metavar="SITE", default=None,
+                    help="only copy the --table folders into an existing SITE (and its index), then exit")
     ap.add_argument("--no-clarify", action="store_true")
     ap.add_argument("--no-blocked", action="store_true")
     ap.add_argument("--evaluation", default=None,
@@ -405,6 +434,10 @@ def main(argv=None) -> int:
         ws_base = check_origin(args.ws_base, ("wss", "ws"))
     except ValueError as exc:
         ap.error(str(exc))
+    if args.add_tables_to:
+        names = copy_tables(Path(args.add_tables_to), args.table)
+        log(f"added tables {names} to {args.add_tables_to}")
+        return 0
     if args.write_config:
         cfg = write_config(Path(args.write_config), api_base, ws_base)
         log(f"wrote {Path(args.write_config) / 'config.js'}: apiBase={cfg['apiBase'] or '(none)'}")
@@ -443,6 +476,8 @@ def main(argv=None) -> int:
                                             "wall_time_s": round(time.time() - t0, 1)})
     if args.capture_sample:
         copy_capture_sample(Path(args.out), args.capture_sample)
+    if args.table:
+        log(f"tables: {copy_tables(Path(args.out), args.table)}")
     failed = [s["step"] for s in steps if s["status"] != "done"]
     if failed:
         log("incomplete export, failed steps: " + "; ".join(failed))

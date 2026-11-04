@@ -105,7 +105,7 @@ def small_jpeg(src: Path, dst: Path, width: int = 480) -> None:
 
 
 # --------------------------------------------------------------- contours
-def _poly(mask, w: int, h: int, eps_px: float = 2.0) -> Optional[list]:
+def _poly(mask, w: int, h: int, eps_px: float = 2.5) -> Optional[list]:
     import cv2
     import numpy as np
     m = (mask > 0).astype(np.uint8)
@@ -118,7 +118,7 @@ def _poly(mask, w: int, h: int, eps_px: float = 2.0) -> Optional[list]:
     if cv2.contourArea(c) < 12:
         return None
     c = cv2.approxPolyDP(c, eps_px, True).reshape(-1, 2)
-    return [round(float(v), 4) for xy in c for v in (xy[0] / w, xy[1] / h)]
+    return [round(float(v), 3) for xy in c for v in (xy[0] / w, xy[1] / h)]
 
 
 def contours_from_tracks(path: Path, *, camera: str = "top", hz: float = 10.0) -> dict:
@@ -526,9 +526,8 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
         "built_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "labels": labels_for(sess, src.labels), "notes": src.notes,
         "synthetic": bool(sess.synthetic), "evidence_kind": sess.evidence_kind, "session_id": sess.session_id,
         "video": {"file": "media/take.mp4", **take_info} if take_info else None,
-        "clip": [c.__dict__ if hasattr(c, "__dict__") else c for c in []],
         "calibration": src.calibration, "objects": objects, "events": events, "review": review,
-        "contours": contours, "gate": gate, "task": task, "robot": robot, "twin": twin, "sim_video": sim_video,
+        "contours": "contours.json" if contours else None, "gate": gate, "task": task, "robot": robot, "twin": twin, "sim_video": sim_video,
         "spend": src.spend, "model_calls_on_build": 0, "timings": timings,
         "honesty": ("Real footage from one phone. Object outlines come from SAM 3.1 masks (recorded); events come from object "
                     "motion in one view, not contact sensing. The robot runs in MuJoCo on simulated proxies placed from the "
@@ -537,6 +536,8 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
                    "SYNTHETIC test render: not real footage and not evidence about phones.",
     }
     table["timings"]["total_s"] = round(time.time() - t_start, 1)
+    if contours:
+        (out / "contours.json").write_text(json.dumps(contours, separators=(",", ":")))
     (out / "table.json").write_text(json.dumps(table, indent=1))
     log(f"wrote {out / 'table.json'} in {table['timings']['total_s']} s")
     return table
