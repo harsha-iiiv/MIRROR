@@ -241,7 +241,9 @@ class Status(str, Enum):
 
 
 class Provenance(_Model):
-    source: Literal["demo_inference", "user_correction", "clarification", "default", "manual"]
+    # "rehearsal": a correction candidate MIRROR ran on its own to show the check, chosen by no person (enforced for
+    # that run only, so its effect can be checked; never shown as the person's words).
+    source: Literal["demo_inference", "user_correction", "clarification", "default", "manual", "rehearsal"]
     evidence: str = ""
     version_introduced: int = 1
     model: Optional[str] = None
