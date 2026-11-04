@@ -376,8 +376,8 @@ function RobotStage({ dir, run, ghost, t, setT, playing, setPlaying, seekReq, la
   return html`<div class="yt-3d">
     <div class="yt-3d-canvas" ref=${el} tabindex="0" aria-label="3D view of the simulated run. Drag to orbit, scroll to zoom."></div>
     ${err ? html`<p class="yt-3d-err">${err}</p>` : ''}
-    ${lenses ? html`<div class="seg yt-lens" role="group" aria-label="Which run">${lenses.map(([k, n]) => html`<button aria-pressed=${lens === k} class="r" onClick=${() => setLens(k)}>${n}</button>`)}</div>` : ''}
-    <div class="yt-3d-hud"><span>${label}</span>
+    ${lenses ? html`<div class="seg yt-lens" data-viz-avoid role="group" aria-label="Which run">${lenses.map(([k, n]) => html`<button aria-pressed=${lens === k} class="r" onClick=${() => setLens(k)}>${n}</button>`)}</div>` : ''}
+    <div class="yt-3d-hud" data-viz-avoid><span>${label}</span>
       <div class="seg" role="group" aria-label="Camera">${[['3d', '3D'], ['top', 'Top'], ['follow', 'Follow'], ...(capture ? [['phone', 'Phone']] : [])].map(([k, n]) => html`<button aria-pressed=${view === k} class="r" onClick=${() => { picked.current = true; setView(k); }}>${n}</button>`)}</div></div>
   </div>`;
 }

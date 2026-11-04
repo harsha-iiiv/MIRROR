@@ -15,6 +15,7 @@ const CSS = `
 .label3d.viz-rule.bad > span { border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); }
 .label3d.viz-rule.warn > span { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
 .label3d.viz-rule.goal > span, .label3d.viz-rule.clear > span { color: var(--muted); }
+.label3d .viz-sw { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: -0.5px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 18%, transparent); }
 .label3d.viz-measure > span { font-family: var(--mono, monospace); background: var(--surface); }
 .label3d.viz-phone > span { color: var(--muted); }
 .viz-help { position: absolute; z-index: 6; right: 12px; bottom: 12px; background: color-mix(in srgb, var(--surface, #fff) 95%, transparent);

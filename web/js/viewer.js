@@ -12,6 +12,7 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { tiltDeg } from './util.js';
+import { colorFor } from './viz/palette.js';
 import { cssVar, isDark, isSmallDevice, prefersReducedMotion, setupRenderer, makeEnvironment, makeLights, bodyRole, materialFor, beadMaterial, tableTexture, frameTriad } from './viz/look.js';
 import { RuleLayer } from './viz/rules.js';
 import { GhostLayer } from './viz/ghost.js';
@@ -443,7 +444,7 @@ export class Viewer {
         } else if (isBead(b.name)) {
           mat = beadMaterial();
         } else {
-          mat = materialFor(role, g.rgba, { translucent: wallLike(b, g, trayIds) });
+          mat = materialFor(role, g.rgba, { translucent: wallLike(b, g, trayIds), bodyName: b.name });
         }
         const m = geomMesh(g, mat);
         if (!m) continue;
@@ -464,7 +465,10 @@ export class Viewer {
         const div = document.createElement('div');
         div.className = 'label3d';
         const span = document.createElement('span');
-        span.textContent = objIds.has(b.name) ? objIds.get(b.name).kind : 'tray';
+        const sw = document.createElement('i');
+        sw.className = 'viz-sw';
+        sw.style.background = colorFor(role, b.name) || 'var(--muted)';
+        span.append(sw, objIds.has(b.name) ? objIds.get(b.name).kind : 'tray');
         div.appendChild(span);
         const lab = new CSS2DObject(div);
         const top = objIds.has(b.name) ? this._halfHeight(objIds.get(b.name)) + 0.012 : 0.05;
@@ -515,32 +519,101 @@ export class Viewer {
     }
   }
 
+  // Short label text where space is tight: the phone view and narrow panes.
+  _labelMode() { return this.view === 'phone' || (this.el.clientWidth || 1000) < 720 ? 'short' : 'full'; }
+
+  _leaderLayer() {
+    if (this._leaders?.isConnected) return this._leaders;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'viz-leaders');
+    svg.setAttribute('aria-hidden', 'true');
+    Object.assign(svg.style, { position: 'absolute', left: '0px', top: '0px', width: '100%', height: '100%', pointerEvents: 'none', overflow: 'visible' });
+    this.el.insertBefore(svg, this.labels.domElement);
+    this._leaders = svg;
+    return svg;
+  }
+
+  // Screen-space label layout. Each label is anchored at its 3D point; labels are placed in
+  // priority order (violations, measurements, objects, tilt, clearance, goal) at the nearest free
+  // slot (stacked above/below, then to either side), kept inside the view and clear of the rule
+  // panel and any host overlay marked [data-viz-avoid]. A displaced label gets a thin leader line
+  // back to its anchor. The previous slot is preferred so labels do not hop during playback.
   _declutterLabels() {
-    if (!this.showLabels) return;
+    const svg = this._leaderLayer();
+    if (!this.showLabels) { if (svg.firstChild) svg.replaceChildren(); return; }
+    const host = this.labels.domElement.getBoundingClientRect();
+    const W = host.width || this._w || 1, H = host.height || this._h || 1;
+    const mode = this._labelMode();
     const items = [];
+    let order = 0;
     const collect = (root) => root.traverse((o) => {
       if (!o.isCSS2DObject) return;
-      let vis = true; for (let p = o; p; p = p.parent) if (!p.visible) { vis = false; break; }
-      if (!vis) return;
-      const span = o.element.firstChild;
-      if (!span) return;
-      span.style.transform = '';
-      const r = o.element.getBoundingClientRect();
-      if (r.width) items.push({ span, x0: r.left, x1: r.right, y0: r.top, y1: r.bottom });
+      for (let p = o; p; p = p.parent) if (!p.visible) return;
+      const div = o.element, span = div.firstChild;
+      if (!span || div.style.display === 'none') return;
+      if (span.dataset?.short) { const want = mode === 'short' ? span.dataset.short : span.dataset.full; if (span.textContent !== want) span.textContent = want; }
+      if (span.style.transition !== 'none') span.style.transition = 'none';
+      const r = div.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      const c = div.classList;
+      const pr = c.contains('bad') ? 0 : c.contains('warn') ? 1 : c.contains('viz-measure') ? 2
+        : !c.contains('viz-rule') && !c.contains('viz-phone') ? 3 : c.contains('tilt') ? 4 : c.contains('clear') ? 5 : 6;
+      items.push({ span, pr, n: order++, bad: pr === 0, cx: (r.left + r.right) / 2 - host.left, cy: (r.top + r.bottom) / 2 - host.top, w: r.width, h: r.height });
     });
     collect(this.world); collect(this.rules.group); collect(this.measureGroup); collect(this.phone.group);
-    items.sort((a, b) => b.y0 - a.y0);
-    const placed = [];
-    for (const it of items) {
-      let dy = 0;
-      for (let pass = 0; pass < 6; pass++) {
-        const hit = placed.find((p) => it.x0 < p.x1 + 2 && it.x1 > p.x0 - 2 && it.y0 + dy < p.y1 + 2 && it.y1 + dy > p.y0 - 2);
-        if (!hit) break;
-        dy = hit.y0 - 2 - it.y1;
-      }
-      if (dy) it.span.style.transform = `translateY(${Math.round(dy)}px)`;
-      placed.push({ ...it, y0: it.y0 + dy, y1: it.y1 + dy });
+    const avoid = [];
+    const scope = this.el.parentElement || this.el;
+    for (const e of scope.querySelectorAll('.viz-rules, [data-viz-avoid]')) {
+      if (e.hidden || !e.offsetParent) continue;
+      const r = e.getBoundingClientRect();
+      if (r.width && r.height) avoid.push({ x0: r.left - host.left, y0: r.top - host.top, x1: r.right - host.left, y1: r.bottom - host.top });
     }
+    items.sort((a, b) => a.pr - b.pr || a.n - b.n);
+    const P = 3, M = 4, placed = [];
+    const area = (a, b) => Math.max(0, Math.min(a.x1, b.x1 + P) - Math.max(a.x0, b.x0 - P)) * Math.max(0, Math.min(a.y1, b.y1 + P) - Math.max(a.y0, b.y0 - P));
+    const lines = [];
+    for (const it of items) {
+      const stepY = it.h + P, stepX = it.w / 2 + 14;
+      const cands = [];
+      if (it.span._slot) cands.push(it.span._slot);
+      cands.push([0, 0]);
+      for (let k = 1; k <= 7; k++) cands.push([0, -k * stepY], [0, k * stepY]);
+      for (let k = 0; k <= 5; k++) for (const sx of [1, -1]) cands.push([sx * stepX, -k * stepY], ...(k ? [[sx * stepX, k * stepY]] : []));
+      let best = null;
+      for (const [dx0, dy0] of cands) {
+        const x0 = Math.max(M, Math.min(W - M - it.w, it.cx + dx0 - it.w / 2));
+        const y0 = Math.max(M, Math.min(H - M - it.h, it.cy + dy0 - it.h / 2));
+        const rc = { x0, y0, x1: x0 + it.w, y1: y0 + it.h };
+        let ov = 0;
+        for (const p of placed) ov += area(rc, p);
+        for (const a of avoid) ov += area(rc, a);
+        if (!best || ov < best.ov - 1e-6) best = { rc, ov, slot: [dx0, dy0] };
+        if (ov <= 0) break;
+      }
+      const { rc } = best;
+      it.span._slot = best.slot;
+      const dx = rc.x0 + it.w / 2 - it.cx, dy = rc.y0 + it.h / 2 - it.cy;
+      const tf = dx || dy ? `translate(${Math.round(dx)}px, ${Math.round(dy)}px)` : '';
+      if (it.span.style.transform !== tf) it.span.style.transform = tf;
+      placed.push(rc);
+      if (Math.hypot(dx, dy) > 6) {
+        const ex = Math.max(rc.x0, Math.min(rc.x1, it.cx)), ey = Math.max(rc.y0, Math.min(rc.y1, it.cy));
+        lines.push({ x1: it.cx, y1: it.cy, x2: ex, y2: ey, bad: it.bad });
+      }
+    }
+    const key = lines.map((l) => `${l.x1 | 0},${l.y1 | 0},${l.x2 | 0},${l.y2 | 0},${l.bad ? 1 : 0}`).join(';');
+    if (key === this._leaderKey) return;
+    this._leaderKey = key;
+    const NS = 'http://www.w3.org/2000/svg';
+    svg.replaceChildren(...lines.flatMap((l) => {
+      const col = l.bad ? 'var(--bad)' : 'var(--muted)';
+      const ln = document.createElementNS(NS, 'line');
+      for (const [k, val] of Object.entries({ x1: l.x1, y1: l.y1, x2: l.x2, y2: l.y2 })) ln.setAttribute(k, val.toFixed(1));
+      ln.setAttribute('stroke', col); ln.setAttribute('stroke-width', '1'); ln.setAttribute('opacity', '0.75');
+      const dot = document.createElementNS(NS, 'circle');
+      dot.setAttribute('cx', l.x1.toFixed(1)); dot.setAttribute('cy', l.y1.toFixed(1)); dot.setAttribute('r', '2.25'); dot.setAttribute('fill', col);
+      return [ln, dot];
+    }));
   }
 
   _halfHeight(o) {
