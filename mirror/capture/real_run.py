@@ -743,6 +743,12 @@ class RealRun:
             self.state["status"] = "waiting"
             self.state["waiting_for"] = str(e)
             self.log(f"[waiting] {e}")
+            for name in ("questions_spec.json", "questions.json") if str(e).startswith("task") else ("questions.json",):
+                f = self.out / name
+                if f.exists() and str(e).split(":")[0] in ("answers", "task"):
+                    for q in json.loads(f.read_text()).get("questions", []):
+                        self.log(f"  ? {q['id']}: {q['question']}  [{' | '.join(q.get('options', []))}]")
+                    break
         except SpendCapReached as e:
             self.state["status"] = "stopped_spend_cap"
             self.state["waiting_for"] = str(e)
@@ -1692,9 +1698,9 @@ class RealRun:
         st = self.state["stages"]
         if "correct" in st and st["correct"].get("after_status"):
             c = st["correct"]
-            return (f"Correction '{c.get('label')}' {('(rehearsal, not your choice) ' if c.get('rehearsal') else '')}compiled to "
-                    f"{c.get('rule_summary')}; replanned run: {c.get('after_status')}; your first run re-checked under it: "
-                    f"{c.get('recheck_status')}.")
+            return (f"Correction \"{c.get('label')}\"{(' (a rehearsal, not your choice)' if c.get('rehearsal') else '')} became "
+                    f"{c.get('rule_summary')}. Your first run, re-checked under it: {c.get('recheck_status').replace('_', ' ')}; "
+                    f"the replanned run: {c.get('after_status').replace('_', ' ')}.")
         if "run" in st:
             r = st["run"]
             return (f"Robot run on your layout ({r.get('spec_source')}): {r.get('result')}, {r.get('violations')} violation(s)"
@@ -2226,8 +2232,15 @@ class RealRun:
                   "first_run_rechecked": vr.get(rid), "after_correction": va.get(rid)}
                  for rid in list(dict.fromkeys(list(va) + list(vb)))]
         ops = [o.model_dump(mode="json") for o in rec.diff]
-        rule_summary = "; ".join(f"{o['op']} {(o.get('value') or {}).get('type', '')} {(o.get('value') or {}).get('id', o.get('target_id') or '')}".strip()
-                                 for o in ops) or "no change"
+        descr = {c.id: (getattr(c, "description", "") or "") for c in new_spec.constraints}
+
+        def _say(o):
+            v = o.get("value") or {}
+            rid = v.get("id") or o.get("target_id") or ""
+            what = {"add_constraint": "new rule", "modify_constraint": "changed rule", "remove_constraint": "removed rule",
+                    "add_ordering": "new ordering", "remove_ordering": "removed ordering"}.get(o["op"], o["op"])
+            return f"{what} '{descr.get(rid) or rid}'"
+        rule_summary = "; ".join(_say(o) for o in ops) or "no change"
         timings = {}
         if self.render_on and rep_a.status != "planning_failed":
             ts = time.time()

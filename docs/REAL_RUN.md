@@ -90,3 +90,31 @@ Relax a threshold, bypass the gate, set `confirmed_by_person` without a person's
 call a model in replay mode, or present the person's stated task as MIRROR's inference.
 Every output carries its labels (real footage, one camera, calibration flagged when it is,
 development clip when `--dev-clip` is given, replayed model outputs in replay mode).
+
+
+## Tomorrow's take (runbook)
+
+1. Film the lens clip and the task with the same phone on the same stand, same lens (1x), same video mode,
+   AE/AF locked; board flat at the start of the task for at least half a second, sync card shown and hidden.
+2. Write `m.json` (copy D1's and change names/sizes if the objects changed).
+3. Watch (record mode; the cap is what is left of the $10, e.g. 9.67 after D1's $0.33):
+
+```
+MODEL_API_KEY=... python -m mirror.capture.real_run --lens IMG_LENS.MOV --take IMG_TASK.MOV \
+    --measurements m.json --out runs/D2 --mode record --cap-usd 9.67 --dev-clip D2 \
+    --publish-dir /cloudspace/mirror/capture/D2/pipeline
+```
+
+   It stops at `waiting: answers` with `questions.json` (and `page.json`, `overlay.mp4`, `timeline.png`, evidence).
+4. The person answers (page or file). From a Firebase answers node: add `--answers-firebase <path>`; from a file:
+   `--answers answers.json`. Run the same command again: answers are applied, the gate decides.
+   * Gate passed: Muse Spark proposes the task (recorded); it stops at `waiting: task review` with
+     `questions_spec.json`; add `spec_review` to the answers and run again.
+   * Gate refused: the refusal is recorded; with an `intent` answer the stated task runs, labelled.
+5. The robot run and render follow. The correction runs once `correction` is answered (or rehearse one with
+   `--rehearse-correction <id>`, labelled as a rehearsal).
+
+Wall time on this sandbox (4 shared cores, two other agents running, D1 replay): watch stages about 6 minutes
+of compute, robot stages under 1 minute plus about 2 minutes per rendered video; record mode adds the model
+latency (about 3 minutes of SAM video and 40 s of grounding for a 50 s take). Time spent waiting for the shared
+render lock is reported separately (`lock_wait_s`).
