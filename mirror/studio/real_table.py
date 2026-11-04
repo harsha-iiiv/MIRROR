@@ -42,6 +42,8 @@ LOCK = os.environ.get("MIRROR_RENDER_LOCK", "")   # optional: serialise heavy en
 
 # Object colours on the page (also used for contours): restrained, distinguishable in both themes.
 PALETTE = ["#d9622b", "#2f7fd1", "#2e9e6a", "#8a63d2", "#b08a2e", "#c2457a", "#5b8a99"]
+# The capture's evidence images and overlay video colour these labels this way; the page matches them.
+LABEL_COLOURS = {"mug": "#e5534b", "red_box": "#d99a1e", "marker": "#3c7ff0", "tray": "#3faf74", "divider": "#b25fd9"}
 
 # Corrections the page offers when the source gives none: one per supported rule family
 # that fits a kit-packing take. Compiled offline; the person still chooses.
@@ -585,7 +587,7 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
                         "confirmed_by_person": bool(md.get("confirmed_by_person")),
                         "confirmed": ({"answer": conf[-1].get("after"), "seconds_spent": conf[-1].get("seconds_spent"), "at": conf[-1].get("at")}
                                       if conf else None),
-                        "fidelity": md.get("fidelity_statement"), "color": PALETTE[i % len(PALETTE)], "evidence": None})
+                        "fidelity": md.get("fidelity_statement"), "color": LABEL_COLOURS.get(lab, PALETTE[i % len(PALETTE)]), "evidence": None})
     events = []
     for e in sess.events:
         d = e.model_dump(mode="json")
