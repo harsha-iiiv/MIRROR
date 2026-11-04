@@ -317,6 +317,44 @@ def simulate(scene, spec, candidates: list[dict], rollout_dir: Path, *, client=N
     return {"run": run, "corrections": out}
 
 
+def recorded_item(r: dict, scene, spec, rollout_dir: Path) -> dict:
+    """A correction the capture run compiled and executed itself (its own files, its own compiler label)."""
+    from mirror.contracts import Rollout, TaskSpec
+    from mirror.studio.session_adapter import compact_rollout
+    scene_d = scene.model_dump(mode="json")
+    ro = Rollout.model_validate_json(Path(r["rollout_path"]).read_text())
+    new_spec = TaskSpec.model_validate_json(Path(r["spec_path"]).read_text())
+    payload = compact_rollout(ro, max_hz=20.0, extra={"scene": scene_d, "spec": new_spec.model_dump(mode="json")})
+    name = f"rec_{r['id']}"
+    payload["id"] = name
+    (rollout_dir / f"{name}.json").write_text(json.dumps(payload, separators=(",", ":")))
+    rep = ro.report.model_dump(mode="json")
+    recheck = json.loads(Path(r["recheck_path"]).read_text())
+    old_ids = {c["id"] for c in spec.model_dump(mode="json").get("constraints", [])}
+    added = [c for c in new_spec.model_dump(mode="json").get("constraints", []) if c["id"] not in old_ids]
+    diff = [{"op": "add_constraint", "target_id": c["id"], "value": c} for c in added]
+    ids = [o["id"] for o in scene_d["objects"]]
+    after = {"id": name, "file": f"rollouts/{name}.json", "summary": _summary(rep), "rules": _rule_rows(rep),
+             "series": series(payload, scene_d), "paths": path2d(payload, ids), "duration_s": payload["t"][-1] if payload["t"] else 0}
+    item = {"id": r["id"], "text": r.get("text"), "label": r.get("label"), "why": "Compiled and run by the capture run itself.",
+            "compiler": r.get("compiler") or "the capture run", "recorded": True, "rehearsal": r.get("rehearsal"),
+            "diff": diff, "version": new_spec.version, "spec": spec_view(new_spec),
+            "recheck": {"status": recheck.get("status"), "rules": _rule_rows(recheck),
+                        "violations": [{k: v.get(k) for k in ("constraint_id", "object_id", "t_start", "t_end", "peak", "detail")}
+                                       for v in recheck.get("violations") or []]},
+            "after": after}
+    added_ids = {d["target_id"] for d in diff}
+    old_ok = all(x["verdict"] != "violated" for x in item["recheck"]["rules"] if x["rule_id"] in added_ids)
+    item["outcome"] = "no_plan" if rep.get("status") == "planning_failed" else ("already_held" if old_ok else "changed")
+    if r.get("before_after_path"):
+        dst = rollout_dir.parent / "media" / f"corr_{r['id']}_before_after.mp4"
+        info = probe(r["before_after_path"])
+        if info.get("codec") == "h264":
+            shutil.copyfile(r["before_after_path"], dst)
+            item["video"] = {"file": f"media/{dst.name}", **info}
+    return item
+
+
 # ------------------------------------------------------------- plan view
 def plan_view(sess, scene: dict, *, hz: float = 5.0, placement: Optional[dict] = None) -> Optional[dict]:
     """Top view in the simulator frame: where MIRROR saw your objects and hands move (from the capture,
@@ -391,6 +429,7 @@ class Source:
     calibration: dict = field(default_factory=dict)
     placement_note: str = ""
     placement_file: Optional[Path] = None   # json with origin_xy_m + yaw_deg (simulator placement of the table frame)
+    recorded_corrections: list = field(default_factory=list)   # corrections the capture run itself compiled and ran
 
 
 # The D1 development capture's folders come from the environment (they are local to the machine that made it):
@@ -466,24 +505,35 @@ def pipeline_source(d: Path, capture_id: Optional[str] = None) -> Source:
         raise SystemExit(f"{d}: needs the session and the take clip (manifest keys 'session', 'take')")
     task = page.get("task") or {}
     gate_ok = bool(task.get("gate_passed"))
-    spec = f(None, "spec.json", "proposal/spec.json")
-    spec_source = "inferred" if gate_ok and "stated" not in str(task.get("spec_source", "")) else "person_stated_intent"
+    spec = f(man.get("spec"), "spec.json", "proposal/spec.json")
+    ss = str(man.get("spec_source") or task.get("spec_source") or "")
+    spec_source = "inferred" if (gate_ok or (man.get("gate") or {}).get("passed")) and "stated" not in ss else "person_stated_intent"
     cands = [{"id": c["id"], "text": c.get("compile_text") or c.get("text") or c.get("label"), "label": c.get("label"),
               "why": c.get("why")} for c in page.get("correction_candidates") or []] or list(DEFAULT_CANDIDATES)
-    twin_dir = f("twin")
-    spend = page.get("spend_usd")
+    twin_dir = f(man.get("twin_dir"), "twin")
+    ev_dir = f(man.get("evidence_dir"), "evidence")
+    sp = man.get("spend") or {}
+    spend = sp.get("usd") if sp else page.get("spend_usd")
+    recorded = []
+    for c in man.get("corrections") or []:
+        paths = {k: f(c.get(k)) for k in ("rollout", "spec", "report", "recheck", "before_after", "video")}
+        if paths["rollout"] and paths["spec"] and paths["recheck"]:
+            recorded.append({"id": c.get("name"), "text": c.get("text") or c.get("label"), "label": c.get("label"),
+                             "rehearsal": bool(c.get("rehearsal")), "compiler": c.get("compiler"), **{k + "_path": v for k, v in paths.items()}})
     return Source(capture_id=capture_id or man.get("capture_id") or d.parent.name if d.name == "out" else (capture_id or d.name),
                   title=man.get("title") or "Your table",
                   session=session, take=take, tracks=f(man.get("tracks"), "tracks_full.json.gz", "tracks_proxy.json.gz"),
                   scene=f(man.get("scene"), "scene/scene.json", "scene.json"), spec=spec, spec_source=spec_source,
-                  evidence={p.stem: p for p in sorted((d / "evidence").glob("*.jpg"))} if (d / "evidence").exists() else {},
+                  evidence={p.stem: p for p in sorted(ev_dir.glob("*.jpg"))} if ev_dir else {},
                   twin={p.stem: p for p in sorted(twin_dir.glob("*.mp4"))} if twin_dir else {},
-                  sim_video=f("run/sim_run.mp4"), candidates=cands, labels=man.get("labels") or page.get("labels") or [],
-                  notes=[page["headline"]] if page.get("headline") else [],
-                  spend={"spent_usd": spend, "cap_usd": page.get("cap_usd")} if spend is not None else None,
-                  calibration=page.get("calibration") or {}, placement_file=f(man.get("table_to_sim"), "table_to_sim.json"),
-                  placement_note=(json.loads(f(man.get("table_to_sim"), "table_to_sim.json").read_text()).get("label")
-                                  if f(man.get("table_to_sim"), "table_to_sim.json") else ""))
+                  sim_video=f(man.get("sim_video"), "run/sim_run.mp4"), candidates=cands, labels=man.get("labels") or page.get("labels") or [],
+                  notes=(man.get("notes") or []) + ([page["headline"]] if page.get("headline") else []),
+                  spend={"spent_usd": spend, "cap_usd": sp.get("cap_usd") or page.get("cap_usd"), "mode": sp.get("mode")} if spend is not None else None,
+                  calibration=man.get("calibration") or page.get("calibration") or {},
+                  placement_file=f(man.get("table_to_sim"), "table_to_sim.json"),
+                  placement_note=man.get("placement_note") or (json.loads(f(man.get("table_to_sim"), "table_to_sim.json").read_text()).get("label")
+                                                               if f(man.get("table_to_sim"), "table_to_sim.json") else ""),
+                  recorded_corrections=recorded)
 
 
 # ------------------------------------------------------------------ build
@@ -621,7 +671,13 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
         task = {"source": src.spec_source, **spec_view(spec)}
         if simulate_runs:
             t0 = time.time()
-            robot = simulate(scene, spec, src.candidates, out / "rollouts")
+            rec_ids = {r["id"] for r in src.recorded_corrections}
+            robot = simulate(scene, spec, [c for c in src.candidates if c.get("id") not in rec_ids], out / "rollouts")
+            for r in src.recorded_corrections:
+                try:
+                    robot["corrections"].insert(0, recorded_item(r, scene, spec, out / "rollouts"))
+                except Exception as exc:  # a malformed record is reported, not hidden
+                    log(f"recorded correction {r.get('id')} skipped: {exc}")
             timings["simulate_s"] = round(time.time() - t0, 1)
             robot["scene"] = scene.model_dump(mode="json")
             robot["placement_note"] = src.placement_note or scene.notes

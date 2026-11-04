@@ -527,7 +527,7 @@ function StepCorrect({ ctx, table, pick, setPick, go, extra, addExtra }) {
     <p class="yt-lead">Pick one correction. Each was compiled into a scoped rule, the old run was re-checked under it, and the robot ran again.</p>
     <div class="yt-cands" role="radiogroup" aria-label="Corrections">${cs.map((c) => { const [lab, cls] = OUTCOME[c.outcome] || [c.outcome, ''];
       return html`<button role="radio" aria-checked=${pick === c.id} class=${'yt-cand' + (pick === c.id ? ' on' : '')} onClick=${() => { setPick(c.id); go(); }}>
-        <span class="q">“${c.text}”${c.live ? html` <span class="yt-new">yours</span>` : ''}</span>
+        <span class="q">“${c.text}”${c.live ? html` <span class="yt-new">yours</span>` : ''}${c.recorded ? html` <span class="yt-new">${c.rehearsal ? 'rehearsal run by the capture' : 'run by the capture'}</span>` : ''}</span>
         <span class="why">${c.why}</span>
         <span class="row2"><span class=${'yt-out ' + cls}>${lab}</span>${c.diff?.length ? html`<span class="num faint">${c.diff.map((d) => `+ ${d.value?.type} · ${d.value?.applies_to?.kind} · ${d.value?.phase}`).join('; ')}</span>` : ''}</span>
       </button>`; })}</div>
@@ -554,7 +554,7 @@ function StepCompare({ table, dir, pick, t, seek, extra }) {
   const thr = (c.diff || []).map((d) => d.value?.params?.min_m).find((x) => x != null);
   return html`<div>
     <div class="yt-diff">${(c.diff || []).map((d) => html`<div><span class="plus">+</span> <b>${d.value?.type}</b> · ${d.value?.applies_to?.kind} · ${d.value?.phase}${d.value?.params ? ' · ' + Object.entries(d.value.params).map(([k, v]) => `${k} ${v}`).join(', ') : ''}<div class="faint">${d.value?.description}</div></div>`)}
-      <div class="faint num">v${table.task?.version} → v${c.version} · ${c.compiler}</div></div>
+      <div class="faint num">v${table.task?.version} → v${c.version} · ${c.compiler}${c.rehearsal ? ' · rehearsal, not chosen by you' : ''}</div></div>
     ${noPlan ? html`<div class="callout yt-refuse"><b>MIRROR refuses to run it.</b> ${after?.summary?.plan_reason || 'No plan keeps every rule on this layout.'}
       <div class="faint">Nothing was executed. The old run, re-checked under the new rule: ${c.recheck?.status === 'success' ? 'it holds' : 'it breaks it'}.</div></div>`
     : c.outcome === 'already_held' ? html`<div class="callout">The old run already kept this rule; the re-check confirms it from the step log. The robot does the same thing.</div>`
@@ -568,6 +568,8 @@ function StepCompare({ table, dir, pick, t, seek, extra }) {
       lines=${[{ name: 'before', color: 'var(--faint)', t: base.series.t, y: base.series.gap_cm, dash: true }, ...(noPlan ? [] : [{ name: 'after', color: 'var(--accent)', t: after.series.t, y: after.series.gap_cm }])]}
       note="Drawing aid from recorded frames (centre distance minus the proxy radius). Verdicts in the table come from the checker on the dense step log." />` : ''}
     <${PlanView} table=${table} dir=${dir} run=${noPlan ? base : after} ghost=${noPlan ? null : base} t=${t} clearance=${thr} />
+    ${c.video ? html`<figure class="yt-tw"><figcaption>Before and after (rendered by the capture run) <span class="num faint">${c.video.width}×${c.video.height}</span></figcaption>
+      <video controls muted playsinline preload="none" src=${urlOf(dir, c.video.file)}></video></figure>` : ''}
     ${(() => { const ba = (table.twin || []).find((v) => v.name === 'before_after'); const rule = table.twin_meta?.before_after?.rule;
       return ba && rule && rule.trim() === (c.text || '').trim() ? html`<figure class="yt-tw"><figcaption>Before and after, on your table <span class="num faint">${ba.width}×${ba.height}</span></figcaption>
         <video controls muted playsinline preload="none" poster=${ba.poster ? urlOf(dir, ba.poster) : undefined} src=${urlOf(dir, ba.file)}></video><p class="yt-note">${table.twin_meta.caption}</p></figure>` : ''; })()}
