@@ -312,7 +312,7 @@ function PlanView({ table, run, ghost, t, clearance }) {
 }
 
 // ------------------------------------------------------------------ 3D stage (studio Viewer API)
-function RobotStage({ dir, run, ghost, t, setT, playing, setPlaying, seekReq, label }) {
+function RobotStage({ dir, run, ghost, t, setT, playing, setPlaying, seekReq, label, capture }) {
   const el = useRef(null);
   const vref = useRef(null);
   const [err, setErr] = useState(null);
@@ -339,7 +339,9 @@ function RobotStage({ dir, run, ghost, t, setT, playing, setPlaying, seekReq, la
         const p = await loadRollout(dir, run.file);
         const g = ghost ? await loadRollout(dir, ghost.file) : null;
         if (gone) return;
-        v.loadRollout(p, { ghost: g, sceneState: p.scene });
+        v.loadRollout(p, { ghost: g, sceneState: p.scene, spec: p.spec || undefined });
+        // Newer viewers can show the phone that filmed the table (feature-detected; optional data).
+        if (capture && v.setCapture && !v.__ytCapture) { try { v.setCapture(capture.view, capture.base); v.__ytCapture = true; } catch (_) { /* optional */ } }
         if (v.setOptions) v.setOptions({ labels: true, trace: true, ghost: !!g });
         v.setTime(0); setT(0);
       } catch (e) { setErr(String(e.message || e)); }
@@ -353,7 +355,7 @@ function RobotStage({ dir, run, ghost, t, setT, playing, setPlaying, seekReq, la
     <div class="yt-3d-canvas" ref=${el} tabindex="0" aria-label="3D view of the simulated run. Drag to orbit, scroll to zoom."></div>
     ${err ? html`<p class="yt-3d-err">${err}</p>` : ''}
     <div class="yt-3d-hud"><span>${label}</span>
-      <div class="seg" role="group" aria-label="Camera">${[['3d', '3D'], ['top', 'Top'], ['follow', 'Follow']].map(([k, n]) => html`<button aria-pressed=${view === k} class="r" onClick=${() => setView(k)}>${n}</button>`)}</div></div>
+      <div class="seg" role="group" aria-label="Camera">${[['3d', '3D'], ['top', 'Top'], ['follow', 'Follow'], ...(capture ? [['phone', 'Phone']] : [])].map(([k, n]) => html`<button aria-pressed=${view === k} class="r" onClick=${() => setView(k)}>${n}</button>`)}</div></div>
   </div>`;
 }
 
@@ -450,12 +452,15 @@ function StepRobot({ table, dir, t, seek }) {
     ${r.series?.tilt ? html`<${LineChart} title="Mug proxy tilt" unit="°" t=${t} onSeek=${seek} threshold=${15} thresholdLabel="15° limit" badAbove=${true} yMax=${20}
       lines=${[{ name: 'run', color: 'var(--accent)', t: r.series.t, y: r.series.tilt }]} yMin=${0} />` : ''}
     ${(table.twin || []).length ? html`<div class="yt-twin"><p class="yt-spec-h">The robot on your table, from your phone</p>
-      ${table.twin.map((v) => html`<video controls muted playsinline preload="metadata" src=${urlOf(dir, v.file)}></video>`)}
+      ${table.twin.map((v) => html`<figure class="yt-tw"><figcaption>${TWIN_TITLE[v.name] || human(v.name)} <span class="num faint">${v.width}×${v.height}</span></figcaption>
+        <video controls muted playsinline preload="metadata" src=${urlOf(dir, v.file)}></video></figure>`)}
       <p class="yt-note">Approximate: one camera, calibration reuse flagged.</p></div>` : ''}
     ${table.sim_video ? html`<details class="yt-det"><summary>Rendered video of this run</summary><video controls muted playsinline preload="none" src=${urlOf(dir, table.sim_video.file)}></video></details>` : ''}
     <p class="yt-note">${table.robot.placement_note}</p>
   </div>`;
 }
+
+const TWIN_TITLE = { overlay: 'The robot on your table, from your phone', side_by_side: 'Your hands · the robot', twin_3panel: 'Video · table twin · simulator', before_after: 'Before and after the example correction' };
 
 const OUTCOME = {
   changed: ['Changes the run', 'ok'], already_held: ['Already true', ''], question: ['Needs your answer', 'warn'],
@@ -548,9 +553,11 @@ export function TablePanel({ ctx }) {
   const [rPlaying, setRPlaying] = useState(false);
   const [rSeek, setRSeek] = useState(null);
   const [extra, setExtra] = useState([]);
+  const [capView, setCapView] = useState(null);
   const table = st.table;
   if (table && st.contours) table.__contours = st.contours;
   const carry = useMemo(() => (table ? carries(table.events) : {}), [table]);
+  useEffect(() => { if (table?.capture_view) api.getDataFile(st.dir + table.capture_view).then((v) => setCapView({ view: v, base: (api.config.base || 'data/') + st.dir + table.capture_view.replace(/[^/]*$/, '') })).catch(() => {}); }, [table]);
   const setT = useCallback((x, seek) => { setTRaw(x); if (seek) setSeekReq({ t: Math.max(0, x) }); }, []);
   const seek = (x) => setT(x, true);
   const rseek = (x) => { setRt(x); setRSeek({ t: x }); };
@@ -600,7 +607,7 @@ export function TablePanel({ ctx }) {
           </div>
           <div class="yt-pane yt-pane-r" aria-hidden=${onVideo}>
             ${!onVideo || rdur ? html`<${RobotStage} dir=${st.dir} run=${run3d} ghost=${ghost3d} t=${rt} setT=${setRt} playing=${rPlaying} setPlaying=${setRPlaying} seekReq=${rSeek}
-              label=${step === 'compare' && ghost3d ? 'After the correction · grey: before' : 'Your layout · simulated proxies · MuJoCo'} />` : ''}
+              capture=${capView} label=${step === 'compare' && ghost3d ? 'After the correction · grey: before' : 'Your layout · simulated proxies · MuJoCo'} />` : ''}
           </div>
         </div>
         <div class="yt-transport">

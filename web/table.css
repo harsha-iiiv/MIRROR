@@ -210,3 +210,4 @@
 .yt-say.live { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s3); background: var(--surface); gap: var(--s2); }
 .yt-say-row { display: flex; gap: var(--s2); align-items: center; flex-wrap: wrap; }
 .yt-say.live input { flex: 1; min-width: 200px; border-style: solid; }
+.yt-tw { margin: 0 0 var(--s3); } .yt-tw figcaption { font-size: var(--fs-sm); display: flex; justify-content: space-between; }

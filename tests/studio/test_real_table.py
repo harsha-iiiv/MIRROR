@@ -111,3 +111,35 @@ def test_build_d1_end_to_end(tmp_path, monkeypatch):
     for c in t["robot"]["corrections"]:
         assert c["compiler"].startswith("offline rules")
     assert (tmp_path / "D1/rollouts/base.json").exists() and (tmp_path / "D1/contours.json").exists()
+
+
+PIPE = Path("/workspace/mirror-team/v2/night/pipeline/D1/out")
+
+
+@pytest.mark.skipif(not (PIPE / "manifest.json").exists(), reason="pipeline D1 output not on this machine")
+def test_pipeline_source_follows_manifest():
+    s = RT.pipeline_source(PIPE, "D1p")
+    assert s.session.name == "session_answered.json"
+    assert s.tracks.name == "tracks_full.json.gz" and s.scene.name == "scene.json"
+    assert s.spec_source == "person_stated_intent"          # the gate refused, so the task is the stated one
+    assert "Calibration reuse flagged" in s.labels
+    assert all(c["text"] for c in s.candidates) and len(s.candidates) >= 1
+    assert s.placement_file is not None and s.placement_file.name == "table_to_sim.json"
+
+
+def test_plan_view_uses_placement_file():
+    class P:  # minimal session stand-ins
+        yaw_deg = 0.0
+    class Tr:
+        t = [0.0, 0.5, 1.0]; pos = [(0.0, 0.0, 0.0), (0.1, 0.0, 0.0), None]; resting = [True, False, False]
+    class Rec:
+        objects = {"mug": Tr()}
+    class S:
+        reconstruction = Rec(); placement = P(); poses = {}
+        class tray:
+            center_xy = (0.0, 0.0)
+    scene = {"trays": [{"pose": {"pos": [9.0, 9.0, 0.0]}}]}
+    v = RT.plan_view(S(), scene, hz=10, placement={"origin_xy_m": [1.0, 2.0], "yaw_deg": 90.0, "source": "test"})
+    assert v["real"]["mug"]["rest"] == [1.0, 2.0]
+    assert v["real"]["mug"]["path"][1][1:] == [pytest.approx(1.0), pytest.approx(2.1)]   # +x in the table frame -> +y in sim at 90 deg
+    assert v["origin_from"].startswith("placement file")

@@ -247,8 +247,9 @@ def simulate(scene, spec, candidates: list[dict], rollout_dir: Path, *, client=N
     scene_d = scene.model_dump(mode="json")
     ids = [o["id"] for o in scene_d["objects"]]
 
-    def save(entry, name) -> dict:
-        payload = compact_rollout(entry.rollout, max_hz=20.0, extra={"scene": scene_d})
+    def save(entry, name, run_spec=None) -> dict:
+        payload = compact_rollout(entry.rollout, max_hz=20.0,
+                                  extra={"scene": scene_d, "spec": (run_spec or spec).model_dump(mode="json")})
         name = prefix + name
         payload["id"] = name
         (rollout_dir / f"{name}.json").write_text(json.dumps(payload, separators=(",", ":")))
@@ -299,7 +300,10 @@ def simulate(scene, spec, candidates: list[dict], rollout_dir: Path, *, client=N
         item["recheck"] = {"status": recheck.get("status"), "rules": _rule_rows(recheck),
                            "violations": [{k: v.get(k) for k in ("constraint_id", "object_id", "t_start", "t_end", "peak", "detail")}
                                           for v in recheck.get("violations") or []]}
-        item["after"] = save(after, f"corr_{item['id']}")
+        item["after"] = save(after, f"corr_{item['id']}", new_spec)
+        # The old run judged under the new rules (for the viewer's ribbons and the re-check table).
+        (rollout_dir / f"{prefix}recheck_{item['id']}.json").write_text(json.dumps(recheck, separators=(",", ":")))
+        item["recheck_file"] = f"rollouts/{prefix}recheck_{item['id']}.json"
         added = {d.get("target_id") for d in item["diff"]}
         old_ok = all(r["verdict"] != "violated" for r in item["recheck"]["rules"] if r["rule_id"] in added)
         item["outcome"] = "already_held" if old_ok else "changed"
@@ -311,7 +315,7 @@ def simulate(scene, spec, candidates: list[dict], rollout_dir: Path, *, client=N
 
 
 # ------------------------------------------------------------- plan view
-def plan_view(sess, scene: dict, *, hz: float = 5.0) -> Optional[dict]:
+def plan_view(sess, scene: dict, *, hz: float = 5.0, placement: Optional[dict] = None) -> Optional[dict]:
     """Top view in the simulator frame: where MIRROR saw your objects and hands move (from the capture,
     one camera, approximate), where the proxies start, and where the phone was.
 
@@ -321,11 +325,18 @@ def plan_view(sess, scene: dict, *, hz: float = 5.0) -> Optional[dict]:
     import numpy as np
     if sess.reconstruction is None or sess.tray is None or not scene.get("trays"):
         return None
-    yaw = math.radians(sess.placement.yaw_deg if sess.placement else 0.0)
-    c, s_ = math.cos(yaw), math.sin(yaw)
-    tc = sess.tray.center_xy
-    st = scene["trays"][0]["pose"]["pos"]
-    ox, oy = st[0] - (c * tc[0] - s_ * tc[1]), st[1] - (s_ * tc[0] + c * tc[1])
+    if placement and placement.get("origin_xy_m") is not None:
+        yaw = math.radians(float(placement.get("yaw_deg") or 0.0))
+        c, s_ = math.cos(yaw), math.sin(yaw)
+        ox, oy = placement["origin_xy_m"]
+        origin_from = f"placement file ({placement.get('source') or 'given'})"
+    else:
+        yaw = math.radians(sess.placement.yaw_deg if sess.placement else 0.0)
+        c, s_ = math.cos(yaw), math.sin(yaw)
+        tc = sess.tray.center_xy
+        st = scene["trays"][0]["pose"]["pos"]
+        ox, oy = st[0] - (c * tc[0] - s_ * tc[1]), st[1] - (s_ * tc[0] + c * tc[1])
+        origin_from = "tray centre (capture) onto the scene's tray; yaw from the session placement"
 
     def to_sim(p):
         return [round(ox + c * p[0] - s_ * p[1], 4), round(oy + s_ * p[0] + c * p[1], 4)]
@@ -351,7 +362,7 @@ def plan_view(sess, scene: dict, *, hz: float = 5.0) -> Optional[dict]:
         cam = {"xy": to_sim(C), "height_m": round(float(C[2]), 3), "look_xy": [round(c * f[0] - s_ * f[1], 3), round(s_ * f[0] + c * f[1], 3)],
                "note": "phone position from the board pose (one view; calibration reuse flagged)"}
     return {"frame": "simulator (m)", "real": real, "camera": cam,
-            "origin_from": "tray centre (capture) onto the scene's tray; yaw from the session placement",
+            "origin_from": origin_from,
             "note": "Your objects' paths come from one camera and the table-plane assumption: approximate, not measured."}
 
 
@@ -376,6 +387,7 @@ class Source:
     spend: Optional[dict] = None
     calibration: dict = field(default_factory=dict)
     placement_note: str = ""
+    placement_file: Optional[Path] = None   # json with origin_xy_m + yaw_deg (simulator placement of the table frame)
 
 
 D1_ROOT = Path("/workspace/mirror-team/v2/phone_real")
@@ -398,12 +410,12 @@ def d1_source(root: Path = D1_ROOT, cloud: Path = D1_CLOUD) -> Source:
     p2 = rd / "phase2"
     loc = root / "out" / "phase2"
     pick = lambda name: (loc / name) if (loc / name).exists() else (p2 / name)
-    ev = {p.stem.split("_1")[0].replace("_12.5s", ""): p for p in sorted((rd / "evidence").glob("*_12.5s.jpg"))} if (rd / "evidence").exists() else {}
+    ev = {p.stem: p for p in sorted((rd / "evidence").glob("*.jpg"))} if (rd / "evidence").exists() else {}
     twin = {}
-    tdir = cloud / "twin"
-    if tdir.exists():
-        for p in sorted(tdir.glob("*.mp4")):
-            twin[p.stem] = p
+    for tdir in (cloud / "twin", Path("/workspace/mirror-team/v2/night/twin/D1")):
+        if tdir.exists() and not twin:
+            for p in sorted(tdir.glob("*.mp4")):
+                twin[p.stem] = p
     spend = None
     if (rd / "spend.json").exists():
         try:
@@ -425,43 +437,48 @@ def d1_source(root: Path = D1_ROOT, cloud: Path = D1_CLOUD) -> Source:
         notes=["Recorded 3 Nov 2026 on one iPhone 17 Pro; measurements by ruler.",
                "Simulated proxies stand in for your objects: a 4 cm cube for the 11 cm carton, a thicker marker; placement is approximate."],
         spend=spend, calibration=intr,
-        placement_note="Layout centred on the simulator table by software (auto_layout_centred); positions approximate.")
+        placement_note="Layout centred on the simulator table by software (auto_layout_centred); positions approximate.",
+        placement_file=pick("phase2_summary.json"))
 
 
 def pipeline_source(d: Path, capture_id: Optional[str] = None) -> Source:
-    """A ``mirror.capture.real_run`` output directory. File names follow the pipeline's
-    manifest (``manifest.json`` maps roles to files) with conventional fallbacks."""
+    """A ``mirror.capture.real_run`` output directory (its manifest.json and page.json; see
+    /workspace/mirror-team/v2/night/status/pipeline.md for the contract)."""
     d = Path(d)
-    man = {}
-    for name in ("manifest.json", "page.json", "table_inputs.json"):
-        if (d / name).exists():
-            man = json.loads((d / name).read_text())
-            break
-    files = man.get("files") or man
+    man = json.loads((d / "manifest.json").read_text()) if (d / "manifest.json").exists() else {}
+    page = json.loads((d / (man.get("page") or "page.json")).read_text()) if (d / (man.get("page") or "page.json")).exists() else {}
 
-    def f(key, *fallbacks) -> Optional[Path]:
-        for cand in ([files.get(key)] if isinstance(files.get(key), str) else []) + list(fallbacks):
-            if cand and (d / cand).exists():
-                return d / cand
+    def f(rel: Optional[str], *fallbacks: str) -> Optional[Path]:
+        for cand in ([rel] if rel else []) + list(fallbacks):
+            p = Path(cand) if Path(cand).is_absolute() else d / cand
+            if p.exists():
+                return p
         return None
 
-    spec = f("spec", "spec.json", "proposal/spec.json", "spec_intent.json", "phase2/spec_intent.json")
-    spec_source = man.get("spec_source") or ("person_stated_intent" if spec and "intent" in spec.name else "inferred")
-    ev_dir = f("evidence_dir", "evidence")
-    ev = {p.stem: p for p in sorted(ev_dir.glob("*.jpg"))} if ev_dir else {}
-    tw_dir = f("twin_dir", "twin")
-    twin = {p.stem: p for p in sorted(tw_dir.glob("*.mp4"))} if tw_dir else {}
-    session = f("session", "session.json", "capture/session.json")
-    take = f("take", "take.mov", "take.mp4", "TASK.MOV")
+    session = f(man.get("session"), "session_answered.json", "session.json")
+    take = f(man.get("take"), "take.mov", "take.mp4")
     if session is None or take is None:
-        raise SystemExit(f"{d}: needs a session.json and the take clip (manifest keys 'session', 'take')")
-    cands = man.get("corrections") or DEFAULT_CANDIDATES
-    return Source(capture_id=capture_id or man.get("capture_id") or d.name, title=man.get("title") or "Your table",
-                  session=session, take=take, tracks=f("tracks", "tracks.json.gz", "tracks_top_sam.json.gz"),
-                  scene=f("scene", "scene.json", "phase2/scene.json"), spec=spec, spec_source=spec_source,
-                  evidence=ev, twin=twin, sim_video=f("sim_video", "sim_run.mp4"), candidates=cands,
-                  labels=man.get("labels") or [], notes=man.get("notes") or [], spend=man.get("spend"),
-                  calibration=man.get("calibration") or {}, placement_note=man.get("placement_note") or "")
+        raise SystemExit(f"{d}: needs the session and the take clip (manifest keys 'session', 'take')")
+    task = page.get("task") or {}
+    gate_ok = bool(task.get("gate_passed"))
+    spec = f(None, "spec.json", "proposal/spec.json")
+    spec_source = "inferred" if gate_ok and "stated" not in str(task.get("spec_source", "")) else "person_stated_intent"
+    cands = [{"id": c["id"], "text": c.get("compile_text") or c.get("text") or c.get("label"), "label": c.get("label"),
+              "why": c.get("why")} for c in page.get("correction_candidates") or []] or list(DEFAULT_CANDIDATES)
+    twin_dir = f("twin")
+    spend = page.get("spend_usd")
+    return Source(capture_id=capture_id or man.get("capture_id") or d.parent.name if d.name == "out" else (capture_id or d.name),
+                  title=man.get("title") or "Your table",
+                  session=session, take=take, tracks=f(man.get("tracks"), "tracks_full.json.gz", "tracks_proxy.json.gz"),
+                  scene=f(man.get("scene"), "scene/scene.json", "scene.json"), spec=spec, spec_source=spec_source,
+                  evidence={p.stem: p for p in sorted((d / "evidence").glob("*.jpg"))} if (d / "evidence").exists() else {},
+                  twin={p.stem: p for p in sorted(twin_dir.glob("*.mp4"))} if twin_dir else {},
+                  sim_video=f("run/sim_run.mp4"), candidates=cands, labels=man.get("labels") or page.get("labels") or [],
+                  notes=[page["headline"]] if page.get("headline") else [],
+                  spend={"spent_usd": spend, "cap_usd": page.get("cap_usd")} if spend is not None else None,
+                  calibration=page.get("calibration") or {}, placement_file=f(man.get("table_to_sim"), "table_to_sim.json"),
+                  placement_note=(json.loads(f(man.get("table_to_sim"), "table_to_sim.json").read_text()).get("label")
+                                  if f(man.get("table_to_sim"), "table_to_sim.json") else ""))
 
 
 # ------------------------------------------------------------------ build
@@ -535,8 +552,13 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
     elif (media / "take.mp4").exists():
         take_info = probe(media / "take.mp4")
     timings["video_s"] = round(time.time() - t0, 1)
+    def evidence_for(label: str) -> Optional[Path]:
+        keys = [k for k in src.evidence if k == label or k.startswith(label + "_")]
+        keys.sort(key=lambda k: (k != label, "12.5" not in k and "seed" not in k, "start" in k or "end" in k, k))
+        return src.evidence[keys[0]] if keys else None
+
     for o in objects:
-        img = src.evidence.get(o["label"])
+        img = evidence_for(o["label"])
         if img and img.exists():
             name = f"evidence_{o['label']}.jpg"
             small_jpeg(img, media / name)
@@ -573,7 +595,11 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
             robot["scene"] = scene.model_dump(mode="json")
             robot["placement_note"] = src.placement_note or scene.notes
         try:
-            plan = plan_view(sess, scene.model_dump(mode="json"))
+            pl = None
+            if src.placement_file and src.placement_file.exists():
+                pj = json.loads(src.placement_file.read_text())
+                pl = pj.get("placement") if isinstance(pj.get("placement"), dict) and "origin_xy_m" in pj.get("placement", {}) else pj
+            plan = plan_view(sess, scene.model_dump(mode="json"), placement=pl)
         except Exception as exc:  # the page works without it
             log(f"plan view skipped: {exc}")
             plan = None
@@ -583,8 +609,22 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
         shutil.copyfile(src.scene, out / "scene.json")
         shutil.copyfile(src.spec, out / "spec.json")
 
+    # The phone that filmed the table, for viewers that can draw it (viz3d's mirror.viz.capture_view, when installed).
+    capture_view = None
+    try:
+        import importlib.util
+        if importlib.util.find_spec("mirror.viz.capture_view") and src.placement_file:
+            cv_dir = out / "capture"
+            cmd = [sys.executable, "-m", "mirror.viz.capture_view", "--session", str(src.session), "--placement", str(src.placement_file),
+                   "--video", str(src.take), "--t", str(round(min(12.5, (take_info or {}).get("duration_s") or 12.5), 2)), "--out", str(cv_dir)]
+            _run(cmd, timeout=300)
+            if (cv_dir / "capture_view.json").exists():
+                capture_view = "capture/capture_view.json"
+    except Exception as exc:  # optional: the page works without it
+        log(f"capture view skipped: {exc}")
+
     table = {
-        "format": TABLE_FORMAT, "id": src.capture_id, "title": src.title,
+        "format": TABLE_FORMAT, "id": src.capture_id, "capture_view": capture_view, "title": src.title,
         "built_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "labels": labels_for(sess, src.labels), "notes": src.notes,
         "synthetic": bool(sess.synthetic), "evidence_kind": sess.evidence_kind, "session_id": sess.session_id,
         "video": {"file": "media/take.mp4", **take_info} if take_info else None,
