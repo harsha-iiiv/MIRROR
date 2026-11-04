@@ -1,0 +1,5 @@
+ur10e.glb, ur5e.glb: display meshes decimated from the MuJoCo Menagerie models
+universal_robots_ur10e and universal_robots_ur5e (https://github.com/google-deepmind/mujoco_menagerie),
+derived from the ROS-Industrial ur_e_description URDF. Copyright 2018 ROS Industrial Consortium.
+License: BSD-3-Clause (full text in ur10e.LICENSE / ur5e.LICENSE). Built by scripts/viz_build_arm_meshes.py.
+"Universal Robots", "UR5e" and "UR10e" are trademarks of Universal Robots A/S; used to identify the model only.

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MIRROR · 3D workspace</title>
+  <link rel="stylesheet" href="../../styles.css">
+  <script type="importmap">
+  { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
+  </script>
+  <script src="../theme.js"></script>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--bg); color: var(--text); font-family: var(--font); }
+    header { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+    header h1 { font-size: var(--fs-lg); margin: 0; font-weight: 600; }
+    header .sub { color: var(--muted); font-size: var(--fs-sm); }
+    header .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    header .tag { font-size: var(--fs-xs); border: 1px solid var(--line-strong); border-radius: var(--r-pill); padding: 1px 8px; color: var(--muted); }
+    header .tag.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); }
+    .stage { position: relative; min-height: 0; }
+    #viewer { position: absolute; inset: 0; background: var(--viewer); }
+    .tools { position: absolute; top: 10px; right: 10px; display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 70%; z-index: 4; }
+    .tools button { font: 500 var(--fs-xs)/1 var(--font); color: var(--text); background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: var(--r-pill); padding: 5px 9px; cursor: pointer; }
+    .tools button[aria-pressed="true"] { background: var(--text); color: var(--surface); border-color: var(--text); }
+    .tools .sep { width: 8px; }
+    footer { border-top: 1px solid var(--line); padding: 8px 14px 10px; display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 10px; align-items: center; }
+    footer button { font: 500 var(--fs-sm)/1 var(--font); border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); border-radius: var(--r-pill); padding: 6px 12px; cursor: pointer; }
+    .legend { position: absolute; left: 10px; bottom: 10px; z-index: 4; display: flex; gap: 12px; flex-wrap: wrap; font-size: var(--fs-xs); color: var(--muted); background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: var(--r-md); padding: 5px 9px; max-width: calc(100% - 20px); }
+    .legend i { display: inline-block; width: 16px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+    .caption { position: absolute; left: 10px; top: 10px; z-index: 4; max-width: 46%; font-size: var(--fs-xs); color: var(--muted); background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: var(--r-md); padding: 6px 9px; }
+    .caption b { color: var(--text); font-weight: 600; }
+    @media (max-width: 560px) { .legend span.long { display: none; } header .tags { display: none; } .caption:not(.open) { max-height: 2.9em; overflow: hidden; cursor: pointer; } .caption:not(.open)::after { content: ' (tap for more)'; } .tools { max-width: 100%; left: 10px; right: 10px; top: auto; bottom: 10px; justify-content: flex-start; } .legend { bottom: 54px; } .caption { max-width: calc(100% - 20px); } }
+  </style>
+</head>
+<body>
+  <header><h1 id="title">MIRROR · 3D workspace</h1><span class="sub" id="sub"></span><span class="tags" id="tags"></span></header>
+  <div class="stage">
+    <div id="viewer" tabindex="0" aria-label="3D workspace. Drag to orbit, scroll to zoom. Press ? for keyboard shortcuts."></div>
+    <div class="caption" id="caption" hidden></div>
+    <div class="tools" id="tools"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <footer><button id="play">Play</button><button id="help" title="Keyboard shortcuts">?</button><div id="tl"></div></footer>
+  <script type="module">
+    import { Viewer } from '../viewer.js';
+    const q = new URLSearchParams(location.search);
+    const data = q.get('data') || '../../data/';
+    const get = async (u) => { const r = await fetch(u); if (!r.ok) throw new Error(`${r.status} ${u}`); return r.json(); };
+    const el = document.getElementById('viewer');
+    const playBtn = document.getElementById('play');
+    const v = new Viewer(el, { quality: q.get('quality') || undefined, force2d: q.has('force2d'), onTick: (t, p) => { playBtn.textContent = p ? 'Pause' : 'Play'; } });
+    window.__lab = { v, ready: false };
+    v.mountTimeline?.(document.getElementById('tl'));
+    playBtn.onclick = () => v.toggle();
+    document.getElementById('help').onclick = () => { v.hud.help.hidden = !v.hud.help.hidden; };
+    window.addEventListener('keydown', (e) => { if (document.activeElement === document.body || document.activeElement === el) { if (v.handleKey?.(e, true)) e.preventDefault(); } });
+
+    async function main() {
+      let session = null;
+      try { session = await get(data + 'session.json'); } catch (e) { console.warn('no session.json', e); }
+      if (session?.specs) v.setSpecs?.(session.specs);
+      // ?pack=DIR/ : a capture pack written by scripts/viz_export_capture.py (rollouts + capture view).
+      const pack = q.get('pack');
+      const run = q.get('run') || (pack ? 'after' : 'r003');
+      const rolloutUrl = (id) => new URL(pack ? `${pack}rollouts/${encodeURIComponent(id)}.json` : `${data}rollouts/${encodeURIComponent(id)}.json`, location.href).href;
+      const p = await get(rolloutUrl(run));
+      const ghostId = q.has('ghost') ? q.get('ghost') : (p.ghost_run || (run === 'r003' ? 'r002' : ''));
+      const g = ghostId ? await get(rolloutUrl(ghostId)) : null;
+      let spec = null;
+      if (q.get('spec')) spec = await get(q.get('spec'));
+      if (p.spec) spec = p.spec;
+      const capUrl = q.get('capture') || (p.capture_view ? new URL(p.capture_view, rolloutUrl(run)).href : '');
+      if (capUrl) { const cv = await get(capUrl); await v.setCapture(cv, capUrl.replace(/[^/]*$/, '')); showCapture(cv); }
+      // ?recheck=V: show this run judged by its re-check under spec version V (old run, new rule).
+      let report = null;
+      if (q.get('recheck') && p.recheck_report) { report = p.recheck_report; spec = p.recheck_spec || spec; }
+      else if (q.get('recheck') && session?.rechecks) {
+        const rc = session.rechecks.find((x) => x.rollout_id === run && String(x.spec_version) === q.get('recheck'));
+        if (rc) report = rc.report;
+      }
+      v.loadRollout(p, { ghost: g, spec, report, sceneState: p.scene || null });
+      const rep = report || p.report || {};
+      document.getElementById('title').textContent = `MIRROR · ${p.id || run}`;
+      document.getElementById('sub').textContent = `${rep.condition || ''} · spec v${rep.spec_version ?? '?'} · ${rep.status || ''}` + (g ? ` · ghost: ${g.id} (v${g.report?.spec_version ?? '?'})` : '');
+      const tags = [...(p.labels || []), ...(capUrl ? [] : ['simulation (MuJoCo)'])];
+      document.getElementById('tags').innerHTML = tags.map((t) => `<span class="tag ${/flag|approx|one camera|proxies|develop/i.test(t) ? 'warn' : ''}">${t}</span>`).join('');
+      tools(!!capUrl);
+      legend(!!g);
+      const t0 = q.get('t');
+      if (t0) v.setTime(parseFloat(t0)); else if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !q.has('still')) v.play();
+      if (q.get('view')) { v.setView(q.get('view'), { instant: true }); v.onViewChange?.(); }
+      if (q.get('hover')) { v._hoverName = q.get('hover'); v._updateMeasure(); const c = v.hud.card; c.style.left = '24px'; c.style.top = '70px'; }
+      if (q.has('help')) v.hud.help.hidden = false;
+      window.__lab.ready = true;
+    }
+    function showCapture(cv) {
+      const c = document.getElementById('caption');
+      c.hidden = false;
+      c.innerHTML = `<b>Your table, from your phone.</b> ${cv.caption || ''}`;
+      c.onclick = () => c.classList.toggle('open');
+    }
+    function tools(hasCap) {
+      const T = document.getElementById('tools');
+      const views = [['follow', 'Follow'], ['3d', '3D'], ['top', 'Top'], ['side', 'Side']].concat(hasCap ? [['phone', 'Phone view']] : []);
+      const opts = [['rules', 'Rules'], ['ghost', 'Ghost'], ['trace', 'Paths'], ['measure', 'Measure'], ['labels', 'Labels']].concat(hasCap ? [['table', 'Real table']] : []);
+      const draw = () => {
+        const o = v.getOptions();
+        T.innerHTML = '';
+        for (const [k, l] of views) { const b = document.createElement('button'); b.textContent = l; b.setAttribute('aria-pressed', v.view === k); b.onclick = () => { v._userMoved = true; v.setView(k); draw(); }; T.appendChild(b); }
+        const s = document.createElement('span'); s.className = 'sep'; T.appendChild(s);
+        for (const [k, l] of opts) { const b = document.createElement('button'); b.textContent = l; b.setAttribute('aria-pressed', !!o[k]); b.onclick = () => { v.setOptions({ [k]: !o[k] }); draw(); }; T.appendChild(b); }
+      };
+      v.onViewChange = draw; v.onOptionsChange = draw;
+      draw();
+    }
+    function legend(hasGhost) {
+      const L = document.getElementById('legend');
+      const vm = v.getState?.().verdictMode;
+      L.innerHTML = (vm === 'verdict'
+        ? `<span><i style="background:var(--accent)"></i>path: checker verdict OK</span><span class="long"><i style="background:var(--warn)"></i>advisory (rule not enforced in this version)</span><span><i style="background:var(--bad)"></i>violated</span>`
+        : `<span><i style="background:var(--accent)"></i>path: within tilt tolerance</span><span><i style="background:var(--bad)"></i>over</span>`)
+        + (hasGhost ? `<span><i style="background:var(--muted);opacity:.5"></i>ghost: previous run, same time</span>` : '')
+        + `<span class="long">beads drawn enlarged</span><span class="long">press ? for keys</span>`;
+    }
+    main().catch((e) => { console.error(e); document.getElementById('sub').textContent = 'Failed to load: ' + e.message; window.__lab.error = String(e); });
+  </script>
+</body>
+</html>
