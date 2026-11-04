@@ -94,3 +94,30 @@ are capped, origins are checked, and `GET /api/health` reports the limits; see
 `mirror/studio/sessions.py`. A static export can switch to a live server when its
 `config.js` names one (`apiBase`); the switch is kept in the URL as `?live=1`.
 Deployment steps and every setting: `deploy/README.md`.
+
+
+## "Your table": a real phone capture, start to finish
+
+The `Your table` step (top bar, or `?step=table&ts=watch|moments|confirm|task|robot|correct|compare`) shows one
+real capture as a guided story: the phone video with the tracked SAM outlines (objects light up while carried) and
+event lanes, the moments MIRROR found, what the person confirmed, the task (or the capture gate's refusal, verbatim,
+and the person's stated task, labelled as such), the robot run on that layout (3D, a top view over the rectified
+table with the person's carry paths, the robot's paths and the phone's position, and the twin films when present),
+then one correction: compiled into a scoped rule, the old run re-checked under it, and the robot run again, with a
+re-check table, a before/after chart and the plan. A correction no plan can satisfy is shown as a refusal with the
+planner's reason; one the compiler cannot apply as written comes back as its question.
+
+Build the data (no model calls; corrections are compiled by the offline rules and run on this machine):
+
+    python -m mirror.studio.real_table d1 --out data/table/D1                       # the D1 development capture
+    python -m mirror.studio.real_table pipeline OUT --id <id> --out data/table/<id>  # a mirror.capture.real_run output
+
+Ship it with a site: `scripts/export_static.py ... --table data/table/<id>`, or add it to an existing site with
+`scripts/export_static.py --add-tables-to SITE --table data/table/<id>`. `data/table/` is not committed (personal
+footage). The live server serves `data/table` (or `MIRROR_TABLE_DIR`) at `/data/table` and adds
+`POST /api/table/{id}/correct` (typed, or spoken through the existing push-to-talk) with `GET /api/table/{id}/live/{name}`
+for the runs it makes; those use the server's interpreter (a model only when the server has one).
+
+What it does not claim: the outlines and carries come from one camera; positions on the table are approximate; the
+robot is simulated on proxies sized from the person's measurements; every label the capture carries (real footage,
+one camera, calibration flagged, development clip) is shown on every step.
