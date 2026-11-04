@@ -70,3 +70,47 @@ def test_table_flow(site, width):
         assert pg.evaluate("() => document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 1
         b.close()
     assert not errors, errors
+
+
+
+def _free_port():
+    import socket
+    s = socket.socket(); s.bind(("127.0.0.1", 0)); p = s.getsockname()[1]; s.close(); return p
+
+
+def test_table_live_typed_correction(tmp_path):
+    """On the live server a typed correction is compiled, re-checked and planned on the capture's layout.
+    9 cm cannot be kept (the mug starts 6.3 cm from the divider), so MIRROR refuses with the planner's reason."""
+    import subprocess, sys, time
+    httpx = pytest.importorskip("httpx")
+    if not (TABLE / "scene.json").exists():
+        pytest.skip("build a table first: python -m mirror.studio.real_table d1 --out data/table/D1")
+    port = _free_port()
+    env = {**os.environ, "PYTHONPATH": str(ROOT), "MIRROR_STUDIO_BACKEND": "live", "MIRROR_LLM_MODE": "offline",
+           "MIRROR_STUDIO_RUNTIME": str(tmp_path / "rt"), "MIRROR_TABLE_DIR": str(TABLE.parent)}
+    srv = subprocess.Popen([sys.executable, "-m", "uvicorn", "mirror.studio.app:app", "--host", "127.0.0.1", "--port", str(port)],
+                           cwd=ROOT, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        for _ in range(240):
+            try:
+                if httpx.get(f"http://127.0.0.1:{port}/api/health", timeout=1).status_code == 200:
+                    break
+            except Exception:
+                time.sleep(0.5)
+        with pw.sync_playwright() as p:
+            b = p.chromium.launch()
+            pg = b.new_page(viewport={"width": 1280, "height": 900})
+            errors = []
+            pg.on("pageerror", lambda e: errors.append(str(e)))
+            pg.goto(f"http://127.0.0.1:{port}/?step=table&table={TABLE.name}&ts=correct", wait_until="networkidle")
+            pg.wait_for_selector(".yt-say.live input", timeout=60000)
+            pg.fill(".yt-say.live input", "Keep the mug at least 9 cm away from the divider while carrying it.")
+            pg.click(".yt-say.live .btn.primary")
+            pg.wait_for_selector(".yt-recheck", timeout=240000)
+            side = pg.locator(".yt-side").inner_text()
+            assert "refuses to run it" in side and "closer than the 0.09 m" in side
+            assert "not run" in side and "broken" in side
+            b.close()
+        assert not errors, errors
+    finally:
+        srv.terminate(); srv.wait(10)
