@@ -1,0 +1,18 @@
+{
+ "name": "mirror-night-motion",
+ "private": true,
+ "version": "0.0.0",
+ "scripts": {},
+ "dependencies": {
+  "@fontsource/inter": "^5.3.0",
+  "@fontsource/jetbrains-mono": "^5.3.0",
+  "@react-three/fiber": "8.17.10",
+  "@remotion/cli": "4.0.540",
+  "@remotion/renderer": "4.0.540",
+  "@remotion/three": "4.0.540",
+  "react": "18.3.1",
+  "react-dom": "18.3.1",
+  "remotion": "4.0.540",
+  "three": "0.169.0"
+ }
+}
