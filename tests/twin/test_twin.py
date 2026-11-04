@@ -185,23 +185,52 @@ def test_clean_plate_and_stream(tmp_path):
     assert abs(int(plate.image[80, 40, 0]) - 90) < 12          # no hand in the plate
 
 
-def test_pipeline_discovery(tmp_path):
+def _load_cli():
     import importlib.util
     spec = importlib.util.spec_from_file_location("twin_render", Path(__file__).resolve().parents[2] / "scripts" / "twin_render.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
+    return mod
+
+
+def test_pipeline_discovery_real_run_manifest(tmp_path):
+    mod = _load_cli()
+    d = tmp_path / "out"
+    for sub in ("run", "correct"):
+        (d / sub).mkdir(parents=True)
+    for p in (d / "session.json", d / "session_answered.json", d / "run" / "rollout.json", d / "tracks_full.json.gz",
+              d / "correct" / "rollout_after.json"):
+        p.write_text("{}")
+    (d / "run" / "report.json").write_text(json.dumps({"rule_results": [{"rule_id": "g1"}]}))
+    (d / "correct" / "report_after.json").write_text(json.dumps({"rule_results": [{"rule_id": "g1"}, {"rule_id": "c_new"}]}))
+    (d / "correct" / "recheck_before.json").write_text(json.dumps({"status": "constraint_violated", "violations": [{"peak": 0.045}]}))
+    (d / "table_to_sim.json").write_text(json.dumps({"origin_xy_m": [0.1, 0.0], "yaw_deg": 0.0, "source": "x"}))
+    take = tmp_path / "elsewhere" / "take.MOV"
+    take.parent.mkdir()
+    take.write_text("")
+    (d / "manifest.json").write_text(json.dumps({
+        "take": str(take), "session": "session.json", "tracks": "tracks_full.json.gz", "table_to_sim": "table_to_sim.json",
+        "rollouts": {"run": "run/rollout.json"}, "labels": ["Real phone footage"],
+        "corrections": [{"name": "mug_clearance", "label": "Keep the mug 6 cm clear", "rehearsal": True,
+                         "rollout": "correct/rollout_after.json"}]}))
+    cfg = mod.from_pipeline(d, SimpleNamespace(video=None, correction=None))
+    assert cfg["session"] == d / "session_answered.json"                  # the answered session wins
+    assert cfg["video"] == take and cfg["out"] == d / "twin"
+    assert [r[0] for r in cfg["rollouts"]] == ["before", "after"]
+    assert cfg["rollouts"][1][1] == d / "correct" / "rollout_after.json"
+    assert cfg["placement"]["origin_xy_m"] == [0.1, 0.0]
+    corr = cfg["correction"]
+    assert corr["text"] == "Keep the mug 6 cm clear" and corr["recheck"]["violations"][0]["peak"] == 0.045
+    assert corr["diff"] == [{"target_id": "c_new"}]
+    assert cfg["after_labels"] == ["Rehearsal correction, not chosen by you"] and cfg["labels"] == ["Real phone footage"]
+
+
+def test_pipeline_discovery_without_correction(tmp_path):
+    mod = _load_cli()
     d = tmp_path / "out"
     (d / "run").mkdir(parents=True)
-    (d / "corrections" / "mug_clearance").mkdir(parents=True)
-    for p in (d / "session.json", d / "run" / "rollout.json", d / "tracks_full.json.gz",
-              d / "corrections" / "mug_clearance" / "rollout.json", d / "take.MOV"):
+    for p in (d / "session.json", d / "run" / "rollout.json"):
         p.write_text("{}")
-    (d / "table_to_sim.json").write_text(json.dumps({"origin_xy_m": [0.1, 0.0], "yaw_deg": 0.0}))
-    (d / "corrections" / "mug_clearance" / "correction.json").write_text(json.dumps({"text": "keep 6 cm"}))
-    (d / "manifest.json").write_text(json.dumps({"take": "take.MOV"}))
-    args = SimpleNamespace(video=None, correction=None)
-    cfg = mod.from_pipeline(d, args)
-    assert cfg["session"] == d / "session.json" and cfg["video"] == d / "take.MOV"
-    assert [r[0] for r in cfg["rollouts"]] == ["before", "after"]
-    assert cfg["placement"]["origin_xy_m"] == [0.1, 0.0] and cfg["correction"]["text"] == "keep 6 cm"
-    assert cfg["out"] == d / "twin"
+    cfg = mod.from_pipeline(d, SimpleNamespace(video=Path("/x/take.MOV"), correction=None))
+    assert cfg["rollouts"] == [("run", d / "run" / "rollout.json")] and cfg["correction"] is None
+    assert cfg["video"] == Path("/x/take.MOV") and cfg["placement"] is None

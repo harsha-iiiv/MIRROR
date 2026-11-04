@@ -326,6 +326,7 @@ class TwinJob:
     title: str = "MIRROR"
     correction: Optional[dict] = None       # {text, diff:[{target_id}], old_run_recheck|recheck:{violations:[...]}}
     after_labels: list = field(default_factory=list)   # labels for the before/after film only
+    intro_s: float = 2.0                    # your table with your objects, dissolving to the simulator's stand-ins
 
 
 def run(job: TwinJob, log=print) -> dict:
@@ -354,7 +355,7 @@ def run(job: TwinJob, log=print) -> dict:
     codes = [b.code for b in blocking]
     if "recalibration_required" in codes or (s.recalibration and len(s.recalibration)):
         labels.append("Calibration reuse flagged")
-    labels += list(job.labels)
+    labels = list(dict.fromkeys(labels + [x for x in job.labels if x.lower() not in {l.lower() for l in labels}]))
     caption = CAPTION_BASE + ("" if len(s.intrinsics) == 1 else "s") + \
         (", calibration reuse flagged" if "Calibration reuse flagged" in labels else "") + \
         ". Simulated gripper and proxies, not your objects."
@@ -569,7 +570,30 @@ def run(job: TwinJob, log=print) -> dict:
     stills = []
     hidden_max = 0
     rates = []
+    n_intro = int(job.intro_s * job.fps)
     try:
+        if n_intro:
+            f0 = pb.at(frames[0].t)
+            ar0, _ = tr_phone.composite(plate.image.copy(), f0, occluders=occluders)
+            td0, _ = tr_top.composite(td_plate.copy(), f0, shadow_strength=0.6)
+            und0 = cv2.undistort(start_img, cam.K, cam.dist)
+            td_real = cv2.warpPerspective(und0, Hm, (vc.width, vc.height), flags=cv2.WARP_INVERSE_MAP | cv2.INTER_LINEAR,
+                                          borderMode=cv2.BORDER_CONSTANT, borderValue=(28, 28, 30))
+            T0 = tmap.real(0.0)
+            for i in range(n_intro):
+                u = min(1.0, max(0.0, (i / job.fps - 0.35 * job.intro_s) / (0.5 * job.intro_s)))
+                u = 0.5 - 0.5 * math.cos(math.pi * u)
+                mix = lambda a, b_: np.clip(a.astype(np.float32) * (1 - u) + b_.astype(np.float32) * u + 0.5, 0, 255).astype(np.uint8)
+                st0 = ["your objects", "become simulator stand-ins"] if u < 0.5 else ["simulator stand-ins", "sized from your measurements"]
+                ov = TX.panel_label(mix(start_img, ar0), "The robot on your table", "seen from your phone", st0, caption, labels)
+                w_ov.write(ov)
+                hp = TX.panel_label(resize(start_img, (pw, ph)), "Your hands", "your video", [f"t = {ts:4.1f} s"], None, None, small=True)
+                rp = TX.panel_label(resize(mix(start_img, ar0), (pw, ph)), "The robot on your table", "simulated", st0, None, None, small=True)
+                tdp = TX.topdown_panel(mix(td_real, td0), (492, ph), "Table twin", "top-down, rectified from your phone", ppm)
+                w_sbs.write(TX.canvas([hp, rp], (2 * pw + 3 * 8, CH), head, job.title + " · your table", caption))
+                w_3p.write(TX.canvas([hp, rp, tdp], (CW, CH), head, job.title + " · your table, your phone, the robot", caption))
+            cv2.imwrite(str(out / "stills" / "intro_objects.png"), cv2.cvtColor(start_img, cv2.COLOR_RGB2BGR))
+            cv2.imwrite(str(out / "stills" / "intro_standins.png"), cv2.cvtColor(ar0, cv2.COLOR_RGB2BGR))
         for i in range(n_out):
             tau = i / job.fps
             s_now = min(sim_end, tmap.sim(tau))
@@ -609,7 +633,7 @@ def run(job: TwinJob, log=print) -> dict:
         for w in (w_ov, w_sbs, w_3p):
             w.close()
     timings["main_render_s"] = round(time.time() - t0, 1)
-    timings["main_frames"] = n_out
+    timings["main_frames"] = n_out + n_intro
 
     # -- before / after (two rollouts on the same table)
     ba = None
