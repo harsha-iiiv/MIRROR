@@ -392,6 +392,8 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
     if (vw.view !== want) { vw.setView(want); setOpts((o) => ({ ...o })); }
   }, [ctx.step, display.kind]);
   useEffect(() => { viewerRef.current?.setOptions(opts); }, [opts]);
+  // viz3d: rule geometry needs the spec each run was checked under.
+  useEffect(() => { viewerRef.current?.setSpecs?.(snap.specs || []); }, [snap.specs]);
   useEffect(() => { if (viewerRef.current) viewerRef.current.speed = speed; }, [speed]);
 
   // Load what the stage should show.
@@ -427,7 +429,8 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
         const ev = display.kind === 'demo' ? demoEvidence(snap) : null;
         const hz = snap.demo?.sample_hz || 0;
         const tiltStatus = ev && hz && p.t ? (i) => tiltStatusAt(ev, v.traceObject || '', Math.round(p.t[i] * hz)) : null;
-        v.loadRollout(p, { ghost: g, sceneState: p.scene || (display.kind === 'demo' ? snap.demo?.scene : null), tiltStatus });
+        // viz3d: `display.report` (e.g. a re-check of an old run under the new rule) colours its frames.
+        v.loadRollout(p, { ghost: g, sceneState: p.scene || (display.kind === 'demo' ? snap.demo?.scene : null), tiltStatus, report: display.report || null });
         setPayload(p);
         setDur(v.duration());
         v.setTime(0);
@@ -481,7 +484,9 @@ function Stage({ ctx, viewerRef, opts, setOpts }) {
         ${loading ? html`<div class="v-loading" role="status">Loading recorded rollout ${loading.total ? `${Math.round((100 * loading.got) / loading.total)}%` : `${(loading.got / 1e6).toFixed(1)} MB`}
           <div class="progress"><div style=${`width:${loading.total ? (100 * loading.got) / loading.total : 30}%`}></div></div></div>` : ''}
         ${payload?.t?.length ? html`<div class="v-legend">
-          <span><i class="grad"></i><span class="long">container path by tilt: within ${15}° → over</span><span class="short">cup path by tilt</span></span>
+          ${viewerRef.current?.verdictMode === 'verdict'
+            ? html`<span><i style="background:var(--accent)"></i><span class="long">paths by the checker's verdict: OK</span><span class="short">verdict OK</span></span><span><i style="background:var(--warn)"></i>advisory</span><span><i style="background:var(--bad)"></i>violated</span>`
+            : html`<span><i class="grad"></i><span class="long">container path by tilt: within ${15}° → over</span><span class="short">cup path by tilt</span></span>`}
           ${viewerRef.current?.hasUnobservedTilt ? html`<span><i style="background:var(--faint)"></i>tilt not observed</span>` : ''}
           ${ghostOn && opts.ghost ? html`<span><i style="background:var(--faint)"></i><span class="long">${display.ghostLabel || ghostText(snap, display.ghost)}</span><span class="short">${display.ghostLabel || `before (v${(snap.rollouts || []).find((r) => r.id === display.ghost)?.spec_version ?? '?'})`}</span></span>` : ''}
           ${payload.beads_hidden ? html`<span>beads not recorded in demo trace</span>`
