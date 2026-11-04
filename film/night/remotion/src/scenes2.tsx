@@ -45,18 +45,18 @@ export const Run: React.FC<{dur: number; speed?: number; lead?: number; header?:
         <div style={{marginTop: 30, ...rise(f, 20)}}>
           {[
             ['sim time', `${simT > RUN_OLD.t[RUN_OLD.n - 1] ? RUN_OLD.t[RUN_OLD.n - 1].toFixed(1) : simT.toFixed(1)} s`],
-            ['phase', phaseText(RUN_OLD.phase[i])],
+            ['phase', phaseText(RUN_OLD.phase[i]) + ''],
             ['mug tilt', p ? `${tiltDeg(p).toFixed(1)}°` : '–'],
           ].map(([k, v]) => (
             <div key={k} style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderTop: `1px solid ${C.line}`}}>
-              <span style={{fontFamily: MONO, fontSize: 17, color: C.faint}}>{k}</span>
-              <span style={{fontFamily: MONO, fontSize: 22, color: C.text}}>{v}</span>
+              <span style={{fontFamily: MONO, fontSize: 19, color: C.faint}}>{k}</span>
+              <span style={{fontFamily: MONO, fontSize: 24, color: C.text}}>{v}</span>
             </div>
           ))}
         </div>
         <div style={{marginTop: 22, opacity: prog(f, (RUN_OLD.n / RUN_OLD.frame_hz / speed) * 30 + lead, 14)}}>
           <div style={{fontSize: 26, fontWeight: 600}}>Checker: success</div>
-          <div style={{fontFamily: MONO, fontSize: 17, color: C.muted, lineHeight: 1.7, marginTop: 6}}>
+          <div style={{fontFamily: MONO, fontSize: 20, color: C.muted, lineHeight: 1.7, marginTop: 6}}>
             <div>order mug → red box → marker ✓</div>
             <div>beads kept {RUN_OLD.beads[0][1]} / {RUN_OLD.beads[0][2]}</div>
             <div>max mug tilt carried {FILM.tilt[0]}°</div>
@@ -85,24 +85,24 @@ export const Sentence: React.FC<{dur: number}> = ({dur}) => {
   return (
     <Frame>
       <Header n="04 · ONE SENTENCE" title="Say what was wrong" x={96} y={64} />
-      <div style={{position: 'absolute', left: 96, top: 230, width: 1720}}>
+      <div style={{position: 'absolute', left: 96, top: 270, width: 1720}}>
         <div style={{fontFamily: MONO, fontSize: 18, color: C.faint, marginBottom: 12, ...rise(f, 4)}}>correction</div>
         <div style={{fontSize: 52, fontWeight: 500, letterSpacing: -0.6, lineHeight: 1.22, minHeight: 140, width: 1500, textWrap: 'balance'} as any}>
           “{shown}{typed ? '”' : <span style={{opacity: Math.floor(f / 8) % 2 ? 1 : 0.25, color: C.accent}}>▍</span>}
         </div>
       </div>
-      <div style={{position: 'absolute', left: 96, top: 470, width: 900, ...rise(f, tEnd + 10)}}>
+      <div style={{position: 'absolute', left: 96, top: 540, width: 900, ...rise(f, tEnd + 10)}}>
         <div style={{fontFamily: MONO, fontSize: 18, color: C.faint, marginBottom: 10}}>becomes one rule · {mc.rule_id}</div>
         <div style={{border: `1px solid ${C.accent}`, borderRadius: 14, padding: '6px 24px', background: C.accentSoft}}>
           {rows.map(([k, v], j) => (
             <div key={k} style={{display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: j ? `1px solid ${C.line}` : 'none', ...rise(f, tEnd + 14 + j * 4)}}>
-              <span style={{fontFamily: MONO, fontSize: 19, color: C.muted}}>{k}</span>
-              <span style={{fontFamily: MONO, fontSize: 22, color: C.text}}>{v}</span>
+              <span style={{fontFamily: MONO, fontSize: 20, color: C.muted}}>{k}</span>
+              <span style={{fontFamily: MONO, fontSize: 23, color: C.text}}>{v}</span>
             </div>
           ))}
         </div>
       </div>
-      <div style={{position: 'absolute', left: 1080, top: 500, width: 740, ...rise(f, tEnd + 40)}}>
+      <div style={{position: 'absolute', left: 1080, top: 570, width: 740, ...rise(f, tEnd + 40)}}>
         <div style={{fontSize: 30, lineHeight: 1.4}}>Specification v1 → v2: <span style={{color: C.accent}}>+1 constraint</span>.</div>
         <div style={{fontSize: 26, color: C.muted, lineHeight: 1.5, marginTop: 14}}>
           Goals, order and the other three rules are unchanged. The rule names the mug only, so the red box and marker keep their own paths.
@@ -199,7 +199,7 @@ export const Rejudge: React.FC<{dur: number; header?: boolean; tOld?: number; tN
         </div>
         <div style={{...rise(f, showOld + 8), marginTop: 24, paddingTop: 16, borderTop: `1px solid ${C.line}`}}>
           <div style={{fontSize: 40, fontWeight: 600}}>violated</div>
-          <div style={{fontFamily: MONO, fontSize: 19, color: C.muted, marginTop: 6, lineHeight: 1.6}}>
+          <div style={{fontFamily: MONO, fontSize: 21, color: C.muted, marginTop: 6, lineHeight: 1.6}}>
             closest {(FILM.old_clear_m * 100).toFixed(2)} cm at t = {FILM.old_clear_t.toFixed(2)} s<br />
             (solid shapes, MuJoCo state log)
           </div>
@@ -209,7 +209,7 @@ export const Rejudge: React.FC<{dur: number; header?: boolean; tOld?: number; tN
         </div>
         <div style={{...rise(f, showNew + 8), marginTop: 10}}>
           <div style={{fontSize: 40, fontWeight: 600, color: C.accent}}>satisfied</div>
-          <div style={{fontFamily: MONO, fontSize: 19, color: C.muted, marginTop: 6, lineHeight: 1.6}}>
+          <div style={{fontFamily: MONO, fontSize: 21, color: C.muted, marginTop: 6, lineHeight: 1.6}}>
             closest {(FILM.new_clear_m * 100).toFixed(2)} cm at t = {FILM.new_clear_t.toFixed(2)} s<br />
             red box {(FILM.unchanged.block_0[1] * 100).toFixed(1)} cm · marker {(FILM.unchanged.marker_0[1] * 100).toFixed(1)} cm: unchanged, out of scope
           </div>
@@ -232,7 +232,7 @@ export const Table: React.FC<{dur: number}> = ({dur}) => {
     ['nothing touches the divider', 'c_no_contact_divider'], ['NEW · mug ≥ 6 cm from the divider', 'c_keep_clearance_transport_cup'],
   ];
   const cell = (v: string, hi: boolean) => (
-    <span style={{fontFamily: MONO, fontSize: 19, color: v === 'violated' ? C.text : v === 'satisfied' ? (hi ? C.accent : C.muted) : C.faint,
+    <span style={{fontFamily: MONO, fontSize: 21, color: v === 'violated' ? C.text : v === 'satisfied' ? (hi ? C.accent : C.muted) : C.faint,
       fontWeight: v === 'violated' ? 600 : 400, textDecoration: v === 'violated' ? 'underline' : 'none', textUnderlineOffset: 5}}>{v === '—' ? 'not in v1' : v}</span>
   );
   const oth = FILM.others;
@@ -245,28 +245,28 @@ export const Table: React.FC<{dur: number}> = ({dur}) => {
     <Frame>
       <Header n="06 · WHAT CHANGED" title="Every rule, before and after" x={96} y={50} />
       <div style={{position: 'absolute', left: 96, top: 200, width: 1040}}>
-        <div style={{display: 'grid', gridTemplateColumns: '420px 190px 230px 190px', padding: '0 0 12px', ...rise(f, 6)}}>
-          {['rule', 'old run (v1)', 'old run re-judged (v2)', 'new run (v2)'].map((h) => <span key={h} style={{fontFamily: MONO, fontSize: 16, color: C.faint}}>{h}</span>)}
+        <div style={{display: 'grid', gridTemplateColumns: '440px 200px 260px 200px', padding: '0 0 12px', ...rise(f, 6)}}>
+          {['rule', 'old run (v1)', 'old run re-judged (v2)', 'new run (v2)'].map((h) => <span key={h} style={{fontFamily: MONO, fontSize: 18, color: C.faint}}>{h}</span>)}
         </div>
         {lines.map(([name, id], j) => {
           const last = id === 'c_keep_clearance_transport_cup';
           return (
-            <div key={id} style={{display: 'grid', gridTemplateColumns: '420px 190px 230px 190px', padding: '11px 0', borderTop: `1px solid ${last ? C.line2 : C.line}`, ...rise(f, 10 + j * 3)}}>
-              <span style={{fontSize: 23, color: last ? C.accent : C.text}}>{name}</span>
+            <div key={id} style={{display: 'grid', gridTemplateColumns: '440px 200px 260px 200px', padding: '13px 0', borderTop: `1px solid ${last ? C.line2 : C.line}`, ...rise(f, 10 + j * 3)}}>
+              <span style={{fontSize: 25, color: last ? C.accent : C.text}}>{name}</span>
               {cell(V_(R.old, id), false)}{cell(V_(R.rechecked, id), last)}{cell(V_(R.new, id), last)}
             </div>
           );
         })}
-        <div style={{fontFamily: MONO, fontSize: 17, color: C.faint, marginTop: 14, ...rise(f, 44)}}>
+        <div style={{fontFamily: MONO, fontSize: 19, color: C.faint, marginTop: 16, ...rise(f, 44)}}>
           beads kept {FILM.beads_old[0][1]}/{FILM.beads_old[0][2]} → {FILM.beads_new[0][1]}/{FILM.beads_new[0][2]} · max mug tilt {FILM.tilt[0]}° → {FILM.tilt[1]}° · {FILM.exec_s[0].toFixed(1)} s → {FILM.exec_s[1].toFixed(1)} s of robot time
         </div>
       </div>
-      <div style={{position: 'absolute', left: 1220, top: 200, width: 620}}>
+      <div style={{position: 'absolute', left: 1290, top: 200, width: 560}}>
         <div style={{fontFamily: MONO, fontSize: 16, color: C.faint, ...rise(f, 60)}}>three other sentences, same layout</div>
         {oth.map((o: any, j: number) => (
           <div key={o.id} style={{padding: '16px 0', borderTop: `1px solid ${C.line}`, marginTop: j ? 0 : 12, ...rise(f, 66 + j * 10)}}>
-            <div style={{fontSize: 24}}>“{o.text}”</div>
-            <div style={{fontFamily: MONO, fontSize: 17, color: C.muted, marginTop: 6}}>{say[o.id] ?? o.outcome}</div>
+            <div style={{fontSize: 25}}>“{o.text}”</div>
+            <div style={{fontFamily: MONO, fontSize: 19, color: C.muted, marginTop: 6}}>{say[o.id] ?? o.outcome}</div>
           </div>
         ))}
         <div style={{fontSize: 22, color: C.muted, marginTop: 18, lineHeight: 1.4, ...rise(f, 100)}}>A correction that changes nothing says so.</div>
@@ -319,6 +319,45 @@ export const Twin: React.FC<{dur: number}> = ({dur}) => {
       </div>
       <Caption at={50} x={820} y={740} w={960} size={30}>Approximate: one camera, calibration reuse flagged.</Caption>
       <Labels items={REAL_LABELS} x={820} y={952} />
+    </Frame>
+  );
+};
+
+// 5b · both runs on one clock: the old run as a ghost, the corrected run solid, inside the rule's clearance region
+export const Ghosts: React.FC<{dur: number; speed?: number; t0?: number; header?: boolean}> = ({dur, speed = 5, t0 = 4, header = true}) => {
+  const f = useCurrentFrame();
+  const simT = t0 + Math.max(0, (f - 20) / 30) * speed;
+  const i = Math.round(simT * 30);
+  const W = 1300, H = 820;
+  const camA: Cam = {pos: [0.56, 0.2, 1.08], look: [-0.16, -0.03, 0.04], fov: 36};
+  const camB: Cam = {pos: [0.53, -0.02, 1.1], look: [-0.16, -0.03, 0.04], fov: 36};
+  return (
+    <Frame>
+      <div style={{position: 'absolute', left: 60, top: 150, width: W, height: H, borderRadius: 18, overflow: 'hidden', boxShadow: `0 0 0 1px ${C.line}`}}>
+        <RobotScene width={W} height={H} run={RUN_NEW} i={Math.min(RUN_NEW.n - 1, i)} camA={camA} camB={camB} camP={prog(f, 0, 120)}
+          ribbon={[{body: 'cup_0', i0: 0, color: C.accent}]} ghost={{run: RUN_OLD, i: Math.min(RUN_OLD.n - 1, i), ribbon: '#e8e8e6'}}
+          clearance={{m: FILM.min_m, opacity: prog(f, 10, 20)}} grid />
+        <div style={{position: 'absolute', left: 16, top: 14, fontFamily: MONO, fontSize: 16, color: C.text, background: 'rgba(17,17,19,0.72)', padding: '4px 10px', borderRadius: 999}}>
+          MuJoCo · two recorded rollouts on one clock · replay {speed}× · sim {simT.toFixed(1)} s
+        </div>
+      </div>
+      {header && <Header n="05 · SAME LAYOUT, BOTH RUNS" title="The corrected run keeps its distance" x={60} y={50} />}
+      <div style={{position: 'absolute', left: 1410, top: 170, width: 440}}>
+        {[
+          ['ghost', 'old run (v1)', `closest ${(FILM.old_clear_m * 100).toFixed(2)} cm`, '#e8e8e6'],
+          ['solid', 'new run (v2)', `closest ${(FILM.new_clear_m * 100).toFixed(2)} cm`, C.accent],
+          ['box', 'divider + 6 cm on every side', 'the region the rule forbids', C.accent],
+        ].map(([k, a, b, col], j) => (
+          <div key={k} style={{padding: '16px 0', borderTop: `1px solid ${C.line}`, ...rise(f, 16 + j * 8)}}>
+            <div style={{fontSize: 26, color: col as string}}>{a}</div>
+            <div style={{fontFamily: MONO, fontSize: 20, color: C.muted, marginTop: 4}}>{b}</div>
+          </div>
+        ))}
+        <div style={{fontSize: 24, color: C.muted, lineHeight: 1.45, marginTop: 20, ...rise(f, 50)}}>
+          The red box and the marker still pass at {(FILM.unchanged.block_0[1] * 100).toFixed(1)} and {(FILM.unchanged.marker_0[1] * 100).toFixed(1)} cm: the rule names the mug only.
+        </div>
+      </div>
+      <Labels items={SIM_LABELS} x={60} y={1000} size={18} />
     </Frame>
   );
 };

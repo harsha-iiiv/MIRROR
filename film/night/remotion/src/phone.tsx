@@ -105,7 +105,7 @@ export const Timeline: React.FC<{x: number; y: number; w: number; t: number; at?
                     <g key={j}>
                       <rect x={X(a)} y={yy - (big ? 11 : 5)} width={Math.max(2, X(a + vis) - X(a))} height={big ? 22 : 10} rx={big ? 11 : 5}
                         fill={big ? C.accent : C.faint} />
-                      {big && t > b && <text x={X(b) + 14} y={yy + 6} fill={C.muted} fontFamily="JetBrains Mono" fontSize={17}>
+                      {big && <text x={X(b) + 14} y={yy + 6} opacity={Math.max(0, Math.min(1, (t - b) / 0.3))} fill={C.muted} fontFamily="JetBrains Mono" fontSize={17}>
                         {`${a.toFixed(1)}–${b.toFixed(1)} s · ends in the tray (2D)`}</text>}
                     </g>
                   );

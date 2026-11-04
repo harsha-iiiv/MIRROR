@@ -19,7 +19,7 @@ export const Header: React.FC<{n: string; title: string; at?: number; end?: numb
 };
 
 // honest labels, always on screen while the related material is visible
-export const Labels: React.FC<{items: string[]; at?: number; end?: number; x?: number; y?: number; size?: number; center?: boolean}> = ({items, at = 0, end, x = 96, y = 1012, size = 19, center = false}) => {
+export const Labels: React.FC<{items: string[]; at?: number; end?: number; x?: number; y?: number; size?: number; center?: boolean}> = ({items, at = 0, end, x = 96, y = 1012, size = 20, center = false}) => {
   const f = useCurrentFrame();
   const o = end ? fadeOut(f, end) : 1;
   return (

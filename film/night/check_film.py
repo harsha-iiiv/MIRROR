@@ -4,9 +4,10 @@
 
 Streams the video (never holds decoded frames), downscaled to 640x360. Per frame pair:
 - global similarity scale change from ORB features + RANSAC over the whole frame (camera zoom / punch-in detector);
-- dense optical flow (Farneback) 99th-percentile magnitude inside the shot's text zones, reported in 1080p pixels
-  (text must move < 20 px/frame); footage and 3-D panels are outside the text zones by design.
-Thresholds (from the owner's motion rules): scale change < 1% per frame; text-zone flow p99 < 20 px/frame.
+- 90th-percentile displacement of ORB features (at least 20 unambiguous matches) matched between consecutive frames inside the shot's text zones,
+  in 1080p pixels (text must move < 20 px/frame); fades and text swaps add features in place and do not count as motion (Lowe ratio 0.7, matches within 120 px);
+  footage and 3-D panels are outside the text zones by design.
+Thresholds (from the owner's motion rules): scale change < 1% per frame; text-zone feature displacement p90 < 20 px/frame.
 --loop also compares the first and last frames (seamless boundary).
 Writes motion.json and contact.jpg (3 frames per shot).
 """
@@ -39,6 +40,7 @@ def main(argv=None):
     cap = cv2.VideoCapture(a.video)
     n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)); fps = cap.get(cv2.CAP_PROP_FPS)
     orb = cv2.ORB_create(800)
+    orb2 = cv2.ORB_create(1500, scaleFactor=1.2, nlevels=4, edgeThreshold=9, patchSize=15)
     starts = []; acc = 0
     for s in shots:
         starts.append(acc); acc += s["frames"]
@@ -50,7 +52,7 @@ def main(argv=None):
         for q in (0.2, 0.6, 0.95):
             sample[min(n - 1, starts[k] + int(q * s["frames"]))] = (k, q)
     prev = None; first = last = None
-    per = {k: dict(name=s["name"], max_scale_change=0.0, max_text_flow_p99_px=0.0, frames=0) for k, s in enumerate(shots)}
+    per = {k: dict(name=s["name"], max_scale_change=0.0, max_text_flow_p99_px=0.0, frames=0, top_flow=[]) for k, s in enumerate(shots)}
     thumbs = {}
     masks = {k: zones_mask(s.get("text_zones", [])) for k, s in enumerate(shots)}
     i = 0
@@ -76,10 +78,22 @@ def main(argv=None):
                     if M is not None and inl is not None and inl.sum() > 30:
                         sc = abs(float(np.hypot(M[0, 0], M[1, 0])) - 1.0)
             per[k]["max_scale_change"] = max(per[k]["max_scale_change"], sc)
-            if masks[k].any():
-                fl = cv2.calcOpticalFlowFarneback(prev, g, None, 0.5, 3, 15, 3, 5, 1.2, 0)
-                mag = np.hypot(fl[..., 0], fl[..., 1])[masks[k]] * K
-                per[k]["max_text_flow_p99_px"] = max(per[k]["max_text_flow_p99_px"], float(np.percentile(mag, 99)))
+            local = i - starts[k]
+            if masks[k].any() and 12 <= local <= shots[k]["frames"] - 12:  # dissolve frames at shot edges excluded (low-contrast, ambiguous matches)
+                # displacement of matched features inside the text zones (fades and text swaps create new features in
+                # place and do not register as motion; a moving caption does)
+                mk = masks[k].astype(np.uint8) * 255
+                ka, da = orb2.detectAndCompute(prev, mk); kb, db = orb2.detectAndCompute(g, mk)
+                p99 = 0.0
+                if da is not None and db is not None and len(ka) >= 8 and len(kb) >= 8:
+                    kn = cv2.BFMatcher(cv2.NORM_HAMMING).knnMatch(da, db, k=2)
+                    mt = [p[0] for p in kn if len(p) == 2 and p[0].distance < 32 and p[0].distance < 0.7 * p[1].distance]
+                    dd = np.array([np.hypot(*(np.subtract(kb[m.trainIdx].pt, ka[m.queryIdx].pt))) for m in mt]) * K
+                    dd = dd[dd < 120]  # unambiguous matches within 120 px; larger jumps are re-detections, not motion
+                    if dd.size >= 20:
+                        p99 = float(np.percentile(dd, 90))
+                per[k]["max_text_flow_p99_px"] = max(per[k]["max_text_flow_p99_px"], p99)
+                per[k]["top_flow"] = sorted(per[k]["top_flow"] + [[i, round(p99, 1)]], key=lambda x: -x[1])[:6]
             per[k]["frames"] += 1
         prev = g; last = g; i += 1
     cap.release()

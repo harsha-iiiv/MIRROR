@@ -13,7 +13,7 @@
  },
  {
   "name": "watch",
-  "frames": 360,
+  "frames": 330,
   "text_zones": [
    [
     800,
@@ -31,7 +31,7 @@
  },
  {
   "name": "gate",
-  "frames": 240,
+  "frames": 210,
   "text_zones": [
    [
     800,
@@ -43,7 +43,7 @@
  },
  {
   "name": "run",
-  "frames": 420,
+  "frames": 345,
   "text_zones": [
    [
     0,
@@ -67,7 +67,7 @@
  },
  {
   "name": "twin",
-  "frames": 180,
+  "frames": 150,
   "text_zones": [
    [
     800,
@@ -79,7 +79,7 @@
  },
  {
   "name": "sentence",
-  "frames": 240,
+  "frames": 210,
   "text_zones": [
    [
     0,
@@ -114,8 +114,32 @@
   ]
  },
  {
+  "name": "ghosts",
+  "frames": 210,
+  "text_zones": [
+   [
+    0,
+    0,
+    1920,
+    140
+   ],
+   [
+    1400,
+    140,
+    1920,
+    1080
+   ],
+   [
+    0,
+    990,
+    1920,
+    1080
+   ]
+  ]
+ },
+ {
   "name": "table",
-  "frames": 255,
+  "frames": 240,
   "text_zones": [
    [
     0,

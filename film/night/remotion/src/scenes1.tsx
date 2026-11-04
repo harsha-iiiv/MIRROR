@@ -4,6 +4,7 @@ import {C, SANS, MONO, prog, rise, fadeOut} from './theme';
 import {Frame, Header, Labels, Caption} from './common';
 import {PhonePanel, Timeline, activeAt, NAMES} from './phone';
 import {DATA, FILM} from './data';
+const EV3: any[] = DATA.timeline.events.filter((e: any) => e.image_displacement_px_540 > 100);
 
 export const REAL_LABELS = ['real phone footage', 'one camera', 'calibration reuse flagged', 'development clip D1 · never scored'];
 export const SIM_LABELS = ['simulation proxies sized from ruler measurements', 'layout centred by software', 'positions approximate'];
@@ -44,14 +45,21 @@ export const Watch: React.FC<{dur: number; src0?: number; rate?: number; compact
       </Caption>
       <Timeline x={940} y={330} w={760} t={t} at={20} />
       <div style={{position: 'absolute', left: 820, top: 720, width: 980, ...rise(f, 40)}}>
-        <div style={{fontFamily: MONO, fontSize: 18, color: C.faint, lineHeight: 1.7}}>
+        <div style={{fontFamily: MONO, fontSize: 19, color: C.muted, lineHeight: 1.7}}>
           <div>masks · SAM 3.1, box prompts from Muse Spark grounding at 12.5 s</div>
           <div>recorded on 3 Nov ($0.33) · replayed here, no model call</div>
           <div>{`1 small mug mask change at 13.5 s (hand arriving) is kept for review, not hidden`}</div>
         </div>
       </div>
-      <div style={{position: 'absolute', left: 820, top: 880, fontSize: 30, fontWeight: 500, opacity: act.length ? 1 : 0.0}}>
-        {act.length ? <span>moving now: <span style={{color: C.accent}}>{act.map((a) => NAMES[a]).join(', ')}</span></span> : null}
+      <div style={{position: 'absolute', left: 820, top: 880, fontSize: 30, fontWeight: 500, opacity: prog(f, 30, 12)}}>
+        <span style={{color: C.muted}}>moving now </span>
+        {['mug', 'red_box', 'marker'].map((o) => {
+          // each name fades with its own event bracket (6 frames in and out), never pops
+          const e = EV3.find((x: any) => x.object === o);
+          const a = (e.moved_from_s - src0) / rate * 30, b = (e.moved_to_s - src0) / rate * 30;
+          const op = Math.min(prog(f, a - 3, 6), 1 - prog(f, b - 3, 6));
+          return <span key={o} style={{position: 'absolute', left: 170, color: C.accent, opacity: op}}>{NAMES[o]}</span>;
+        })}
       </div>
       <Labels items={REAL_LABELS} x={820} y={952} />
     </Frame>
@@ -67,7 +75,7 @@ export const Gate: React.FC<{dur: number}> = ({dur}) => {
     <div style={{display: 'grid', gridTemplateColumns: '150px 1fr 360px', alignItems: 'baseline', padding: '12px 0', borderTop: `1px solid ${C.line}`, ...rise(f, at)}}>
       <div style={{fontFamily: MONO, fontSize: 17, color: C.faint, letterSpacing: 2}}>{k}</div>
       <div style={{fontSize: 28}}>{v}</div>
-      <div style={{fontFamily: MONO, fontSize: 16, color: C.faint, textAlign: 'right'}}>{id}</div>
+      <div style={{fontFamily: MONO, fontSize: 17, color: C.faint, textAlign: 'right'}}>{id}</div>
     </div>
   );
   return (

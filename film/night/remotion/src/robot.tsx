@@ -100,6 +100,19 @@ const TableGrid: React.FC = () => {
   return <lineSegments geometry={geo}><lineBasicMaterial color="#8a8b90" transparent opacity={0.18} /></lineSegments>;
 };
 
+// the correction's clearance region: the divider's box grown by m on every side (what the checker tests against)
+const ClearanceVolume: React.FC<{run: any; m: number; opacity: number}> = ({run, m, opacity}) => {
+  const g = run.bodies.find((b: any) => b.name === 'wall_0').geoms[0];
+  const size: [number, number, number] = [2 * (g.size[0] + m), 2 * (g.size[1] + m), 2 * (g.size[2] + m)];
+  const edges = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(...size)), [size[0], size[1], size[2]]);
+  return (
+    <group position={[g.pos[0], g.pos[1], g.pos[2]]} quaternion={q4(g.quat)}>
+      <mesh><boxGeometry args={size} /><meshBasicMaterial color={C.accent} transparent opacity={0.10 * opacity} depthWrite={false} /></mesh>
+      <lineSegments geometry={edges}><lineBasicMaterial color={C.accent} transparent opacity={0.8 * opacity} /></lineSegments>
+    </group>
+  );
+};
+
 export type Cam = {pos: [number, number, number]; look: [number, number, number]; fov?: number};
 const CamRig: React.FC<{a: Cam; b: Cam; p: number}> = ({a, b, p}) => {
   const {camera} = useThree();
@@ -115,8 +128,9 @@ const CamRig: React.FC<{a: Cam; b: Cam; p: number}> = ({a, b, p}) => {
 };
 
 export const RobotScene: React.FC<{width: number; height: number; run: any; i: number; camA: Cam; camB: Cam; camP: number;
-  ribbon?: {body: string; i0: number; color: string}[]; ghost?: {run: any; i: number}; accentBody?: string; grid?: boolean}> =
-  ({width, height, run, i, camA, camB, camP, ribbon = [], ghost, accentBody, grid = false}) => (
+  ribbon?: {body: string; i0: number; color: string}[]; ghost?: {run: any; i: number; ribbon?: string}; accentBody?: string; grid?: boolean;
+  clearance?: {m: number; opacity: number}}> =
+  ({width, height, run, i, camA, camB, camP, ribbon = [], ghost, accentBody, grid = false, clearance}) => (
   <ThreeCanvas width={width} height={height} shadows gl={{antialias: true, preserveDrawingBuffer: true}} camera={{fov: camA.fov ?? 32, near: 0.02, far: 20}}
     style={{background: 'transparent'}}>
     <CamRig a={camA} b={camB} p={camP} />
@@ -128,6 +142,8 @@ export const RobotScene: React.FC<{width: number; height: number; run: any; i: n
     <directionalLight position={[0.8, 0.6, 0.9]} intensity={0.35} />
     <Bodies run={run} i={i} accentBody={accentBody} />
     {ghost && <Bodies run={ghost.run} i={ghost.i} ghost skipStatic />}
+    {ghost?.ribbon && <Ribbon run={ghost.run} body="cup_0" i0={0} i={ghost.i} color={ghost.ribbon} width={0.004} opacity={0.7} />}
+    {clearance && <ClearanceVolume run={run} m={clearance.m} opacity={clearance.opacity} />}
     {ribbon.map((r) => <Ribbon key={r.body + r.color + 'g'} run={run} body={r.body} i0={r.i0} i={i} color={r.color} z={0.0012} opacity={0.35} />)}
     {ribbon.map((r) => <Ribbon key={r.body + r.color} run={run} body={r.body} i0={r.i0} i={i} color={r.color} width={0.005} />)}
     {grid && <TableGrid />}
