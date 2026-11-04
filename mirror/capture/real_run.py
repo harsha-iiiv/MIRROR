@@ -1379,7 +1379,7 @@ class RealRun:
         fig.savefig(self.p("timeline.png"), dpi=110)
         plt.close(fig)
 
-    def _overlay(self, tl):
+    def _overlay(self, tl, max_frames: Optional[int] = None, out_name: str = "overlay.mp4"):
         """Masks and labels over the real footage (proxy resolution, H.264, browser-playable)."""
         import cv2
         rle_decode = _rle_decode
@@ -1396,11 +1396,22 @@ class RealRun:
         moving = {l: set() for l in labels}
         for e in tl["events"]:
             moving[e["object"]].update(range(e["frames"][0], e["frames"][1] + 1))
-        out = self.p("overlay.mp4")
+        out = self.p(out_name)
         font = cv2.FONT_HERSHEY_SIMPLEX
-        head = " | ".join(x for x in self.labels() if not x.startswith("Model outputs"))[:96]
+        head_items = [x for x in self.labels() if not x.startswith("Model outputs")]
+        head_lines, cur = [], ""
+        for it in head_items:
+            cand = (cur + " | " + it) if cur else it
+            if cv2.getTextSize(cand, font, 0.38, 1)[0][0] > pw - 16 and cur:
+                head_lines.append(cur); cur = it
+            else:
+                cur = cand
+        if cur:
+            head_lines.append(cur)
+        head_h = 18 * len(head_lines) + 26
         dec = subprocess.Popen(["ffmpeg", "-v", "error", "-i", str(proxy), "-f", "rawvideo", "-pix_fmt", "rgb24",
-                                "-fps_mode", "passthrough", "-"], stdout=subprocess.PIPE, stdin=subprocess.DEVNULL)
+                                "-fps_mode", "passthrough", "-"], stdout=subprocess.PIPE, stdin=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
         enc = subprocess.Popen(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{pw}x{ph}",
                                 "-r", f"{float(self.clip(self.take).nominal_fps or 30):.6f}", "-i", "-", "-c:v", "libx264",
                                 "-pix_fmt", "yuv420p", "-crf", "23", "-movflags", "+faststart", str(out)],
@@ -1409,10 +1420,11 @@ class RealRun:
         with heavy_lock():
             while True:
                 buf = dec.stdout.read(pw * ph * 3)
-                if len(buf) < pw * ph * 3:
+                if len(buf) < pw * ph * 3 or (max_frames is not None and i >= max_frames):
                     break
                 f = np.frombuffer(buf, np.uint8).reshape(ph, pw, 3).copy()
                 over = f.copy()
+                placed, labels_to_draw = [], []
                 for l in labels:
                     a = static.get(l)
                     if a is None:
@@ -1427,13 +1439,23 @@ class RealRun:
                         x, y, w_, h_ = cv2.boundingRect(max(cnts, key=cv2.contourArea))
                         txt = _nice(self.meas, l) + (" (moving)" if i in moving[l] else "") + (" (static)" if l in walls else "")
                         (tw, th), _ = cv2.getTextSize(txt, font, 0.45, 1)
-                        cv2.rectangle(f, (x, max(0, y - th - 8)), (x + tw + 6, y), (20, 20, 20), -1)
-                        cv2.putText(f, txt, (x + 3, y - 4), font, 0.45, COL[l], 1, cv2.LINE_AA)
+                        x = min(max(0, x), pw - tw - 6)
+                        y = max(y, head_h + th + 8)
+                        for _ in range(6):     # keep labels from covering each other
+                            if not any(x < bx1 and x + tw + 6 > bx0 and y - th - 8 < by1 and y > by0 for bx0, by0, bx1, by1 in placed):
+                                break
+                            y += th + 10
+                        placed.append((x, y - th - 8, x + tw + 6, y))
+                        labels_to_draw.append((x, y, tw, th, txt, COL[l]))
                 f = cv2.addWeighted(over, 0.35, f, 0.65, 0)
-                cv2.rectangle(f, (0, 0), (pw, 44), (15, 15, 15), -1)
-                cv2.putText(f, head, (8, 17), font, 0.38, (235, 235, 235), 1, cv2.LINE_AA)
-                cv2.putText(f, f"masks: SAM 3.1, seeded by Muse Spark   t = {pts[min(i, len(pts) - 1)]:5.2f} s", (8, 36), font,
-                            0.42, (190, 190, 190), 1, cv2.LINE_AA)
+                for x, y, tw, th, txt, col in labels_to_draw:
+                    cv2.rectangle(f, (x, y - th - 8), (x + tw + 6, y), (20, 20, 20), -1)
+                    cv2.putText(f, txt, (x + 3, y - 4), font, 0.45, col, 1, cv2.LINE_AA)
+                cv2.rectangle(f, (0, 0), (pw, head_h), (15, 15, 15), -1)
+                for q, hl in enumerate(head_lines):
+                    cv2.putText(f, hl, (8, 17 + 18 * q), font, 0.38, (235, 235, 235), 1, cv2.LINE_AA)
+                cv2.putText(f, f"masks: SAM 3.1, seeded by Muse Spark   t = {pts[min(i, len(pts) - 1)]:5.2f} s",
+                            (8, head_h - 9), font, 0.42, (190, 190, 190), 1, cv2.LINE_AA)
                 enc.stdin.write(f.tobytes())
                 i += 1
         enc.stdin.close(); enc.wait(timeout=600); dec.stdout.close(); dec.wait(timeout=60)
