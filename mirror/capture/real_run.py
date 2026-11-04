@@ -115,6 +115,7 @@ def _run(cmd: list, timeout: int = 1800):
 
 
 LOCK_WAIT_S = [0.0]       # time spent waiting for the shared lock (excluded from compute time)
+_ORIG_PROBE = [None]      # mirror.capture.media.probe as imported (the session build patches the module attribute)
 
 
 @contextlib.contextmanager
@@ -676,6 +677,8 @@ class RealRun:
     def clip(self, path) -> "Any":
         """ClipMeta, probed once per file (probing hashes the file and reads every timestamp)."""
         from mirror.capture import media as M
+        if _ORIG_PROBE[0] is None and getattr(M.probe, "__name__", "") == "probe":
+            _ORIG_PROBE[0] = M.probe
         path = Path(path)
         st = path.stat()
         key = hashlib.sha1(f"{path.resolve()}|{st.st_size}|{int(st.st_mtime)}".encode()).hexdigest()[:16]
@@ -687,7 +690,7 @@ class RealRun:
         if f.exists():
             m = M.ClipMeta.model_validate_json(f.read_text())
         else:
-            m = M.probe(path)
+            m = _ORIG_PROBE[0](path) if _ORIG_PROBE[0] else M.probe(path)
             f.parent.mkdir(parents=True, exist_ok=True)
             f.write_text(m.model_dump_json())
         self._clips[key] = m
@@ -1031,6 +1034,16 @@ class RealRun:
         t0 = time.time()
         m = self.clip(self.take)
         N, W, H = m.n_frames, m.width, m.height
+        import threading
+        warm_err = []
+
+        def _warm():
+            try:
+                self._warm_session_cache()
+            except Exception as e:      # the session stage computes them itself if this fails
+                warm_err.append(repr(e))
+        warmer = threading.Thread(target=_warm, name="session-cache", daemon=True)
+        warmer.start()
         g = json.loads(self.p("grounding.json").read_text())
         seed = g["seed_frame"]
         k = 2 if W >= 1000 else 1
@@ -1130,7 +1143,8 @@ class RealRun:
             v.get("cassette") for kk, v in info["sam"].items() if kk.endswith("_static")) and \
             all(r.get("sam", {}).get("cassette", True) for r in info["reseed"])
         cov = {lab: round(len(fr) / N, 3) if lab not in walls else 1.0 for lab, fr in masks.items()}
-        self.mark("track", t0, coverage=cov, proxy=[pw, ph], reseed=len(info["reseed"]), upscale_s=round(time.time() - t_up, 1),
+        warmer.join()
+        self.mark("track", t0, session_cache_warm_errors=warm_err, coverage=cov, proxy=[pw, ph], reseed=len(info["reseed"]), upscale_s=round(time.time() - t_up, 1),
                   origin="recorded_replay" if self.mode == "replay" or all_cas else "fresh_model_call",
                   sam={k2: {kk: v[kk] for kk in ("frames", "cassette") if kk in v} for k2, v in info["sam"].items()})
 
@@ -1236,23 +1250,52 @@ class RealRun:
             SE.M.probe, SE.first_board, SE.last_board, SE.M.read_frame = orig
 
     def _warm_session_cache(self):
-        """Run the clip decodes build_session needs in parallel (ffmpeg and OpenCV release the GIL)."""
+        """Run the clip decodes build_session needs, in parallel (ffmpeg and OpenCV release the GIL), writing the
+        same cache files the patched build reads. Uses the unpatched functions only, so it is safe to run in a
+        background thread while another stage works (the track stage starts it to hide it behind SAM)."""
         from concurrent.futures import ThreadPoolExecutor
-        from mirror.capture import session as SE
+        from mirror.capture import media as M, session as SE
         from mirror.capture.target import DEFAULT_TARGET
         m = self.clip(self.take)
         sc = self.info("scan")
-        with self._session_patches():
-            def first():
-                d0 = SE.first_board(m, DEFAULT_TARGET, search_s=float(sc.get("board_search_s", 3.0)))
-                if d0 is not None:
-                    k0 = min(m.n_frames - 1, (d0.frame_index or 0) + int(2.0 / max(np.median(np.diff(m.pts_s)), 1e-3)))
-                    SE.M.read_frame(m, k0)
-            with ThreadPoolExecutor(3) as ex:
-                fs = [ex.submit(first), ex.submit(SE.last_board, m, DEFAULT_TARGET),
-                      ex.submit(SE.M.read_frame, m, m.n_frames - 1)]
-                for f in fs:
-                    f.result()
+        cache_dir = self.p("work", "session_cache", "x").parent
+        search = float(sc.get("board_search_s", 3.0))
+
+        def det_file(name, kw):
+            return cache_dir / f"{name}_{'_'.join(f'{kk}{vv}' for kk, vv in sorted(kw.items()))}.json"
+
+        def save_det(f, d):
+            tmp = f.with_suffix(".tmp")
+            tmp.write_text(json.dumps(None if d is None else d.model_dump(mode="json")))
+            tmp.replace(f)
+
+        def frame(k):
+            f = cache_dir / f"frame_{k}_0.npy"
+            if not f.exists():
+                a = M.read_frame(m, k)
+                tmp = cache_dir / f"frame_{k}_0.tmp.npy"
+                np.save(tmp, a)
+                tmp.replace(f)
+
+        def first():
+            f = det_file("first_board", {"search_s": search})
+            if f.exists():
+                d0 = json.loads(f.read_text())
+                fi = None if d0 is None else d0.get("frame_index")
+            else:
+                d = SE.first_board(m, DEFAULT_TARGET, search_s=search)
+                save_det(f, d)
+                fi = None if d is None else d.frame_index
+            if fi is not None:
+                frame(min(m.n_frames - 1, fi + int(2.0 / max(np.median(np.diff(m.pts_s)), 1e-3))))
+
+        def last():
+            f = det_file("last_board", {})
+            if not f.exists():
+                save_det(f, SE.last_board(m, DEFAULT_TARGET))
+        with ThreadPoolExecutor(3) as ex:
+            for fut in [ex.submit(first), ex.submit(last), ex.submit(frame, m.n_frames - 1)]:
+                fut.result()
 
     def _build(self, SE, C, m, sc, intr, ts, confirmed, rejected, corrections, tray=None):
         return SE.build_session(tray=tray, take={"top": str(self.take)}, intrinsics={"top": intr},
