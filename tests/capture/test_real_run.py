@@ -71,7 +71,7 @@ def test_replay_transport_refuses_any_network_request(tmp_path):
     c = MetaClient(mode="live", api_key="not-a-key", cassette_dir=tmp_path, transport=RR._no_network_transport(), max_retries=0)
     with pytest.raises(Exception) as e:
         c.responses("muse-spark-1.3", [text_part("hello")])
-    assert "replay mode: refused a live request" in str(e.value) or isinstance(e.value, RR.LiveCallInReplay)
+    assert "refused a live request" in str(e.value) or isinstance(e.value, RR.LiveCallInReplay)
     r = MetaClient(mode="replay", cassette_dir=tmp_path, transport=RR._no_network_transport())
     from mirror.meta.cassette import MetaCassetteMiss
     with pytest.raises(MetaCassetteMiss):

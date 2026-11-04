@@ -172,7 +172,8 @@ def _no_network_transport():
     import httpx
 
     def handler(request):
-        raise LiveCallInReplay(f"replay mode: refused a live request to {request.url.host}{request.url.path}")
+        raise LiveCallInReplay(f"network forbidden (replay mode or MIRROR_FORBID_NETWORK): refused a live request to "
+                               f"{request.url.host}{request.url.path}")
     return httpx.MockTransport(handler)
 
 
@@ -196,6 +197,9 @@ class GuardedMeta:
             orig(name, endpoint, model, usage, latency, from_cassette=from_cassette, key=key)
             ledger.charge({"model": model, "usage": usage, "call": name, "from_cassette": from_cassette, "key": key})
         client._log = _log
+        self._orig_upload = getattr(client, "upload_file", None)
+        if self._orig_upload is not None:
+            client.upload_file = self._upload_rehearsal
 
     @property
     def mode(self):
@@ -226,8 +230,21 @@ class GuardedMeta:
                 self.ledger.guard(WORST_SAM_IMAGE, "a SAM 3.1 image request")
         return self.c.sam_segment(media, prompt, video=video, **k)
 
-    def upload_file(self, *a, **k):
-        return self.c.upload_file(*a, **k)
+    def upload_file(self, src, *a, **k):
+        return self.c.upload_file(src, *a, **k)
+
+    def _upload_rehearsal(self, src, *a, **k):
+        if os.environ.get("MIRROR_FORBID_NETWORK"):
+            # record-mode rehearsal without network: reuse the recorded upload of the same bytes (uploads are free
+            # and always re-sent in record mode, so this only matters when the network is forbidden)
+            from mirror.meta.cassette import normalize, request_key, sha256_bytes
+            data = Path(src).read_bytes() if not isinstance(src, (bytes, bytearray)) else bytes(src)
+            req = {"purpose": k.get("purpose", "user_data"), "file": f"sha256:{sha256_bytes(data)}"}
+            cas = self.c._store.load("files", request_key("files", "/files", normalize(req, {})))
+            if cas is not None:
+                self.c._files[cas["response"]["id"]] = req["file"]
+                return cas["response"]["id"]
+        return self._orig_upload(src, *a, **k)
 
     def __getattr__(self, name):
         return getattr(self.c, name)
@@ -743,6 +760,8 @@ class RealRun:
                     break
             self.state["status"] = "complete"
             self.state.pop("waiting_for", None)
+            self.state.pop("error", None)
+            self.state.pop("error_trace", None)
         except StageStop as e:
             self.state["status"] = "waiting"
             self.state["waiting_for"] = str(e)
@@ -757,6 +776,12 @@ class RealRun:
             self.state["status"] = "stopped_spend_cap"
             self.state["waiting_for"] = str(e)
             self.log(f"[stopped] {e}")
+        except Exception as e:      # unattended: record the failure where the page and the next run can see it
+            import traceback
+            self.state["status"] = "failed"
+            self.state["error"] = f"{type(e).__name__}: {e}"
+            self.state["error_trace"] = traceback.format_exc()[-3000:]
+            self.log(f"[failed] {type(e).__name__}: {e}")
         self.state["last_invocation_wall_s"] = round(time.time() - t_all, 1)
         calls = self.state.setdefault("model_calls", {"from_recording": 0, "live": 0})
         for c in (self._meta, self._llm):
