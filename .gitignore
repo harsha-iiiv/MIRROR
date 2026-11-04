@@ -16,3 +16,5 @@ results/dev*/
 results/rehearsal/
 site/
 tests/web/artifacts/
+# real phone captures built for the studio (personal footage; shipped only via export --table)
+data/table/
