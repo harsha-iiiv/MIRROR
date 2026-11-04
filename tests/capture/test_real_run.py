@@ -261,3 +261,51 @@ def test_gate_passed_branch_waits_for_rule_review_then_plans_and_runs(tmp_path):
     assert run["result"] in ("success", "unverified", "task_incomplete", "constraint_violated", "planning_failed")
     page = json.loads((tmp_path / "page.json").read_text())
     assert page["run"]["result"] == run["result"] and "manifest.json" in [p.name for p in tmp_path.iterdir()]
+
+
+
+def test_record_mode_charges_the_ledger_and_saves_a_cassette(tmp_path):
+    """Record mode against a fake endpoint: the live call is charged once, saved as a
+    cassette, and the identical request is then served from the cassette for free."""
+    import httpx
+    from mirror.meta import MetaClient, text_part
+    calls = []
+
+    def handler(request):
+        calls.append(request.url.path)
+        return httpx.Response(200, json={"status": "completed", "model": "muse-spark-1.3",
+                                         "usage": {"input_tokens": 1000, "output_tokens": 2000},
+                                         "output": [{"type": "message", "content": [{"type": "output_text", "text": "{}"}]}]})
+    led = RR.Ledger(tmp_path / "spend.jsonl", cap_usd=1.0)
+    c = RR.GuardedMeta(MetaClient(mode="record", api_key="test", cassette_dir=tmp_path / "cas",
+                                  transport=httpx.MockTransport(handler)), led)
+    r1 = c.responses("muse-spark-1.3", [text_part("find the mug")])
+    r2 = c.responses("muse-spark-1.3", [text_part("find the mug")])
+    assert not r1.from_cassette and r2.from_cassette and len(calls) == 1
+    assert led.spent() == pytest.approx((1000 * 1.25 + 2000 * 4.25) / 1e6)
+    assert len(list((tmp_path / "cas").rglob("*.json"))) == 1
+    replay = MetaClient(mode="replay", cassette_dir=tmp_path / "cas", transport=RR._no_network_transport())
+    assert replay.responses("muse-spark-1.3", [text_part("find the mug")]).from_cassette
+
+
+
+def test_c_sam_decoder_matches_the_official_decoder():
+    pytest.importorskip("meta_sam_parser")
+    import re
+    if RR._c_decoder() is None:
+        pytest.skip("no C compiler: the official decoder is used")
+    n = 0
+    for f in sorted((REPO / "data" / "cassettes_meta" / "sam-3.1").glob("*.json"))[:300]:
+        t = json.loads(f.read_text())["response"].get("text", "")
+        for line in t.splitlines()[:2]:
+            m = re.match(r"<(\d+)f>", line)
+            if not m:
+                continue
+            for r in RR._REC.finditer(line[m.end():]):
+                a = (int(r.group(11)), int(r.group(12)), r.group(13))
+                assert np.array_equal(RR._dec(a), RR._decode_fast(*a))
+                n += 1
+        if n >= 40:
+            break
+    if n == 0:
+        pytest.skip("no recorded SAM masks in data/cassettes_meta")

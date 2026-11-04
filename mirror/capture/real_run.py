@@ -255,6 +255,140 @@ def _dec(args):
     return np.frombuffer(_decode_raster(payload, w, h), dtype=np.uint8).reshape(h, w)
 
 
+# ------------------------------------------------- fast SAM mask decoding (C)
+_C_DECODER_SRC = r"""
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+/* Port of meta_sam_parser._mask_codec._decode_raster (context-modelled binary range decoder).
+   Returns 0 on success, nonzero on invalid input (the caller falls back to the official decoder). */
+int mirror_sam_decode(const uint8_t *in, int n_in, int width, int height, uint8_t *out) {
+    if (n_in < 4) return 1;
+    const int PAD = 2, CTX = 1 << 12;
+    int pw = width + 2 * PAD;
+    uint8_t *padded = (uint8_t *)calloc((size_t)pw * (size_t)(height + PAD), 1);
+    uint16_t *counts = (uint16_t *)malloc(sizeof(uint16_t) * CTX * 2);
+    if (!padded || !counts) { free(padded); free(counts); return 2; }
+    for (int i = 0; i < CTX * 2; i++) counts[i] = 1;
+    int pos = 0;
+    uint32_t low = 0, range = 0xFFFFFFFFu, code = 0, scaled = 0;
+    for (int i = 0; i < 4; i++) code = (code << 8) | in[pos++];
+    int err = 0;
+    for (int y = 0; y < height && !err; y++) {
+        int row = (y + PAD) * pw + PAD;
+        for (int x = 0; x < width; x++) {
+            int p = row + x, pr = p - pw, ea = p - 2 * pw;
+            int ctx = padded[p - 1] | (padded[p - 2] << 1) | (padded[pr - 2] << 2) | (padded[pr - 1] << 3)
+                    | (padded[pr] << 4) | (padded[pr + 1] << 5) | (padded[pr + 2] << 6) | (padded[ea - 2] << 7)
+                    | (padded[ea - 1] << 8) | (padded[ea] << 9) | (padded[ea + 1] << 10) | (padded[ea + 2] << 11);
+            int off = ctx << 1;
+            uint32_t zero = counts[off], one = counts[off + 1], total = zero + one;
+            scaled = range / total;
+            if (scaled == 0) { err = 3; break; }
+            uint32_t value = (uint32_t)(code - low) / scaled;
+            if (value >= total) value = total - 1;
+            int bit = value < zero ? 0 : 1;
+            uint32_t cum = bit ? zero : 0, freq = bit ? one : zero;
+            low = low + scaled * cum;
+            range = scaled * freq;
+            for (;;) {
+                if ((uint32_t)(low ^ (uint32_t)(low + range)) < (1u << 24)) {
+                } else if (range < (1u << 16)) {
+                    range = ((uint32_t)(0u - low)) & ((1u << 16) - 1);
+                } else break;
+                if (pos >= n_in) { err = 4; break; }
+                code = (code << 8) | in[pos++];
+                low = low << 8;
+                range = range << 8;
+            }
+            if (err) break;
+            padded[p] = (uint8_t)bit;
+            out[(size_t)y * width + x] = (uint8_t)bit;
+            uint16_t c = (uint16_t)(counts[off + bit] + 14);
+            counts[off + bit] = c;
+            if ((uint32_t)counts[off] + counts[off + 1] >= 4096) {
+                counts[off] = (counts[off] >> 1) ? (counts[off] >> 1) : 1;
+                counts[off + 1] = (counts[off + 1] >> 1) ? (counts[off + 1] >> 1) : 1;
+            }
+        }
+    }
+    free(padded); free(counts);
+    return err;
+}
+"""
+_CLIB = [None, False]
+
+
+def _c_decoder():
+    """ctypes handle on a C port of the official SAM raster decoder (compiled once with the system
+    compiler into ~/.cache/mirror); None if no compiler is available (the official decoder is used)."""
+    if _CLIB[1]:
+        return _CLIB[0]
+    _CLIB[1] = True
+    try:
+        import ctypes
+        cc = shutil.which("cc") or shutil.which("gcc")
+        if cc is None:
+            return None
+        d = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "mirror"
+        d.mkdir(parents=True, exist_ok=True)
+        h = hashlib.sha1(_C_DECODER_SRC.encode()).hexdigest()[:12]
+        so = d / f"sam_decode_{h}.so"
+        if not so.exists():
+            c = d / f"sam_decode_{h}.c"
+            c.write_text(_C_DECODER_SRC)
+            tmp = so.with_suffix(f".{os.getpid()}.tmp")
+            subprocess.run([cc, "-O2", "-shared", "-fPIC", "-o", str(tmp), str(c)], check=True, timeout=120,
+                           stdin=subprocess.DEVNULL, capture_output=True)
+            tmp.replace(so)
+        lib = ctypes.CDLL(str(so))
+        lib.mirror_sam_decode.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_char_p]
+        lib.mirror_sam_decode.restype = ctypes.c_int
+        _CLIB[0] = lib
+    except Exception:
+        _CLIB[0] = None
+    return _CLIB[0]
+
+
+def _unpack_payload(payload: str) -> bytes:
+    """Base-85 payload -> bytes (meta_sam_parser._mask_codec._unpack without its canonical re-encode check)."""
+    from meta_sam_parser import _mask_codec as MC
+    body = payload[1:]
+    n = 0
+    for ch in body[:5]:
+        n = n * 85 + MC._digit(ch)
+    out = bytearray(n)
+    src, dst, rem = 5, 0, n % 4
+    full = n - rem
+    while dst < full:
+        v = 0
+        for k in range(5):
+            v = v * 85 + MC._digit(body[src + k])
+        src += 5
+        out[dst:dst + 4] = v.to_bytes(4, "big")
+        dst += 4
+    if rem:
+        v = 0
+        for k in range(5):
+            v = v * 85 + (MC._digit(body[src + k]) if k < rem + 1 else 84)
+        out[dst:dst + rem] = (v & 0xFFFFFFFF).to_bytes(4, "big")[:rem]
+    return bytes(out)
+
+
+def _decode_fast(h: int, w: int, payload: str) -> np.ndarray:
+    lib = _c_decoder()
+    if lib is not None:
+        try:
+            data = _unpack_payload(payload)
+            out = (np.zeros(w * h, np.uint8))
+            buf = out.ctypes.data_as(__import__("ctypes").c_char_p)
+            if lib.mirror_sam_decode(data, len(data), w, h, buf) == 0:
+                return out.reshape(h, w)
+        except Exception:
+            pass
+    return _dec((h, w, payload))
+
+
 def _fast_parse(text, *, prompt="", media="image", decode_masks=True, workers=3):
     from concurrent.futures import ProcessPoolExecutor
     from mirror.meta import sam as S
@@ -276,9 +410,9 @@ def _fast_parse(text, *, prompt="", media="image", decode_masks=True, workers=3)
     if not items:
         return S._orig_parse(text, prompt=prompt, media=media, decode_masks=decode_masks)
     if decode_masks:
-        if len(items) < 64:
+        if _c_decoder() is not None or len(items) < 64:
             for o, a in items:
-                o.mask = _dec(a)
+                o.mask = _decode_fast(*a)
         else:
             with ProcessPoolExecutor(workers) as ex:
                 for (o, _), arr in zip(items, ex.map(_dec, [a for _, a in items], chunksize=16)):
