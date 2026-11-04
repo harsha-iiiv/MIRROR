@@ -373,11 +373,13 @@ def run(job: TwinJob, log=print) -> dict:
     if "recalibration_required" in codes or (s.recalibration and len(s.recalibration)):
         labels.append("Calibration reuse flagged")
     labels = list(dict.fromkeys(labels + [x for x in job.labels if x.lower() not in {l.lower() for l in labels}]))
+    rolls = [(lbl, load_rollout(p)) for lbl, p in job.rollouts]
+    has_arm = any(b_.name.startswith("arm/") for b_ in rolls[0][1].visual.bodies)
+    robot_words = ("Simulated UR10e arm (simulated ceiling mount, drawn with its collision shapes)" if has_arm
+                   else "Simulated gripper")
     caption = CAPTION_BASE + ("" if len(s.intrinsics) == 1 else "s") + \
         (", calibration reuse flagged" if "Calibration reuse flagged" in labels else "") + \
-        ". Simulated gripper and proxies, not your objects."
-
-    rolls = [(lbl, load_rollout(p)) for lbl, p in job.rollouts]
+        f". {robot_words} and proxies, not your objects."
     base_label, base = rolls[0]
     visual, frames = base.visual, list(base.frames)
     sim_ids = moving_objects(visual)
@@ -553,7 +555,7 @@ def run(job: TwinJob, log=print) -> dict:
     span_r = np.ptp(corners @ right); span_u = np.ptp(corners @ up)
     PW, PH = 492, 672
     ppm = min(PW / span_r, (PH - 60) / span_u)
-    vc = VirtualCamera.top_down(((lo + hi) / 2), (PW / ppm, PH / ppm), ppm, up_xy=up)
+    vc = VirtualCamera.top_down(((lo + hi) / 2), (PW / ppm, PH / ppm), ppm, height_m=2.5, up_xy=up)
     Hm = vc.plane_homography_from(cam, z=0.0)
     und = cv2.undistort(plate.image, cam.K, cam.dist)
     td_plate = cv2.warpPerspective(und, Hm, (vc.width, vc.height), flags=cv2.WARP_INVERSE_MAP | cv2.INTER_LINEAR,
@@ -826,9 +828,11 @@ def run(job: TwinJob, log=print) -> dict:
         "before_after": ba if not ba else {**ba, "rule": job.correction.get("text") if job.correction else None,
                                             "after_labels": job.after_labels},
         "timings_s": {**timings, "total_s": round(time.time() - t_start, 1)},
+        "robot": "arm" if has_arm else "gripper",
         "honesty": ["Display only: no new measurement is made here.",
                     "Proxies are simulator stand-ins sized from your measurements; their colours are sampled from your footage.",
-                    "The robot is a simulated free-floating gripper; it never touched your table.",
+                    ("The robot is a simulated UR10e arm on a simulated ceiling mount; it never touched your table." if has_arm
+                     else "The robot is a simulated free-floating gripper; it never touched your table."),
                     "Registration is limited by one camera and the capture's calibration labels."],
     }
     prev = out / "twin.json"
