@@ -1680,6 +1680,8 @@ class RealRun:
         page = {"labels": self.labels(), "status": self.state.get("status"), "waiting_for": self.state.get("waiting_for"),
                 "mode": self.mode, "spend_usd": round(self.ledger.spent(), 4), "cap_usd": self.ledger.cap,
                 "model_calls": self.state.get("model_calls"),
+                "notes": list(st.get("probe", {}).get("notes", [])) + list(self.state.get("problems", [])),
+                "error": self.state.get("error"),
                 "timings_s": {k: v.get("wall_s") for k, v in st.items()},
                 "confirmations_needed": qd.get("questions", []), "correction_candidates": qd.get("correction_candidates", []),
                 "events_2d": [{k: e[k] for k in ("object", "from_s", "to_s", "in_tray")} for e in tl.get("events", [])]}
