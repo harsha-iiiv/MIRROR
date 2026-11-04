@@ -1088,7 +1088,8 @@ export class Viewer {
     return { view: this.view, t: this.t, frame: this.frameIndex(), playing: this.playing, fps: this._fps.value, glide: !!this.glide.active || !!this._phoneGlide,
       ribbons: (this.ribbons || []).map((r) => r.object), rules: { cones: this.rules.cones.length, volumes: this.rules.volumes.length, markers: this.rules.markers.length },
       ghostBodies: this.ghostLayer.bodies.size, capture: !!this.phone.view, arm: this.armModel || null, spec: this.spec ? `${this.spec.spec_id}@v${this.spec.version}` : null, report: this.report ? `${this.report.rollout_id} (${this.report.status})` : null,
-      options: this.getOptions(), verdictMode: this.verdictMode || null, fallback: null, software: !!this.software };
+      options: this.getOptions(), verdictMode: this.verdictMode || null, fallback: null, software: !!this.software,
+      render: { calls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles, geometries: this.renderer.info.memory.geometries, textures: this.renderer.info.memory.textures } };
   }
 
   snapshotPNG() { this._render(); return this.renderer.domElement.toDataURL('image/png'); }
