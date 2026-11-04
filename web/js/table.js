@@ -244,6 +244,66 @@ function LineChart({ title, unit, lines, threshold, thresholdLabel, t, onSeek, h
   </figure>`;
 }
 
+
+// ------------------------------------------------------------------ plan view (simulator frame, metres)
+function quatYaw(q) { const [w, x, y, z] = q; return Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)); }
+
+function PlanView({ table, run, ghost, t, clearance }) {
+  const carryW = useMemo(() => carries(table.events), [table]);
+  const box = useRef(null);
+  const W = useWidth(box);
+  const [hover, setHover] = useState(null);
+  const [hands, setHands] = useState(true);
+  const scene = table.robot?.scene, plan = table.robot?.plan;
+  if (!scene) return '';
+  const xr = [-0.48, 0.48], yr = [-0.36, 0.30];
+  const H = Math.round(W * (yr[1] - yr[0]) / (xr[1] - xr[0]));
+  const sx = (x) => ((x - xr[0]) / (xr[1] - xr[0])) * W;
+  const sy = (y) => H - ((y - yr[0]) / (yr[1] - yr[0])) * H;
+  const k = W / (xr[1] - xr[0]);           // px per metre
+  const kindLabel = Object.fromEntries(table.objects.map((o) => [o.proxy, o]));
+  const col = (id) => (kindLabel[(scene.objects.find((o) => o.id === id) || {}).kind] || {}).color || 'var(--muted)';
+  const pathD = (pts) => pts.map((p, i) => (i ? 'L' : 'M') + sx(p[0]).toFixed(1) + ',' + sy(p[1]).toFixed(1)).join('');
+  const idx = (n) => Math.max(0, Math.min(n - 1, Math.round(t * 5)));
+  const wall = scene.obstacles?.[0];
+  const tray = scene.trays?.[0];
+  const rectAt = (cx, cy, hx, hy, yaw, cls, extra = {}) => html`<rect x=${-hx * k} y=${-hy * k} width=${2 * hx * k} height=${2 * hy * k} class=${cls}
+    transform=${`translate(${sx(cx).toFixed(1)} ${sy(cy).toFixed(1)}) rotate(${(-yaw * 180) / Math.PI})`} ...${extra} />`;
+  const move = (e) => { const r = box.current.getBoundingClientRect(); const x = xr[0] + ((e.clientX - r.left) / W) * (xr[1] - xr[0]); const y = yr[0] + (1 - (e.clientY - r.top) / H) * (yr[1] - yr[0]); setHover([x, y]); };
+  const cam = plan?.camera;
+  return html`<figure class="yt-plan" ref=${box}>
+    <figcaption><span>From above: your hands and the robot</span>
+      <span class="num faint">${hover ? `x ${fmt(hover[0] * 100, 1)} cm · y ${fmt(hover[1] * 100, 1)} cm` : 'simulator frame'}</span></figcaption>
+    <svg width=${W} height=${H} onPointerMove=${move} onPointerLeave=${() => setHover(null)} role="img" aria-label="Top view of the table">
+      <defs><pattern id="ytgrid" width=${k * 0.05} height=${k * 0.05} patternUnits="userSpaceOnUse"><path d=${`M ${k * 0.05} 0 L 0 0 0 ${k * 0.05}`} class="g5" /></pattern></defs>
+      <rect x=${sx(-0.45)} y=${sy(0.4)} width=${0.9 * k} height=${0.8 * k} class="ws" />
+      <rect x="0" y="0" width=${W} height=${H} fill="url(#ytgrid)" />
+      ${tray ? rectAt(tray.pose.pos[0], tray.pose.pos[1], tray.inner_half[0], tray.inner_half[1], quatYaw(tray.pose.quat), 'tray') : ''}
+      ${wall && clearance ? html`<g transform=${`translate(${sx(wall.pose.pos[0]).toFixed(1)} ${sy(wall.pose.pos[1]).toFixed(1)}) rotate(${(-quatYaw(wall.pose.quat) * 180) / Math.PI})`}>
+        <rect x=${-(wall.thickness / 2 + clearance) * k} y=${-(wall.length / 2 + clearance) * k} width=${(wall.thickness + 2 * clearance) * k} height=${(wall.length + 2 * clearance) * k} rx=${clearance * k} class="band" /></g>` : ''}
+      ${wall ? rectAt(wall.pose.pos[0], wall.pose.pos[1], wall.thickness / 2, wall.length / 2, quatYaw(wall.pose.quat), 'wall') : ''}
+      ${hands && plan ? Object.entries(plan.real).filter(([l]) => !['tray', 'divider'].includes(l)).flatMap(([l, r]) => {
+        const o = table.objects.find((x) => x.label === l);
+        // Only while carried (the confirmed or inferred carries), so resting jitter is not drawn as motion.
+        return (carryW[l] || []).filter((w) => w.to - w.from > 0.8).map((w) => html`<path d=${pathD(r.path.filter((p) => p[0] >= w.from - 0.1 && p[0] <= w.to + 0.1).map((p) => [p[1], p[2]]))} class="hand" style=${{ stroke: o?.color }} />`); }) : ''}
+      ${ghost ? Object.entries(ghost.paths || {}).map(([id, pts]) => html`<path d=${pathD(pts)} class="ghost" />`) : ''}
+      ${Object.entries(run?.paths || {}).map(([id, pts]) => html`<path d=${pathD(pts.slice(0, idx(pts.length) + 1))} class="robot" style=${{ stroke: col(id) }} />
+        <path d=${pathD(pts)} class="robot-future" style=${{ stroke: col(id) }} />`)}
+      ${scene.objects.map((o) => html`<circle cx=${sx(o.pose.pos[0])} cy=${sy(o.pose.pos[1])} r="3.5" class="start" style=${{ stroke: col(o.id) }} />`)}
+      ${Object.entries(run?.paths || {}).map(([id, pts]) => { const p = pts[idx(pts.length)]; return p ? html`<circle cx=${sx(p[0])} cy=${sy(p[1])} r=${4 + Math.min(6, p[2] * 30)} class="now" style=${{ fill: col(id) }} />` : ''; })}
+      ${cam ? html`<g class="cam" transform=${`translate(${sx(cam.xy[0]).toFixed(1)} ${sy(cam.xy[1]).toFixed(1)}) rotate(${(-Math.atan2(cam.look_xy[1], cam.look_xy[0]) * 180) / Math.PI})`}>
+        <path d="M0,-7 L14,-11 L14,11 L0,7 Z" /><circle r="2.5" /></g>
+        <text x=${Math.min(W - 4, sx(cam.xy[0]) + 6)} y=${sy(cam.xy[1]) + 22} class="lbl" text-anchor="end">your phone · ${fmt(cam.height_m * 100, 0)} cm up</text>` : ''}
+      <g class="scale" transform=${`translate(${12} ${H - 12})`}><line x1="0" x2=${0.1 * k} y1="0" y2="0" /><text x=${0.05 * k} y="-5" text-anchor="middle">10 cm</text></g>
+    </svg>
+    <div class="yt-plan-key">
+      <label><input type="checkbox" checked=${hands} onChange=${(e) => setHands(e.target.checked)} /> <i class="hand-k"></i> your hands (from the video, approx.)</label>
+      <span><i class="robot-k"></i> robot${ghost ? html` · <i class="ghost-k"></i> before` : ''}</span>
+      ${clearance ? html`<span><i class="band-k"></i> ${fmt(clearance * 100, 0)} cm clearance</span>` : ''}
+    </div>
+  </figure>`;
+}
+
 // ------------------------------------------------------------------ 3D stage (studio Viewer API)
 function RobotStage({ dir, run, ghost, t, setT, playing, setPlaying, seekReq, label }) {
   const el = useRef(null);
@@ -376,6 +436,7 @@ function StepRobot({ table, dir, t, seek }) {
   return html`<div>
     <${Metrics} s=${r.summary} />
     <p class="faint num yt-routes">${(r.summary.routes || []).map((x) => human(x).replace(/:/g, ' · ')).join('   ')}</p>
+    <${PlanView} table=${table} run=${r} t=${t} />
     ${r.series?.gap_cm ? html`<${LineChart} title="Mug proxy to divider (approx.)" unit="cm" t=${t} onSeek=${seek}
       lines=${[{ name: 'run', color: 'var(--accent)', t: r.series.t, y: r.series.gap_cm }]} yMin=${0} yMax=${20}
       note="Horizontal gap from the cup proxy's surface to the divider box, drawn from recorded frames; the checker's verdicts use solid shapes." />` : ''}
@@ -435,6 +496,7 @@ function StepCompare({ table, pick, t, seek }) {
       threshold=${thr != null ? thr * 100 : null} thresholdLabel=${thr != null ? `${thr * 100} cm rule` : ''}
       lines=${[{ name: 'before', color: 'var(--faint)', t: base.series.t, y: base.series.gap_cm, dash: true }, { name: 'after', color: 'var(--accent)', t: after.series.t, y: after.series.gap_cm }]}
       note="Drawing aid from recorded frames (centre distance minus the proxy radius). Verdicts in the table come from the checker on the dense step log." />` : ''}
+    <${PlanView} table=${table} run=${after} ghost=${base} t=${t} clearance=${thr} />
     <${Metrics} s=${after?.summary} />
   </div>`;
 }

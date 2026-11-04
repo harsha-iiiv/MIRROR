@@ -303,6 +303,51 @@ def simulate(scene, spec, candidates: list[dict], rollout_dir: Path) -> dict:
     return {"run": run, "corrections": out}
 
 
+# ------------------------------------------------------------- plan view
+def plan_view(sess, scene: dict, *, hz: float = 5.0) -> Optional[dict]:
+    """Top view in the simulator frame: where MIRROR saw your objects and hands move (from the capture,
+    one camera, approximate), where the proxies start, and where the phone was.
+
+    The capture's table frame is mapped onto the simulator frame with the placement the scene was built
+    with, recovered from the tray (the one object both share): rotation from the session's placement yaw,
+    translation so the capture's tray centre lands on the scene's tray."""
+    import numpy as np
+    if sess.reconstruction is None or sess.tray is None or not scene.get("trays"):
+        return None
+    yaw = math.radians(sess.placement.yaw_deg if sess.placement else 0.0)
+    c, s_ = math.cos(yaw), math.sin(yaw)
+    tc = sess.tray.center_xy
+    st = scene["trays"][0]["pose"]["pos"]
+    ox, oy = st[0] - (c * tc[0] - s_ * tc[1]), st[1] - (s_ * tc[0] + c * tc[1])
+
+    def to_sim(p):
+        return [round(ox + c * p[0] - s_ * p[1], 4), round(oy + s_ * p[0] + c * p[1], 4)]
+
+    real = {}
+    for label, tr in sess.reconstruction.objects.items():
+        ts = list(getattr(tr, "t", None) or [])
+        if not ts:
+            continue
+        step = max(1, int(round((len(ts) / max(ts[-1] - ts[0], 1e-6)) / hz)))
+        pts = [[round(ts[k], 2)] + to_sim(tr.pos[k]) for k in range(0, len(ts), step) if tr.pos[k] is not None]
+        rest = None
+        idx = [k for k, (p, r) in enumerate(zip(tr.pos, getattr(tr, "resting", [True] * len(tr.pos)))) if p is not None and r]
+        if idx:
+            rest = to_sim(np.median(np.array([tr.pos[k] for k in idx[:5]]), 0))
+        real[label] = {"path": pts, "rest": rest}
+    cam = None
+    pose = (sess.poses or {}).get("top")
+    if pose is not None:
+        R = np.asarray(pose.R, float); t = np.asarray(pose.t, float).reshape(3)
+        C = -R.T @ t
+        f = R.T @ np.array([0.0, 0.0, 1.0])
+        cam = {"xy": to_sim(C), "height_m": round(float(C[2]), 3), "look_xy": [round(c * f[0] - s_ * f[1], 3), round(s_ * f[0] + c * f[1], 3)],
+               "note": "phone position from the board pose (one view; calibration reuse flagged)"}
+    return {"frame": "simulator (m)", "real": real, "camera": cam,
+            "origin_from": "tray centre (capture) onto the scene's tray; yaw from the session placement",
+            "note": "Your objects' paths come from one camera and the table-plane assumption: approximate, not measured."}
+
+
 # ---------------------------------------------------------------- sources
 @dataclass
 class Source:
@@ -520,6 +565,16 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
             timings["simulate_s"] = round(time.time() - t0, 1)
             robot["scene"] = scene.model_dump(mode="json")
             robot["placement_note"] = src.placement_note or scene.notes
+        try:
+            plan = plan_view(sess, scene.model_dump(mode="json"))
+        except Exception as exc:  # the page works without it
+            log(f"plan view skipped: {exc}")
+            plan = None
+        if robot is not None:
+            robot["plan"] = plan
+        # The live studio re-plans corrections from these two files.
+        shutil.copyfile(src.scene, out / "scene.json")
+        shutil.copyfile(src.spec, out / "spec.json")
 
     table = {
         "format": TABLE_FORMAT, "id": src.capture_id, "title": src.title,
