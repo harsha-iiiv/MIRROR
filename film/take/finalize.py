@@ -1,6 +1,6 @@
-"""Finish the night film: quiet synthesized pad + three soft cues muxed under the Remotion render, stills, checksums.
+"""Finish the capture film: quiet synthesized pad + three soft cues muxed under the Remotion render, stills, checksums.
 
-    python film/night/finalize.py --video film.mp4 --shots film/night/shots_film.json --out DIR
+    python film/take/finalize.py --video film.mp4 --shots film/take/shots_film.json --out DIR
 
 The pad is the v2 film's music_bed (scripts/film/build.py), copied here so this script needs no simulator imports;
 no third-party audio, no voice. Cues: the gate refusal and the two verdicts of the re-judge shot (times derived from
@@ -43,7 +43,7 @@ def knock(freq: float, dur: float = 0.35) -> np.ndarray:
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--video", required=True); ap.add_argument("--shots", required=True); ap.add_argument("--out", required=True)
-    ap.add_argument("--name", default="mirror_night_film_v3")
+    ap.add_argument("--name", default="mirror_film_v3")
     a = ap.parse_args(argv)
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     shots = json.loads(Path(a.shots).read_text())

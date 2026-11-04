@@ -1,4 +1,4 @@
-"""Correction sources for the night film (D1 development clip, never scored).
+"""Correction sources for the capture film (D1 development clip, never scored).
 
 Re-runs the D1 phase-2 layout and person-stated spec exactly as phase 2 did (planner default config,
 gripper backend), checks it reproduces the recorded phase-2 report, then compiles each correction
@@ -6,8 +6,8 @@ candidate shown on the D1 page with the OFFLINE rule interpreter (no model call)
 run from its step log under the new spec, and plans + executes the new spec. Every result is written;
 none is filtered.
 
-    python film/night/make_correction.py --phase2 DIR --out DIR          # D1 phase-2 artefacts
-    python film/night/make_correction.py --pipeline DIR --out DIR        # a mirror.capture.real_run output dir
+    python film/take/make_correction.py --phase2 DIR --out DIR          # D1 phase-2 artefacts
+    python film/take/make_correction.py --pipeline DIR --out DIR        # a mirror.capture.real_run output dir
 
 With --pipeline the scene, the spec and the reference report come from the run's manifest (scene/scene.json, spec.json,
 run/report.json) and the sentences from page.json correction_candidates (compile_text), the manifest's corrections first.
@@ -113,7 +113,7 @@ def main(argv=None):
                  routes=o["routes"] == [r for r in recorded["route_labels"] if not r.startswith("transit")],
                  violations=len(o["violations"]) == len(recorded["violations"]))
     (out / "rollout_old.json").write_text(old.rollout.model_dump_json())
-    rec = dict(script="film/night/make_correction.py", interpreter="offline-rules (no model call)",
+    rec = dict(script="film/take/make_correction.py", interpreter="offline-rules (no model call)",
                planner="mirror.plan default config (as the D1 phase-2 run)", backend="gripper",
                labels=["real phone footage", "one camera", "calibration reuse flagged", "development clip D1, never scored",
                        "simulation proxies, layout centred by software"],

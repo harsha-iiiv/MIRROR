@@ -1,10 +1,11 @@
 """One recorded Muse Spark compile of the film's correction sentence, compared with the offline rule interpreter.
 
 Record mode: an existing cassette is served (no call); otherwise exactly one API call is made and saved as a cassette.
-Before a live call, the night spend ledger is checked under its lock (tonight's cap $8 across tracks) and the call is
-appended to it. The API key is read from MODEL_API_KEY in the process environment only.
+Before a live call, the spend ledger (--ledger, default MIRROR_PROJECT_LEDGER, else OUT.spend.jsonl) is checked
+under a lock against --cap-usd (default $8) and the call is appended to it. The API key is read from MODEL_API_KEY in
+the process environment only.
 
-    MODEL_API_KEY=... python film/night/spark_compile.py --phase2 DIR --cassettes DIR --out spark.json
+    MODEL_API_KEY=... python film/take/spark_compile.py --phase2 DIR --cassettes DIR --out spark.json
 """
 from __future__ import annotations
 import argparse, fcntl, json, os, sys, time
@@ -16,9 +17,7 @@ from mirror.contracts import SceneState, TaskSpec  # noqa: E402
 from mirror.interpret import LLMClient  # noqa: E402
 from mirror.interpret.correct import compile_correction  # noqa: E402
 
-LEDGER = Path("/workspace/mirror-team/v2/night/spend.jsonl")
-LOCK = Path("/workspace/mirror-team/v2/night/spend.lock")
-NIGHT_CAP = 8.0
+DEFAULT_CAP = 8.0
 TEXT = "Keep the mug at least 6 cm away from the divider while carrying it."
 IN_USD, OUT_USD = 1.25e-6, 4.25e-6   # per token, as in the D1 ledger's muse-spark-1.3 estimates
 
@@ -37,7 +36,13 @@ def main(argv=None):
     ap.add_argument("--phase2", required=True)
     ap.add_argument("--cassettes", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--ledger", default=os.environ.get("MIRROR_PROJECT_LEDGER") or None,
+                    help="append-only spend ledger (default MIRROR_PROJECT_LEDGER, else OUT.spend.jsonl)")
+    ap.add_argument("--cap-usd", type=float, default=DEFAULT_CAP)
     a = ap.parse_args(argv)
+    LEDGER = Path(a.ledger) if a.ledger and a.ledger.lower() != "none" else Path(a.out).with_suffix(".spend.jsonl")
+    LOCK = LEDGER.with_suffix(".lock")
+    LEDGER.parent.mkdir(parents=True, exist_ok=True)
     p2 = Path(a.phase2)
     scene = SceneState.model_validate_json((p2 / "scene.json").read_text())
     spec = TaskSpec.model_validate_json((p2 / "spec_intent.json").read_text())
@@ -46,8 +51,8 @@ def main(argv=None):
     with open(LOCK, "w") as lk:
         fcntl.flock(lk, fcntl.LOCK_EX)
         spent = sum(json.loads(l).get("est_cost_usd", 0) for l in LEDGER.read_text().splitlines() if l.strip()) if LEDGER.exists() else 0.0
-        if spent + 0.05 > NIGHT_CAP:
-            raise SystemExit(f"night spend {spent:.3f} would exceed the cap")
+        if spent + 0.05 > a.cap_usd:
+            raise SystemExit(f"spend {spent:.3f} would exceed the ${a.cap_usd:.2f} cap")
         t0 = time.time()
         new, rec = compile_correction(spec, TEXT, client, context={"scene": scene})
         off, roff = compile_correction(spec, TEXT, LLMClient.offline_client(), context={"scene": scene})
@@ -58,7 +63,7 @@ def main(argv=None):
             cost += (c.get("prompt_tokens") or 0) * IN_USD + (c.get("completion_tokens") or 0) * OUT_USD
         if live:
             with open(LEDGER, "a") as f:
-                f.write(json.dumps(dict(time=time.strftime("%Y-%m-%dT%H:%M:%S%z"), track="motion", model=client.model, endpoint="/responses",
+                f.write(json.dumps(dict(time=time.strftime("%Y-%m-%dT%H:%M:%S%z"), track="film", model=client.model, endpoint="/responses",
                                         est_cost_usd=round(cost, 6), what="compile film correction sentence (record mode)",
                                         calls=len(live))) + "\n")
     ops_m = [o.model_dump(mode="json") for o in rec.diff]

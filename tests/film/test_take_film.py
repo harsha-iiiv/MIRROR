@@ -1,17 +1,17 @@
-"""Night film tooling: numbers come from records, outlines from recorded masks, and the motion check catches moving text."""
+"""Capture film tooling: numbers come from records, outlines from recorded masks, and the motion check catches moving text."""
 from __future__ import annotations
-import importlib.util, json, subprocess, sys
+import importlib.util, json, os, subprocess, sys
 from pathlib import Path
 
 import numpy as np
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-NIGHT = ROOT / "film" / "night"
+FILM = ROOT / "film" / "take"
 
 
 def _load(name):
-    spec = importlib.util.spec_from_file_location(name, NIGHT / f"{name}.py")
+    spec = importlib.util.spec_from_file_location(name, FILM / f"{name}.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -95,7 +95,7 @@ def test_motion_check_flags_fast_text(tmp_path, step, expect_pass):
     shots = tmp_path / "s.json"
     shots.write_text(json.dumps([{"name": "s", "frames": 40, "text_zones": [[0, 0, 1920, 1080]]}]))
     out = tmp_path / "chk"
-    r = subprocess.run([sys.executable, str(NIGHT / "check_film.py"), str(vid), "--shots", str(shots), "--out", str(out)],
+    r = subprocess.run([sys.executable, str(FILM / "check_film.py"), str(vid), "--shots", str(shots), "--out", str(out)],
                        capture_output=True, text=True, timeout=300)
     assert r.returncode == 0, r.stderr
     m = json.loads((out / "motion.json").read_text())
@@ -108,19 +108,19 @@ def test_fade_is_not_motion(tmp_path):
     _video(vid, [_text_frame(0, alpha=min(1.0, 0.2 + i / 20)) for i in range(40)])
     shots = tmp_path / "s.json"
     shots.write_text(json.dumps([{"name": "s", "frames": 40, "text_zones": [[0, 0, 1920, 1080]]}]))
-    r = subprocess.run([sys.executable, str(NIGHT / "check_film.py"), str(vid), "--shots", str(shots), "--out", str(tmp_path / "c")],
+    r = subprocess.run([sys.executable, str(FILM / "check_film.py"), str(vid), "--shots", str(shots), "--out", str(tmp_path / "c")],
                        capture_output=True, text=True, timeout=300)
     assert r.returncode == 0, r.stderr
     assert json.loads((tmp_path / "c" / "motion.json").read_text())["shots"][0]["pass"]
 
 
-PHASE2 = Path("/workspace/mirror-team/v2/phone_real/out/phase2")
+PHASE2 = Path(os.environ.get("MIRROR_D1_PHASE2", "/nonexistent"))
 
 
 @pytest.mark.slow
 @pytest.mark.skipif(not PHASE2.exists(), reason="D1 phase-2 outputs not on this machine")
 def test_correction_sources_reproduce_phase2(tmp_path):
-    r = subprocess.run([sys.executable, str(NIGHT / "make_correction.py"), "--phase2", str(PHASE2), "--out", str(tmp_path / "c")],
+    r = subprocess.run([sys.executable, str(FILM / "make_correction.py"), "--phase2", str(PHASE2), "--out", str(tmp_path / "c")],
                        capture_output=True, text=True, timeout=900, env={**__import__("os").environ, "MIRROR_LLM_MODE": "offline"})
     assert r.returncode == 0, r.stderr[-2000:]
     C = json.loads((tmp_path / "c" / "corrections.json").read_text())

@@ -1,6 +1,6 @@
-"""Contact sheet and frame-to-frame motion check for the night film and loops.
+"""Contact sheet and frame-to-frame motion check for the capture film and loops.
 
-    python film/night/check_film.py VIDEO --shots shots.json --out DIR [--loop]
+    python film/take/check_film.py VIDEO --shots shots.json --out DIR [--loop]
 
 Streams the video (never holds decoded frames), downscaled to 640x360. Per frame pair:
 - global similarity scale change from ORB features + RANSAC over the whole frame (camera zoom / punch-in detector);

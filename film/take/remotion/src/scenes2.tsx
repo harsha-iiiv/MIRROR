@@ -284,7 +284,7 @@ export const End: React.FC<{dur: number}> = ({dur}) => {
   );
 };
 
-// 3b · the same recorded run drawn from the phone's own viewpoint (twin track output, approximate registration)
+// 3b · the same recorded run drawn from the phone's own viewpoint (twin output, approximate registration)
 export const Twin: React.FC<{dur: number}> = ({dur}) => {
   const f = useCurrentFrame();
   const TW = DATA.twin;
@@ -303,7 +303,7 @@ export const Twin: React.FC<{dur: number}> = ({dur}) => {
           ['camera', 'IMG_0806 lens (0.60 px) + board pose at rest (1.13 px, about 88 cm)'],
           ['registration', `tray outline IoU ${TW.tray_iou} in the image · simulated tray ${TW.tray_offset_cm} cm / ${Math.abs(TW.tray_yaw_deg)}° from the real one`],
           ['stand-ins', 'gripper and proxies are simulated, not your objects'],
-          ['video', `twin track overlay, first ${(dur / 30 * 2).toFixed(0)} s at 2× (robot at ${2 * (TW.time_map?.sim_speed ?? 1)}× real time)`],
+          ['video', `twin overlay, first ${(dur / 30 * 2).toFixed(0)} s at 2× (robot at ${2 * (TW.time_map?.sim_speed ?? 1)}× real time)`],
         ].map(([k, v]) => (
           <div key={k} style={{display: 'grid', gridTemplateColumns: '200px 1fr', padding: '13px 0', borderTop: `1px solid ${C.line}`}}>
             <span style={{fontFamily: MONO, fontSize: 18, color: C.faint}}>{k}</span>

@@ -1,4 +1,4 @@
-"""Export real D1 outputs as Remotion assets for the night film (no model calls, no fabrication).
+"""Export real D1 outputs as Remotion assets for the capture film (no model calls, no fabrication).
 
 Writes into OUT (Remotion public dir):
   phone.mp4            IMG_0815 rotated to portrait, 720x1280, H.264 (the person's own footage, untouched otherwise)
@@ -7,7 +7,7 @@ Writes into OUT (Remotion public dir):
   run_old.json / run_new.json   recorded MuJoCo rollouts: static geoms + per-frame body poses (30 Hz)
   data.json            timeline events, gate result, spec, report rule rows, correction records, labels, provenance
 
-    python film/night/export_assets.py --capture DIR --phase2 DIR --corr DIR --take IMG_0815.MOV --out PUBLIC
+    python film/take/export_assets.py --capture DIR --phase2 DIR --corr DIR --take IMG_0815.MOV --out PUBLIC
 """
 from __future__ import annotations
 import argparse, gzip, hashlib, json, subprocess
@@ -296,7 +296,7 @@ def main(argv=None):
     ap.add_argument("--take", default=None)
     ap.add_argument("--out", required=True)
     ap.add_argument("--skip-video", action="store_true")
-    ap.add_argument("--twin", default=None, help="twin track output dir (twin.json + overlay.mp4), optional")
+    ap.add_argument("--twin", default=None, help="twin output dir (twin.json + overlay.mp4), optional")
     ap.add_argument("--spark", default=None, help="spark_compile.py output (one recorded Muse Spark compile), optional")
     a = ap.parse_args(argv)
     corr, out = Path(a.corr), Path(a.out)
@@ -314,7 +314,7 @@ def main(argv=None):
         labels = man.get("labels")
         divider_axis = None
         prov = dict(take=f"{Path(take).name} sha256 {sha(take)}", masks=page.get("calibration", {}).get("lens", ""),
-                    run="mirror.capture.real_run " + str(pd), correction="film/night/make_correction.py --pipeline")
+                    run="mirror.capture.real_run " + str(pd), correction="film/take/make_correction.py --pipeline")
     else:
         cap, p2 = Path(a.capture), Path(a.phase2)
         take = a.take; tracks = cap / "tracks_sam_540x960.json.gz"; timeline_p = cap / "timeline.json"
@@ -325,8 +325,8 @@ def main(argv=None):
         placement_label = "layout centred by software" if placement.get("source") == "auto_layout_centred" else "layout in your table's frame"
         prov = dict(
             take="IMG_0815.MOV (owner's phone, one camera, 1920x1080 HEVC, 49.8 s) sha256 " + sha(take),
-            masks="SAM 3.1 box-prompt tracking seeded by Muse Spark grounding at 12.5 s (recorded cassettes, $0.33 spent on 3 Nov); no model call tonight",
-            run="MuJoCo rollouts re-run tonight by film/night/make_correction.py (reproduces the phase-2 report)",
+            masks="SAM 3.1 box-prompt tracking seeded by Muse Spark grounding at 12.5 s (recorded cassettes, $0.33 spent on 3 Nov); no model call when building the film",
+            run="MuJoCo rollouts re-run by film/take/make_correction.py (reproduces the phase-2 report)",
             correction="offline rule interpreter (no model call)")
     if not a.skip_video:
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", take, "-an", "-vf",

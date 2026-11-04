@@ -1,12 +1,14 @@
 #!/bin/bash
-# One command for the night film from a capture run (or the D1 phase-2 artefacts).
-#   film/night/make_film.sh --pipeline <real_run out dir> --out <dir> [--remotion /tmp/night-motion] [--twin <twin dir>] [--spark spark.json] [--loops]
-#   film/night/make_film.sh --d1 --out <dir> [...]
+# One command for the capture film from a real_run output directory (or the D1 phase-2 artefacts).
+#   film/take/make_film.sh --pipeline <real_run out dir> --out <dir> [--remotion <dir>] [--twin <twin dir>] [--spark spark.json] [--loops]
+#   film/take/make_film.sh --d1 --out <dir> [...]   (needs MIRROR_D1_PHASE2, MIRROR_D1_CAPTURE, MIRROR_D1_TAKE, MIRROR_D1_SESSION)
+# Environment: PY (python, default python3), MIRROR_REMOTION_DIR (Remotion work dir), MIRROR_RENDER_LOCK (optional flock file).
 # Steps: correction sources (offline, ~25 s) -> assets -> Remotion bundle -> film (+ loops) under the shared render lock ->
 #        motion check + contact sheet -> pad + cues + stills -> shot list. No model calls.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"; ROOT="$(cd "$HERE/../.." && pwd)"
-PY=${PY:-/workspace/mirror/.venv/bin/python}; REM=/tmp/night-motion; LOCK=/workspace/mirror-team/v2/night/render.lock
+PY=${PY:-python3}; REM=${MIRROR_REMOTION_DIR:-${TMPDIR:-/tmp}/mirror-film-remotion}; LOCK=${MIRROR_RENDER_LOCK:-}
+locked() { if [ -n "$LOCK" ]; then flock "$LOCK" "$@"; else "$@"; fi; }
 PIPE=""; D1=0; OUT=""; TWIN=""; SPARK=""; LOOPS=0; NOTE=""
 while [ $# -gt 0 ]; do case "$1" in
   --pipeline) PIPE="$2"; shift 2;; --d1) D1=1; shift;; --out) OUT="$2"; shift 2;; --remotion) REM="$2"; shift 2;;
@@ -27,17 +29,20 @@ if [ -n "$PIPE" ]; then
   [ -z "$TWIN" ] && [ -f "$PIPE/twin/twin.json" ] && EXTRA+=(--twin "$PIPE/twin")
   "$PY" "$HERE/export_assets.py" --pipeline "$PIPE" --corr "$OUT/corr" --out "$REM/public" "${EXTRA[@]}"
 else
-  P2=/workspace/mirror-team/v2/phone_real/out/phase2; CAP=/cloudspace/mirror/capture/D1/real-demo
-  "$PY" "$HERE/make_correction.py" --phase2 "$P2" --out "$OUT/corr"
-  "$PY" "$HERE/export_assets.py" --capture "$CAP" --phase2 "$P2" --corr "$OUT/corr" --take /workspace/mirror-team/v2/phone_real/D1/IMG_0815.MOV \
-     --session /workspace/mirror-team/v2/phone_real/D1/session.json --out "$REM/public" "${EXTRA[@]}"
+  [ "$D1" = 1 ] || { echo "give --pipeline DIR or --d1"; exit 2; }
+  : "${MIRROR_D1_PHASE2:?set MIRROR_D1_PHASE2 to the D1 phase-2 output directory}"
+  : "${MIRROR_D1_CAPTURE:?set MIRROR_D1_CAPTURE to the D1 capture directory (timeline.json, tracks)}"
+  : "${MIRROR_D1_TAKE:?set MIRROR_D1_TAKE to IMG_0815.MOV}"; : "${MIRROR_D1_SESSION:?set MIRROR_D1_SESSION to the D1 session.json}"
+  "$PY" "$HERE/make_correction.py" --phase2 "$MIRROR_D1_PHASE2" --out "$OUT/corr"
+  "$PY" "$HERE/export_assets.py" --capture "$MIRROR_D1_CAPTURE" --phase2 "$MIRROR_D1_PHASE2" --corr "$OUT/corr" --take "$MIRROR_D1_TAKE" \
+     --session "$MIRROR_D1_SESSION" --out "$REM/public" "${EXTRA[@]}"
 fi
 T1=$(date +%s)
 (cd "$REM" && rm -rf build && npx remotion bundle src/index.ts --out-dir build --log=error)
 REN=(--gl=swangle --concurrency=2 --codec=h264 --crf=18 --pixel-format=yuv420p --color-space=bt709 --log=error)
-(cd "$REM" && flock "$LOCK" timeout 5400 npx remotion render build Film "$OUT/film_raw.mp4" "${REN[@]}")
+(cd "$REM" && locked timeout 5400 npx remotion render build Film "$OUT/film_raw.mp4" "${REN[@]}")
 if [ "$LOOPS" = 1 ]; then for L in LoopWatch LoopRun LoopGhosts LoopRejudge; do
-  (cd "$REM" && flock "$LOCK" timeout 1800 npx remotion render build $L "$OUT/loop_${L#Loop}.mp4" "${REN[@]}"); done; fi
+  (cd "$REM" && locked timeout 1800 npx remotion render build $L "$OUT/loop_${L#Loop}.mp4" "${REN[@]}"); done; fi
 T2=$(date +%s)
 "$PY" - "$REM/public/data.json" "$HERE/shots_film.json" "$OUT/shots.json" <<'EOF'
 import json, sys
@@ -50,4 +55,4 @@ EOF
 "$PY" "$HERE/shotlist.py" --data "$REM/public/data.json" --shots "$OUT/shots.json" --motion "$OUT/check/motion.json" --out "$OUT/SHOTLIST.md"
 cp "$REM/public/data.json" "$OUT/data.json"
 echo "{\"sources_s\": $((T1-T0)), \"render_s\": $((T2-T1)), \"total_s\": $(( $(date +%s)-T0 ))}" > "$OUT/timings.json"
-echo "film ready: $OUT/mirror_night_film_v3.mp4 ($(cat "$OUT/timings.json"))"
+echo "film ready: $OUT/mirror_film_v3.mp4 ($(cat "$OUT/timings.json"))"

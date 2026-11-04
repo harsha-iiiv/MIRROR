@@ -1,16 +1,16 @@
-# Night film (3-4 Nov 2026): "corrections you can check" on the owner's own table
+# Capture film: "corrections you can check" on the owner's own table
 
 A 74 s film and four 8 s loops built only from recorded outputs of development clip D1 (IMG_0815, the owner's phone,
 one camera, calibration reuse flagged, never scored). No model was called to build them.
 
 | Output | Size | Content |
 |---|---|---|
-| `mirror_night_film_v3.mp4` | 1920x1080, 30 fps, 74 s | 9 shots below |
+| `mirror_film_v3.mp4` | 1920x1080, 30 fps, 74 s | 9 shots below |
 | `loop_watch.mp4`, `loop_run.mp4`, `loop_rejudge.mp4`, `loop_sentence.mp4` | 1280x720, 8 s | README/site loops |
 
 Shots: title over the footage (board + sync card) · SAM 3.1 outlines on the footage with the event timeline on the take's own
 clock · the gate refusing task inference (recalibration_required, focal check +7.1 %) and the task as the person stated it ·
-the recorded MuJoCo rollout on the D1 layout (three.js, recorded poses only, 6x replay) · the twin track's overlay of the same
+the recorded MuJoCo rollout on the D1 layout (three.js, recorded poses only, 6x replay) · the twin overlay of the same
 run from the phone's viewpoint · one sentence compiled into one scoped rule · the old run re-judged from its step log
 (closest 4.52 cm, violated) and the re-plan (closest 6.33 cm, satisfied) · every rule before/after plus three other sentences
 (already satisfied / a question / refused) · end card.
@@ -26,10 +26,10 @@ run from the phone's viewpoint · one sentence compiled into one scoped rule · 
 - `check_film.py`: contact sheet + motion check (ORB similarity scale change < 1 %/frame; text-zone flow p99 < 20 px/frame;
   loop boundary).
 
-## One command (D1 or tomorrow's take)
+## One command (D1 or a new take)
 ```
-film/night/make_film.sh --d1 --loops --out <dir> [--twin <twin>/D1] [--spark spark.json] [--gate-note "..."]
-film/night/make_film.sh --pipeline <mirror.capture.real_run out dir> --loops --out <dir>     # twin picked up from <dir>/twin
+film/take/make_film.sh --d1 --loops --out <dir> [--twin <twin>/D1] [--spark spark.json] [--gate-note "..."]
+film/take/make_film.sh --pipeline <mirror.capture.real_run out dir> --loops --out <dir>     # twin picked up from <dir>/twin
 ```
 Everything the film says that depends on the take (object names, the gate card, the spec lines, the rule table, the source
 windows of the footage, the top-view fit, the 3-D camera targets) is computed by `export_assets.py` into `data.json`
@@ -39,14 +39,16 @@ The film's correction is the first suggested correction that adds a clearance ru
 
 ## Rebuild (step by step)
 ```
-python film/night/make_correction.py --phase2 <phone_real>/out/phase2 --out <corr>
-python film/night/export_assets.py --capture <D1 real-demo> --phase2 <phase2> --corr <corr> --take IMG_0815.MOV \
+python film/take/make_correction.py --phase2 <phone_real>/out/phase2 --out <corr>
+python film/take/export_assets.py --capture <D1 real-demo> --phase2 <phase2> --corr <corr> --take IMG_0815.MOV \
     --twin <twin>/D1 --out <remotion>/public
 cd <remotion> && npm install && bash setup_fonts.sh && npx remotion bundle src/index.ts --out-dir build
 bash render.sh Film film.mp4 ; bash render.sh LoopRun loop_run.mp4 --scale=0.6667
-python film/night/check_film.py film.mp4 --shots film/night/shots_film.json --out <check>
+python film/take/check_film.py film.mp4 --shots film/take/shots_film.json --out <check>
 ```
-Render with `--gl=swangle` (no GPU in the sandbox), concurrency 2, under the shared render lock.
+Render with `--gl=swangle` (software GL, no GPU needed), concurrency 2. Set `MIRROR_RENDER_LOCK` to a file to serialise
+renders with other heavy jobs; `--d1` needs `MIRROR_D1_PHASE2`, `MIRROR_D1_CAPTURE`, `MIRROR_D1_TAKE` and `MIRROR_D1_SESSION`
+(personal footage, not in the repository).
 
 ## What is approximate (also on screen)
 One camera; calibration reuse flagged (focal check +7.1 %, the phone was moved afterwards); simulation proxies sized from ruler
