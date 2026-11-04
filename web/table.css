@@ -253,3 +253,5 @@
 .yt-vbtn { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0; cursor: pointer; color: var(--muted); font-size: var(--fs-xs); }
 .yt-vbtn:hover .yt-v, .yt-vbtn:focus-visible .yt-v { box-shadow: 0 0 0 2px color-mix(in srgb, var(--bad) 25%, transparent); }
 .yt-vbtn:focus-visible { outline: none; }
+.yt-3d-hud > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.yt-3d-hud > .seg { flex: none; }
