@@ -32,7 +32,7 @@
     .legend i { display: inline-block; width: 16px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
     .caption { position: absolute; left: 10px; top: 10px; z-index: 4; max-width: 46%; font-size: var(--fs-xs); color: var(--muted); background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: var(--r-md); padding: 6px 9px; }
     .caption b { color: var(--text); font-weight: 600; }
-    @media (max-width: 560px) { .legend span.long { display: none; } header .tags { display: none; } .tools { max-width: 100%; left: 10px; right: 10px; top: auto; bottom: 10px; justify-content: flex-start; } .legend { bottom: 54px; } .caption { max-width: calc(100% - 20px); } }
+    @media (max-width: 560px) { .legend span.long { display: none; } header .tags { display: none; } .caption:not(.open) { max-height: 2.9em; overflow: hidden; cursor: pointer; } .caption:not(.open)::after { content: ' (tap for more)'; } .tools { max-width: 100%; left: 10px; right: 10px; top: auto; bottom: 10px; justify-content: flex-start; } .legend { bottom: 54px; } .caption { max-width: calc(100% - 20px); } }
   </style>
 </head>
 <body>
@@ -100,6 +100,7 @@
       const c = document.getElementById('caption');
       c.hidden = false;
       c.innerHTML = `<b>Your table, from your phone.</b> ${cv.caption || ''}`;
+      c.onclick = () => c.classList.toggle('open');
     }
     function tools(hasCap) {
       const T = document.getElementById('tools');
