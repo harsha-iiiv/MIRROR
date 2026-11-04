@@ -110,7 +110,7 @@ def test_placement_label_person_and_still_out_of_reach():
     assert len(lab) == 2 and "cup_0 outside the robot's reach" in lab[1]
 
 
-# ---------------------------------------------------------------- calibration flag (P2-5)
+# ---------------------------------------------------------------- calibration flag only for an open item
 def _rev(code, resolved):
     return SimpleNamespace(code=code, resolved=resolved)
 
@@ -124,7 +124,7 @@ def test_calibration_flag_only_for_open_item():
     assert not calibration_flag_open(SimpleNamespace(review=[], recalibration={}))
 
 
-# ---------------------------------------------------------------- registration wording (P1-5)
+# ---------------------------------------------------------------- registration wording: agreement by construction
 def test_tray_agreement_by_construction():
     reg = {"tray_iou": 0.921, "object_base_offset_px": {"red_box": 11.1, "mug": 8.9, "marker": 8.6}}
     r = tray_agreement(reg, "tracked_tray_at_rest", (540, 960))

@@ -163,9 +163,9 @@ The checker reads simulator trajectories, not the model's explanation. Evaluate 
 
 Simulator ground truth may be used for planning, control and evaluation, but record exactly where it is used. Do not represent privileged object poses as model-derived visual perception. Finite simulation tests do not constitute formal verification or physical safety guarantees.
 
-## 6. Workstreams and interfaces
+## 6. Components and interfaces
 
-| Workstream | Responsibility | Main output |
+| Component | Responsibility | Main output |
 |---|---|---|
 | Integration | Shared interfaces, reproducibility and the working end-to-end path | Integrated runnable system |
 | Simulation and control | Robot model, scenes, teleoperation, actuation, contacts and reset behavior | Reliable MuJoCo execution environment |

@@ -1,7 +1,7 @@
 """M2 understanding test matrix (author-written development cases).
 
 Every case was written by the developer of the offline rules; none is an
-independent or held-out measurement. Categories follow the owner's M2 brief.
+independent or held-out measurement. Categories follow milestone M2.
 "jar" and "bowl" informed the absent-object guard during development and are
 kept only as REGRESSION cases. The other absent-object words ("thermos",
 "goblet", "coffee") were checked against the lexicons before use: none appears

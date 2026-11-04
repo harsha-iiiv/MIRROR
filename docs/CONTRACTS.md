@@ -32,7 +32,7 @@ Reference scenes (from `mirror.scenes`):
 | `shortcut` | the "change the world" layout: the tray moves and the wall gains a slot, so the shortest route tilts the cup |
 | `blocked` | the slot is the only connection between regions; carrying the cup upright is geometrically impossible |
 
-## `mirror.scenes` (owner: simulation)
+## `mirror.scenes`
 
 ```python
 reference_scene(name: str) -> SceneState            # "demo" | "shortcut" | "blocked"
@@ -46,7 +46,7 @@ layout must have at least one collision-free route for every object under
 the unconstrained specification (validated at sampling time) unless the split
 is "blocked".
 
-## `mirror.sim` (owner: simulation)
+## `mirror.sim`
 
 ```python
 build_model(scene: SceneState) -> tuple[mujoco.MjModel, SceneIndex]
@@ -70,7 +70,7 @@ The executor tracks plan waypoints with bounded speed, closes the jaw on
 grasp steps, opens it on release steps, and never sets object poses. Resets
 between trials are allowed and are separate from execution.
 
-## `mirror.interpret` (owner: interpretation)
+## `mirror.interpret`
 
 ```python
 summarize_demo(trace: DemoTrace) -> DemoSummary        # deterministic features: per-object events, tilt stats, order
@@ -88,7 +88,7 @@ LLMClient.from_env()  # MIRROR_LLM_BASE_URL (default https://api.meta.ai/v1),
 Model output is always validated against the schema before planning. The
 model never emits actuator commands and never judges success.
 
-## `mirror.plan` (owner: planning)
+## `mirror.plan`
 
 ```python
 ground(spec: TaskSpec, scene: SceneState) -> Grounding  # role -> object ids, destination tray id
@@ -101,7 +101,7 @@ configuration are used for every specification version. A plan with no valid
 route returns `status="no_plan"` with the rejected routes listed; an
 infeasibility certificate is attached only when it is actually proven.
 
-## `mirror.evaluate` (owner: evaluation)
+## `mirror.evaluate`
 
 ```python
 check(log: StateLog, spec: TaskSpec, scene: SceneState) -> RolloutReport
@@ -112,13 +112,13 @@ write_report(report: EvalReport, out_dir: Path) -> None       # JSON + Markdown 
 
 The checker reads only the step log and the scene, never model output.
 
-## `mirror.studio` (owner: studio)
+## `mirror.studio`
 
 FastAPI app at `mirror.studio.app:app`, static frontend in `web/`, and
 `scripts/export_static.py` that writes a self-contained static site of
 precomputed sessions.
 
-## `mirror.pipeline` (owner: integration)
+## `mirror.pipeline`
 
 `Session` composes the packages for the studio and the CLI: load or record a
 demo, interpret, confirm, plan, execute, change the scene, correct,
@@ -208,5 +208,5 @@ hashes and recorded request keys are unchanged).
 - Checker id `mirror.evaluate.check/2`: ordering monitored from execution
   evidence (grasp start, placement completion), never from the plan; exact
   solid-shape clearance. Rule semantics and the support matrix: docs/RULES.md.
-- Perception track: `DemoTrace.evidence` (optional; omitted when absent) belongs
-  to the same additive minor version when merged.
+- Perception: `DemoTrace.evidence` (optional; omitted when absent) belongs
+  to the same additive minor version.

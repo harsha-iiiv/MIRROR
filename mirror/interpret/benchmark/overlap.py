@@ -12,7 +12,7 @@ STOP = {"the", "a", "an", "of", "to", "at", "in", "on", "it", "is", "and", "or",
         "be", "for", "with", "as", "by", "its", "are", "was", "not", "just", "only", "when", "while",
         "you", "your", "must", "can", "may", "has", "have", "do", "does"}
 
-# Illustrative phrases in prompt revision 1 (before the review round), kept so
+# Illustrative phrases in prompt revision 1 (removed in revision 2), kept so
 # that results produced with that revision can be tagged after the fact.
 PROMPT_V1_EXAMPLES = (
     "open-top container that may hold loose beads",

@@ -24,7 +24,7 @@ from typing import Any, ClassVar, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_serializer
 
-# --- perception track: observability/provenance (additive; see mirror/observability.py) ---
+# --- perception: observability/provenance (additive; see mirror/observability.py) ---
 from mirror.observability import TraceEvidence  # noqa: E402
 # --- end perception block ---
 
@@ -193,7 +193,7 @@ class DemoTrace(_Model):
     frames: list[TraceFrame]
     events: list[TraceEvent] = Field(default_factory=list)
     video_path: Optional[str] = None
-    # --- perception track: observability/provenance (additive) ---
+    # --- perception: observability/provenance (additive) ---
     # How every stored value was obtained (measured / inferred / interpolated /
     # unobserved) and where the trace came from. Absent on traces written before
     # this field existed: mirror.observability.resolve_evidence() derives what may

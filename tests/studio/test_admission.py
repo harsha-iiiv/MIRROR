@@ -1,4 +1,4 @@
-"""Admission control (workstream B): session tokens, per-address limits, eviction rules.
+"""Admission control: session tokens, per-address limits, eviction rules.
 
 The Origin check is not authentication: these tests drive the server the way a
 script would (no Origin header) and check what it can and cannot make it do."""

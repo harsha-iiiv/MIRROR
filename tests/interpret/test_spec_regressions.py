@@ -1,4 +1,4 @@
-"""Fixes from review round 1: role-based specs, selectors cover every matching
+"""Regression tests: role-based specs, selectors cover every matching
 object, and the offline rules' worst held-out failure."""
 import pytest
 

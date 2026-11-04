@@ -2,8 +2,8 @@
 
 One JSON object per **attempt** (one submitted correction or one saved manual
 edit), written as JSON lines, plus a CSV flattening and a readable summary.
-It covers every field the owner's milestone M2 section 4 asks to retain. The
-studio emits it (requested; field names follow the studio API: generation,
+It covers every field milestone M2 section 4 asks to retain. The
+studio is to emit it (planned; field names follow the studio API: generation,
 spec version and rollout ids from CHALLENGE_API section 2, provenance values
 from section 3). `study/tools/pilotkit.py validate` checks it; the pilot
 analysis reads only this format.

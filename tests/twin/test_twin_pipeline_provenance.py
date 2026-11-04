@@ -1,4 +1,4 @@
-"""Correction provenance from the pipeline manifest (review P0-3): a missing rehearsal flag is an error."""
+"""Correction provenance from the pipeline manifest: a missing rehearsal flag is an error."""
 from __future__ import annotations
 
 import json
@@ -11,7 +11,7 @@ D1_LABELS = ["Real phone footage", "One camera (single view, reduced)", "Calibra
              "Development clip D1, never scored"]
 
 
-# ---------------------------------------------------------------- correction provenance (P0-3)
+# ---------------------------------------------------------------- correction provenance
 def _load_cli():
     import importlib.util
     spec = importlib.util.spec_from_file_location("twin_render", Path(__file__).resolve().parents[2] / "scripts" / "twin_render.py")

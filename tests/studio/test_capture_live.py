@@ -65,7 +65,7 @@ def test_rendered_two_view_capture_end_to_end(tmp_path):
         s = svc.snapshot()
         assert s["generation"]["reason"] == "phone_capture"            # the reviewed capture became the demonstration
         if j.status != "done":
-            # Known gap (reported to the phone track): the capture scene carries no tray, so the interpreter
+            # Known gap: the capture scene carries no tray, so the interpreter
             # finds no packing task. The studio reports the refusal and substitutes nothing.
             assert "InterpretError" in j.error and not s["specs"]
             assert svc.capture_public(cid)["proposal"]["spec_version_id"] is None

@@ -1,6 +1,6 @@
 """Perception robustness benchmark (pre-registered).
 
-The measured path is the plan track's ``mirror.robustness.evaluate_robustness``
+The measured path is ``mirror.robustness.evaluate_robustness``
 (the same function its development rehearsal ran): frozen ground-truth frames x
 the frozen instructions; muse-image-1.0 edits with the frozen request options;
 sam-3.1 under condition A (muse-spark-1.3 chooser per original frame, reused

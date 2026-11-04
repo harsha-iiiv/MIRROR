@@ -31,7 +31,7 @@ def test_verification_is_recorded_and_can_reject():
     ps = choose_prompts(FX / "ref_top_frame0.png", "muse-spark-1.3", _replay(), verify=True,
                         verify_image=(FX / "ref_top_frame0_outlined.png").read_bytes())
     wall = next(c for c in ps.choices if c.kind == "wall")
-    assert wall.verified is False and not wall.ok  # a correct box the model rejected (see status note)
+    assert wall.verified is False and not wall.ok  # a correct box the model rejected on the reference render
 
 
 def test_outlined_image_pixels_match_the_stored_image():

@@ -1,5 +1,5 @@
 // Phone capture: pure helpers for the capture wizard (no DOM, no network).
-// Thresholds and wording come from the phone track (mirror/capture/calibrate.py THRESHOLDS,
+// Thresholds and wording come from the capture code and docs (mirror/capture/calibrate.py THRESHOLDS,
 // mirror/capture/proxy.py, docs/CAMERA_CAPTURE.md and the capture wizard content).
 
 export const HONESTY = 'Real-phone capture is a supported workflow, tested on synthetic renders only. No real footage has been validated yet. Your hand is not a robot gripper: MIRROR infers pick-up and put-down from how the objects move.';

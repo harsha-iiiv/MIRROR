@@ -24,7 +24,7 @@ export class PhoneLayer {
     this.view = null;
   }
 
-  // view: mirror-capture-view/1 (see docs in status/viz3d.md); base: URL prefix for its files.
+  // view: mirror-capture-view/1 (written by mirror/viz/capture_view.py); base: URL prefix for its files.
   async build(view, base = '') {
     this.clear();
     if (!view?.camera) return;

@@ -1,5 +1,5 @@
 // Three.js playback workspace for MuJoCo rollouts (VisualScene + columnar frames + the checker's
-// records). Public API is the one the studio uses (see status/viz3d.md for additions):
+// records). Public API is the one the studio uses:
 //   new Viewer(el, {onTick, onEdit, tol}) · loadRollout(payload, {ghost, traceObject, sceneState, keepTime, tiltStatus, spec})
 //   showScene · showLive · applyBodies · endLive · setView · setOptions · setTime · play/pause/toggle
 //   duration · frameIndex · beadsOffTable · snapshotPNG · setEditMode · applyTheme · dispose

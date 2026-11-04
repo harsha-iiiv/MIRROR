@@ -1,14 +1,14 @@
 # MIRROR usability pilot (3-5 people)
 
 **Status: prepared, not run.** No one has been recruited or contacted.
-Recruiting needs the owner's approval. Everything under `fixtures/` is
+Recruiting needs the study owner's approval. Everything under `fixtures/` is
 synthetic.
 
 **What it can show.** A pilot with 3 to 5 people is preliminary usability
 evidence: where people get stuck, which interpretations go wrong, whether the
 labels are understood. It is not proof of demand, of a general productivity
 gain, or of language understanding in general (that is
-[protocol v3](../../docs/protocols/v3_language.md)). The owner's own testing is
+[protocol v3](../../docs/protocols/v3_language.md)). The author's own testing is
 a developer smoke test (`context: dev_smoke`), not independent validation, and
 is never pooled with pilot sessions.
 
@@ -69,8 +69,8 @@ is excluded.
 
 ## Instrumentation
 
-The studio's trial export ([schema](../TRIAL_EXPORT.md), requested from the
-studio track; not yet emitted). Validate and analyse:
+The studio's trial export ([schema](../TRIAL_EXPORT.md); not yet emitted by
+the studio). Validate and analyse:
 
 ```bash
 python study/tools/pilotkit.py validate trials.jsonl

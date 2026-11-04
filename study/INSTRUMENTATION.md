@@ -1,8 +1,7 @@
 # Study event log, schema `mirror-study-events/1`
 
 One JSON object per line. The studio writes it only when started with
-`MIRROR_STUDY_LOG=<path>` (requested from the studio track; not yet emitted by
-the studio). `tools/studykit.py validate` checks a log against this schema.
+`MIRROR_STUDY_LOG=<path>` (planned; not yet emitted by the studio). `tools/studykit.py validate` checks a log against this schema.
 
 ## Fields on every event
 

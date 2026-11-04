@@ -236,7 +236,7 @@ def abstains(ev: TraceEvidence) -> list[ReviewItem]:
 
 # ------------------------------------------------------------- user text ---
 
-# One plain description per kind, for interfaces and reports (the web track owns the UI text).
+# One plain description per kind, for interfaces and reports (the web UI keeps its own text).
 ABOUT_WORDING: dict[str, str] = {
     "simulator_ground_truth": ("Recorded simulator trace: gripper and object poses logged by the physics "
                                "simulator. Not video, and not a person."),

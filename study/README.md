@@ -1,6 +1,6 @@
 # MIRROR impact study kit
 
-**Status: not yet run.** Both the impact study (5-8 people) and the smaller usability pilot (3-5 people, `pilot/`) are prepared, not run. The owner's own testing counts as a developer smoke test, never as independent validation. No participant has been recruited and no session has
+**Status: not yet run.** Both the impact study (5-8 people) and the smaller usability pilot (3-5 people, `pilot/`) are prepared, not run. The author's own testing counts as a developer smoke test, never as independent validation. No participant has been recruited and no session has
 taken place. Everything under `fixtures/` is synthetic and labelled so in every
 record; it exists only to test the tools.
 
@@ -20,9 +20,9 @@ they edit the structured specification by hand?
 | `tools/studykit.py` | Assignment, validation, export and analysis (`python study/tools/studykit.py -h`) |
 | `fixtures/` | Synthetic event logs for testing the tools; never study data |
 | [pilot/](pilot/PROTOCOL.md) | **Usability pilot (3-5 people), prepared, not run**: outcome task cards, counterbalancing, measures from the trial export |
-| [TRIAL_EXPORT.md](TRIAL_EXPORT.md) | Per-attempt trial export schema (`mirror-trial/1`) the studio is asked to emit |
+| [TRIAL_EXPORT.md](TRIAL_EXPORT.md) | Per-attempt trial export schema (`mirror-trial/1`) the studio is to emit |
 | `tools/pilotkit.py` | Pilot assignment, validation, analysis and CSV export |
 
-Running the study needs the owner's approval to contact participants, an
+Running the study needs the study owner's approval to contact participants, an
 appropriate ethics or review decision where the participants' organisations
-require one, and the studio's event logging (requested from the studio track).
+require one, and the studio's event logging (planned; not yet emitted by the studio).

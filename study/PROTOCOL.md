@@ -16,9 +16,9 @@ whether either reaches the intended behaviour on layouts they never saw.
 * 5 to 8 external task authors: people who program, integrate or maintain
   robot cells and have revised a handling or packing requirement in the last
   year. Not MIRROR developers, not people who wrote its benchmarks or cases.
-* Recruited by the owner (no one is contacted without the owner's approval).
+* Recruited by the study owner (no one is contacted without the study owner's approval).
   Each participant gets a pseudonymous id (P01, P02, ...) at consent. No
-  compensation is promised in this kit; the owner decides.
+  compensation is promised in this kit; the study owner decides.
 * Results are reported per person, including every failure and drop-out. Five
   to eight people is a pilot: it can show problems and effect directions, not
   population rates.

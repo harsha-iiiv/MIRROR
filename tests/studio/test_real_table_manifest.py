@@ -1,4 +1,4 @@
-"""real_table.pipeline_source: correction provenance (review P0-3)."""
+"""real_table.pipeline_source: correction provenance (a missing rehearsal flag is an error)."""
 from __future__ import annotations
 
 import json

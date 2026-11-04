@@ -185,7 +185,7 @@ tests the harness, not MIRROR:
 * End-to-end: 16 of 17 known cases succeed in every condition and 1 is unknown
   (the ordering case); the failure is the clearance case below.
 * Files: [`results/protocol_v3/dryrun-dev-2026-11-02/`](../../results/protocol_v3/dryrun-dev-2026-11-02/).
-* Found defects, reported to their owners rather than worked around: the offline
+* Found defects, recorded rather than worked around: the offline
   compiler raises a duplicate-id error on "keep it at least 3 cm away from the
   wall"; with a confirmed 3 cm clearance rule for the cup the planner chose a
   route that the checker then flagged for that rule (development seed 9605); and

@@ -159,7 +159,7 @@ def choose_prompts(media: Union[str, Path, bytes], model: str = "muse-spark-1.3"
     once whether each SAM box really is that kind (exactly one match is
     necessary but not sufficient: a phrase can uniquely match the wrong thing).
     ``verify`` is off by default: on the reference render it caught no wrong box
-    and rejected one correct box (round 7 status note)."""
+    and rejected one correct box (see tests/interpret/test_sam_prompts.py)."""
     import hashlib
     from mirror.meta import MetaClient, image_part, text_part
     client = client or MetaClient.from_env()

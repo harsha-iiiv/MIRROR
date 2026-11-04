@@ -1,6 +1,6 @@
 // Phone capture wizard: a guide for recording the supported kitting task on real phones, and a
 // review of a processed capture before MIRROR may propose rules from it. Content and thresholds
-// come from the phone track (docs/CAMERA_CAPTURE.md); endpoints from docs/CHALLENGE_API.md §6.
+// come from docs/CAMERA_CAPTURE.md; endpoints from docs/CHALLENGE_API.md §6.
 import { h } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import htm from 'htm';

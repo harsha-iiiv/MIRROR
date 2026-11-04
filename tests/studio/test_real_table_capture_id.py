@@ -1,4 +1,4 @@
-"""real_table.pipeline_source: capture id precedence (review P2-8)."""
+"""real_table.pipeline_source: capture id precedence."""
 from __future__ import annotations
 
 import json

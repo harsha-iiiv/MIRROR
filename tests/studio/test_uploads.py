@@ -1,4 +1,4 @@
-"""Upload admission (workstream B): probing, decoding, bounds, cleanup and expiry.
+"""Upload admission: probing, decoding, bounds, cleanup and expiry.
 
 Every video here is SYNTHETIC: ffmpeg's built-in test pattern, made on the fly.
 """
