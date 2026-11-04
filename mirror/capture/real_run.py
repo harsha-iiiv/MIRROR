@@ -283,6 +283,27 @@ def _fast_parse(text, *, prompt="", media="image", decode_masks=True, workers=3)
                        diagnostics=["decoded with real_run fast parser (official raster decoder, no canonical re-encode check)"])
 
 
+def _scaled_gray_frames(meta, scale: float):
+    """(index, pts, gray frame) at ``scale`` x resolution, scaled by ffmpeg (area filter), one at a time."""
+    w = int(round(meta.width * scale / 2)) * 2
+    h = int(round(meta.height * scale / 2)) * 2
+    proc = subprocess.Popen(["ffmpeg", "-v", "error", "-i", meta.path, "-map", "0:v:0", "-fps_mode", "passthrough",
+                             "-vf", f"scale={w}:{h}:flags=area", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+    try:
+        i = 0
+        while i < meta.n_frames:
+            buf = proc.stdout.read(w * h)
+            if len(buf) < w * h:
+                break
+            yield i, meta.pts_s[i], np.frombuffer(buf, np.uint8).reshape(h, w)
+            i += 1
+    finally:
+        proc.stdout.close()
+        proc.kill()
+        proc.wait(timeout=30)
+
+
 # ------------------------------------------------------------- measurements
 DIM_KEYS = ("width", "depth", "height")
 
@@ -417,7 +438,7 @@ class RealRun:
         return self.state["stages"].get(stage, {})
 
     def mark(self, stage: str, t0: float, **info):
-        self.state["stages"][stage] = {"status": "done", "wall_s": round(time.time() - t0, 2), "at": _now_ms(), **info}
+        self.state["stages"][stage] = {**info, "status": "done", "wall_s": round(time.time() - t0, 2), "at": _now_ms()}
         self._save()
         self.log(f"[{stage}] done in {time.time() - t0:.1f} s")
 
@@ -545,6 +566,11 @@ class RealRun:
     def stage_probe(self):
         from mirror.capture import media as M
         t0 = time.time()
+        if self.lens is not None:
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(2) as ex:
+                for f in [ex.submit(self.clip, self.take), ex.submit(self.clip, self.lens)]:
+                    f.result()
         tm = self.clip(self.take)
         out = {"take": {"path": str(self.take), "sha256": tm.sha256, "n_frames": tm.n_frames, "duration_s": tm.duration_s,
                         "fps": tm.nominal_fps, "size": [tm.width, tm.height], "variable_frame_rate": tm.variable_frame_rate,
@@ -598,8 +624,7 @@ class RealRun:
         ts, fs, vis, boards = [], [], [], []
         BSTEP, SC = 2, 0.5
         with heavy_lock():
-            for i, t, g in M.iter_frames(m, gray=True):
-                h = cv2.resize(g, None, fx=SC, fy=SC, interpolation=cv2.INTER_AREA)
+            for i, t, h in _scaled_gray_frames(m, SC):
                 _, ids, _ = det.detectMarkers(h)
                 ts.append(t); fs.append(i)
                 vis.append(ids is not None and SPEC.sync_marker_id in ids.ravel())
@@ -883,21 +908,94 @@ class RealRun:
         sc = self.info("scan")
         intr = C.Intrinsics.model_validate_json(self.p("lens", "intrinsics.json").read_text())
         origin = self.info("track").get("origin", "recorded_replay")
-        ts = TR.from_perception_tracks(m, self.p("tracks_full.json.gz"), camera="top", origin=origin)
-        s = SE.build_session(take={"top": str(self.take)}, intrinsics={"top": intr},
-                             print_check=C.PrintCheck(**self.meas["print_check"]), prompts=[],
-                             mappings=mappings_from(self.meas, set(confirmed), set(rejected)), tracker="model",
-                             model_tracks={"top": ts}, corrections=list(corrections),
-                             board_search_s=float(sc.get("board_search_s", 3.0)),
-                             end_board_same_placement=bool(sc.get("end_board_same_placement", True)))
+        tsf = self.p("work", "trackset_top.json")
+        if tsf.exists():
+            ts = TR.TrackSet.model_validate_json(tsf.read_text())
+        else:
+            ts = TR.from_perception_tracks(m, self.p("tracks_full.json.gz"), camera="top", origin=origin)
+            tsf.write_text(ts.model_dump_json())
+        with self._session_patches():
+            s = self._build(SE, C, m, sc, intr, ts, confirmed, rejected, corrections)
         s.notes.append("built by mirror.capture.real_run (board search and end-board placement found automatically: "
                        + sc.get("end_board_reason", "") + ")")
         s.notes += list(extra_notes)
         return s
 
+    @contextlib.contextmanager
+    def _session_patches(self):
+        """build_session decodes the take several times (board at the start and end, camera-shift frames);
+        those results depend only on the clip, so they are computed once and cached in DIR/work."""
+        from mirror.capture import calibrate as C, session as SE
+        cache_dir = self.p("work", "session_cache", "x").parent
+        orig = (SE.M.probe, SE.first_board, SE.last_board, SE.M.read_frame)
+        take = self.take.resolve()
+
+        def is_take(meta_or_path):
+            p = getattr(meta_or_path, "path", meta_or_path)
+            return Path(p).resolve() == take
+
+        def memo_det(name, fn):
+            def w(meta, spec, *a, **k):
+                if not is_take(meta):
+                    return fn(meta, spec, *a, **k)
+                f = cache_dir / f"{name}_{'_'.join(f'{kk}{vv}' for kk, vv in sorted(k.items()))}.json"
+                if f.exists():
+                    d = json.loads(f.read_text())
+                    return None if d is None else C.Detection.model_validate(d)
+                r = fn(meta, spec, *a, **k)
+                f.write_text(json.dumps(None if r is None else r.model_dump(mode="json")))
+                return r
+            return w
+
+        def read_frame(meta, index, gray=False, _o=orig[3]):
+            if not is_take(meta):
+                return _o(meta, index, gray=gray)
+            f = cache_dir / f"frame_{index}_{int(gray)}.npy"
+            if f.exists():
+                return np.load(f)
+            a = _o(meta, index, gray=gray)
+            np.save(f, a)
+            return a
+        SE.M.probe = lambda path, _o=orig[0]: self.clip(path) if is_take(path) else _o(path)
+        SE.first_board = memo_det("first_board", orig[1])
+        SE.last_board = memo_det("last_board", orig[2])
+        SE.M.read_frame = read_frame
+        try:
+            yield
+        finally:
+            SE.M.probe, SE.first_board, SE.last_board, SE.M.read_frame = orig
+
+    def _warm_session_cache(self):
+        """Run the clip decodes build_session needs in parallel (ffmpeg and OpenCV release the GIL)."""
+        from concurrent.futures import ThreadPoolExecutor
+        from mirror.capture import session as SE
+        from mirror.capture.target import DEFAULT_TARGET
+        m = self.clip(self.take)
+        sc = self.info("scan")
+        with self._session_patches():
+            def first():
+                d0 = SE.first_board(m, DEFAULT_TARGET, search_s=float(sc.get("board_search_s", 3.0)))
+                if d0 is not None:
+                    k0 = min(m.n_frames - 1, (d0.frame_index or 0) + int(2.0 / max(np.median(np.diff(m.pts_s)), 1e-3)))
+                    SE.M.read_frame(m, k0)
+            with ThreadPoolExecutor(3) as ex:
+                fs = [ex.submit(first), ex.submit(SE.last_board, m, DEFAULT_TARGET),
+                      ex.submit(SE.M.read_frame, m, m.n_frames - 1)]
+                for f in fs:
+                    f.result()
+
+    def _build(self, SE, C, m, sc, intr, ts, confirmed, rejected, corrections):
+        return SE.build_session(take={"top": str(self.take)}, intrinsics={"top": intr},
+                             print_check=C.PrintCheck(**self.meas["print_check"]), prompts=[],
+                             mappings=mappings_from(self.meas, set(confirmed), set(rejected)), tracker="model",
+                             model_tracks={"top": ts}, corrections=list(corrections),
+                             board_search_s=float(sc.get("board_search_s", 3.0)),
+                             end_board_same_placement=bool(sc.get("end_board_same_placement", True)))
+
     def stage_session(self):
         from mirror.capture import session as SE
         t0 = time.time()
+        self._warm_session_cache()
         s = self._build_session()
         s.save(self.p("session.json"))
         lines = SE.summary_lines(s)
@@ -975,7 +1073,10 @@ class RealRun:
                     merged[-1][1] = sgm[1]
                 else:
                     merged.append(sgm)
-            for a, b in merged:
+            big = [sg for sg in merged
+                   if np.nansum([np.hypot(*(c[min(sg[1] + 3, N - 1)] - c[max(sg[0] - 3, 0)]))]) > 25.0 * pw / 540
+                   or pts[sg[1]] - pts[sg[0]] > 0.5]
+            for a, b in big:
                 pre = next((q for q in range(a - 1, -1, -1) if ok[q]), None)
                 post = next((q for q in range(b + 1, N) if ok[q]), None)
                 sxy = c[pre] if pre is not None else None
@@ -1322,6 +1423,17 @@ class RealRun:
                 paths[name.replace("/", "_").replace(".", "_")] = name
         page["paths"] = paths
         page["headline"] = self._headline(page)
+        man = {"take": str(self.take), "lens": str(self.lens) if self.lens else None,
+               "session": "session_answered.json" if (self.out / "session_answered.json").exists() else "session.json",
+               "tracks": "tracks_full.json.gz", "tracks_proxy": "tracks_proxy.json.gz", "table_to_sim": "table_to_sim.json",
+               "scene": "scene/scene.json", "rollouts": {}, "corrections": [], "labels": page["labels"], "page": "page.json"}
+        if (self.out / "run" / "rollout.json").exists():
+            man["rollouts"]["run"] = "run/rollout.json"
+        if (self.out / "correct" / "rollout_after.json").exists():
+            c = st.get("correct", {})
+            man["corrections"].append({"name": c.get("candidate"), "label": c.get("label"), "rehearsal": c.get("rehearsal"),
+                                       "rollout": "correct/rollout_after.json", "spec": "correct/spec_after.json"})
+        _jdump(self.p("manifest.json"), man)
         _jdump(self.p("page.json"), page)
         return page
 
@@ -1334,7 +1446,7 @@ class RealRun:
                     f"{c.get('recheck_status')}.")
         if "run" in st:
             r = st["run"]
-            return (f"Robot run on your layout ({r.get('spec_source')}): {r.get('status')}, {r.get('violations')} violation(s)"
+            return (f"Robot run on your layout ({r.get('spec_source')}): {r.get('result')}, {r.get('violations')} violation(s)"
                     + (f", beads {r.get('beads')}" if r.get("beads") else "") + ".")
         if "task" in st:
             return st["task"].get("summary", "")
@@ -1651,7 +1763,8 @@ class RealRun:
         self.p("scene", "scene.json").write_text(scene.model_dump_json(indent=1))
         pose = s.poses.get("top")
         intr = s.intrinsics.get("top")
-        tts = {"placement": placement.model_dump(), "label": label, "fell_back": fell_back,
+        tts = {"origin_xy_m": list(placement.origin_xy_m), "yaw_deg": placement.yaw_deg, "source": placement.source,
+               "placement": placement.model_dump(), "label": label, "fell_back": fell_back,
                "convention": "sim_xy = Rz(yaw_deg) @ table_xy + origin_xy_m; z unchanged (table top z = 0 in both). The table frame is "
                              "MIRROR's board frame (mirror.capture.calibrate: printed ChArUco board, metres, z up).",
                "camera": None if pose is None else {"K": intr.K, "dist": intr.dist, "image_size": intr.image_size,
@@ -1673,7 +1786,7 @@ class RealRun:
         beads = None
         if cups and cups[0] in oc and oc[cups[0]].beads_total:
             beads = f"{oc[cups[0]].beads_in_container} of {oc[cups[0]].beads_total} kept in the cup (simulated)"
-        return {"status": rep.status, "plan_status": rep.plan_status, "plan_reason": rep.plan_reason,
+        return {"result": rep.status, "plan_status": rep.plan_status, "plan_reason": rep.plan_reason,
                 "violations": len(rep.violations), "beads": beads,
                 "max_cup_tilt_deg": round(oc[cups[0]].max_transport_tilt_deg, 1) if cups and cups[0] in oc else None,
                 "routes": list(rep.route_labels), "sim_time_s": round(rep.execution_time_s, 1),
@@ -1745,7 +1858,7 @@ class RealRun:
         if cand is None:
             raise StageStop("correction: waiting for the person's choice (answers 'correction'; candidates in questions.json)")
         run = self.info("run")
-        if run.get("status") == "planning_failed":
+        if run.get("result") == "planning_failed":
             raise StageStop("correction: the first run did not plan, so there is nothing to correct against")
         sess = Session.load_state(self.p("run", "session_state", "x").parent)
         client = self.llm()
@@ -1814,7 +1927,7 @@ class RealRun:
             lines += ["", f"Placement: {st['scene'].get('label')}"]
         if "run" in st:
             r = st["run"]
-            lines += ["", f"Run: {r.get('status')}, {r.get('violations')} violation(s), beads {r.get('beads')}, routes {r.get('routes')}"]
+            lines += ["", f"Run: {r.get('result')}, {r.get('violations')} violation(s), beads {r.get('beads')}, routes {r.get('routes')}"]
         if "correct" in st:
             c = st["correct"]
             lines += ["", f"Correction ({c.get('chosen_by')}): {c.get('label')} -> {c.get('rule_summary')} [{c.get('compiler')}]",

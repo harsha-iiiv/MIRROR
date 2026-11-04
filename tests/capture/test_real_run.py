@@ -197,3 +197,67 @@ def test_reach_check_flags_objects_outside_the_workspace():
 def test_cli_requires_inputs(tmp_path):
     with pytest.raises(SystemExit):
         RR.main(["--out", str(tmp_path / "o"), "--take", str(tmp_path / "missing.mov")])
+
+
+
+def _robot_stub(tmp_path):
+    from mirror.capture import real_run as RR2
+    r = RR2.RealRun.__new__(RR2.RealRun)
+    meas = {"print_check": {"measured_bar_mm": 50.0, "measured_square_mm": 30.0, "measured_by": "person"},
+            "objects": [{"label": "mug", "name": "the mug", "short": "mug", "proxy": "cup"},
+                        {"label": "tray", "name": "the tray", "proxy": "tray"}]}
+    (tmp_path / "m.json").write_text(json.dumps(meas))
+    r.meas = RR2.load_measurements(tmp_path / "m.json")
+    r.out = tmp_path
+    r.answers_path = tmp_path / "answers.json"
+    r.mode = "offline"
+    r.ledger = RR2.Ledger(tmp_path / "spend.jsonl", 1.0)
+    r.state = {"stages": {}, "version": 1}
+    r.state_path = tmp_path / "real_run.json"
+    r.take = tmp_path / "take.mp4"
+    r.lens = None
+    r.dev_clip = None
+    r.label_extra = []
+    r.render_on = False
+    r.rehearse = None
+    r._meta = r._llm = None
+    r.log = lambda *a: None
+    return r
+
+
+def test_gate_passed_branch_waits_for_rule_review_then_plans_and_runs(tmp_path):
+    """SYNTHETIC session that passes the gate: offline proposal -> the person's
+    review of the proposed rules -> scene in the real table frame -> MuJoCo run."""
+    pytest.importorskip("mirror.observability")
+    from mirror.contracts import DemoTrace
+    if "evidence" not in DemoTrace.model_fields:
+        pytest.skip("observability not integrated")
+    from .test_trace import _session
+    r = _robot_stub(tmp_path)
+    s = _session()
+    assert s.gate()[0]
+    s.save(tmp_path / "session_answered.json")
+    try:
+        r.stage_task()
+        waited = False
+    except RR.StageStop as e:
+        waited = True
+        assert "review" in str(e)
+        qs = json.loads((tmp_path / "questions_spec.json").read_text())["questions"]
+        ids = [q["id"].removeprefix("rule:") for q in qs]
+        (tmp_path / "answers.json").write_text(json.dumps({"spec_review": {"answer": {"confirm": ids, "reject": []},
+                                                                           "by": "person", "at": 1}}))
+        r.stage_task()
+    t = r.info("task")
+    assert t["gate_passed"] and "MIRROR's proposal" in t["spec_source"]
+    assert waited or not any(x["status"] == "proposed" for x in t["rules"])
+    r.stage_scene()
+    sc = r.info("scene")
+    assert sc["placement"] in ("default_centred", "auto_layout_centred")
+    tts = json.loads((tmp_path / "table_to_sim.json").read_text())
+    assert "origin_xy_m" in tts and "yaw_deg" in tts
+    r.stage_run()
+    run = r.info("run")
+    assert run["result"] in ("success", "unverified", "task_incomplete", "constraint_violated", "planning_failed")
+    page = json.loads((tmp_path / "page.json").read_text())
+    assert page["run"]["result"] == run["result"] and "manifest.json" in [p.name for p in tmp_path.iterdir()]

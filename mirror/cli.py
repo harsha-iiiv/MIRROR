@@ -446,6 +446,14 @@ def cmd_correct(args, out: Out) -> int:
     return 0
 
 
+def cmd_real_run(args, out: Out) -> int:
+    from mirror.capture import real_run
+    argv = list(args.real_args)
+    if argv and argv[0] == "--":
+        argv = argv[1:]
+    return int(real_run.main(argv) or 0)
+
+
 def cmd_eval(args, out: Out) -> int:
     if not RUN_EVAL.exists():
         raise SystemExit(f"evaluation script not found: {RUN_EVAL}")
@@ -608,6 +616,11 @@ def build_parser() -> argparse.ArgumentParser:
     e.add_argument("eval_args", nargs=argparse.REMAINDER,
                    help="e.g. dev --seeds 0-5 --out results/dev")
     e.set_defaults(func=cmd_eval)
+
+    rr = sub.add_parser("real-run", help="your phone clips -> watched, checked robot run (mirror.capture.real_run)")
+    rr.add_argument("real_args", nargs=argparse.REMAINDER,
+                    help="e.g. --lens L.MOV --take T.MOV --measurements m.json --out runs/take1 --mode record --cap-usd 9")
+    rr.set_defaults(func=cmd_real_run)
 
     st = sub.add_parser("studio", help="launch the studio web app")
     st.add_argument("--port", type=int, default=8000)
