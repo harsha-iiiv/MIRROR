@@ -152,7 +152,7 @@ export class RuleLayer {
       ring.renderOrder = 6;
       const dot = new THREE.Mesh(new THREE.SphereGeometry(0.0032, 12, 8), new THREE.MeshBasicMaterial({ color: col, depthTest: false }));
       dot.position.copy(at.pos); dot.renderOrder = 6;
-      const what = v.constraint_id + (v.kind === 'advisory' ? ' (advisory: rule not enforced in this version)' : '');
+      const what = v.constraint_id + (v.kind === 'advisory' ? ' (advisory: rule not enforced in this version)' : v.kind === 'contact' ? ' (shown at the nearest point; the contact point is not recorded)' : '');
       const val = /clear/i.test(v.constraint_id) || v.kind === 'contact' ? `${(v.peak * 100).toFixed(1)} cm` : `${v.peak.toFixed(1)}°`;
       const lab = label(compact ? `${v.kind === 'advisory' ? 'advisory' : 'violated'} · peak ${val}` : `${what} · peak ${val} · ${v.t_start.toFixed(2)}–${v.t_end.toFixed(2)} s`, v.kind === 'advisory' ? 'warn' : 'bad');
       lab.position.copy(at.pos).add(new THREE.Vector3(0, 0, 0.03));

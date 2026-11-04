@@ -106,6 +106,8 @@ def test_workspace_rules_ribbons_and_readouts(site):
         assert m["tilt"] == pytest.approx(geom.tilt_of(s[3:]), abs=1e-3)
         assert m["tiltLimit"] == 15 and m["tiltOver"] == (geom.tilt_of(s[3:]) > 15)
         assert m["clearLimit"] == pytest.approx(0.06) and m["clearOver"] == (d < 0.06)
+        panel = page.inner_text(".viz-rules")
+        assert "c_clear" in panel and f"{100 * d:.2f} cm" in panel and "constraint_violated" in panel
         # camera presets glide and settle
         page.evaluate("() => { const v = window.__lab.v; v.setView('top'); for (let i = 0; i < 40; i++) v._advance(0.05); }")
         st = page.evaluate("() => window.__lab.v.getState()")
