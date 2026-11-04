@@ -275,6 +275,15 @@ def iou(a, b) -> float:
     return float((a & b).sum() / u) if u else 0.0
 
 
+def _px_to_plane(cam, uv, z: float = 0.0) -> np.ndarray:
+    """Sim (x, y) where pixel ``uv`` of a distortion-free camera meets the plane z."""
+    n = np.linalg.inv(cam.K) @ np.array([uv[0], uv[1], 1.0])
+    d = cam.R.T @ n
+    C = cam.centre
+    lam = (z - C[2]) / d[2]
+    return (C + lam * d)[:2]
+
+
 # ------------------------------------------------------------------- writing
 class Mp4:
     def __init__(self, path, size, fps=30.0, crf=20):
@@ -327,6 +336,7 @@ class TwinJob:
     correction: Optional[dict] = None       # {text, diff:[{target_id}], old_run_recheck|recheck:{violations:[...]}}
     after_labels: list = field(default_factory=list)   # labels for the before/after film only
     intro_s: float = 2.0                    # your table with your objects, dissolving to the simulator's stand-ins
+    render: bool = True                     # False: plate, checks and twin.json only (fast)
 
 
 def run(job: TwinJob, log=print) -> dict:
@@ -541,8 +551,16 @@ def run(job: TwinJob, log=print) -> dict:
                         cv2.line(img, tuple(np.int32(a)), tuple(np.int32(b)), c, width, cv2.LINE_AA)
         return img
 
-    def status_lines(f, s_now):
+    def verdict(rollout) -> str:
+        rep = rollout.report.model_dump(mode="json")
+        rr = [x for x in rep.get("rule_results") or [] if x.get("enforced")]
+        sat = sum(1 for x in rr if x.get("verdict") == "satisfied")
+        return f"checker: {rep.get('status')} · {sat}/{len(rr)} rules satisfied"
+
+    def status_lines(f, s_now, rollout=None, end=None):
         lines = [phase_words(f.phase)]
+        if rollout is not None and end is not None and s_now >= end - 1e-6:
+            lines = ["done", verdict(rollout)]
         bi = _cup_beads_in(f, visual)
         obj = f.phase.partition(":")[2]
         if obj and obj in f.bodies and f.phase.partition(":")[0] in CARRY:
@@ -555,6 +573,8 @@ def run(job: TwinJob, log=print) -> dict:
     t0 = time.time()
     sim_end = frames[-1].t - frames[0].t
     n_out = int(sim_end / tmap.speed * job.fps) + int(1.0 * job.fps)
+    if not job.render:
+        n_out = 0
     if job.max_seconds:
         n_out = min(n_out, int(job.max_seconds * job.fps))
     pb = _Playback(frames)
@@ -563,14 +583,23 @@ def run(job: TwinJob, log=print) -> dict:
     CW, CH = 1280, 720
     head = 48
     pw, ph = 378, 672
-    w_ov = Mp4(out / "overlay.mp4", (W, H), job.fps)
-    w_sbs = Mp4(out / "side_by_side.mp4", (2 * pw + 3 * 8, CH), job.fps)
-    w_3p = Mp4(out / "twin_3panel.mp4", (CW, CH), job.fps)
+    class _Null:
+        def write(self, img):
+            pass
+
+        def close(self):
+            pass
+    if job.render:
+        w_ov = Mp4(out / "overlay.mp4", (W, H), job.fps)
+        w_sbs = Mp4(out / "side_by_side.mp4", (2 * pw + 3 * 8, CH), job.fps)
+        w_3p = Mp4(out / "twin_3panel.mp4", (CW, CH), job.fps)
+    else:
+        w_ov = w_sbs = w_3p = _Null()
     still_times = sorted({round(a[0], 2) for a in tmap.anchors} | {round(sim_end * 0.02, 2), round(sim_end - 0.1, 2)})
     stills = []
     hidden_max = 0
     rates = []
-    n_intro = int(job.intro_s * job.fps)
+    n_intro = int(job.intro_s * job.fps) if job.render else 0
     try:
         if n_intro:
             f0 = pb.at(frames[0].t)
@@ -609,7 +638,7 @@ def run(job: TwinJob, log=print) -> dict:
             # top-down twin
             td_base = trails_on(td_plate.copy(), pb, vc, width=2)
             td, _ = tr_top.composite(td_base, f, shadow_strength=0.6)
-            st = status_lines(f, s_now)
+            st = status_lines(f, s_now, base, sim_end)
             # overlay (portrait)
             ov = TX.panel_label(ar, "The robot on your table", f"seen from your phone · sim ×{tmap.speed:g}", st,
                                 caption, labels)
@@ -637,7 +666,7 @@ def run(job: TwinJob, log=print) -> dict:
 
     # -- before / after (two rollouts on the same table)
     ba = None
-    if len(rolls) >= 2:
+    if len(rolls) >= 2 and job.render:
         t0 = time.time()
         (la, ra), (lb, rb) = rolls[0], rolls[1]
         fa, fb = list(ra.frames), list(rb.frames)
@@ -681,9 +710,10 @@ def run(job: TwinJob, log=print) -> dict:
                 tdimg = trails_on(td_plate.copy(), pa, vc, faded=True)
                 tdimg = trails_on(tdimg, pbb, vc, width=3)
                 tdimg, _ = tdb.composite(tdimg, f2, shadow_strength=0.6)
-                p1 = TX.panel_label(resize(a1, (pw, ph)), la.capitalize(), f"simulated · ×{sp:g}", before_lines(f1, sn), None, None, small=True)
+                l1 = before_lines(f1, sn) if sn < da else ["done", verdict(ra)] + ([f"re-checked under the new rule: {len(viol)} violation" + ("s" if len(viol) > 1 else "")] if viol else [])
+                p1 = TX.panel_label(resize(a1, (pw, ph)), la.capitalize(), f"simulated · ×{sp:g}", l1, None, None, small=True)
                 p2 = TX.panel_label(resize(a2, (pw, ph)), lb.capitalize(), (rule_text[:44] + "…") if len(rule_text) > 45 else (rule_text or f"simulated · ×{sp:g}"),
-                                    after_lines(f2, sn), None, None, small=True)
+                                    after_lines(f2, sn) if sn < db else ["done", verdict(rb)], None, None, small=True)
                 p3 = TX.topdown_panel(tdimg, (492, ph), "Table twin", f"grey: {la} · colour: {lb}", ppm)
                 cap2 = caption + ("" if not job.after_labels else " " + " · ".join(job.after_labels) + ".")
                 img = TX.canvas([p1, p2, p3], (CW, CH), head, job.title + f" · {la} vs {lb}, on your table", cap2)
@@ -716,9 +746,18 @@ def run(job: TwinJob, log=print) -> dict:
         "time_map": {"sim_speed": tmap.speed, "anchors": [{"sim_s": round(a, 2), "video_s": round(b, 2), "what": n} for a, b, n in tmap.anchors],
                      "your_video_rate_min": round(min(rates), 2) if rates else None, "your_video_rate_max": round(max(rates), 2) if rates else None,
                      "note": "Your video is re-timed between matching events so the robot and your hands pick and place together; rates are shown on screen."},
-        "topdown": {"px_per_m": round(ppm, 1), "size": [vc.width, vc.height],
+        "phone_camera_sim": {"K": np.round(cam.K, 4).tolist(), "dist": np.round(cam.dist, 6).tolist(), "size": [W, H],
+                             "R_sim_to_cam": np.round(cam.R, 6).tolist(), "t_sim_to_cam": np.round(cam.t, 6).tolist(),
+                             "centre_sim": np.round(cam.centre, 4).tolist(),
+                             "convention": "OpenCV: x_cam = R x_sim + t; x right, y down, z forward; pixel centres at integers"},
+        "topdown": {"image": "topdown_plate.png", "px_per_m": round(ppm, 1), "size": [vc.width, vc.height],
+                    "corners_sim_xy": {k: np.round(_px_to_plane(vc, uv), 4).tolist() for k, uv in
+                                       (("top_left", (-0.5, -0.5)), ("top_right", (vc.width - 0.5, -0.5)),
+                                        ("bottom_right", (vc.width - 0.5, vc.height - 0.5)), ("bottom_left", (-0.5, vc.height - 0.5)))},
+                    "plane_z_sim": 0.0,
                     "note": "Plane-to-plane homography of the table surface (z = 0). Anything above the table (tray walls, the divider, your objects) is smeared in this view."},
-        "files": {"overlay": "overlay.mp4", "side_by_side": "side_by_side.mp4", "twin_3panel": "twin_3panel.mp4",
+        "files": {"overlay": "overlay.mp4" if job.render else None, "side_by_side": "side_by_side.mp4" if job.render else None,
+                  "twin_3panel": "twin_3panel.mp4" if job.render else None,
                   "before_after": "before_after.mp4" if ba else None, "plate": "plate.png", "topdown_plate": "topdown_plate.png",
                   "stills": sorted(os.listdir(out / "stills"))},
         "before_after": ba if not ba else {**ba, "rule": job.correction.get("text") if job.correction else None,
