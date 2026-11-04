@@ -716,6 +716,12 @@ def run(job: TwinJob, log=print) -> dict:
             td_base = trails_on(td_plate.copy(), pb, vc, width=2)
             td, _ = tr_top.composite(td_base, f, shadow_strength=0.6)
             st = status_lines(f, s_now, base, sim_end)
+            near = [a for a in tmap.anchors if abs(a[0] - s_now) <= 0.6 * tmap.speed]
+            sync_line = None
+            if near:
+                obj = near[0][2].split(" ")[0]
+                what = "pick" if " grasp " in near[0][2] else "place"
+                sync_line = f"in step with you: your {what} of the {near[0][2].rsplit(' of ', 1)[-1].replace('_', ' ')}"
             # overlay (portrait)
             ov = TX.panel_label(ar, "The robot on your table", f"seen from your phone · sim ×{tmap.speed:g} · dashed: simulated tray", st,
                                 caption, labels)
@@ -723,7 +729,8 @@ def run(job: TwinJob, log=print) -> dict:
             # panels
             hp = TX.panel_label(resize(hands, (pw, ph)), "Your hands", f"your video · ×{rate:.2f}" if abs(rate - 1) > 0.05 else "your video · real time",
                                 [f"t = {T:4.1f} s"], None, None, small=True)
-            rp = TX.panel_label(resize(ar, (pw, ph)), "The robot on your table", f"simulated · ×{tmap.speed:g}", st, None, None, small=True)
+            rp = TX.panel_label(resize(ar, (pw, ph)), "The robot on your table", f"simulated · ×{tmap.speed:g}",
+                                st + ([sync_line] if sync_line else []), None, None, small=True)
             tdp = TX.topdown_panel(td, (492, ph), "Table twin", "top-down from your phone · dashed: simulated tray", ppm)
             sbs = TX.canvas([hp, rp], (2 * pw + 3 * 8, CH), head, job.title + " · your table", caption)
             w_sbs.write(sbs)

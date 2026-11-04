@@ -137,7 +137,7 @@ def main(argv=None):
             if p.is_file():
                 q = dst / p.relative_to(job.out)
                 q.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(p, q)
+                shutil.copyfile(p, q)   # contents only: /cloudspace (FUSE) refuses chmod/utime
         print("copied to", dst)
 
 
