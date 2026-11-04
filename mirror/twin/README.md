@@ -47,16 +47,23 @@ python scripts/twin_render.py --session S.json --video TAKE.MOV --tracks TRACKS.
 
 ## D1 results (development clip, never scored)
 
-Storage `mirror/capture/D1/twin/` (README there). From the pipeline's replayed D1 run with the tray placed from the
-footage: simulated tray vs real tray 0.1 cm / 0.2 deg (it was 3.3 cm / 3.6 deg when the tray was assumed aligned with
-the board; the twin's registration check found it). Arm backend on the same scene: the checker flags one cup tilt of
-16.2 deg (rule 15) for 1.3 s, shown in the film.
+Storage `mirror/capture/D1/twin/` (README there). From the pipeline's replayed D1 run. The pipeline places the
+simulated tray from the tray's own SAM outline (back-projected to the rim plane: the same single-view method the twin's
+check uses), so the simulated-vs-footage tray agreement of about 0.1 cm / 0.2 deg is by construction, not an accuracy
+measurement (`twin.json` → `registration.agreement_by_construction: true`). Before the pipeline did this, the tray was
+assumed aligned with the board and the same check read 3.3 cm / 3.6 deg; that is what the check is good for. The
+independent check is the object bases: 9-11 px at 540x960. Arm backend on the same scene: the checker flags one cup tilt
+of 16.2 deg (rule 15) for 1.3 s, shown in the film.
 
 ## Limits (say them on screen, they are in the caption)
 
 * One camera and whatever calibration labels the session carries (D1: calibration reuse flagged).
   Registration is reported in image space (`twin.json` → `registration`): D1 sim tray vs SAM tray
-  IoU 0.82; object bases 9-11 px at 540x960. Not a 3-D accuracy figure.
+  IoU 0.921 on the final fresh scene (0.824 on the earlier phase-2 scene). In the
+  final scene the tray is placed from that same outline, so its IoU is agreement by construction; the independent check
+  is the object bases, 9-11 px at 540x960. Not a 3-D accuracy figure.
+* Every film draws the run's honesty labels as chips (wrapped, never cut), including the software layout shift when the
+  pipeline moved the layout to fit the robot's reach (`table_to_sim.json` → `source`, `fell_back.shift_cm`).
 * Proxies are simulator stand-ins sized from the person's measurements, not their objects
   (D1: a 4 cm cube for an 11 cm carton, an upright marker for a lying one).
 * The robot is a simulated free-floating gripper (or, with `--arm`, a UR10e on a simulated ceiling mount drawn with its

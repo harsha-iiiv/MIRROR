@@ -13,7 +13,7 @@ spec) or from a real capture's calibration. Nothing is decorative and every numb
 | Re-check | `loadRollout(p, {report})` judges a run's frames with another report, e.g. the old run under the new rule | `viewer.js` |
 | Readouts | hover any body: tilt (vs the rule's limit), speed (frame difference), height, exact distance from the object's solid shape to the nearest obstacle box with the closest-point segment drawn; a persistent clearance line when a clearance rule exists | `viz/geom.js` is a line-by-line port of `mirror/evaluate/geom.py` (tested against it) |
 | Timeline | phases per object, grasp/release, violation intervals, playhead; scrub; frame steps | `viz/timeline.js` |
-| Phone | for real captures: the calibrated phone as a frustum with its undistorted frame, the rectified table photo as the table texture, and a glide into the phone's own viewpoint where the simulation is drawn over the real frame with the phone's exact pinhole | `viz/phone.js`, `mirror/viz/capture_view.py` |
+| Phone | for real captures: the calibrated phone as a frustum with its undistorted frame, the rectified table photo as the table texture, and a glide into the phone's own viewpoint where the simulation is drawn over the real frame with the calibrated pinhole (approximate; calibration reuse may be flagged) | `viz/phone.js`, `mirror/viz/capture_view.py` |
 | Arm | UR10e/UR5e display meshes decimated from MuJoCo Menagerie (BSD-3, `assets/NOTICE`); C toggles the simulation's collision capsules | `viz/arm.js`, `scripts/viz_build_arm_meshes.py` |
 | Fallback | no WebGL: a top-down 2D view with the same API | `viz/fallback2d.js` |
 
