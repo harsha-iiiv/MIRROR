@@ -646,8 +646,10 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
         import importlib.util
         if importlib.util.find_spec("mirror.viz.capture_view") and src.placement_file:
             cv_dir = out / "capture"
+            plate = next((p.parent / "plate.png" for p in src.twin.values() if (p.parent / "plate.png").exists()), None)
+            frame = ["--image", str(plate)] if plate else ["--video", str(src.take), "--t", str(round(min(12.5, (take_info or {}).get("duration_s") or 12.5), 2))]
             cmd = [sys.executable, "-m", "mirror.viz.capture_view", "--session", str(src.session), "--placement", str(src.placement_file),
-                   "--video", str(src.take), "--t", str(round(min(12.5, (take_info or {}).get("duration_s") or 12.5), 2)), "--out", str(cv_dir)]
+                   *frame, "--out", str(cv_dir)] + [x for lab in labels_for(sess, src.labels) for x in ("--label", lab)]
             _run(cmd, timeout=300)
             if (cv_dir / "capture_view.json").exists():
                 capture_view = "capture/capture_view.json"

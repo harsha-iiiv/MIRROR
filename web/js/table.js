@@ -331,6 +331,7 @@ function RobotStage({ dir, run, ghost, t, setT, playing, setPlaying, seekReq, la
   const [err, setErr] = useState(null);
   const [view, setView] = useState('3d');
   const [ready, setReady] = useState(false);
+  const picked = useRef(false);
   useEffect(() => {
     let gone = false, viewer = null;
     (async () => {
@@ -354,13 +355,15 @@ function RobotStage({ dir, run, ghost, t, setT, playing, setPlaying, seekReq, la
         if (gone) return;
         v.loadRollout(p, { ghost: g, sceneState: p.scene, spec: p.spec || undefined });
         // Newer viewers can show the phone that filmed the table (feature-detected; optional data).
-        if (capture && v.setCapture && !v.__ytCapture) { try { v.setCapture(capture.view, capture.base); v.__ytCapture = true; } catch (_) { /* optional */ } }
+        if (capture && v.setCapture && !v.__ytCapture) {
+          try { v.setCapture(capture.view, capture.base); v.__ytCapture = true; if (!picked.current) setView('phone'); } catch (_) { /* optional */ }
+        }
         if (v.setOptions) v.setOptions({ labels: true, trace: true, ghost: !!g });
         v.setTime(0); setT(0);
       } catch (e) { setErr(String(e.message || e)); }
     })();
     return () => { gone = true; };
-  }, [ready, run?.file, ghost?.file]);
+  }, [ready, run?.file, ghost?.file, capture]);
   useEffect(() => { const v = vref.current; if (v) playing ? v.play() : v.pause(); }, [playing, ready]);
   useEffect(() => { const v = vref.current; if (v && seekReq) v.setTime(seekReq.t); }, [seekReq]);
   useEffect(() => { const v = vref.current; if (v && v.setView) v.setView(view); }, [view, ready]);
@@ -368,7 +371,7 @@ function RobotStage({ dir, run, ghost, t, setT, playing, setPlaying, seekReq, la
     <div class="yt-3d-canvas" ref=${el} tabindex="0" aria-label="3D view of the simulated run. Drag to orbit, scroll to zoom."></div>
     ${err ? html`<p class="yt-3d-err">${err}</p>` : ''}
     <div class="yt-3d-hud"><span>${label}</span>
-      <div class="seg" role="group" aria-label="Camera">${[['3d', '3D'], ['top', 'Top'], ['follow', 'Follow'], ...(capture ? [['phone', 'Phone']] : [])].map(([k, n]) => html`<button aria-pressed=${view === k} class="r" onClick=${() => setView(k)}>${n}</button>`)}</div></div>
+      <div class="seg" role="group" aria-label="Camera">${[['3d', '3D'], ['top', 'Top'], ['follow', 'Follow'], ...(capture ? [['phone', 'Phone']] : [])].map(([k, n]) => html`<button aria-pressed=${view === k} class="r" onClick=${() => { picked.current = true; setView(k); }}>${n}</button>`)}</div></div>
   </div>`;
 }
 
