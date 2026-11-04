@@ -136,6 +136,7 @@ def main(argv=None):
     ap.add_argument("--take", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--skip-video", action="store_true")
+    ap.add_argument("--twin", default=None, help="twin track output dir (twin.json + overlay.mp4), optional")
     a = ap.parse_args(argv)
     cap, p2, corr, out = Path(a.capture), Path(a.phase2), Path(a.corr), Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -162,6 +163,15 @@ def main(argv=None):
             run="MuJoCo rollouts re-run tonight by film/night/make_correction.py (reproduces the phase-2 report)",
             correction="offline rule interpreter (no model call)"),
     )
+    if a.twin and (Path(a.twin) / "twin.json").exists():
+        tj = json.loads((Path(a.twin) / "twin.json").read_text())
+        reg = tj.get("registration", {})
+        tt = reg.get("tray_table_frame", {})
+        data["twin"] = dict(caption=tj.get("caption"), labels=tj.get("labels"), time_map=tj.get("time_map"),
+                            tray_iou=reg.get("tray_iou"), tray_offset_cm=tt.get("centre_offset_cm"), tray_yaw_deg=tt.get("yaw_offset_deg"),
+                            object_base_offset_px=reg.get("object_base_offset_px"), plate=tj.get("plate", {}).get("method"),
+                            source=str(Path(a.twin) / "overlay.mp4"), created_unix=tj.get("created_unix"))
+        subprocess.run(["cp", str(Path(a.twin) / "overlay.mp4"), str(out / "twin_overlay.mp4")], check=True, timeout=60)
     (out / "data.json").write_text(json.dumps(data, indent=1, default=str))
     print("ok", {k: len(v.get("poly", [])) for k, v in masks["objects"].items()})
 
