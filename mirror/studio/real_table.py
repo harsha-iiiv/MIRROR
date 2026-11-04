@@ -345,6 +345,9 @@ def recorded_item(r: dict, scene, spec, rollout_dir: Path) -> dict:
                         "violations": [{k: v.get(k) for k in ("constraint_id", "object_id", "t_start", "t_end", "peak", "detail")}
                                        for v in recheck.get("violations") or []]},
             "after": after}
+    # The full re-check report, so the 3D view can judge the old run's frames under the new rule.
+    (rollout_dir / f"rec_recheck_{r['id']}.json").write_text(json.dumps(recheck, separators=(",", ":")))
+    item["recheck_file"] = f"rollouts/rec_recheck_{r['id']}.json"
     added_ids = {d["target_id"] for d in diff}
     old_ok = all(x["verdict"] != "violated" for x in item["recheck"]["rules"] if x["rule_id"] in added_ids)
     item["outcome"] = "no_plan" if rep.get("status") == "planning_failed" else ("already_held" if old_ok else "changed")

@@ -325,13 +325,14 @@ function PlanView({ table, dir, run, ghost, t, clearance }) {
 }
 
 // ------------------------------------------------------------------ 3D stage (studio Viewer API)
-function RobotStage({ dir, run, ghost, t, setT, playing, setPlaying, seekReq, label, capture }) {
+function RobotStage({ dir, run, ghost, t, setT, playing, setPlaying, seekReq, label, capture, reportFile, specFrom, lens, lenses, setLens }) {
   const el = useRef(null);
   const vref = useRef(null);
   const [err, setErr] = useState(null);
   const [view, setView] = useState('3d');
   const [ready, setReady] = useState(false);
   const picked = useRef(false);
+  const lastLens = useRef(lens);
   useEffect(() => {
     let gone = false, viewer = null;
     (async () => {
@@ -352,24 +353,30 @@ function RobotStage({ dir, run, ghost, t, setT, playing, setPlaying, seekReq, la
       try {
         const p = await loadRollout(dir, run.file);
         const g = ghost ? await loadRollout(dir, ghost.file) : null;
+        // Old run under the new rule: the checker's re-check report colours its frames and marks where it broke the rule.
+        const rep = reportFile ? await api.getDataFile(dir + reportFile).catch(() => null) : null;
+        const sp = specFrom ? (await loadRollout(dir, specFrom.file).catch(() => null))?.spec : null;
         if (gone) return;
-        v.loadRollout(p, { ghost: g, sceneState: p.scene, spec: p.spec || undefined });
+        // Switching between the old and the new run keeps the playhead (same moment, other run); anything else starts at 0.
+        const keep = lastLens.current !== lens; lastLens.current = lens;
+        v.loadRollout(p, { ghost: g, sceneState: p.scene, spec: (rep && sp) || p.spec || undefined, report: rep || undefined, keepTime: keep });
         // Newer viewers can show the phone that filmed the table (feature-detected; optional data).
         if (capture && v.setCapture && !v.__ytCapture) {
           try { v.setCapture(capture.view, capture.base); v.__ytCapture = true; if (!picked.current) setView('phone'); } catch (_) { /* optional */ }
         }
         if (v.setOptions) v.setOptions({ labels: true, trace: true, ghost: !!g });
-        v.setTime(0); setT(0);
+        if (!keep) { v.setTime(0); setT(0); } else { v.setTime(Math.min(t, v.duration ? v.duration() : t)); }
       } catch (e) { setErr(String(e.message || e)); }
     })();
     return () => { gone = true; };
-  }, [ready, run?.file, ghost?.file, capture]);
+  }, [ready, run?.file, ghost?.file, capture, reportFile]);
   useEffect(() => { const v = vref.current; if (v) playing ? v.play() : v.pause(); }, [playing, ready]);
   useEffect(() => { const v = vref.current; if (v && seekReq) v.setTime(seekReq.t); }, [seekReq]);
   useEffect(() => { const v = vref.current; if (v && v.setView) v.setView(view); }, [view, ready]);
   return html`<div class="yt-3d">
     <div class="yt-3d-canvas" ref=${el} tabindex="0" aria-label="3D view of the simulated run. Drag to orbit, scroll to zoom."></div>
     ${err ? html`<p class="yt-3d-err">${err}</p>` : ''}
+    ${lenses ? html`<div class="seg yt-lens" role="group" aria-label="Which run">${lenses.map(([k, n]) => html`<button aria-pressed=${lens === k} class="r" onClick=${() => setLens(k)}>${n}</button>`)}</div>` : ''}
     <div class="yt-3d-hud"><span>${label}</span>
       <div class="seg" role="group" aria-label="Camera">${[['3d', '3D'], ['top', 'Top'], ['follow', 'Follow'], ...(capture ? [['phone', 'Phone']] : [])].map(([k, n]) => html`<button aria-pressed=${view === k} class="r" onClick=${() => { picked.current = true; setView(k); }}>${n}</button>`)}</div></div>
   </div>`;
@@ -543,7 +550,7 @@ function StepCorrect({ ctx, table, pick, setPick, go, extra, addExtra }) {
 const VERDICT = { satisfied: ['holds', 'ok'], violated: ['broken', 'bad'], not_verified: ['not verified', 'warn'], not_applicable: ['n/a', ''], not_run: ['not run', ''] };
 function Verdict({ v }) { const [l, c] = VERDICT[v] || [human(v), '']; return html`<span class=${'yt-v ' + c}>${l}</span>`; }
 
-function StepCompare({ table, dir, pick, t, seek, extra }) {
+function StepCompare({ table, dir, pick, t, seek, extra, onShowOld }) {
   const c = [...(table.robot?.corrections || []), ...extra].find((x) => x.id === pick);
   if (!c) return html`<p class="muted">Choose a correction first.</p>`;
   if (c.outcome === 'question' || c.outcome === 'refused') return html`<div>
@@ -565,7 +572,8 @@ function StepCompare({ table, dir, pick, t, seek, extra }) {
       : html`<div class="callout ok"><b>The old run breaks the new rule; the new run keeps it.</b> ${(c.recheck?.violations || []).length} violation window${(c.recheck?.violations || []).length === 1 ? '' : 's'} in the old run, ${after?.summary?.violations ?? 0} in the new one.</div>`}
     <table class="yt-table yt-recheck"><thead><tr><th>Rule</th><th>Old run, re-checked</th><th>New run</th></tr></thead><tbody>
       ${rows.map((r) => html`<tr class=${added.has(r.rule_id) ? 'new' : ''}><td><span class="num">${r.rule_id}</span>${added.has(r.rule_id) ? html` <span class="yt-new">new</span>` : ''}${r.old?.detail && r.old.verdict === 'violated' ? html`<div class="faint">${r.old.detail.split(';')[0]}</div>` : ''}</td>
-        <td><${Verdict} v=${r.old?.verdict} /></td><td><${Verdict} v=${r.verdict} /></td></tr>`)}
+        <td>${(() => { const w = r.old?.verdict === 'violated' && !noPlan && onShowOld && c.recheck_file ? (c.recheck?.violations || []).find((x) => x.constraint_id === r.rule_id) : null;
+          return w ? html`<button class="yt-vbtn" title="Show this moment of the old run in the 3D view" onClick=${() => onShowOld(Math.max(0, (w.t_start ?? 0) - 0.3))}><${Verdict} v="violated" /> <span class="num">${fmt(w.t_start, 1)} s</span></button>` : html`<${Verdict} v=${r.old?.verdict} />`; })()}</td><td><${Verdict} v=${r.verdict} /></td></tr>`)}
     </tbody></table>
     ${base.series?.gap_cm && (after?.series?.gap_cm || noPlan) ? html`<${LineChart} title="Mug proxy to divider, before and after (approx.)" unit="cm" t=${t} onSeek=${seek} yMin=${0} yMax=${20} height=${190}
       threshold=${thr != null ? thr * 100 : null} thresholdLabel=${thr != null ? `${thr * 100} cm rule` : ''}
@@ -579,6 +587,21 @@ function StepCompare({ table, dir, pick, t, seek, extra }) {
         <video controls muted playsinline preload="none" poster=${ba.poster ? urlOf(dir, ba.poster) : undefined} src=${urlOf(dir, ba.file)}></video><p class="yt-note">${table.twin_meta.caption}</p></figure>` : ''; })()}
     ${noPlan ? '' : html`<${Metrics} s=${after?.summary} />`}
   </div>`;
+}
+
+// One accent rail that glides between steps (and follows resizes), instead of one underline per button.
+function StepRail({ navRef, step }) {
+  const [box, setBox] = useState(null);
+  useEffect(() => {
+    const nav = navRef.current; if (!nav) return;
+    const place = () => { const b = nav.querySelector('button[aria-current="step"]'); if (b) setBox({ x: b.offsetLeft + 14, w: Math.max(0, b.offsetWidth - 28) }); };
+    place();
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(place) : null; ro && ro.observe(nav);
+    const b = nav.querySelector('button[aria-current="step"]');
+    if (b && b.scrollIntoView && nav.scrollWidth > nav.clientWidth) b.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'nearest', inline: 'center' });
+    return () => ro && ro.disconnect();
+  }, [step]);
+  return box ? html`<span class="yt-rail" aria-hidden="true" style=${{ transform: `translateX(${box.x}px)`, width: box.w + 'px' }}></span>` : '';
 }
 
 // ------------------------------------------------------------------ the panel
@@ -595,6 +618,8 @@ export function TablePanel({ ctx }) {
   const [rSeek, setRSeek] = useState(null);
   const [extra, setExtra] = useState([]);
   const [capView, setCapView] = useState(null);
+  const [lens, setLens] = useState('new');
+  const stepsRef = useRef(null);
   const table = st.table;
   if (table && st.contours) table.__contours = st.contours;
   const carry = useMemo(() => (table ? carries(table.events) : {}), [table]);
@@ -604,6 +629,15 @@ export function TablePanel({ ctx }) {
   const rseek = (x) => { setRt(x); setRSeek({ t: x }); };
   useEffect(() => { if (table && !pick) { const c = (table.robot?.corrections || []).find((x) => x.outcome === 'changed') || (table.robot?.corrections || [])[0]; c && setPick(c.id); } }, [table]);
   useEffect(() => { const u = new URL(location.href); u.searchParams.set('ts', step); history.replaceState(history.state, '', u); setPlaying(false); setRPlaying(false); }, [step]);
+  useEffect(() => { setLens('new'); }, [pick]);
+  // On narrow screens the step body sits below the stage: bring the steps bar back into view (one eased scroll) when the step changes.
+  const firstStep = useRef(true);
+  useEffect(() => {
+    if (firstStep.current) { firstStep.current = false; return; }
+    const el = stepsRef.current; if (!el) return;
+    const r = el.getBoundingClientRect();
+    if (r.top < 0 || r.top > innerHeight * 0.6) el.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+  }, [step]);
   useEffect(() => {
     const onKey = (e) => {
       if (e.target.closest && e.target.closest('input,textarea,select,[role=slider],.yt-3d-canvas')) return;
@@ -620,8 +654,12 @@ export function TablePanel({ ctx }) {
   const onVideo = VIDEO_STEPS.has(step);
   const corr = [...(table.robot?.corrections || []), ...extra].find((x) => x.id === pick);
   const corrRan = corr?.after && corr.outcome !== 'no_plan' && corr.after.summary?.status !== 'planning_failed';
-  const run3d = step === 'compare' && corrRan ? corr.after : table.robot?.run;
-  const ghost3d = step === 'compare' && corrRan ? table.robot?.run : null;
+  // Compare: look at the new run (grey ghost: before), or at the old run judged under the new rule.
+  const canLens = step === 'compare' && corrRan && corr.recheck_file && corr.outcome === 'changed';
+  const oldLens = canLens && lens === 'old';
+  const run3d = oldLens ? table.robot?.run : step === 'compare' && corrRan ? corr.after : table.robot?.run;
+  const ghost3d = !oldLens && step === 'compare' && corrRan ? table.robot?.run : null;
+  const label3d = oldLens ? 'Old run under the new rule' : step === 'compare' && ghost3d ? 'After the correction · grey: before' : 'Your layout · simulated proxies · MuJoCo';
   const body = {
     watch: html`<${StepWatch} table=${table} carry=${carry} seek=${seek} />`,
     moments: html`<${StepMoments} table=${table} seek=${seek} t=${t} />`,
@@ -629,7 +667,7 @@ export function TablePanel({ ctx }) {
     task: html`<${StepTask} table=${table} />`,
     robot: html`<${StepRobot} table=${table} dir=${st.dir} t=${rt} seek=${rseek} />`,
     correct: html`<${StepCorrect} ctx=${ctx} table=${table} pick=${pick} setPick=${setPick} go=${() => setStep('compare')} extra=${extra} addExtra=${(it) => setExtra((x) => [...x, it])} />`,
-    compare: html`<${StepCompare} table=${table} dir=${st.dir} pick=${pick} t=${rt} seek=${rseek} extra=${extra} />`,
+    compare: html`<${StepCompare} table=${table} dir=${st.dir} pick=${pick} t=${rt} seek=${rseek} extra=${extra} onShowOld=${(x) => { setLens('old'); rseek(x); const el = document.querySelector('.yt-stage'); const r = el && el.getBoundingClientRect(); if (r && (r.bottom < 80 || r.top > innerHeight - 80)) el.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' }); }} />`,
   }[step];
   const rdur = run3d?.duration_s || 0;
 
@@ -640,8 +678,8 @@ export function TablePanel({ ctx }) {
         ${st.rows.map((r) => html`<option value=${r.id}>${r.id}${r.built_at ? ' · built ' + r.built_at.slice(0, 16).replace('T', ' ') : ''}</option>`)}</select>` : ''}</p><h2>${table.title}</h2></div>
       <${Labels} table=${table} />
     </header>
-    <nav class="yt-steps" aria-label="Your table steps">${TABLE_STEPS.map((s) => html`<button aria-current=${s.key === step ? 'step' : null} class=${TABLE_STEPS.findIndex((x) => x.key === s.key) < i ? 'done' : ''}
-      onClick=${() => setStep(s.key)}><span class="ix num">${s.n}</span><span class="lbl">${s.short}</span></button>`)}</nav>
+    <nav class="yt-steps" aria-label="Your table steps" ref=${stepsRef}>${TABLE_STEPS.map((s) => html`<button aria-current=${s.key === step ? 'step' : null} class=${TABLE_STEPS.findIndex((x) => x.key === s.key) < i ? 'done' : ''}
+      onClick=${() => setStep(s.key)}><span class="ix num">${s.n}</span><span class="lbl">${s.short}</span></button>`)}<${StepRail} navRef=${stepsRef} step=${step} /></nav>
     <div class="yt-body">
       <section class="yt-stage" aria-label=${onVideo ? 'Your video' : 'Simulated run'}>
         <div class=${'yt-swap' + (onVideo ? ' video' : ' robot')}>
@@ -651,7 +689,8 @@ export function TablePanel({ ctx }) {
           </div>
           <div class="yt-pane yt-pane-r" aria-hidden=${onVideo}>
             ${!onVideo || rdur ? html`<${RobotStage} dir=${st.dir} run=${run3d} ghost=${ghost3d} t=${rt} setT=${setRt} playing=${rPlaying} setPlaying=${setRPlaying} seekReq=${rSeek}
-              capture=${capView} label=${step === 'compare' && ghost3d ? 'After the correction · grey: before' : 'Your layout · simulated proxies · MuJoCo'} />` : ''}
+              capture=${capView} label=${label3d} reportFile=${oldLens ? corr.recheck_file : null} specFrom=${oldLens ? corr.after : null}
+              lens=${lens} setLens=${setLens} lenses=${canLens ? [['new', 'New run'], ['old', 'Old run, re-checked']] : null} />` : ''}
           </div>
         </div>
         <div class="yt-transport">

@@ -9,14 +9,14 @@
 .yt-labels { display: flex; flex-wrap: wrap; gap: 6px; }
 .yt-label { font-size: var(--fs-xs); border: 1px solid var(--line-strong); border-radius: var(--r-pill); padding: 2px 9px; color: var(--muted); white-space: nowrap; }
 
-.yt-steps { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-bottom: var(--s5); overflow-x: auto; scrollbar-width: none; }
+.yt-steps { position: relative; display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-bottom: var(--s5); overflow-x: auto; scrollbar-width: none; scroll-margin-top: var(--s3); }
 .yt-steps button { position: relative; display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 10px 14px 12px; color: var(--muted); cursor: pointer; white-space: nowrap; font-size: var(--fs-sm); }
 .yt-steps button .ix { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line-strong); display: inline-grid; place-items: center; font-size: var(--fs-xs); transition: background .25s, border-color .25s, color .25s; }
 .yt-steps button.done .ix { border-color: var(--text); color: var(--text); }
 .yt-steps button[aria-current="step"] { color: var(--text); }
 .yt-steps button[aria-current="step"] .ix { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.yt-steps button::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: -1px; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform .35s cubic-bezier(.2,.7,.2,1); }
-.yt-steps button[aria-current="step"]::after { transform: scaleX(1); }
+.yt-rail { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--accent); border-radius: 1px; pointer-events: none;
+  transition: transform .52s cubic-bezier(.22,.8,.24,1), width .52s cubic-bezier(.22,.8,.24,1); }
 .yt-steps button:hover { color: var(--text); }
 
 .yt-body { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: var(--s6); align-items: start; }
@@ -231,3 +231,25 @@
 .yt-qs li { padding: 8px 0; border-top: 1px solid var(--line); }
 .yt-qs li p { margin: 2px 0; }
 .yt-qs .q { font-weight: 550; }
+
+/* Compare: which run the 3D view shows (new run with the old one as a ghost, or the old run judged under the new rule). */
+.yt-lens { position: absolute; left: 10px; bottom: 10px; z-index: 2; background: color-mix(in srgb, var(--surface) 90%, transparent); border-radius: var(--r-pill); }
+/* Results settle in once, top to bottom: rows of the re-check table, then the metric tiles. */
+.yt-step .yt-recheck tbody tr, .yt-step .yt-metrics > div, .yt-step .yt-cand, .yt-step .yt-card { animation: yt-row .38s cubic-bezier(.2,.7,.2,1) both; }
+.yt-step .yt-recheck tbody tr:nth-child(1), .yt-step .yt-metrics > div:nth-child(1), .yt-step .yt-cand:nth-child(1), .yt-step .yt-card:nth-child(1) { animation-delay: .06s; }
+.yt-step .yt-recheck tbody tr:nth-child(2), .yt-step .yt-metrics > div:nth-child(2), .yt-step .yt-cand:nth-child(2), .yt-step .yt-card:nth-child(2) { animation-delay: .10s; }
+.yt-step .yt-recheck tbody tr:nth-child(3), .yt-step .yt-metrics > div:nth-child(3), .yt-step .yt-cand:nth-child(3), .yt-step .yt-card:nth-child(3) { animation-delay: .14s; }
+.yt-step .yt-recheck tbody tr:nth-child(4), .yt-step .yt-metrics > div:nth-child(4), .yt-step .yt-cand:nth-child(4), .yt-step .yt-card:nth-child(4) { animation-delay: .18s; }
+.yt-step .yt-recheck tbody tr:nth-child(5), .yt-step .yt-metrics > div:nth-child(5), .yt-step .yt-card:nth-child(5) { animation-delay: .22s; }
+.yt-step .yt-recheck tbody tr:nth-child(6), .yt-step .yt-metrics > div:nth-child(6) { animation-delay: .26s; }
+.yt-step .yt-recheck tbody tr:nth-child(n+7) { animation-delay: .30s; }
+@keyframes yt-row { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.yt-recheck tr.new td { transition: background .4s; }
+.yt-v { transition: background .3s, color .3s, border-color .3s; }
+@media (prefers-reduced-motion: reduce) {
+  .yt-rail { transition: none; }
+  .yt-step .yt-recheck tbody tr, .yt-step .yt-metrics > div, .yt-step .yt-cand, .yt-step .yt-card { animation: none; }
+}
+.yt-vbtn { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0; cursor: pointer; color: var(--muted); font-size: var(--fs-xs); }
+.yt-vbtn:hover .yt-v, .yt-vbtn:focus-visible .yt-v { box-shadow: 0 0 0 2px color-mix(in srgb, var(--bad) 25%, transparent); }
+.yt-vbtn:focus-visible { outline: none; }
