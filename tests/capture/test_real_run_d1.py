@@ -34,7 +34,7 @@ def d1_run(tmp_path_factory):
     os.environ.pop("MODEL_API_KEY", None)
     rc = RR.main(["--take", str(TAKE), "--lens", str(INP / "IMG_0806.MOV"), "--measurements", str(INP / "measurements.json"),
                   "--out", str(out), "--mode", "replay", "--cassettes", str(INP / "cassettes_d1"), "--seed-t", "12.5",
-                  "--dev-clip", "D1", "--answers", str(INP / "answers_from_page.json"),
+                  "--dev-clip", "D1", "--answers", str(INP / "answers_from_page.json"), "--legacy-answers-d1",
                   "--rehearse-correction", "mug_clearance", "--no-render"])
     assert rc == 0
     return out
@@ -55,9 +55,11 @@ def test_watch_stage_finds_the_setup_and_asks_the_same_questions(d1_run):
     sync = [e["t"] for e in st["scan"]["sync_events"]]
     assert sync == pytest.approx([8.483, 11.683, 36.985, 40.252], abs=0.02)
     assert st["scan"]["board_rest"][0]["t0"] < 4.8 < st["scan"]["board_rest"][0]["t1"]
-    assert st["scan"]["end_board_same_placement"] is False
-    q = json.loads((d1_run / "questions.json").read_text())["questions"]
-    assert [x["id"] for x in q] == ["mug", "red_box", "marker", "tray", "divider", "mug_pickup", "camera_settings", "intent"]
+    assert st["scan"]["end_board_rotated_suggestion"] is True          # a suggestion only; applied via the legacy D1 setting
+    qd = json.loads((d1_run / "questions.json").read_text())
+    assert [x["id"] for x in qd["questions"]] == ["mug", "red_box", "marker", "tray", "divider", "mug_pickup", "camera_settings",
+                                                  "end_board", "intent"]
+    assert qd["take_sha256"] == RR.D1_TAKE_SHA256 and qd["session_id"] and qd["question_set_sha256"]
 
 
 def test_gate_stays_closed_and_the_stated_task_runs_labelled(d1_run):
@@ -68,3 +70,9 @@ def test_gate_stays_closed_and_the_stated_task_runs_labelled(d1_run):
     assert "stated task" in page["task"]["spec_source"] and "refused" in page["task"]["proposal_from_capture"]
     assert page["run"]["result"] == "success" and page["run"]["violations"] == 0
     assert page["correct"]["rehearsal"] is True and "rehearsal" in page["correct"]["chosen_by"]
+    assert "Answers carried over from D1's own page (legacy, same take)" in page["labels"]
+    assert any(l.startswith("Layout shifted by software") for l in page["labels"])
+    spec_after = json.loads((d1_run / "correct" / "spec_after.json").read_text())
+    assert not any(c["provenance"]["source"] == "user_correction" for c in spec_after["constraints"])
+    man = json.loads((d1_run / "manifest.json").read_text())
+    assert man["corrections"][0]["rehearsal"] is True
