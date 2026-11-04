@@ -494,6 +494,17 @@ def d1_source(root: Path = D1_ROOT, cloud: Path = D1_CLOUD, twin_dir: Optional[P
         placement_file=pick("phase2_summary.json"))
 
 
+def rehearsal_flag(c, where: str) -> bool:
+    """A manifest correction's ``rehearsal`` flag. Missing, None or not a bool raises: a correction of unknown origin
+    must never be shown as the person's own (it would lose its "rehearsal, not chosen by you" badge)."""
+    v = c.get("rehearsal") if isinstance(c, dict) else None
+    if not isinstance(v, bool):
+        name = c.get("name") if isinstance(c, dict) else None
+        raise ValueError(f"{where}: correction {name!r} has rehearsal={v!r}; expected true (rehearsed by the pipeline, "
+                         "not chosen by the person) or false (the person's correction)")
+    return v
+
+
 def pipeline_source(d: Path, capture_id: Optional[str] = None, twin_override: Optional[Path] = None) -> Source:
     """A ``mirror.capture.real_run`` output directory (its manifest.json and page.json)."""
     d = Path(d)
@@ -524,10 +535,11 @@ def pipeline_source(d: Path, capture_id: Optional[str] = None, twin_override: Op
     spend = sp.get("usd") if sp else page.get("spend_usd")
     recorded = []
     for c in man.get("corrections") or []:
+        rehearsal = rehearsal_flag(c, str(d / "manifest.json"))     # missing or None is an error, never False
         paths = {k: f(c.get(k)) for k in ("rollout", "spec", "report", "recheck", "before_after", "video")}
         if paths["rollout"] and paths["spec"] and paths["recheck"]:
             recorded.append({"id": c.get("name"), "text": c.get("text") or c.get("label"), "label": c.get("label"),
-                             "rehearsal": bool(c.get("rehearsal")), "compiler": c.get("compiler"), **{k + "_path": v for k, v in paths.items()}})
+                             "rehearsal": rehearsal, "compiler": c.get("compiler"), **{k + "_path": v for k, v in paths.items()}})
     return Source(capture_id=capture_id or man.get("capture_id") or d.parent.name if d.name == "out" else (capture_id or d.name),
                   title=man.get("title") or "Your table",
                   session=session, take=take, tracks=f(man.get("tracks"), "tracks_full.json.gz", "tracks_proxy.json.gz"),
