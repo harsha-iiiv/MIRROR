@@ -36,7 +36,7 @@ with sync_playwright() as p:
         pg.wait_for_timeout(400)
         pg.screenshot(path=f"{out}/{name}.png", timeout=120000)
         st = pg.evaluate("() => window.__lab.v.getState ? window.__lab.v.getState() : null")
-        print(name, json.dumps(st)[:400])
+        print(name, json.dumps(st)[:400]); print("   render", json.dumps((st or {}).get("render")))
         for l in logs[-8:]:
             print("   ", l[:300])
         ctx.close()
