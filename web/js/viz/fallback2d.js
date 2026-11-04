@@ -37,6 +37,9 @@ export class Fallback2D {
   setView(k) { this.view = k; }
   setEditMode() {}
   setOptions(o = {}) { if (o.trace !== undefined) this.showTrace = o.trace; this.draw(); }
+  getOptions() { return { trace: this.showTrace }; }
+  getState() { return { view: 'top', t: this.t, frame: this.frameIndex(), playing: this.playing, fallback: '2d' }; }
+  handleKey() { return false; } measure() { return null; } events() { return []; } seekEvent() {}
   setSpecs() {} setSpec() {} setCapture() { return Promise.resolve(); } mountTimeline() { return null; }
   endLive() { this.live = false; }
   beadsOffTable() { return 0; }
