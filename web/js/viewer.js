@@ -16,7 +16,7 @@ import { cssVar, isDark, isSmallDevice, prefersReducedMotion, setupRenderer, mak
 import { RuleLayer } from './viz/rules.js';
 import { GhostLayer } from './viz/ghost.js';
 import { PhoneLayer } from './viz/phone.js';
-import { Glide } from './viz/ease.js';
+import { Glide, easeInOutSine } from './viz/ease.js';
 import { buildRibbon } from './viz/ribbon.js';
 import { intervalsFor, verdictAt, events as runEvents } from './viz/verdict.js';
 import { makeHud, cardHTML } from './viz/hud.js';
@@ -186,6 +186,7 @@ export class Viewer {
       this.onTick(this.t, this.playing);
     }
     if (this.glide.step(dt)) this.dirty = true;
+    if (this._stepPhoneGlide(dt)) this.dirty = true;
     if (this.view === 'follow') this._follow(dt);
     const animating = this.showRules && this.rules.update(this.t, this.frameIndex(), this.bodies, now);
     const moved = this.view !== 'phone' && this.controls.update();
@@ -194,20 +195,19 @@ export class Viewer {
 
   _render() {
     this._sizeBeads();
-    if (this.view === 'phone' && this.phone.view) {
-      const r = this._phoneRect();
-      this.renderer.setScissorTest(true);
-      this.renderer.setViewport(0, 0, this._w, this._h); this.renderer.setScissor(0, 0, this._w, this._h);
-      this.renderer.setClearColor(new THREE.Color(cssVar('--viewer') || '#eceae6'), 1);
-      this.renderer.clear();
-      this.renderer.setViewport(r.x, r.y, r.w, r.h); this.renderer.setScissor(r.x, r.y, r.w, r.h);
-      this.renderer.render(this.scene, this.camera);
-      this.renderer.setScissorTest(false);
-      Object.assign(this.labels.domElement.style, { left: `${r.x}px`, top: `${this._h - r.y - r.h}px`, right: 'auto', bottom: 'auto' });
-      this.labels.setSize(r.w, r.h);
+    const r = this.renderer;
+    if (this.view === 'phone' && this.phone.view && !this._phoneGlide) {
+      // Only the phone's image area is drawn: the real frame with the simulation over it.
+      const R = this._phoneRect();
+      r.setScissorTest(true);
+      r.setScissor(0, 0, this._w, this._h);
+      r.setClearColor(new THREE.Color(cssVar('--viewer') || '#eceae6'), 1);
+      r.clear();
+      r.setScissor(R.x, R.y, R.w, R.h);
+      r.render(this.scene, this.camera);
+      r.setScissorTest(false);
     } else {
-      this.renderer.setViewport(0, 0, this._w, this._h);
-      this.renderer.render(this.scene, this.camera);
+      r.render(this.scene, this.camera);
     }
     this.labels.render(this.scene, this.camera);
     this._declutterLabels();
@@ -232,11 +232,11 @@ export class Viewer {
     this._w = w; this._h = h;
     const aspect0 = this.camera.aspect;
     this.renderer.setSize(w, h, false);
+    this._labelsFull();
     if (this.view !== 'phone') {
-      this._labelsFull();
       this.camera.aspect = w / h;
       this.camera.updateProjectionMatrix();
-    }
+    } else if (!this._phoneGlide) this._applyPhoneProjection();
     for (const m of this._lineMats || []) m.resolution.set(w, h);
     if (!this._userMoved && this.view !== 'phone' && Math.abs(aspect0 - this.camera.aspect) > 0.05) this.setView(this.view, { instant: true });
     this.dirty = true;
@@ -293,27 +293,42 @@ export class Viewer {
     this.dirty = true;
   }
 
+  // The phone image fitted into the canvas: equivalent intrinsics for the whole canvas.
   _phoneRect() {
-    const a = this.phone.aspect(), W = this._w, H = this._h;
-    let w = W, h = W / a;
-    if (h > H) { h = H; w = H * a; }
-    return { x: Math.round((W - w) / 2), y: Math.round((H - h) / 2), w: Math.round(w), h: Math.round(h) };
+    const c = this.phone.view.camera, W = this._w || 1, H = this._h || 1;
+    const s = Math.min(W / c.width, H / c.height);
+    const w = c.width * s, h = c.height * s, ox = (W - w) / 2, oy = (H - h) / 2;
+    return { x: Math.round(ox), y: Math.round(H - oy - h), w: Math.round(w), h: Math.round(h), s, ox, oy,
+      fx: c.fx * s, fy: c.fy * s, cx: ox + c.cx * s, cy: oy + c.cy * s, W, H };
   }
 
-  _enterPhone() {
+  _applyPhoneProjection() {
+    const R = this._phoneRect();
+    this.phone.poseCamera(this.camera);
+    this.camera.projectionMatrix.copy(this.phone.projection(0.01, 20, R));
+    this.camera.projectionMatrixInverse.copy(this.camera.projectionMatrix).invert();
+    this.dirty = true;
+  }
+
+  _enterPhone(instant = false) {
     if (!this.phone.view) return;
     this.glide.cancel();
     this._prevView = this.view === 'phone' ? '3d' : this.view;
     this.view = 'phone';
     this.controls.enabled = false;
-    this.camera.up.set(0, 0, 1);
-    this.phone.poseCamera(this.camera);
-    this.camera.projectionMatrix.copy(this.phone.projection(0.01, 20));
-    this.camera.projectionMatrixInverse.copy(this.camera.projectionMatrix).invert();
-    if (this.phone.backdrop) this.phone.backdrop.visible = true;
-    this.phone.group.children.forEach((c) => { if (c !== this.phone.backdrop) c.visible = false; });
+    // Glide (position, orientation, field of view) into the phone's pose, then switch to its
+    // exact pinhole (principal point included); the switch moves the image by a few pixels.
+    const R = this._phoneRect();
+    const tmp = new THREE.PerspectiveCamera();
+    this.phone.poseCamera(tmp);
+    const fov1 = (2 * Math.atan(R.H / 2 / R.fy) * 180) / Math.PI;
+    if (instant || prefersReducedMotion()) this._phoneGlide = null;
+    else this._phoneGlide = { t: 0, dur: 1.2, p0: this.camera.position.clone(), q0: this.camera.quaternion.clone(), f0: this.camera.fov, p1: tmp.position.clone(), q1: tmp.quaternion.clone(), f1: fov1 };
+    if (!this._phoneGlide) this._applyPhoneProjection();
     // The real frame replaces the simulated table: hide table, floor and table photo; a shadow
     // catcher keeps the objects' contact shadows on the real surface.
+    if (this.phone.backdrop) this.phone.backdrop.visible = true;
+    this.phone.group.children.forEach((c) => { if (c !== this.phone.backdrop) c.visible = false; });
     this._hiddenForPhone = [];
     for (const [, grp] of this.bodies) if (grp.userData.role === 'world' && grp.visible) { grp.visible = false; this._hiddenForPhone.push(grp); }
     if (this.phone.ground?.visible) { this.phone.ground.visible = false; this._hiddenForPhone.push(this.phone.ground); }
@@ -324,22 +339,36 @@ export class Viewer {
       this.scene.add(this._catcher);
     }
     this._catcher.visible = true;
-    this.labels.domElement.style.overflow = 'visible';
     this.dirty = true;
+  }
+
+  _stepPhoneGlide(dt) {
+    const g = this._phoneGlide;
+    if (!g) return false;
+    g.t = Math.min(1, g.t + dt / g.dur);
+    const k = easeInOutSine(g.t);
+    this.camera.position.copy(g.p0).lerp(g.p1, k);
+    this.camera.quaternion.copy(g.q0).slerp(g.q1, k);
+    this.camera.fov = g.f0 + (g.f1 - g.f0) * k;
+    this.camera.aspect = this._w / this._h;
+    this.camera.updateProjectionMatrix();
+    this.camera.updateMatrixWorld(true);
+    if (g.t >= 1) { this._phoneGlide = null; this._applyPhoneProjection(); }
+    return true;
   }
 
   _exitPhone(reframe = true) {
     if (this.view !== 'phone') return;
-    this.controls.enabled = !this.editMode || this.editMode === 'obstacle';
+    this._phoneGlide = null;
     this.controls.enabled = true;
     if (this.phone.backdrop) this.phone.backdrop.visible = false;
     this.phone.group.children.forEach((c) => { if (c !== this.phone.backdrop) c.visible = true; });
     for (const o of this._hiddenForPhone || []) o.visible = true;
     this._hiddenForPhone = [];
     if (this._catcher) this._catcher.visible = false;
-    this.labels.domElement.style.overflow = 'hidden';
     this.view = this._prevView || '3d';
-    this.resize();
+    this.camera.up.set(0, 0, 1);
+    this.camera.fov = 36;
     this.camera.aspect = this._w / this._h; this.camera.updateProjectionMatrix();
     if (reframe) this.setView(this.view, { instant: true });
     this.dirty = true;
@@ -442,7 +471,7 @@ export class Viewer {
       this.bodies.set(b.name, grp);
     }
     if (this.phone.ground) this.world.add(this.phone.ground), (this.phone.ground.visible = this.showTableTexture);
-    if (this.view === 'phone') { this.view = this._prevView || '3d'; this._enterPhone(); }
+    if (this.view === 'phone') { this.view = this._prevView || '3d'; this._enterPhone(true); }
     const token = (this._armToken = (this._armToken || 0) + 1);
     this.armModel = null;
     attachArm(this, visual, token).then((m) => { if (m) { this.armModel = m; this.dirty = true; } });
@@ -1042,7 +1071,7 @@ export class Viewer {
   }
 
   getState() {
-    return { view: this.view, t: this.t, frame: this.frameIndex(), playing: this.playing, fps: this._fps.value, glide: !!this.glide.active,
+    return { view: this.view, t: this.t, frame: this.frameIndex(), playing: this.playing, fps: this._fps.value, glide: !!this.glide.active || !!this._phoneGlide,
       ribbons: (this.ribbons || []).map((r) => r.object), rules: { cones: this.rules.cones.length, volumes: this.rules.volumes.length, markers: this.rules.markers.length },
       ghostBodies: this.ghostLayer.bodies.size, capture: !!this.phone.view, arm: this.armModel || null, spec: this.spec ? `${this.spec.spec_id}@v${this.spec.version}` : null, report: this.report ? `${this.report.rollout_id} (${this.report.status})` : null,
       options: this.getOptions(), verdictMode: this.verdictMode || null, fallback: null, software: !!this.software };

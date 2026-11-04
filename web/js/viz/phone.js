@@ -103,8 +103,9 @@ export class PhoneLayer {
   }
 
   // Projection matrix equal to the phone's pinhole model (principal point honoured).
-  projection(near = 0.01, far = 20) {
-    const c = this.view.camera, W = c.width, H = c.height;
+  // `fit` (optional): {fx, fy, cx, cy, W, H} — the phone image fitted into a larger canvas.
+  projection(near = 0.01, far = 20, fit = null) {
+    const c = fit || this.view.camera, W = fit ? fit.W : c.width, H = fit ? fit.H : c.height;
     const m = new THREE.Matrix4();
     // OpenCV pixel coords -> NDC with y up; camera looks down -z in three, so flip y and z axes.
     m.set(2 * c.fx / W, 0, 1 - 2 * c.cx / W, 0,
