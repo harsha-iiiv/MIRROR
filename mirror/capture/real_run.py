@@ -564,6 +564,7 @@ class RealRun:
                 if until and st == until:
                     break
             self.state["status"] = "complete"
+            self.state.pop("waiting_for", None)
         except StageStop as e:
             self.state["status"] = "waiting"
             self.state["waiting_for"] = str(e)
@@ -573,7 +574,14 @@ class RealRun:
             self.state["waiting_for"] = str(e)
             self.log(f"[stopped] {e}")
         self.state["last_invocation_wall_s"] = round(time.time() - t_all, 1)
+        calls = self.state.setdefault("model_calls", {"from_recording": 0, "live": 0})
+        for c in (self._meta, self._llm):
+            for rec in (getattr(c, "usage", None) or []):
+                calls["from_recording" if rec.get("from_cassette") else "live"] += 1
+        if self.mode == "replay" and calls["live"]:
+            raise LiveCallInReplay(f"{calls['live']} live model call(s) recorded in replay mode")
         self._save()
+        self._write_page()
         return self.state
 
 
@@ -1402,6 +1410,7 @@ class RealRun:
         s = self._session_quick()
         page = {"labels": self.labels(), "status": self.state.get("status"), "waiting_for": self.state.get("waiting_for"),
                 "mode": self.mode, "spend_usd": round(self.ledger.spent(), 4), "cap_usd": self.ledger.cap,
+                "model_calls": self.state.get("model_calls"),
                 "timings_s": {k: v.get("wall_s") for k, v in st.items()},
                 "confirmations_needed": qd.get("questions", []), "correction_candidates": qd.get("correction_candidates", []),
                 "events_2d": [{k: e[k] for k in ("object", "from_s", "to_s", "in_tray")} for e in tl.get("events", [])]}
@@ -1441,13 +1450,24 @@ class RealRun:
         man = {"take": str(self.take), "lens": str(self.lens) if self.lens else None,
                "session": "session_answered.json" if (self.out / "session_answered.json").exists() else "session.json",
                "tracks": "tracks_full.json.gz", "tracks_proxy": "tracks_proxy.json.gz", "table_to_sim": "table_to_sim.json",
-               "scene": "scene/scene.json", "rollouts": {}, "corrections": [], "labels": page["labels"], "page": "page.json"}
+               "scene": "scene/scene.json", "rollouts": {}, "corrections": [], "labels": page["labels"], "page": "page.json",
+               "spec": "spec.json" if (self.out / "spec.json").exists() else None,
+               "spec_source": st.get("task", {}).get("spec_source"), "evidence_dir": "evidence", "twin_dir": "twin",
+               "sim_video": "run/sim_run.mp4" if (self.out / "run" / "sim_run.mp4").exists() else None,
+               "overlay_video": "overlay.mp4" if (self.out / "overlay.mp4").exists() else None,
+               "notes": list(self.state.get("problems", [])), "spend": {"usd": round(self.ledger.spent(), 4), "cap_usd": self.ledger.cap,
+                                                                        "mode": self.mode},
+               "calibration": page.get("calibration"), "placement_note": st.get("scene", {}).get("label"),
+               "gate": page.get("gate"), "questions": "questions.json", "answers": str(self.answers_path)}
         if (self.out / "run" / "rollout.json").exists():
             man["rollouts"]["run"] = "run/rollout.json"
         if (self.out / "correct" / "rollout_after.json").exists():
             c = st.get("correct", {})
             man["corrections"].append({"name": c.get("candidate"), "label": c.get("label"), "rehearsal": c.get("rehearsal"),
-                                       "rollout": "correct/rollout_after.json", "spec": "correct/spec_after.json"})
+                                       "rollout": "correct/rollout_after.json", "spec": "correct/spec_after.json",
+                                       "report": "correct/report_after.json", "recheck": "correct/recheck_before.json",
+                                       "video": "correct/sim_after.mp4", "before_after": "correct/before_after.mp4",
+                                       "compiler": c.get("compiler"), "text": c.get("compile_text")})
         _jdump(self.p("manifest.json"), man)
         try:
             self._publish_copy()
