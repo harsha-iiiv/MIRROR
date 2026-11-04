@@ -2010,8 +2010,23 @@ class RealRun:
             rev = ans.get("spec_review")
             items = [r for r in list(spec.constraints) + list(spec.ordering) if getattr(r, "status", None) == "proposed"]
             if rev is None and items:
+                said = str((intent or {}).get("answer", "")).lower()
+
+                def agrees(r):
+                    """Does the person's stated intent (answered before MIRROR interpreted the clip) say the same?"""
+                    if not said:
+                        return None
+                    t = getattr(r, "type", None)
+                    if r in spec.ordering:
+                        return said.startswith("order mattered")
+                    if t == "upright":
+                        return not said.startswith("something else")
+                    if t == "forbidden_contact":
+                        return bool(_walls(self.meas)) and not said.startswith("something else")
+                    return None
                 qs = [{"id": f"rule:{r.id}", "kind": "rule", "question": f"Keep this rule? {getattr(r, 'description', '') or r.id}",
-                       "options": ["Keep it", "Drop it"], "rule": r.model_dump(mode="json")} for r in items]
+                       "options": ["Keep it", "Drop it"], "rule": r.model_dump(mode="json"), "agrees_with_your_stated_intent": agrees(r)}
+                      for r in items]
                 _jdump(self.p("questions_spec.json"), {"about": "Review of MIRROR's proposed rules. Answer in answers.json as "
                                                        "spec_review: {answer: {confirm: [ids], reject: [ids]}, by: 'person', at}.",
                                                        "interpreter": interp, "summary": spec.summary, "questions": qs})
