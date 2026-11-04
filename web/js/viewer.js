@@ -263,6 +263,9 @@ export class Viewer {
     if (this.floorMat) this.floorMat.color.set(dark ? '#17171a' : '#dedcd6');
     if (this.edgeMat) this.edgeMat.color.set(cssVar('--muted'));
     if (this.payload) this._buildTraces();
+    if (this.rules && this.sceneState) this._buildRules();
+    if (this.ghostLayer && this.ghost && this.showGhost) { this.ghostLayer.build(this.ghost); this.ghostLayer.setTime(this.t); }
+    this.timeline?.draw();
     this.dirty = true;
   }
 
