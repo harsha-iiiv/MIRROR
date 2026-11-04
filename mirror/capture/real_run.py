@@ -2186,7 +2186,8 @@ class RealRun:
             return
         base = self._fb_base(self.publish_firebase)
         storage = self._storage_rel()
-        pub = set(self.PUBLISH) | {str(p.relative_to(self.out)) for p in self.out.glob("evidence/*.jpg")}
+        pub = set(self.PUBLISH) | {str(p.relative_to(self.out)) for p in self.out.glob("evidence/*.jpg")} \
+            | {str(p.relative_to(self.out)) for p in self.out.glob("twin/*.mp4")}
         pg = _strip_abs(json.loads(json.dumps(page, default=_json_default)))
         pg["run_id"] = self.publish_firebase
         pg["storage_base"] = storage
@@ -2306,7 +2307,8 @@ class RealRun:
         """Copy the light outputs (no tracks, no rollouts) to --publish-dir, e.g. a /cloudspace folder the page reads."""
         if getattr(self, "publish_dir", None) is None:
             return
-        files = list(self.PUBLISH) + [str(p.relative_to(self.out)) for p in self.out.glob("evidence/*.jpg")]
+        files = list(self.PUBLISH) + [str(p.relative_to(self.out)) for p in self.out.glob("evidence/*.jpg")] \
+            + [str(p.relative_to(self.out)) for p in list(self.out.glob("twin/*.mp4")) + list(self.out.glob("twin/twin.json"))]
         for rel in files:
             src_, dst = self.out / rel, self.publish_dir / rel
             if not src_.exists():

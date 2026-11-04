@@ -158,17 +158,13 @@ def test_stated_spec_marks_default_thresholds_as_default(tmp_path):
 
 
 def test_rehearsal_correction_is_never_recorded_as_the_persons_words(tmp_path):
-    from mirror.contracts import TaskSpec
-    from mirror.interpret import compile_correction
+    from mirror.evaluate.specs import reference_specs
     from mirror.pipeline import Session
     from mirror.scenes.reference import reference_scene
-    from mirror.interpret import propose_spec  # noqa: F401  (import check)
-    sc = reference_scene("demo")
-    sess = Session(scene=sc, client=None)
-    base = sess.spec if getattr(sess, "specs", None) else None
-    if base is None:
-        pytest.skip("no default spec in the reference session")
+    sess = Session(scene=reference_scene("demo"), client=None)
+    sess.specs = [reference_specs()[0]]
     new, rec = sess.correct("Keep the cup at least 6 cm away from the wall while carrying it.")
+    assert any(c.provenance.source == "user_correction" for c in new.constraints)    # what the compiler writes
     new2, rec2 = RR.RealRun._mark_rehearsal(sess, new, rec, {"id": "mug_clearance", "label": "Keep the mug 6 cm away"})
     blob = new2.model_dump_json()
     assert "user_correction" not in json.dumps([c.provenance.model_dump() for c in new2.constraints if
@@ -277,3 +273,31 @@ def test_strip_abs_paths():
     out = RR._strip_abs({"take": "/workspace/x/IMG_1.MOV", "pub": "/cloudspace/mirror/capture/D2/pipeline/a.json",
                          "rel": "run/rollout.json", "error_trace": "/tmp/x"})
     assert out == {"take": "local:IMG_1.MOV", "pub": "mirror/capture/D2/pipeline/a.json", "rel": "run/rollout.json"}
+
+
+def test_publish_firebase_writes_page_questions_status_with_storage_paths(tmp_path, monkeypatch):
+    r = _run(tmp_path)
+    q = _questions(tmp_path)
+    r.publish_firebase = "D9"
+    r.publish_dir = Path("/cloudspace/mirror/capture/D9/pipeline")
+    (tmp_path / "evidence").mkdir()
+    (tmp_path / "evidence" / "mug_seed.jpg").write_bytes(b"j")
+    qd = json.loads((tmp_path / "questions.json").read_text())
+    qd["questions"][0]["evidence"] = {"image": "evidence/mug_seed.jpg", "t_s": 12.5}
+    (tmp_path / "questions.json").write_text(json.dumps(qd))
+    writes = {}
+    monkeypatch.setattr(RR, "_fb", lambda op, path, data=None: writes.__setitem__(path, (op, data)))
+    page = {"labels": ["x"], "paths": {"overlay_mp4": "overlay.mp4", "tracks_full_json_gz": "tracks_full.json.gz"},
+            "notes": ["/workspace/secret/IMG_0815.MOV"], "confirmations_needed": qd["questions"]}
+    r._publish_firebase(page)
+    base = RR.FIREBASE_RUNS_BASE + "/D9"
+    assert set(writes) == {base + "/page", base + "/questions", base + "/status"}
+    pg = writes[base + "/page"][1]
+    assert pg["storage_base"] == "mirror/capture/D9/pipeline"
+    assert pg["media"] == {"overlay_mp4": "mirror/capture/D9/pipeline/overlay.mp4"}    # tracks are never published
+    assert "/workspace" not in json.dumps(pg)
+    qn = writes[base + "/questions"][1]
+    assert qn["items"]["mug"]["evidence"]["image_path"] == "mirror/capture/D9/pipeline/evidence/mug_seed.jpg"
+    assert qn["question_set_sha256"] == q["question_set_sha256"]
+    st = writes[base + "/status"][1]
+    assert set(st) == {"stage", "updated_at_ms", "message"}
