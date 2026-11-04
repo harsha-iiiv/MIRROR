@@ -422,6 +422,19 @@ def _fast_parse(text, *, prompt="", media="image", decode_masks=True, workers=3)
                        diagnostics=["decoded with real_run fast parser (official raster decoder, no canonical re-encode check)"])
 
 
+def _rle_decode(rle: dict) -> np.ndarray:
+    """mirror.perception.masks.rle_decode, vectorised (same output)."""
+    h, w = rle["size"]
+    c = np.asarray(rle["counts"], dtype=np.int64)
+    if c.size == 0:
+        return np.zeros((h, w), bool)
+    vals = (np.arange(c.size) % 2).astype(bool)
+    out = np.repeat(vals, c)
+    if out.size < h * w:
+        out = np.concatenate([out, np.zeros(h * w - out.size, bool)])
+    return out[: h * w].reshape(h, w)
+
+
 def _scaled_gray_frames(meta, scale: float):
     """(index, pts, gray frame) at ``scale`` x resolution, scaled by ffmpeg (area filter), one at a time."""
     w = int(round(meta.width * scale / 2)) * 2
@@ -949,7 +962,8 @@ class RealRun:
         from PIL import Image
         from mirror.capture import media as M
         PT = __import__('importlib').import_module('mirror.perception.track')
-        from mirror.perception.masks import rle_decode, rle_encode
+        from mirror.perception.masks import rle_encode
+        rle_decode = _rle_decode
         from mirror.perception.reconstruct import Tracks
         install_fast_sam_decoder()
         t0 = time.time()
@@ -1059,6 +1073,64 @@ class RealRun:
                   sam={k2: {kk: v[kk] for kk in ("frames", "cassette") if kk in v} for k2, v in info["sam"].items()})
 
     # ----------------------------------------------------------- session
+
+    def _trackset_from_proxy(self, origin: str):
+        """The capture's 2D observations computed from the proxy-resolution masks with the exact moments of
+        their nearest-neighbour upscale (same numbers as importing tracks_full.json.gz, about k^2 times less work)."""
+        from mirror.capture import track as TR
+        rle_decode = _rle_decode
+        PT = __import__('importlib').import_module('mirror.perception.track')
+        m = self.clip(self.take)
+        tr = PT.load_tracks(self.p("tracks_proxy.json.gz"))
+        pw, ph = tr.size["top"]
+        k = m.width // pw
+        if k * pw != m.width or k * ph != m.height:
+            return None
+        walls = set(_walls(self.meas))
+        thr = TR.TRACK_THRESHOLDS["elongation_for_axis"]
+        cj = (k - 1) / 2.0
+        sj = sum((j - cj) ** 2 for j in range(k))
+        out = {}
+        for lab, fr in tr.masks["top"].items():
+            static = lab in walls and len(fr) == 1
+            cache = {}
+            obs = []
+            for i, t in enumerate(m.pts_s):
+                mm = next(iter(fr.values())) if static else fr.get(i)
+                if mm is None:
+                    obs.append(TR.Obs2D(frame=i, t=t, status="lost"))
+                    continue
+                key = id(mm)
+                if key not in cache:
+                    a = rle_decode(mm)
+                    ys, xs = np.nonzero(a)
+                    if len(xs) == 0:
+                        cache[key] = None
+                    else:
+                        n = len(xs)
+                        mx, my = xs.mean(), ys.mean()
+                        dx, dy = xs - mx, ys - my
+                        N = k * k * n
+                        sxx = k ** 4 * float(dx @ dx) + k * n * sj
+                        syy = k ** 4 * float(dy @ dy) + k * n * sj
+                        sxy = k ** 4 * float(dx @ dy)
+                        el = ang = None
+                        if N > 2:
+                            cov = np.array([[sxx, sxy], [sxy, syy]]) / (N - 1)
+                            w_, v_ = np.linalg.eigh(cov)
+                            el = float(np.sqrt(w_[1] / max(w_[0], 1e-9)))
+                            ang = float(np.degrees(np.arctan2(v_[1, 1], v_[0, 1]))) if el >= thr else None
+                        x0, y0 = k * int(xs.min()), k * int(ys.min())
+                        x1, y1 = k * (int(xs.max()) + 1), k * (int(ys.max()) + 1)
+                        cache[key] = dict(cx=float(k * mx + cj), cy=float(k * my + cj),
+                                          box=(float(x0), float(y0), float(x1 - x0), float(y1 - y0)), axis_deg=ang, elongation=el)
+                c = cache[key]
+                obs.append(TR.Obs2D(frame=i, t=t, status="lost") if c is None else TR.Obs2D(frame=i, t=t, status="model", **c))
+            out[lab] = obs
+        src_ = tr.source + f"; observations from the {pw}x{ph} masks with the exact moments of their x{k} nearest upscale"
+        ts = TR.TrackSet(camera="top", clip_sha256=m.sha256, source="model", model=src_, model_origin=origin, tracks=out)
+        ts.notes.append(f"imported tracks file ({src_})")
+        return ts
     def _build_session(self, confirmed=frozenset(), rejected=frozenset(), corrections=(), extra_notes=(), tray=None):
         from mirror.capture import calibrate as C, events as EV, session as SE, track as TR, media as M
         m = self.clip(self.take)
@@ -1069,7 +1141,9 @@ class RealRun:
         if tsf.exists():
             ts = TR.TrackSet.model_validate_json(tsf.read_text())
         else:
-            ts = TR.from_perception_tracks(m, self.p("tracks_full.json.gz"), camera="top", origin=origin)
+            ts = self._trackset_from_proxy(origin)
+            if ts is None:
+                ts = TR.from_perception_tracks(m, self.p("tracks_full.json.gz"), camera="top", origin=origin)
             tsf.write_text(ts.model_dump_json())
         with self._session_patches():
             s = self._build(SE, C, m, sc, intr, ts, confirmed, rejected, corrections, tray)
@@ -1171,7 +1245,7 @@ class RealRun:
     def _timeline(self):
         """2D image-space motion of the masks (proxy resolution): moves, jitter, visibility."""
         import cv2
-        from mirror.perception.masks import rle_decode
+        rle_decode = _rle_decode
         t = self._proxy_tracks()
         masks = t.masks["top"]
         pw, ph = t.size["top"]
@@ -1298,7 +1372,7 @@ class RealRun:
     def _overlay(self, tl):
         """Masks and labels over the real footage (proxy resolution, H.264, browser-playable)."""
         import cv2
-        from mirror.perception.masks import rle_decode
+        rle_decode = _rle_decode
         t = self._proxy_tracks()
         masks = t.masks["top"]
         pw, ph = t.size["top"]
@@ -1360,7 +1434,7 @@ class RealRun:
         import cv2
         import imageio.v2 as iio
         from PIL import Image
-        from mirror.perception.masks import rle_decode
+        rle_decode = _rle_decode
         t = self._proxy_tracks()
         masks = t.masks["top"]
         pw, ph = t.size["top"]
@@ -1634,7 +1708,7 @@ class RealRun:
         (single view, approximate); the inside size stays the person's ruler measurement. None if unavailable."""
         import cv2
         from mirror.capture import events as EV
-        from mirror.perception.masks import rle_decode
+        rle_decode = _rle_decode
         tm = next((m for m in s.mappings if m.proxy == "tray" and m.confirmed_by_person), None)
         if tm is None or "top" not in s.poses or not s.poses["top"].accepted:
             return None, None
@@ -1941,7 +2015,7 @@ class RealRun:
         """Wall axis in the table frame from its static mask (single view, approximate)."""
         import cv2
         PT = __import__('importlib').import_module('mirror.perception.track')
-        from mirror.perception.masks import rle_decode
+        rle_decode = _rle_decode
         mp = next(m for m in s.mappings if m.track_label == label)
         H = mp.real_dims["height"].value_m if "height" in mp.real_dims else 0.2
         intr, pose = s.intrinsics["top"], s.poses["top"]
