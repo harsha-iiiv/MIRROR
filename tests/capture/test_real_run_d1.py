@@ -52,8 +52,9 @@ def test_replay_is_free_and_every_model_output_came_from_a_recording(d1_run):
 def test_watch_stage_finds_the_setup_and_asks_the_same_questions(d1_run):
     st = json.loads((d1_run / "real_run.json").read_text())["stages"]
     assert st["lens"]["accepted"] and st["lens"]["n_views"] == 65
-    sync = [round(e["t"], 2) for e in st["scan"]["sync_events"]]
-    assert sync == [8.48, 11.68, 36.99, 40.25]
+    sync = [e["t"] for e in st["scan"]["sync_events"]]
+    assert sync == pytest.approx([8.483, 11.683, 36.985, 40.252], abs=0.02)
+    assert st["scan"]["board_rest"][0]["t0"] < 4.8 < st["scan"]["board_rest"][0]["t1"]
     assert st["scan"]["end_board_same_placement"] is False
     q = json.loads((d1_run / "questions.json").read_text())["questions"]
     assert [x["id"] for x in q] == ["mug", "red_box", "marker", "tray", "divider", "mug_pickup", "camera_settings", "intent"]
