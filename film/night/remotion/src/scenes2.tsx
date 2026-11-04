@@ -76,10 +76,9 @@ export const Run: React.FC<{dur: number; speed?: number; lead?: number; header?:
 export const Sentence: React.FC<{dur: number}> = ({dur}) => {
   const f = useCurrentFrame();
   const text: string = FILM.correction_text;
-  const n = Math.floor(Math.max(0, f - 12) * 1.6);
-  const shown = text.slice(0, n);
-  const typed = n >= text.length;
-  const tEnd = 12 + text.length / 1.6;
+  // words land in place at 5 words per second (6 frames apart, 8-frame fade): nothing slides, no caret
+  const words = text.split(' ');
+  const tEnd = 12 + words.length * 6 + 8;
   const mc = DATA.film;
   const rows: [string, string][] = CP.rule_rows;
   return (
@@ -88,7 +87,7 @@ export const Sentence: React.FC<{dur: number}> = ({dur}) => {
       <div style={{position: 'absolute', left: 96, top: 270, width: 1720}}>
         <div style={{fontFamily: MONO, fontSize: 18, color: C.faint, marginBottom: 12, ...rise(f, 4)}}>correction · chosen for this film from MIRROR's suggested corrections</div>
         <div style={{fontSize: 52, fontWeight: 500, letterSpacing: -0.6, lineHeight: 1.22, minHeight: 140, width: 1500, textWrap: 'balance'} as any}>
-          “{shown}{typed ? '”' : <span style={{opacity: Math.floor(f / 8) % 2 ? 1 : 0.25, color: C.accent}}>▍</span>}
+          {words.map((w, j) => <span key={j} style={{opacity: prog(f, 12 + j * 6, 8)}}>{j === 0 ? '“' : ''}{w}{j === words.length - 1 ? '”' : ''}{j < words.length - 1 ? ' ' : ''}</span>)}
         </div>
       </div>
       <div style={{position: 'absolute', left: 96, top: 540, width: 900, ...rise(f, tEnd + 10)}}>
