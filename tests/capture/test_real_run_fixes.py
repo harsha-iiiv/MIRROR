@@ -157,7 +157,10 @@ def test_stated_spec_marks_default_thresholds_as_default(tmp_path):
         r._stated_spec(s, {"answer": "pack them quickly", "order_seen": [], "proposal": "p"})
 
 
-def test_rehearsal_correction_is_never_recorded_as_the_persons_words(tmp_path):
+def test_rehearsal_correction_is_never_recorded_as_the_persons_words(tmp_path, monkeypatch):
+    # the deterministic offline compiler, whatever the caller's environment says: with
+    # MIRROR_LLM_MODE=replay this missed a cassette, and with a model key set it would call the model
+    monkeypatch.setenv("MIRROR_LLM_MODE", "offline")
     from mirror.evaluate.specs import reference_specs
     from mirror.pipeline import Session
     from mirror.scenes.reference import reference_scene
