@@ -646,7 +646,7 @@ export function TablePanel({ ctx }) {
           ${i < TABLE_STEPS.length - 1 ? html`<button class="btn primary" onClick=${() => setStep(TABLE_STEPS[i + 1].key)}>${TABLE_STEPS[i + 1].short}</button>` : ''}
         </div>
         <details class="yt-det yt-hon"><summary>How this page was made</summary><p>${table.honesty}</p>
-          <p class="num faint">built ${table.built_at} · session ${table.session_id} · model calls while building: ${table.model_calls_on_build}${table.spend ? ` · capture spend $${fmt(table.spend.spent_usd ?? table.spend.usd, 2)}` : ''}</p>
+          <p class="num faint">built ${table.built_at} · session ${table.session_id} · model calls while building: ${table.model_calls_on_build}${table.spend ? ` · model spend for this capture run $${fmt(table.spend.spent_usd ?? table.spend.usd, 2)}` : ''}</p>
           ${(table.notes || []).map((n) => html`<p class="faint">${n}</p>`)}</details>
       </section>
     </div>
