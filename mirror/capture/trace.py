@@ -74,6 +74,9 @@ def to_scene(session: CaptureSession):
             wall = make_wall(f"wall_{k}", float(q[0]), float(q[1] - half), float(q[1] + half))
             if h is not None:
                 wall = wall.model_copy(update={"height": float(h.value_m)})
+            dpt = m.real_dims.get("depth")
+            if dpt is not None:
+                wall = wall.model_copy(update={"thickness": float(dpt.value_m)})
             obstacles.append(wall)
     if session.tray is None:
         raise TrayNotMapped("map the tray: the capture has no destination tray, so there is no packing task")

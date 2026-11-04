@@ -113,7 +113,9 @@ class WorkspacePlacement(_M):
     person chooses this; it is not measured."""
     origin_xy_m: tuple[float, float] = (-0.075, 0.105)    # board centred on the sim table origin by default
     yaw_deg: float = 0.0
-    source: Literal["default_centred", "user_supplied"] = "default_centred"
+    source: Literal["default_centred", "user_supplied", "auto_layout_centred"] = "default_centred"
+    # auto_layout_centred: chosen by software so the captured layout's bounding box sits at the simulator
+    # table centre (a display/workspace convenience, not a measurement and not a person's choice)
 
 
 def review_items(mappings: list[ObjectMapping]) -> list[dict]:
