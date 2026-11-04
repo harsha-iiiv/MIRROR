@@ -324,9 +324,16 @@ export class Viewer {
     const fov1 = (2 * Math.atan(R.H / 2 / R.fy) * 180) / Math.PI;
     if (instant || prefersReducedMotion()) this._phoneGlide = null;
     else this._phoneGlide = { t: 0, dur: 1.2, p0: this.camera.position.clone(), q0: this.camera.quaternion.clone(), f0: this.camera.fov, p1: tmp.position.clone(), q1: tmp.quaternion.clone(), f1: fov1 };
+    this.phone.group.visible = false;   // the camera flies to the phone: its frustum would fill the view
     if (!this._phoneGlide) this._applyPhoneProjection();
-    // The real frame replaces the simulated table: hide table, floor and table photo; a shadow
-    // catcher keeps the objects' contact shadows on the real surface.
+    if (!this._phoneGlide) this._phoneSwap();
+    this.dirty = true;
+  }
+
+  // When the camera is at the phone: the real frame replaces the simulated table (table, floor and
+  // table photo hidden); a shadow catcher keeps the objects' contact shadows on the real surface.
+  _phoneSwap() {
+    this.phone.group.visible = true;
     if (this.phone.backdrop) this.phone.backdrop.visible = true;
     this.phone.group.children.forEach((c) => { if (c !== this.phone.backdrop) c.visible = false; });
     this._hiddenForPhone = [];
@@ -353,13 +360,14 @@ export class Viewer {
     this.camera.aspect = this._w / this._h;
     this.camera.updateProjectionMatrix();
     this.camera.updateMatrixWorld(true);
-    if (g.t >= 1) { this._phoneGlide = null; this._applyPhoneProjection(); }
+    if (g.t >= 1) { this._phoneGlide = null; this._applyPhoneProjection(); this._phoneSwap(); }
     return true;
   }
 
   _exitPhone(reframe = true) {
     if (this.view !== 'phone') return;
     this._phoneGlide = null;
+    this.phone.group.visible = true;
     this.controls.enabled = true;
     if (this.phone.backdrop) this.phone.backdrop.visible = false;
     this.phone.group.children.forEach((c) => { if (c !== this.phone.backdrop) c.visible = true; });
