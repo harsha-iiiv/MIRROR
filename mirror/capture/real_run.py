@@ -692,6 +692,8 @@ class RealRun:
                 if not key:
                     raise SystemExit("record mode needs MODEL_API_KEY in the environment (never written to files)")
                 kw["api_key"] = key
+                if os.environ.get("MIRROR_FORBID_NETWORK"):      # rehearse record mode on existing cassettes only
+                    kw["transport"] = _no_network_transport()
             n = self.info("probe").get("take", {}).get("n_frames", 1500)
             self._meta = GuardedMeta(MetaClient(**kw), self.ledger, n)
         return self._meta
@@ -709,6 +711,8 @@ class RealRun:
                     kw.update(api_key=None, transport=_no_network_transport())
                 else:
                     kw["api_key"] = os.environ.get("MODEL_API_KEY")
+                    if os.environ.get("MIRROR_FORBID_NETWORK"):
+                        kw["transport"] = _no_network_transport()
                 c = LLMClient(**kw)
                 led = self.ledger
                 orig = c.complete_json

@@ -331,3 +331,23 @@ def test_upscaled_moments_equal_the_full_resolution_import():
         if ref.axis_deg is not None:
             assert got["axis_deg"] == pytest.approx(ref.axis_deg)
     assert RR._upscaled_moments(np.zeros((4, 4), bool), 2, thr) is None
+
+
+
+def test_correction_choice_person_first_then_labelled_rehearsal(tmp_path):
+    r = _stub_run(tmp_path, {"correction": {"answer": "box_upright", "by": "person", "at": 1}})
+    r.rehearse = "mug_clearance"
+    c, rehearsal, a = r._choose_correction()
+    assert c["id"] == "box_upright" and rehearsal is False
+    r2 = _stub_run(tmp_path / "x", None) if (tmp_path / "x").mkdir() is None else None
+    r2.rehearse = "mug_clearance"
+    c, rehearsal, a = r2._choose_correction()
+    assert c["id"] == "mug_clearance" and rehearsal is True and a is None
+    r3 = _stub_run(tmp_path / "y", None) if (tmp_path / "y").mkdir() is None else None
+    r3.rehearse = None
+    assert r3._choose_correction() == (None, None, None)
+    r4 = _stub_run(tmp_path / "z", {"correction": {"answer": "Stay 10 cm from the tray edge", "by": "person", "at": 1}}) \
+        if (tmp_path / "z").mkdir() is None else None
+    r4.rehearse = None
+    c, rehearsal, _ = r4._choose_correction()
+    assert c["id"] == "custom" and c["compile_text"] == "Stay 10 cm from the tray edge" and rehearsal is False
