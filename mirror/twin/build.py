@@ -632,16 +632,31 @@ def run(job: TwinJob, log=print) -> dict:
         sat = sum(1 for x in rr if x.get("verdict") == "satisfied")
         return f"checker: {rep.get('status')} · {sat}/{len(rr)} rules satisfied"
 
+    def broken_lines(rollout) -> list:
+        rep = rollout.report.model_dump(mode="json")
+        return [f"broken: {x.get('rule_id')} ({x.get('detail') or 'see report'})"[:70]
+                for x in rep.get("rule_results") or [] if x.get("enforced") and x.get("verdict") == "violated"]
+
+    def live_violation(rollout, t_abs) -> list:
+        out_ = []
+        for v in rollout.report.violations or []:
+            if v.t_start is not None and v.t_end is not None and v.t_start - 0.05 <= t_abs <= v.t_end + 0.05:
+                pk = f" (peak {v.peak:.1f}°)" if v.peak is not None and "upright" in v.constraint_id else ""
+                out_.append(f"checker: {v.constraint_id} broken now{pk}")
+        return out_[:1]
+
     def status_lines(f, s_now, rollout=None, end=None):
         lines = [phase_words(f.phase)]
         if rollout is not None and end is not None and s_now >= end - 1e-6:
-            lines = ["done", verdict(rollout)]
+            lines = ["done", verdict(rollout)] + broken_lines(rollout)
         bi = _cup_beads_in(f, visual)
         obj = f.phase.partition(":")[2]
         if obj and obj in f.bodies and f.phase.partition(":")[0] in CARRY:
             lines.append(f"{object_words(obj)} tilt {_tilt_deg(f.bodies[obj].quat):.0f}°")
         if bi is not None:
             lines.append(f"beads in cup {bi[0]}/{bi[1]}")
+        if rollout is not None:
+            lines += live_violation(rollout, f.t)
         return lines
 
     # -- main render (base rollout): overlay, side-by-side, 3-panel
@@ -770,7 +785,7 @@ def run(job: TwinJob, log=print) -> dict:
         after_rules = [x for x in rb.report.model_dump(mode="json").get("rule_results") or [] if x.get("rule_id") in added]
 
         def before_lines(f, sn):
-            ln = status_lines(f, sn)
+            ln = status_lines(f, sn, ra)
             now = [v for v in viol if v.get("t_start") is not None and v["t_start"] - 0.05 <= sn <= v["t_end"] + 0.05]
             if now:
                 v = now[0]
@@ -780,7 +795,7 @@ def run(job: TwinJob, log=print) -> dict:
             return ln
 
         def after_lines(f, sn):
-            ln = status_lines(f, sn)
+            ln = status_lines(f, sn, rb)
             for x in after_rules:
                 ln.append(f"new rule: {x.get('verdict')} (checked from the run)")
             return ln
