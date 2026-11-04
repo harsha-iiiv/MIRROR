@@ -866,7 +866,10 @@ class RealRun:
                 out.append("Calibration reuse flagged" if b.code == "recalibration_required"
                            else f"Gate open: {b.code.replace('_', ' ')}")
             if any((s.recalibration.get(c) or {}).get("end_drift_used") is False for c in s.recalibration):
-                out.append("End-of-take drift check not used (board re-laid)")
+                why = str(self.state.get("stages", {}).get("answers", {}).get("applied", {}).get("end_of_take_drift_check", ""))
+                out.append("End-of-take drift check not used (board re-laid"
+                           + ("; D1 legacy setting from video review, not a person's answer" if "legacy" in why
+                              or (self.legacy_d1 and "answers" not in self.state.get("stages", {})) else "") + ")")
         st = self.state.get("stages", {})
         ts = st.get("task", {})
         if ts.get("status") == "done" and "stated" in str(ts.get("spec_source", "")):
