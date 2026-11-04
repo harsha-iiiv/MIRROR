@@ -437,6 +437,7 @@ class Source:
     recorded_corrections: list = field(default_factory=list)   # corrections the capture run itself compiled and ran
     questions: Optional[Path] = None         # questions.json the capture run asked the person
     answers: Optional[Path] = None           # the person's answers ({id: {answer, by, at, seconds_spent}})
+    stated_intent: Optional[dict] = None     # {answer, proposal} when the spec is the person's stated task
 
 
 # The D1 development capture's folders come from the environment (they are local to the machine that made it):
@@ -554,7 +555,7 @@ def pipeline_source(d: Path, capture_id: Optional[str] = None, twin_override: Op
                   placement_note=man.get("placement_note") or (json.loads(f(man.get("table_to_sim"), "table_to_sim.json").read_text()).get("label")
                                                                if f(man.get("table_to_sim"), "table_to_sim.json") else ""),
                   recorded_corrections=recorded, questions=f(man.get("questions"), "questions.json"),
-                  answers=f(man.get("answers"), "answers.json"))
+                  answers=f(man.get("answers"), "answers.json"), stated_intent=man.get("stated_intent"))
 
 
 # ------------------------------------------------------------------ build
@@ -704,6 +705,8 @@ def build(src: Source, out: Path, *, simulate_runs: bool = True, video: bool = T
         spec = TaskSpec.model_validate_json(src.spec.read_text())
         scene = SceneState.model_validate_json(src.scene.read_text())
         task = {"source": src.spec_source, **spec_view(spec)}
+        if src.stated_intent:      # the person's literal answer and the proposal it answered (shown instead of a fixed sentence)
+            task["stated"] = {k: src.stated_intent.get(k) for k in ("answer", "proposal")}
         if simulate_runs:
             t0 = time.time()
             rec_ids = {r["id"] for r in src.recorded_corrections}
