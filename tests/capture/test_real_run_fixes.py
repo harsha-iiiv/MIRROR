@@ -301,3 +301,26 @@ def test_publish_firebase_writes_page_questions_status_with_storage_paths(tmp_pa
     assert qn["question_set_sha256"] == q["question_set_sha256"]
     st = writes[base + "/status"][1]
     assert set(st) == {"stage", "updated_at_ms", "message"}
+
+
+def test_unknown_choice_id_is_refused_not_read_as_free_text(tmp_path):
+    r = _run(tmp_path)
+    r.rehearse = None
+    q = _questions(tmp_path)
+    (tmp_path / "answers.json").write_text(json.dumps({"correction": {"choice_id": "box_upright", "by": "person", "at": 2000,
+                                                                      "session_id": q["session_id"], "take_sha256": SHA}}))
+    with pytest.raises(RR.StageStop):
+        r._choose_correction()
+    (tmp_path / "answers.json").write_text(json.dumps({"correction": {"text": "Stay 10 cm from the tray edge", "by": "person",
+                                                                      "at": 2000, "session_id": q["session_id"], "take_sha256": SHA}}))
+    c, rehearsal, _ = r._choose_correction()
+    assert c["id"] == "custom" and rehearsal is False
+
+
+def test_something_else_with_text_is_recorded_but_never_a_task(tmp_path):
+    from mirror.capture.session import CaptureSession
+    r = _run(tmp_path)
+    s = CaptureSession(mappings=RR.mappings_from(r.meas, confirmed={"mug", "box", "pen", "tray", "divider"}))
+    with pytest.raises(RR.StageStop) as e:
+        r._stated_spec(s, {"answer": "Something else: pack the box last", "order_seen": [], "proposal": "p"})
+    assert "pack the box last" in str(e.value)

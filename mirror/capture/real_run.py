@@ -2417,7 +2417,8 @@ class RealRun:
             if why:
                 refused.append({"item": "correction", "reason": why})
             else:
-                out["correction"] = {**cor, "answer": cor.get("choice_id") or cor.get("text") or cor.get("answer")}
+                out["correction"] = {**cor, "answer": cor.get("choice_id") or cor.get("text") or cor.get("answer"),
+                                     "kind": "choice" if cor.get("choice_id") else "text"}
         rev = d.get("spec_review")
         if isinstance(rev, dict) and rev:
             why = None
@@ -2447,6 +2448,7 @@ class RealRun:
                 why = "old spec_review shape without spec_sha256 and per-rule records"
             if why:
                 refused.append({"item": "spec_review", "reason": why})
+        self.state.pop("legacy_answers", None)
         if self.legacy_d1 and out:
             self.state["legacy_answers"] = ("answers carried over from D1's own page (3 Nov 2026, same take IMG_0815) without "
                                             "this run's binding fields: --legacy-answers-d1")
@@ -2902,6 +2904,9 @@ class RealRun:
             for c in cands:
                 if txt in (c["id"], c["label"], c["compile_text"]):
                     return c, False, a
+            if a.get("kind") == "choice":
+                raise StageStop(f"correction: the chosen candidate {txt!r} is not one of this run's candidates "
+                                f"{[c['id'] for c in cands]}")
             return {"id": "custom", "label": txt, "compile_text": txt, "rule": "as compiled", "why": "your own words"}, False, a
         if self.rehearse:
             c = next((c for c in cands if c["id"] == self.rehearse), None)
@@ -3012,13 +3017,28 @@ class RealRun:
         sess = Session.load_state(self.p("run", "session_state", "x").parent)
         client = self.llm()
         compiler = "offline rules" if client.offline else f"{client.model} ({client.mode})"
+        from mirror.interpret.types import CorrectionRejected, NeedsClarification
+
+        def refuse(e):
+            self.state["stages"]["correct"] = {"status": "refused", "candidate": cand["id"], "label": cand["label"],
+                                               "rehearsal": bool(rehearsal), "compiler": compiler,
+                                               "reason": f"{type(e).__name__}: {e}"}
+            self._save(); self._write_page()
+            raise StageStop(f"correction: MIRROR could not turn '{cand['compile_text']}' into a rule ({type(e).__name__}: {e}); "
+                            "choose another candidate or say it differently")
         try:
             sess.client = client
             new_spec, rec = sess.correct(cand["compile_text"])
-        except CassetteMiss:
+        except (CassetteMiss, CorrectionRejected, NeedsClarification) as e:
+            if client.offline or not (isinstance(e, CassetteMiss) or isinstance(e.__context__, CassetteMiss)):
+                refuse(e)
+            sess = Session.load_state(self.p("run", "session_state", "x").parent)
             sess.client = LLMClient.offline_client()
-            new_spec, rec = sess.correct(cand["compile_text"])
             compiler = "offline rules (replay had no Muse Spark recording for this correction)"
+            try:
+                new_spec, rec = sess.correct(cand["compile_text"])
+            except (CorrectionRejected, NeedsClarification) as e2:
+                refuse(e2)
         if rehearsal:       # never recorded as the person's words: provenance 'rehearsal', rationale and summary say so
             new_spec, rec = self._mark_rehearsal(sess, new_spec, rec, cand)
         before_id = run["rollout_id"]
