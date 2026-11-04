@@ -100,6 +100,7 @@ def main(argv=None):
     ap.add_argument("--after-label", action="append", default=[], help="label shown only on the before/after film")
     ap.add_argument("--correction-json", type=Path, help="correction summary: text, diff, old_run_recheck/recheck violations")
     ap.add_argument("--no-render", action="store_true", help="plate, checks and twin.json only")
+    ap.add_argument("--only", choices=["main", "before_after"], help="render one film (shorter lock holds)")
     ap.add_argument("--upload", help="also copy outputs to this directory (e.g. /cloudspace/mirror/capture/D1/twin)")
     a = ap.parse_args(argv)
 
@@ -123,7 +124,7 @@ def main(argv=None):
     job = TwinJob(session=cfg["session"], video=cfg["video"], tracks=cfg.get("tracks"), rollouts=cfg["rollouts"],
                   out=cfg["out"], placement=cfg.get("placement"), speed=a.speed, max_seconds=a.max_seconds,
                   labels=list(dict.fromkeys(cfg.get("labels", []) + a.label)),
-                  after_labels=list(dict.fromkeys(cfg.get("after_labels", []) + a.after_label)), render=not a.no_render,
+                  after_labels=list(dict.fromkeys(cfg.get("after_labels", []) + a.after_label)), render=not a.no_render, only=a.only,
                   correction=json.loads(a.correction_json.read_text()) if a.correction_json else cfg.get("correction"))
     m = run(job)
     print(json.dumps({"out": str(job.out), "files": m["files"], "timings_s": m["timings_s"],

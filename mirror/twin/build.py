@@ -97,7 +97,10 @@ def fit_placement(pairs_table: np.ndarray, pairs_sim: np.ndarray) -> tuple[Place
 
 
 def moving_objects(visual) -> list[str]:
-    return [b.name for b in visual.bodies if not b.static and not b.name.startswith("gripper") and "/bead" not in b.name]
+    """Task objects (scene ids like cup_0): not the robot's links, the gripper or beads."""
+    import re
+    return [b.name for b in visual.bodies if not b.static and re.fullmatch(r"[a-z]+(?:_[a-z]+)*_\d+", b.name)
+            and not b.name.startswith(("gripper", "arm", "ur"))]
 
 
 def kind_of(obj_id: str) -> str:
@@ -337,6 +340,7 @@ class TwinJob:
     after_labels: list = field(default_factory=list)   # labels for the before/after film only
     intro_s: float = 2.0                    # your table with your objects, dissolving to the simulator's stand-ins
     render: bool = True                     # False: plate, checks and twin.json only (fast)
+    only: Optional[str] = None              # "main" or "before_after": render one film (shorter lock holds)
 
 
 def run(job: TwinJob, log=print) -> dict:
@@ -349,6 +353,9 @@ def run(job: TwinJob, log=print) -> dict:
     timings = {}
     out = Path(job.out)
     (out / "stills").mkdir(parents=True, exist_ok=True)
+    for old in (out / "stills").glob("*.png"):
+        if job.render and (job.only is None or old.name.startswith(("before_after",) if job.only == "before_after" else ("twin_", "overlay_", "intro_"))):
+            old.unlink()
     W, H = job.size
 
     # -- capture
@@ -492,6 +499,30 @@ def run(job: TwinJob, log=print) -> dict:
         ys, xs = np.nonzero(m)
         bottom = np.array([xs.mean(), np.percentile(ys, 85)])
         reg.setdefault("object_base_offset_px", {})[lbl] = round(float(np.linalg.norm(uv - bottom)), 1)
+    if tm is not None and tray_lbl:
+        from mirror.twin.registration import tray_from_mask, compare_tray
+        tmap_ = next(m for m in s.mappings if m.track_label == tray_lbl)
+        rim = tmap_.real_dims["height"].value_m if "height" in tmap_.real_dims else 0.02
+        full = None
+        mm = tracks["masks"].get(cam_key, {}).get(tray_lbl) if tracks else None
+        if mm:
+            from mirror.perception.masks import rle_decode
+            keys = np.array(sorted(int(k) for k in mm))
+            full = rle_decode(mm[str(int(keys[np.argmin(np.abs(keys - ts * tfps))]))])
+        if full is not None:
+            est = tray_from_mask(full, intr.K, intr.dist, pose.R, pose.t, rim)
+            # the simulated tray in the table frame
+            tb = next((b_ for b_ in visual.bodies if b_.static and b_.name.startswith("tray")), None)
+            fl = next((g for g in tb.geoms if g.name and g.name.endswith("/floor")), None) if tb else None
+            if est and fl is not None:
+                c_sim = np.array([fl.pos[0], fl.pos[1], 0.0])
+                c_tab = pl.sim_to_table(c_sim)[0]
+                from mirror.sim.rotations import quat_to_mat
+                Rf = np.asarray(quat_to_mat(fl.quat))
+                yaw_sim = math.degrees(math.atan2(Rf[1, 0], Rf[0, 0])) - pl.yaw_deg
+                reg["tray_table_frame"] = {"footage": est, "simulated_centre_xy_m": [round(float(c_tab[0]), 4), round(float(c_tab[1]), 4)],
+                                           "simulated_yaw_deg": round(yaw_sim, 2),
+                                           **compare_tray(est, c_tab[:2], fl.size[:2], yaw_sim)}
     reg["note"] = ("Image-space agreement between the simulator's placement and your footage at "
                    f"{W}x{H}; not a 3-D accuracy measurement.")
 
@@ -534,6 +565,36 @@ def run(job: TwinJob, log=print) -> dict:
     tr_phone = TwinRenderer(vis, cam)
     tr_top = TwinRenderer(vis, vc, shadows=True)
 
+    tray_rim = []
+    for b_ in visual.bodies:
+        if b_.static and b_.name.startswith("tray"):
+            fl = next((g for g in b_.geoms if g.name and g.name.endswith("/floor")), None)
+            if fl is not None:
+                from mirror.sim.rotations import quat_to_mat
+                Rf = np.asarray(quat_to_mat(fl.quat))
+                hx, hy = fl.size[0], fl.size[1]
+                zr = max(g.pos[2] + g.size[2] for g in b_.geoms)
+                loop = [(-hx, -hy), (hx, -hy), (hx, hy), (-hx, hy), (-hx, -hy)]
+                pts = []
+                for a_, b2 in zip(loop, loop[1:]):
+                    for u in np.linspace(0, 1, 40, endpoint=False):
+                        lx, ly = a_[0] + (b2[0] - a_[0]) * u, a_[1] + (b2[1] - a_[1]) * u
+                        pts.append(np.asarray(fl.pos) + Rf @ np.array([lx, ly, 0.0]) * 1.0 + np.array([0, 0, zr - fl.pos[2]]))
+                tray_rim.append(np.array(pts))
+
+    def dashed_tray(img, camera, colour=(236, 236, 232)):
+        for P in tray_rim:
+            uv = camera.project(P)
+            for k in range(0, len(uv) - 1, 2):
+                a_, b2 = uv[k], uv[k + 1]
+                if np.all(np.isfinite([a_, b2])):
+                    cv2.line(img, tuple(np.int32(a_)), tuple(np.int32(b2)), colour, 1, cv2.LINE_AA)
+        return img
+
+    # the simulated tray's rim, dashed, so the viewer sees where the robot is aiming (plate.png stays clean)
+    plate_draw = dashed_tray(plate.image.copy(), cam)
+    td_plate = dashed_tray(td_plate.copy(), vc)
+
     def trails_on(img, playback, camera, faded=False, width=2):
         for obj, segs in playback.trails.items():
             for seg in segs:
@@ -572,8 +633,10 @@ def run(job: TwinJob, log=print) -> dict:
     # -- main render (base rollout): overlay, side-by-side, 3-panel
     t0 = time.time()
     sim_end = frames[-1].t - frames[0].t
+    do_main = job.render and job.only in (None, "main")
+    do_ba = job.render and job.only in (None, "before_after")
     n_out = int(sim_end / tmap.speed * job.fps) + int(1.0 * job.fps)
-    if not job.render:
+    if not do_main:
         n_out = 0
     if job.max_seconds:
         n_out = min(n_out, int(job.max_seconds * job.fps))
@@ -589,7 +652,7 @@ def run(job: TwinJob, log=print) -> dict:
 
         def close(self):
             pass
-    if job.render:
+    if do_main:
         w_ov = Mp4(out / "overlay.mp4", (W, H), job.fps)
         w_sbs = Mp4(out / "side_by_side.mp4", (2 * pw + 3 * 8, CH), job.fps)
         w_3p = Mp4(out / "twin_3panel.mp4", (CW, CH), job.fps)
@@ -599,11 +662,11 @@ def run(job: TwinJob, log=print) -> dict:
     stills = []
     hidden_max = 0
     rates = []
-    n_intro = int(job.intro_s * job.fps) if job.render else 0
+    n_intro = int(job.intro_s * job.fps) if do_main else 0
     try:
         if n_intro:
             f0 = pb.at(frames[0].t)
-            ar0, _ = tr_phone.composite(plate.image.copy(), f0, occluders=occluders)
+            ar0, _ = tr_phone.composite(plate_draw.copy(), f0, occluders=occluders)
             td0, _ = tr_top.composite(td_plate.copy(), f0, shadow_strength=0.6)
             und0 = cv2.undistort(start_img, cam.K, cam.dist)
             td_real = cv2.warpPerspective(und0, Hm, (vc.width, vc.height), flags=cv2.WARP_INVERSE_MAP | cv2.INTER_LINEAR,
@@ -618,7 +681,7 @@ def run(job: TwinJob, log=print) -> dict:
                 w_ov.write(ov)
                 hp = TX.panel_label(resize(start_img, (pw, ph)), "Your hands", "your video", [f"t = {ts:4.1f} s"], None, None, small=True)
                 rp = TX.panel_label(resize(mix(start_img, ar0), (pw, ph)), "The robot on your table", "simulated", st0, None, None, small=True)
-                tdp = TX.topdown_panel(mix(td_real, td0), (492, ph), "Table twin", "top-down, rectified from your phone", ppm)
+                tdp = TX.topdown_panel(mix(td_real, td0), (492, ph), "Table twin", "top-down from your phone · dashed: simulated tray", ppm)
                 w_sbs.write(TX.canvas([hp, rp], (2 * pw + 3 * 8, CH), head, job.title + " · your table", caption))
                 w_3p.write(TX.canvas([hp, rp, tdp], (CW, CH), head, job.title + " · your table, your phone, the robot", caption))
             cv2.imwrite(str(out / "stills" / "intro_objects.png"), cv2.cvtColor(start_img, cv2.COLOR_RGB2BGR))
@@ -632,7 +695,7 @@ def run(job: TwinJob, log=print) -> dict:
             rates.append(rate)
             hands = fs.at(T)
             # phone view
-            base_img = trails_on(plate.image.copy(), pb, cam)
+            base_img = trails_on(plate_draw.copy(), pb, cam)
             ar, info = tr_phone.composite(base_img, f, occluders=occluders)
             hidden_max = max(hidden_max, info["hidden_px"])
             # top-down twin
@@ -640,14 +703,14 @@ def run(job: TwinJob, log=print) -> dict:
             td, _ = tr_top.composite(td_base, f, shadow_strength=0.6)
             st = status_lines(f, s_now, base, sim_end)
             # overlay (portrait)
-            ov = TX.panel_label(ar, "The robot on your table", f"seen from your phone · sim ×{tmap.speed:g}", st,
+            ov = TX.panel_label(ar, "The robot on your table", f"seen from your phone · sim ×{tmap.speed:g} · dashed: simulated tray", st,
                                 caption, labels)
             w_ov.write(ov)
             # panels
             hp = TX.panel_label(resize(hands, (pw, ph)), "Your hands", f"your video · ×{rate:.2f}" if abs(rate - 1) > 0.05 else "your video · real time",
                                 [f"t = {T:4.1f} s"], None, None, small=True)
             rp = TX.panel_label(resize(ar, (pw, ph)), "The robot on your table", f"simulated · ×{tmap.speed:g}", st, None, None, small=True)
-            tdp = TX.topdown_panel(td, (492, ph), "Table twin", "top-down, rectified from your phone", ppm)
+            tdp = TX.topdown_panel(td, (492, ph), "Table twin", "top-down from your phone · dashed: simulated tray", ppm)
             sbs = TX.canvas([hp, rp], (2 * pw + 3 * 8, CH), head, job.title + " · your table", caption)
             w_sbs.write(sbs)
             three = TX.canvas([hp, rp, tdp], (CW, CH), head, job.title + " · your table, your phone, the robot", caption)
@@ -666,7 +729,7 @@ def run(job: TwinJob, log=print) -> dict:
 
     # -- before / after (two rollouts on the same table)
     ba = None
-    if len(rolls) >= 2 and job.render:
+    if len(rolls) >= 2 and do_ba:
         t0 = time.time()
         (la, ra), (lb, rb) = rolls[0], rolls[1]
         fa, fb = list(ra.frames), list(rb.frames)
@@ -705,8 +768,8 @@ def run(job: TwinJob, log=print) -> dict:
             for i in range(n_ba):
                 sn = i / job.fps * sp
                 f1 = pa.at(fa[0].t + min(da, sn)); f2 = pbb.at(fb[0].t + min(db, sn))
-                a1, _ = tr_phone.composite(trails_on(plate.image.copy(), pa, cam), f1, occluders=occluders)
-                a2, _ = trb.composite(trails_on(plate.image.copy(), pbb, cam), f2, occluders=occluders)
+                a1, _ = tr_phone.composite(trails_on(plate_draw.copy(), pa, cam), f1, occluders=occluders)
+                a2, _ = trb.composite(trails_on(plate_draw.copy(), pbb, cam), f2, occluders=occluders)
                 tdimg = trails_on(td_plate.copy(), pa, vc, faded=True)
                 tdimg = trails_on(tdimg, pbb, vc, width=3)
                 tdimg, _ = tdb.composite(tdimg, f2, shadow_strength=0.6)
@@ -768,5 +831,19 @@ def run(job: TwinJob, log=print) -> dict:
                     "The robot is a simulated free-floating gripper; it never touched your table.",
                     "Registration is limited by one camera and the capture's calibration labels."],
     }
+    prev = out / "twin.json"
+    if job.only and prev.exists():
+        try:
+            old = json.loads(prev.read_text())
+            keep = old.get("timings_s", {})
+            manifest["timings_s"] = {**keep, **manifest["timings_s"]}
+            if job.only == "main" and old.get("before_after"):
+                manifest["before_after"] = old["before_after"]
+        except Exception:
+            pass
+    files = manifest["files"]
+    for k, fn in (("overlay", "overlay.mp4"), ("side_by_side", "side_by_side.mp4"), ("twin_3panel", "twin_3panel.mp4"),
+                  ("before_after", "before_after.mp4")):
+        files[k] = fn if (out / fn).exists() and (out / fn).stat().st_size > 1000 else None
     (out / "twin.json").write_text(json.dumps(manifest, indent=1))
     return manifest

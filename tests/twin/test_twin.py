@@ -234,3 +234,26 @@ def test_pipeline_discovery_without_correction(tmp_path):
     cfg = mod.from_pipeline(d, SimpleNamespace(video=Path("/x/take.MOV"), correction=None))
     assert cfg["rollouts"] == [("run", d / "run" / "rollout.json")] and cfg["correction"] is None
     assert cfg["video"] == Path("/x/take.MOV") and cfg["placement"] is None
+
+
+def test_tray_from_mask_recovers_pose():
+    from mirror.capture.geometry import project
+    from mirror.twin.registration import compare_tray, tray_from_mask
+    R, t = _pose()
+    cx, cy, yaw, L, S, z = -0.30, 0.07, -4.0, 0.39, 0.27, 0.02
+    c, s = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+    corners = [(cx + c * a - s * b, cy + s * a + c * b, z) for a, b in ((-L / 2, -S / 2), (L / 2, -S / 2), (L / 2, S / 2), (-L / 2, S / 2))]
+    # dense outline -> polygon mask (the lens bends straight edges)
+    pts = []
+    for p, q in zip(corners, corners[1:] + corners[:1]):
+        for u in np.linspace(0, 1, 60, endpoint=False):
+            pts.append([p[k] + (q[k] - p[k]) * u for k in range(3)])
+    uv = project(K, DIST, R, t, np.array(pts))
+    m = np.zeros((960, 540), np.uint8)
+    cv2.fillPoly(m, [np.int32(np.round(uv))], 1)
+    est = tray_from_mask(m > 0, K, DIST, R, t, z)
+    assert abs(est["centre_xy_m"][0] - cx) < 0.004 and abs(est["centre_xy_m"][1] - cy) < 0.004
+    assert abs(est["yaw_deg"] - yaw) < 0.6
+    assert abs(est["outer_long_m"] - L) < 0.006 and abs(est["outer_short_m"] - S) < 0.006
+    cmp = compare_tray(est, (cx + 0.03, cy), (0.18, 0.12), 0.0)
+    assert abs(cmp["centre_offset_cm"] - 3.0) < 0.5 and abs(cmp["yaw_offset_deg"] - yaw) < 0.6
