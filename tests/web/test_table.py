@@ -72,6 +72,33 @@ def test_table_flow(site, width):
     assert not errors, errors
 
 
+def test_table_compare_old_run_and_reduced_motion(site):
+    """A broken verdict in the re-check table opens the old run, judged under the new rule, at that moment;
+    under prefers-reduced-motion the step rail and reveals do not animate."""
+    from tests.web.harness import StaticServer
+    from tests.web.range_server import RangeHandler
+    errors = []
+    with StaticServer(site, handler=RangeHandler) as srv, pw.sync_playwright() as p:
+        b = p.chromium.launch()
+        ctx = b.new_context(viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
+        pg = ctx.new_page()
+        pg.on("pageerror", lambda e: errors.append(str(e)))
+        pg.goto(srv.url + "?step=table&ts=correct", wait_until="networkidle")
+        pg.locator(".yt-cand", has_text="6 cm").first.click()
+        pg.wait_for_selector(".yt-recheck .yt-vbtn")
+        assert pg.locator(".yt-lens button[aria-pressed=true]").inner_text() == "New run"
+        t0 = float(pg.locator(".yt-recheck .yt-vbtn .num").first.inner_text().split()[0])
+        pg.locator(".yt-recheck .yt-vbtn").first.click()
+        pg.wait_for_function("() => document.querySelector('.yt-3d-hud span')?.textContent.includes('Old run')")
+        assert pg.locator(".yt-lens button[aria-pressed=true]").inner_text().startswith("Old run")
+        assert abs(float(pg.locator(".yt-range").input_value()) - (t0 - 0.3)) < 0.35
+        motion = pg.evaluate("""() => ({ rail: getComputedStyle(document.querySelector('.yt-rail')).transitionDuration,
+            step: getComputedStyle(document.querySelector('.yt-step')).animationName })""")
+        assert motion["step"] == "none" and all(float(x.rstrip("s")) == 0 for x in motion["rail"].split(","))
+        b.close()
+    assert not errors, errors
+
+
 
 def _free_port():
     import socket

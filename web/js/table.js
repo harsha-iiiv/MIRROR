@@ -547,6 +547,8 @@ function StepCorrect({ ctx, table, pick, setPick, go, extra, addExtra }) {
   </div>`;
 }
 
+// Rule ids are long snake_case tokens: let narrow tables break them after underscores, never mid-word.
+const idBreaks = (id) => String(id || '').split('_').flatMap((p, k, a) => (k < a.length - 1 ? [p + '_', html`<wbr />`] : [p]));
 const VERDICT = { satisfied: ['holds', 'ok'], violated: ['broken', 'bad'], not_verified: ['not verified', 'warn'], not_applicable: ['n/a', ''], not_run: ['not run', ''] };
 function Verdict({ v }) { const [l, c] = VERDICT[v] || [human(v), '']; return html`<span class=${'yt-v ' + c}>${l}</span>`; }
 
@@ -571,7 +573,7 @@ function StepCompare({ table, dir, pick, t, seek, extra, onShowOld }) {
     : c.outcome === 'already_held' ? html`<div class="callout">The old run already kept this rule; the re-check confirms it from the step log. The robot does the same thing.</div>`
       : html`<div class="callout ok"><b>The old run breaks the new rule; the new run keeps it.</b> ${(c.recheck?.violations || []).length} violation window${(c.recheck?.violations || []).length === 1 ? '' : 's'} in the old run, ${after?.summary?.violations ?? 0} in the new one.</div>`}
     <table class="yt-table yt-recheck"><thead><tr><th>Rule</th><th>Old run, re-checked</th><th>New run</th></tr></thead><tbody>
-      ${rows.map((r) => html`<tr class=${added.has(r.rule_id) ? 'new' : ''}><td><span class="num">${r.rule_id}</span>${added.has(r.rule_id) ? html` <span class="yt-new">new</span>` : ''}${r.old?.detail && r.old.verdict === 'violated' ? html`<div class="faint">${r.old.detail.split(';')[0]}</div>` : ''}</td>
+      ${rows.map((r) => html`<tr class=${added.has(r.rule_id) ? 'new' : ''}><td><span class="num">${idBreaks(r.rule_id)}</span>${added.has(r.rule_id) ? html` <span class="yt-new">new</span>` : ''}${r.old?.detail && r.old.verdict === 'violated' ? html`<div class="faint">${r.old.detail.split(';')[0]}</div>` : ''}</td>
         <td>${(() => { const w = r.old?.verdict === 'violated' && !noPlan && onShowOld && c.recheck_file ? (c.recheck?.violations || []).find((x) => x.constraint_id === r.rule_id) : null;
           return w ? html`<button class="yt-vbtn" title="Show this moment of the old run in the 3D view" onClick=${() => onShowOld(Math.max(0, (w.t_start ?? 0) - 0.3))}><${Verdict} v="violated" /> <span class="num">${fmt(w.t_start, 1)} s</span></button>` : html`<${Verdict} v=${r.old?.verdict} />`; })()}</td><td><${Verdict} v=${r.verdict} /></td></tr>`)}
     </tbody></table>
