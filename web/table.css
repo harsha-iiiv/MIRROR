@@ -207,3 +207,6 @@
 .yt-plan-key i { display: inline-block; width: 16px; height: 0; vertical-align: 3px; margin-right: 4px; border-top: 2px solid var(--text); }
 .yt-plan-key .hand-k { border-top-style: dotted; } .yt-plan-key .ghost-k { border-top: 2px dashed var(--faint); }
 .yt-plan-key .band-k { height: 8px; border: 1px dashed var(--bad); background: var(--bad-soft); vertical-align: -1px; }
+.yt-say.live { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s3); background: var(--surface); gap: var(--s2); }
+.yt-say-row { display: flex; gap: var(--s2); align-items: center; flex-wrap: wrap; }
+.yt-say.live input { flex: 1; min-width: 200px; border-style: solid; }

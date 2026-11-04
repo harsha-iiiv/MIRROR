@@ -235,7 +235,8 @@ def spec_view(spec) -> dict:
             "interpreter": d.get("interpreter"), "rules": rows}
 
 
-def simulate(scene, spec, candidates: list[dict], rollout_dir: Path) -> dict:
+def simulate(scene, spec, candidates: list[dict], rollout_dir: Path, *, client=None, base_only: bool = False,
+             prefix: str = "") -> dict:
     """Run the task once, then each correction from the same base: compile offline, re-check the
     old run under the new rules, plan and run again. Returns the run + corrections blocks."""
     from mirror.interpret import LLMClient
@@ -248,6 +249,7 @@ def simulate(scene, spec, candidates: list[dict], rollout_dir: Path) -> dict:
 
     def save(entry, name) -> dict:
         payload = compact_rollout(entry.rollout, max_hz=20.0, extra={"scene": scene_d})
+        name = prefix + name
         payload["id"] = name
         (rollout_dir / f"{name}.json").write_text(json.dumps(payload, separators=(",", ":")))
         rep = entry.rollout.report.model_dump(mode="json")
@@ -255,7 +257,8 @@ def simulate(scene, spec, candidates: list[dict], rollout_dir: Path) -> dict:
                 "series": series(payload, scene_d), "paths": path2d(payload, ids), "duration_s": payload["t"][-1] if payload["t"] else 0}
 
     t0 = time.time()
-    base_sess = Session(scene=scene, client=LLMClient.offline_client())
+    client = client or LLMClient.offline_client()
+    base_sess = Session(scene=scene, client=client)
     base_sess.specs = [spec]
     base = base_sess.run(condition="your layout, your task")
     run = save(base, "base")
@@ -266,14 +269,16 @@ def simulate(scene, spec, candidates: list[dict], rollout_dir: Path) -> dict:
         t1 = time.time()
         item = {k: cand.get(k) for k in ("id", "label", "why")}
         item["text"] = cand.get("text") or cand.get("compile_text")
-        item["compiler"] = "offline rules (deterministic, no model call)"
-        s = Session(scene=scene, client=LLMClient.offline_client())
+        s = Session(scene=scene, client=client)
         s.specs = [spec]
         b = s.run(condition="before the correction")
         try:
             new_spec, record = s.correct(item["text"])
         except Exception as exc:  # NeedsClarification / CorrectionRejected are answers, not crashes
             kind = type(exc).__name__
+            item["compiler"] = "offline rules (deterministic, no model call)" if getattr(client, "offline", True) else f"{getattr(client, 'model', 'model')} ({client.mode})"
+            if kind not in ("NeedsClarification", "CorrectionRejected", "InterpretError"):
+                raise
             item.update({"outcome": "question" if kind == "NeedsClarification" else "refused",
                          "message": str(exc), "error_type": kind})
             log(f"{item['id']}: {kind}")
@@ -282,6 +287,8 @@ def simulate(scene, spec, candidates: list[dict], rollout_dir: Path) -> dict:
         rec = record.model_dump(mode="json")
         item["diff"] = rec.get("diff") or []
         item["model"] = rec.get("model")
+        item["compiler"] = ("offline rules (deterministic, no model call)" if (rec.get("model") or "").startswith("offline")
+                            else f"{rec.get('model')} ({getattr(client, 'mode', 'live')})")
         item["version"] = new_spec.version
         if new_spec.version == spec.version:
             item.update({"outcome": "no_change", "message": "The rules already say this; nothing changed."})

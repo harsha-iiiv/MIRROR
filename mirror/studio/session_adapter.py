@@ -326,7 +326,7 @@ class Job:
 
 
 # Jobs that run the simulator (the expensive part); they share the server's job gate.
-SIM_JOB_KINDS = {"run", "clarify", "evaluate", "video", "challenge", "challenge_execute", "capture"}
+SIM_JOB_KINDS = {"run", "clarify", "evaluate", "video", "challenge", "challenge_execute", "capture", "table_correct"}
 UPLOAD_VIEWS = ("top", "side", "calibration", "single", "take_top", "take_side", "lens_top", "lens_side")
 CAPTURE_VIEWS = ("calibration", "single", "take_top", "take_side", "lens_top", "lens_side")
 
@@ -1346,6 +1346,40 @@ class StudioService:
         self.evaluation = None
         self.clarification = None
         self.scene_seq = 0
+
+    # ------------------------------------------------------------- "Your table" (real captures)
+    def table_correct(self, table_dir: Path, text: str, transcript_id: Optional[str] = None) -> Job:
+        """Compile one correction against a real capture's task (the session's interpreter: a model when
+        this server has one, else the offline rules), re-check the capture's run under it and run again.
+        The capture's own files are read-only; results live in this session's runtime folder."""
+        if transcript_id is not None and transcript_id not in self.transcripts:
+            raise KeyError(f"transcript {transcript_id}")
+        table_dir = Path(table_dir)
+
+        def work(job):
+            from mirror.contracts import SceneState, TaskSpec
+            from . import real_table as RT
+            self._progress(job, 0.1, "Compiling the correction and running your layout")
+            scene = SceneState.model_validate_json((table_dir / "scene.json").read_text())
+            spec = TaskSpec.model_validate_json((table_dir / "spec.json").read_text())
+            cid = "u" + uuid.uuid4().hex[:8]
+            out = self._runtime_dir() / "table" / table_dir.name
+            res = RT.simulate(scene, spec, [{"id": cid, "text": text, "label": text, "why": "Your words."}], out,
+                              client=self.session._client(), prefix=f"{cid}_")
+            item = res["corrections"][0]
+            item["transcript_id"] = transcript_id
+            item["live"] = True
+            if item.get("after"):
+                item["after"]["file"] = f"live/{Path(item['after']['file']).name}"
+            self._changed()
+            return item
+        return self.submit("table_correct", {"text": text, "table": table_dir.name}, work)
+
+    def table_rollout(self, table_id: str, name: str) -> Path:
+        p = self._runtime_dir() / "table" / table_id / name
+        if not p.is_file():
+            raise KeyError(name)
+        return p
 
     def transcribe(self, wav: bytes) -> Job:
         info = check_wav(wav)

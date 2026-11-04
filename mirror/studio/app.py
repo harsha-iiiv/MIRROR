@@ -492,6 +492,35 @@ def create_app(manager: Optional[SessionManager] = None, *, cors_origins: Option
             raise StudioError(422, "invalid_audio", str(exc))
         return guard(svc.transcribe, data).public()
 
+    # "Your table": real captures built by mirror/studio/real_table.py (read-only), plus corrections typed or spoken here.
+    TABLE_ROOT = Path(os.environ.get("MIRROR_TABLE_DIR") or Path(__file__).resolve().parents[2] / "data" / "table")
+
+    def _table_dir(tid: str) -> Path:
+        import re
+        d = TABLE_ROOT / tid
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", tid) or not (d / "scene.json").is_file() or not (d / "spec.json").is_file():
+            raise StudioError(404, "not_found", "no such capture on this server")
+        return d
+
+    @app.post("/api/table/{tid}/correct")
+    def table_correct(tid: str, body: CorrectionIn, svc: StudioService = Depends(session)):
+        text = body.text.strip()
+        if not text:
+            raise StudioError(422, "invalid", "empty correction")
+        if len(text) > 600:
+            raise StudioError(422, "invalid", "a correction is one or two sentences (600 characters at most)")
+        return guard(svc.table_correct, _table_dir(tid), text, body.transcript_id).public()
+
+    @app.get("/api/table/{tid}/live/{name}")
+    def table_live_rollout(tid: str, name: str, svc: StudioService = Depends(session)):
+        import re
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}\.json", name):
+            raise StudioError(404, "not_found", "no such rollout")
+        try:
+            return FileResponse(svc.table_rollout(tid, name), media_type="application/json")
+        except KeyError:
+            raise StudioError(404, "not_found", "no such rollout")
+
     @app.get("/api/models")
     def models(svc: StudioService = Depends(session)):
         return svc.models_public()

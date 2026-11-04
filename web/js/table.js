@@ -6,6 +6,7 @@ import { h } from 'preact';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'preact/hooks';
 import htm from 'htm';
 import * as api from './api.js';
+import { MicButton } from './media.js';
 
 const html = htm.bind(h);
 const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -51,6 +52,12 @@ const urlOf = (dir, rel) => (rel ? (api.config.base || 'data/') + dir + rel : ''
 
 const rolloutCache = new Map();
 function loadRollout(dir, rel) {
+  // live/<name>: a run made by this server for a correction you typed or spoke (session-scoped API).
+  if (rel && rel.startsWith('live/')) {
+    const key = 'api:' + dir + rel;
+    if (!rolloutCache.has(key)) rolloutCache.set(key, api.getJSONApi(`table/${encodeURIComponent(dir.split('/').filter(Boolean).pop())}/live/${encodeURIComponent(rel.slice(5))}`));
+    return rolloutCache.get(key);
+  }
   const u = urlOf(dir, rel);
   if (!rolloutCache.has(u)) rolloutCache.set(u, fetch(u).then((r) => { if (!r.ok) throw new Error(rel + ': ' + r.status); return r.json(); }));
   return rolloutCache.get(u);
@@ -455,25 +462,52 @@ const OUTCOME = {
   refused: ['Not supported', 'bad'], no_change: ['No change', ''],
 };
 
-function StepCorrect({ table, pick, setPick, go }) {
-  const cs = table.robot?.corrections || [];
+function OwnCorrection({ ctx, table, onItem }) {
+  const [text, setText] = useState('');
+  const [tid, setTid] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+  const send = async () => {
+    const t = text.trim(); if (!t || busy) return;
+    setBusy(true); setErr(null);
+    try {
+      let job = await api.post(`table/${encodeURIComponent(table.id)}/correct`, { text: t, transcript_id: tid });
+      if (job && job.id && job.status && job.status !== 'done') job = await api.waitJob(job);
+      const item = job.result || job;
+      if (job.status === 'error') throw new Error(job.error || 'the run failed');
+      onItem(item); setText(''); setTid(null);
+    } catch (e) { setErr(String(e.message || e)); } finally { setBusy(false); }
+  };
+  return html`<div class="yt-say live">
+    <div class="yt-say-row"><input value=${text} maxlength="600" placeholder="Type a correction, for example: keep the box 5 cm from the tray wall"
+      aria-label="Your own correction" onInput=${(e) => { setText(e.target.value); }} onKeyDown=${(e) => e.key === 'Enter' && send()} disabled=${busy} />
+      <button class="btn primary" disabled=${busy || !text.trim()} onClick=${send}>${busy ? 'Running…' : 'Check it'}</button></div>
+    <div class="yt-say-row"><${MicButton} ctx=${ctx} disabled=${busy} onTranscript=${(tr) => { setText(tr.text); setTid(tr.id); }} />
+      <span class="faint">${tid ? 'Transcribed; edit it if needed, then Check it.' : 'Compiled by this server’s interpreter, re-checked and run on your layout (about 20 s).'}</span></div>
+    ${err ? html`<p class="err" role="alert">${err}</p>` : ''}
+  </div>`;
+}
+
+function StepCorrect({ ctx, table, pick, setPick, go, extra, addExtra }) {
+  const cs = [...(table.robot?.corrections || []), ...extra];
   return html`<div>
     <p class="yt-lead">Pick one correction. Each was compiled into a scoped rule, the old run was re-checked under it, and the robot ran again.</p>
     <div class="yt-cands" role="radiogroup" aria-label="Corrections">${cs.map((c) => { const [lab, cls] = OUTCOME[c.outcome] || [c.outcome, ''];
       return html`<button role="radio" aria-checked=${pick === c.id} class=${'yt-cand' + (pick === c.id ? ' on' : '')} onClick=${() => { setPick(c.id); go(); }}>
-        <span class="q">“${c.text}”</span>
+        <span class="q">“${c.text}”${c.live ? html` <span class="yt-new">yours</span>` : ''}</span>
         <span class="why">${c.why}</span>
         <span class="row2"><span class=${'yt-out ' + cls}>${lab}</span>${c.diff?.length ? html`<span class="num faint">${c.diff.map((d) => `+ ${d.value?.type} · ${d.value?.applies_to?.kind} · ${d.value?.phase}`).join('; ')}</span>` : ''}</span>
       </button>`; })}</div>
-    <div class="yt-say"><input disabled placeholder="Say or type your own correction" aria-label="Your own correction (live studio only)" /><span class="faint">Your own words need the live studio; these were compiled by ${cs[0]?.compiler || 'the offline rules'}.</span></div>
+    ${api.isStatic ? html`<div class="yt-say"><input disabled placeholder="Say or type your own correction" aria-label="Your own correction (live studio only)" /><span class="faint">Your own words need the live studio; these were compiled by ${cs[0]?.compiler || 'the offline rules'}.</span></div>`
+      : html`<${OwnCorrection} ctx=${ctx} table=${table} onItem=${(it) => { addExtra(it); setPick(it.id); go(); }} />`}
   </div>`;
 }
 
 const VERDICT = { satisfied: ['holds', 'ok'], violated: ['broken', 'bad'], not_verified: ['not verified', 'warn'], not_applicable: ['n/a', ''] };
 function Verdict({ v }) { const [l, c] = VERDICT[v] || [human(v), '']; return html`<span class=${'yt-v ' + c}>${l}</span>`; }
 
-function StepCompare({ table, pick, t, seek }) {
-  const c = (table.robot?.corrections || []).find((x) => x.id === pick);
+function StepCompare({ table, pick, t, seek, extra }) {
+  const c = [...(table.robot?.corrections || []), ...extra].find((x) => x.id === pick);
   if (!c) return html`<p class="muted">Choose a correction first.</p>`;
   if (c.outcome === 'question' || c.outcome === 'refused') return html`<div>
     <div class=${'callout ' + (c.outcome === 'refused' ? 'bad' : '')}><b>${c.outcome === 'question' ? 'MIRROR asks before changing anything:' : 'Not a supported change:'}</b> ${c.message}</div>
@@ -513,6 +547,7 @@ export function TablePanel({ ctx }) {
   const [rt, setRt] = useState(0);
   const [rPlaying, setRPlaying] = useState(false);
   const [rSeek, setRSeek] = useState(null);
+  const [extra, setExtra] = useState([]);
   const table = st.table;
   if (table && st.contours) table.__contours = st.contours;
   const carry = useMemo(() => (table ? carries(table.events) : {}), [table]);
@@ -535,7 +570,7 @@ export function TablePanel({ ctx }) {
   const i = TABLE_STEPS.findIndex((s) => s.key === step);
   const S = TABLE_STEPS[i];
   const onVideo = VIDEO_STEPS.has(step);
-  const corr = (table.robot?.corrections || []).find((x) => x.id === pick);
+  const corr = [...(table.robot?.corrections || []), ...extra].find((x) => x.id === pick);
   const run3d = step === 'compare' && corr?.after ? corr.after : table.robot?.run;
   const ghost3d = step === 'compare' && corr?.after ? table.robot?.run : null;
   const body = {
@@ -544,8 +579,8 @@ export function TablePanel({ ctx }) {
     confirm: html`<${StepConfirm} table=${table} dir=${st.dir} />`,
     task: html`<${StepTask} table=${table} />`,
     robot: html`<${StepRobot} table=${table} dir=${st.dir} t=${rt} seek=${rseek} />`,
-    correct: html`<${StepCorrect} table=${table} pick=${pick} setPick=${setPick} go=${() => setStep('compare')} />`,
-    compare: html`<${StepCompare} table=${table} pick=${pick} t=${rt} seek=${rseek} />`,
+    correct: html`<${StepCorrect} ctx=${ctx} table=${table} pick=${pick} setPick=${setPick} go=${() => setStep('compare')} extra=${extra} addExtra=${(it) => setExtra((x) => [...x, it])} />`,
+    compare: html`<${StepCompare} table=${table} pick=${pick} t=${rt} seek=${rseek} extra=${extra} />`,
   }[step];
   const rdur = run3d?.duration_s || 0;
 
