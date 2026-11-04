@@ -309,3 +309,25 @@ def test_c_sam_decoder_matches_the_official_decoder():
             break
     if n == 0:
         pytest.skip("no recorded SAM masks in data/cassettes_meta")
+
+
+
+def test_upscaled_moments_equal_the_full_resolution_import():
+    from types import SimpleNamespace
+    from mirror.capture import track as TR
+    rng = np.random.default_rng(3)
+    thr = TR.TRACK_THRESHOLDS["elongation_for_axis"]
+    for k in (2, 3):
+        a = np.zeros((40, 60), bool)
+        a[5:30, 10:18] = True
+        a[rng.integers(0, 40, 30), rng.integers(0, 60, 30)] = True
+        full = np.repeat(np.repeat(a, k, 0), k, 1)
+        meta = SimpleNamespace(pts_s=[0.0], sha256="x")
+        ref = TR.from_masks(meta, {"o": {0: full}}, camera="top", model="m", model_origin="recorded_replay").tracks["o"][0]
+        got = RR._upscaled_moments(a, k, thr)
+        assert got["cx"] == pytest.approx(ref.cx) and got["cy"] == pytest.approx(ref.cy)
+        assert got["box"] == pytest.approx(ref.box) and got["elongation"] == pytest.approx(ref.elongation)
+        assert (got["axis_deg"] is None) == (ref.axis_deg is None)
+        if ref.axis_deg is not None:
+            assert got["axis_deg"] == pytest.approx(ref.axis_deg)
+    assert RR._upscaled_moments(np.zeros((4, 4), bool), 2, thr) is None

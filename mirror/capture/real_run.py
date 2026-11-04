@@ -435,6 +435,33 @@ def _rle_decode(rle: dict) -> np.ndarray:
     return out[: h * w].reshape(h, w)
 
 
+def _upscaled_moments(a: np.ndarray, k: int, thr: float) -> Optional[dict]:
+    """Centroid, box, elongation and axis (as mirror.capture.track.from_masks computes them) of the x``k``
+    nearest-neighbour upscale of mask ``a``, from ``a``'s own moments (exact up to float rounding)."""
+    ys, xs = np.nonzero(a)
+    if len(xs) == 0:
+        return None
+    cj = (k - 1) / 2.0
+    sj = sum((j - cj) ** 2 for j in range(k))
+    n = len(xs)
+    mx, my = xs.mean(), ys.mean()
+    dx, dy = xs - mx, ys - my
+    N = k * k * n
+    sxx = k ** 4 * float(dx @ dx) + k * n * sj
+    syy = k ** 4 * float(dy @ dy) + k * n * sj
+    sxy = k ** 4 * float(dx @ dy)
+    el = ang = None
+    if N > 2:
+        cov = np.array([[sxx, sxy], [sxy, syy]]) / (N - 1)
+        w_, v_ = np.linalg.eigh(cov)
+        el = float(np.sqrt(w_[1] / max(w_[0], 1e-9)))
+        ang = float(np.degrees(np.arctan2(v_[1, 1], v_[0, 1]))) if el >= thr else None
+    x0, y0 = k * int(xs.min()), k * int(ys.min())
+    x1, y1 = k * (int(xs.max()) + 1), k * (int(ys.max()) + 1)
+    return dict(cx=float(k * mx + cj), cy=float(k * my + cj), box=(float(x0), float(y0), float(x1 - x0), float(y1 - y0)),
+                axis_deg=ang, elongation=el)
+
+
 def _scaled_gray_frames(meta, scale: float):
     """(index, pts, gray frame) at ``scale`` x resolution, scaled by ffmpeg (area filter), one at a time."""
     w = int(round(meta.width * scale / 2)) * 2
@@ -1088,8 +1115,6 @@ class RealRun:
             return None
         walls = set(_walls(self.meas))
         thr = TR.TRACK_THRESHOLDS["elongation_for_axis"]
-        cj = (k - 1) / 2.0
-        sj = sum((j - cj) ** 2 for j in range(k))
         out = {}
         for lab, fr in tr.masks["top"].items():
             static = lab in walls and len(fr) == 1
@@ -1102,28 +1127,7 @@ class RealRun:
                     continue
                 key = id(mm)
                 if key not in cache:
-                    a = rle_decode(mm)
-                    ys, xs = np.nonzero(a)
-                    if len(xs) == 0:
-                        cache[key] = None
-                    else:
-                        n = len(xs)
-                        mx, my = xs.mean(), ys.mean()
-                        dx, dy = xs - mx, ys - my
-                        N = k * k * n
-                        sxx = k ** 4 * float(dx @ dx) + k * n * sj
-                        syy = k ** 4 * float(dy @ dy) + k * n * sj
-                        sxy = k ** 4 * float(dx @ dy)
-                        el = ang = None
-                        if N > 2:
-                            cov = np.array([[sxx, sxy], [sxy, syy]]) / (N - 1)
-                            w_, v_ = np.linalg.eigh(cov)
-                            el = float(np.sqrt(w_[1] / max(w_[0], 1e-9)))
-                            ang = float(np.degrees(np.arctan2(v_[1, 1], v_[0, 1]))) if el >= thr else None
-                        x0, y0 = k * int(xs.min()), k * int(ys.min())
-                        x1, y1 = k * (int(xs.max()) + 1), k * (int(ys.max()) + 1)
-                        cache[key] = dict(cx=float(k * mx + cj), cy=float(k * my + cj),
-                                          box=(float(x0), float(y0), float(x1 - x0), float(y1 - y0)), axis_deg=ang, elongation=el)
+                    cache[key] = _upscaled_moments(rle_decode(mm), k, thr)
                 c = cache[key]
                 obs.append(TR.Obs2D(frame=i, t=t, status="lost") if c is None else TR.Obs2D(frame=i, t=t, status="model", **c))
             out[lab] = obs
