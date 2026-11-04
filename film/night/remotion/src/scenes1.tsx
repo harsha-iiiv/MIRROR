@@ -58,7 +58,7 @@ export const Watch: React.FC<{dur: number; src0?: number; rate?: number; compact
           const e = EV3.find((x: any) => x.object === o);
           const a = (e.moved_from_s - src0) / rate * 30, b = (e.moved_to_s - src0) / rate * 30;
           const op = Math.min(prog(f, a - 3, 6), 1 - prog(f, b - 3, 6));
-          return <span key={o} style={{position: 'absolute', left: 170, color: C.accent, opacity: op}}>{NAMES[o]}</span>;
+          return <span key={o} style={{position: 'absolute', left: 196, top: 0, color: C.accent, opacity: op, whiteSpace: 'nowrap'}}>{NAMES[o]}</span>;
         })}
       </div>
       <Labels items={REAL_LABELS} x={820} y={952} />

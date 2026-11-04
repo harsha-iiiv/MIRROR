@@ -34,6 +34,7 @@ def main(argv=None):
     ap.add_argument("--shots", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--loop", action="store_true")
+    # text zones are given in 1920x1080 design coordinates for any input size; displacements are reported in 1080p pixels
     a = ap.parse_args(argv)
     shots = json.loads(Path(a.shots).read_text())
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
