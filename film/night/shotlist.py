@@ -32,7 +32,7 @@ def main(argv=None):
         "twin": (f"Twin track overlay (first 10 s at 2x; robot at {2 * (tw.get('time_map') or {}).get('sim_speed', 1)}x real time): "
                  f"tray IoU {tw.get('tray_iou')}, simulated tray {tw.get('tray_offset_cm')} cm / {abs(tw.get('tray_yaw_deg') or 0)} deg off.",
                  tw.get("source", "-")),
-        "sentence": (f"\"{F['correction_text']}\" typed, then the rule {F['rule_id']} (keep_clearance, cup, transport, 0.06 m). "
+        "sentence": (f"\"{F['correction_text']}\" lands word by word, then the rule {F['rule_id']} (keep_clearance, cup, transport, 0.06 m). "
                      + (f"Muse Spark ({sp.get('model')}, 1 recorded call, ${sp.get('est_cost_usd')}) and the offline interpreter give the same rule; "
                         f"rationale quoted from the model." if sp else "offline interpreter."),
                      "corrections.json, spark.json (cassette in night/motion_cassettes)"),
@@ -60,7 +60,7 @@ def main(argv=None):
         lines.append(f"| {k + 1} | {s['name']} | {t:.1f}-{t + dur:.1f} s | {desc[s['name']][0]} | {desc[s['name']][1]} | "
                      f"{m.get('max_scale_change', '-')}, {m.get('max_text_flow_p99_px', '-')} {'pass' if m.get('pass') else 'FAIL'} |")
         t += dur
-    lines += ["", "## Approximate (on screen)", "- one camera; calibration reuse flagged (focal check +7.1 %, phone moved afterwards)",
+    lines += ["", "## Approximate (on screen)", "- " + "; ".join(d["labels"]),
               "- simulation proxies sized from ruler measurements (4 cm cube for the 11 cm carton; upright cylinder for the lying marker); "
               "proxy colours neutralised in the 3-D view", "- layout centred on the simulator table by software",
               "- the correction sentence was chosen for the film from MIRROR's suggested corrections; the owner has not chosen one"]
