@@ -112,6 +112,12 @@ Build the data (no model calls; corrections are compiled by the offline rules an
     python -m mirror.studio.real_table d1 --out data/table/D1                       # the D1 development capture
     python -m mirror.studio.real_table pipeline OUT --id <id> --out data/table/<id>  # a mirror.capture.real_run output
     python -m mirror.studio.real_table pipeline OUT --id <id> --out data/table/<id> --site site   # ... and add it to a site
+    python -m mirror.studio.real_table pipeline OUT --id <id> --twin TWIN_DIR --feature --out data/table/<id>  # twin films from that run; open first
+
+In Compare, the 3D view has two lenses: the new run (the old one as a grey ghost) and the old run judged under the new
+rule (the viewer colours its frames with the checker's re-check report and marks where it broke the rule). A `broken`
+verdict in the re-check table is a button: it opens the old run at that violation. Motion settles rather than snaps (one
+gliding step rail, eased scroll back to the steps on phones, staggered reveals) and is off under `prefers-reduced-motion`.
 
 Ship it with a site: `scripts/export_static.py ... --table data/table/<id>`, or add it to an existing site with
 `scripts/export_static.py --add-tables-to SITE --table data/table/<id>`. `data/table/` is not committed (personal
