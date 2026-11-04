@@ -317,10 +317,18 @@ def from_perception_tracks(meta: ClipMeta, path, *, camera: str, track_camera: O
         raise ValueError(f"tracks file has no camera {cam!r}")
     if tr.n_frames and tr.n_frames != meta.n_frames:
         raise ValueError(f"tracks file covers {tr.n_frames} frames, clip has {meta.n_frames}: not the same clip/decoding")
+    class _Lazy(dict):
+        """Decode one mask at a time (a long full-resolution clip does not fit in memory decoded)."""
+        def get(self, k, default=None):
+            m = dict.get(self, k)
+            if m is None:
+                return default
+            return rle_decode(m) if isinstance(m, dict) else np.asarray(m)
+
     masks = {}
     for lab, fr in tr.masks[cam].items():
         name = (labels or {}).get(lab, lab)
-        masks[name] = {int(i): (rle_decode(m) if isinstance(m, dict) else np.asarray(m)) for i, m in fr.items()}
+        masks[name] = _Lazy({int(i): m for i, m in fr.items()})
     ts = from_masks(meta, masks, camera=camera, model=tr.source, model_origin=origin)
     ts.notes.append(f"imported tracks file ({tr.source})")
     return ts

@@ -13,6 +13,9 @@
     objects                               one mapping per tracked object (see mirror.capture.proxy)
     prompts                               boxes [x, y, w, h] drawn on a frame of each take clip
     tags                                  {"95": "mug"} if a printed tag is taped to an object
+    intrinsics                            {camera: intrinsics.json} saved lens calibration (instead of clips.lens)
+    board_search_s                        seconds searched for the flat board at the start (default 3)
+    end_board_same_placement              false if the end-of-take board was laid down differently (default true)
     tracker                               "classical" (default), "manual" (baseline: clicked key frames only)
                                           or "model" (imported model tracks only)
     model_tracks                          {camera: {"path": tracks.json.gz, "origin": "recorded_replay"|"fresh_model_call",
@@ -121,6 +124,10 @@ def _load_inputs(d: Path):
         identity_confirmations=[tuple(x) for x in cfg.get("identity_confirmations", [])],
         corrections=[EV.Correction(**c) for c in cfg.get("corrections", [])],
         tracker=cfg.get("tracker", "classical"),
+        intrinsics={c: C.Intrinsics.model_validate_json((d / p).read_text())
+                    for c, p in (cfg.get("intrinsics") or {}).items()} or None,
+        board_search_s=float(cfg.get("board_search_s", 3.0)),
+        end_board_same_placement=bool(cfg.get("end_board_same_placement", True)),
         model_tracks=_model_tracks(d, cfg),
         manual_keyframes={cam: {lab: {int(k): tuple(v) for k, v in kf.items()} for lab, kf in d2.items()}
                           for cam, d2 in (cfg.get("manual_keyframes") or {}).items()} or None)

@@ -399,7 +399,8 @@ def recalibration_reasons(intr: Intrinsics, fingerprint: Optional[CaptureFingerp
         checks.append(Check(name="recal_focal_change_rel", value=round(float(rel), 4), threshold=T["recal_max_focal_change_rel"], passed=ok,
                             note=f"oblique board view ({angle:.0f} deg)"))
         if not ok:
-            reasons.append(f"focal length re-estimated {100 * rel:.1f}% different: zoom changed")
+            reasons.append(f"focal length re-estimated {100 * rel:.1f}% different from one oblique board view: "
+                           "zoom, lens or focus may have changed (a single-view estimate cannot prove which)")
     else:
         checks.append(Check(name="recal_focal_change_rel", passed=None,
                             note=f"board seen nearly face-on ({angle:.0f} deg); zoom cannot be checked from this view"))

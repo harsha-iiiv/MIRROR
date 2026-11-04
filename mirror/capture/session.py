@@ -123,16 +123,48 @@ def lens_detections(meta: M.ClipMeta, spec: TargetSpec, *, max_views: int = 30) 
     return dets
 
 
+BOARD_STEADY_PX = 1.0     # median corner motion between consecutive frames below which the board counts as at rest
+
+
 def first_board(meta: M.ClipMeta, spec: TargetSpec, *, search_s: float = 3.0) -> Optional[C.Detection]:
-    """Best board view in the first seconds of a take (board lying on the table)."""
-    best = None
+    """Best board view in the first seconds of a take (board lying on the table).
+
+    The board must be at rest: a frame taken while it is still being laid down
+    (or lifted) is blurred and moving, and gives a wrong pose. Among frames whose
+    corners moved less than BOARD_STEADY_PX since the previous frame, the one
+    with the most corners is used (ties: the middle of the longest steady run).
+    If the board is never at rest, the frame with the most corners is used, as
+    before."""
+    dets = []
     for i, t, f in M.iter_frames(meta, gray=True):
         if t - meta.pts_s[0] > search_s:
             break
-        d = C.detect(f, spec, frame_index=i, pts_s=t)
+        dets.append(C.detect(f, spec, frame_index=i, pts_s=t))
+    if not dets:
+        return None
+    best = None
+    for d in dets:
         if best is None or d.n > best.n:
             best = d
-    return best
+    motion = [None]
+    for a, b in zip(dets, dets[1:]):
+        ia = {int(k): p for k, p in zip(a.corner_ids or [], a.corners_px or [])}
+        shared = [(ia[int(k)], p) for k, p in zip(b.corner_ids or [], b.corners_px or []) if int(k) in ia]
+        motion.append(float(np.median([np.hypot(p[0] - q[0], p[1] - q[1]) for q, p in shared])) if len(shared) >= 6 else None)
+    steady = [k for k, m in enumerate(motion) if m is not None and m < BOARD_STEADY_PX and dets[k].n >= 6]
+    if not steady:
+        return best
+    nmax = max(dets[k].n for k in steady)
+    top = [k for k in steady if dets[k].n == nmax]
+    runs, cur = [], [top[0]]
+    for k in top[1:]:
+        if k == cur[-1] + 1:
+            cur.append(k)
+        else:
+            runs.append(cur); cur = [k]
+    runs.append(cur)
+    run = max(runs, key=len)
+    return dets[run[len(run) // 2]]
 
 
 def last_board(meta: M.ClipMeta, spec: TargetSpec, *, search_s: float = 3.0) -> Optional[C.Detection]:
@@ -153,11 +185,20 @@ def build_session(*, take: dict[str, str], lens: dict[str, str] | None = None, i
                   placement: Optional[PX.WorkspacePlacement] = None, synthetic: bool = False,
                   corrections: Sequence[EV.Correction] = (), identity_confirmations: Sequence[tuple[str, str, int]] = (),
                   manual_keyframes: dict[str, dict[str, dict[int, tuple[float, float]]]] | None = None,
-                  tracker: Literal["classical", "manual", "model"] = "classical") -> CaptureSession:
+                  tracker: Literal["classical", "manual", "model"] = "classical",
+                  board_search_s: float = 3.0, end_board_same_placement: bool = True) -> CaptureSession:
     """Offline pipeline. ``take`` maps camera name ("top", "side") to the take
     clip; ``lens`` maps camera name to its lens-calibration clip (or pass
     ``intrinsics``). ``identity_confirmations`` are (camera, label, from_frame)
-    confirmations a person gave for reacquired tracks."""
+    confirmations a person gave for reacquired tracks.
+
+    ``board_search_s``: seconds from the start of the take searched for the
+    flat board (default 3; a board laid down later needs a longer window).
+    ``end_board_same_placement``: False when the board shown at the end was laid
+    down in a different place or orientation than at the start; its pose then
+    differs for reasons other than camera motion, so the end-board drift is
+    recorded but not used as a camera-moved check (the image-border shift check
+    still runs)."""
     s = CaptureSession(synthetic=synthetic, target=spec, print_check=print_check, mappings=list(mappings),
                        placement=placement or PX.WorkspacePlacement(), corrections=list(corrections))
     review: list[ReviewItem] = []
@@ -186,7 +227,7 @@ def build_session(*, take: dict[str, str], lens: dict[str, str] | None = None, i
             failed = [f"{c.name} = {c.value} (limit {c.threshold})" for c in intr.checks if c.passed is False]
             review.append(ReviewItem(code="calibration_invalid", severity="abstain", camera=cam,
                                      message=f"{cam} lens calibration rejected: " + "; ".join(failed)))
-        d0 = first_board(m, spec)
+        d0 = first_board(m, spec, search_s=board_search_s)
         reasons, checks = C.recalibration_reasons(intr, m.fingerprint, d0, spec, print_check)
         s.recalibration[cam] = {"reasons": reasons, "checks": [c.model_dump() for c in checks]}
         if reasons:
@@ -215,7 +256,12 @@ def build_session(*, take: dict[str, str], lens: dict[str, str] | None = None, i
             p1 = C.table_pose(d1, intr, spec, print_check)
             dmm, ddeg = C.pose_drift(pose, p1)
             s.recalibration[cam]["end_drift_mm_deg"] = [dmm, ddeg]
-            if dmm > C.THRESHOLDS["drift_max_translation_mm"] or ddeg > C.THRESHOLDS["drift_max_rotation_deg"]:
+            if not end_board_same_placement:
+                s.recalibration[cam]["end_drift_used"] = False
+                s.notes.append(f"{cam}: end-of-take board was laid down in a different place/orientation; its pose difference "
+                               f"({dmm:.1f} mm / {ddeg:.1f} deg) is not camera motion and is not used as a check; "
+                               "the image-border shift check is the camera-motion check for this take.")
+            elif dmm > C.THRESHOLDS["drift_max_translation_mm"] or ddeg > C.THRESHOLDS["drift_max_rotation_deg"]:
                 review.append(ReviewItem(code="camera_moved", severity="abstain", camera=cam,
                                          message=f"Board seen at the end of the take moved {dmm:.1f} mm / {ddeg:.2f} deg: the {cam} phone moved."))
         cams[cam] = RC.CameraModel(name=cam, intrinsics=intr, pose=pose)
