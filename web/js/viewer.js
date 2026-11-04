@@ -24,6 +24,7 @@ import { Timeline } from './viz/timeline.js';
 import { Fallback2D } from './viz/fallback2d.js';
 import { injectStyles } from './viz/style.js';
 import { tiltOf } from './viz/geom.js';
+import { attachArm } from './viz/arm.js';
 
 const Z_UP = new THREE.Vector3(0, 0, 1);
 const tmpA = new THREE.Quaternion(), tmpB = new THREE.Quaternion();
@@ -131,6 +132,7 @@ export class Viewer {
     this.showRules = true;
     this.showMeasure = true;
     this.showTableTexture = true;
+    this.showCollision = false;
     this.editMode = null;
     this.dirty = true;
     this.view = '3d';
@@ -246,6 +248,10 @@ export class Viewer {
   _viewPose(kind) {
     const k = this._frameScale();
     const P = (target, offset) => ({ target: new THREE.Vector3(...target), pos: new THREE.Vector3(target[0] + offset[0] * k, target[1] + offset[1] * k, target[2] + offset[2] * k) });
+    const arm = [...this.bodies.keys()].some((n) => n.startsWith('arm/'));
+    if (arm && kind === 'top') return P([0.0, 0.12, 0], [0, -0.05, 2.3]);
+    if (arm && kind === 'side') return P([0.0, 0.2, 0.42], [0, -2.15, 0.22]);
+    if (arm && kind === '3d') return P([0.0, 0.2, 0.42], [-1.05, -1.95, 0.85]);
     if (kind === 'top') return P([0.02, 0, 0], [0, -0.04, 1.55]);
     if (kind === 'side') return P([0.0, 0, 0.12], [0, -1.35, 0.30]);
     if (kind === 'follow') {
@@ -418,6 +424,9 @@ export class Viewer {
     }
     if (this.phone.ground) this.world.add(this.phone.ground), (this.phone.ground.visible = this.showTableTexture);
     if (this.view === 'phone') { this.view = this._prevView || '3d'; this._enterPhone(); }
+    const token = (this._armToken = (this._armToken || 0) + 1);
+    this.armModel = null;
+    attachArm(this, visual, token).then((m) => { if (m) { this.armModel = m; this.dirty = true; } });
     this.dirty = true;
   }
 
@@ -567,7 +576,10 @@ export class Viewer {
     this._loadSpec = spec;
     this.sceneState = sceneState || payload.scene || this.sceneState;
     this.traceObject = traceObject || this._pickTraceObject(payload);
+    const hadArm = [...this.bodies.keys()].some((n) => n.startsWith('arm/'));
     this._buildVisual(payload.visual, this.sceneState);
+    const hasArm = [...this.bodies.keys()].some((n) => n.startsWith('arm/'));
+    if (hadArm !== hasArm && !this._userMoved && this.view !== 'follow' && this.view !== 'phone') this.setView(this.view, { instant: true });
     if (payload.beads_hidden) for (const [, g] of this.bodies) if (g.userData.isBead) g.visible = false;
     this._buildRules();
     this.ghostLayer.build(this.showGhost ? ghost : null);
@@ -775,7 +787,8 @@ export class Viewer {
     this.ghostSpilled = spilled.length;
   }
 
-  setOptions({ labels, trace, ghost, rules, measure, table, fps } = {}) {
+  setOptions({ labels, trace, ghost, rules, measure, table, fps, collision } = {}) {
+    if (collision !== undefined) { this.showCollision = collision; this.world.traverse((o) => { if (o.userData?.collision) o.visible = collision; }); }
     if (labels !== undefined && labels !== this.showLabels) {
       this.showLabels = labels;
       const set = (root) => root.traverse((o) => { if (o.userData?.isLabel) o.visible = labels; });
@@ -796,7 +809,7 @@ export class Viewer {
   }
 
   getOptions() {
-    return { labels: this.showLabels, trace: this.showTrace, ghost: this.showGhost, rules: this.showRules, measure: this.showMeasure, table: this.showTableTexture };
+    return { labels: this.showLabels, trace: this.showTrace, ghost: this.showGhost, rules: this.showRules, measure: this.showMeasure, table: this.showTableTexture, collision: this.showCollision };
   }
 
   // ------------------------------------------------------------ capture
@@ -996,7 +1009,7 @@ export class Viewer {
     const views = { 1: 'follow', 2: '3d', 3: 'top', 4: 'side', 5: 'phone' };
     if (views[k]) { this._userMoved = true; this.setView(views[k]); this.onViewChange?.(views[k]); return true; }
     const o = this.getOptions();
-    const toggles = { r: 'rules', g: 'ghost', p: 'trace', m: 'measure', l: 'labels', x: 'table' };
+    const toggles = { r: 'rules', g: 'ghost', p: 'trace', m: 'measure', l: 'labels', x: 'table', c: 'collision' };
     const key = toggles[k.toLowerCase()];
     if (key) { this.setOptions({ [key]: !o[key] }); this.onOptionsChange?.(this.getOptions()); return true; }
     if (k === '?') { this.hud.help.hidden = !this.hud.help.hidden; return true; }
@@ -1012,7 +1025,7 @@ export class Viewer {
   getState() {
     return { view: this.view, t: this.t, frame: this.frameIndex(), playing: this.playing, fps: this._fps.value, glide: !!this.glide.active,
       ribbons: (this.ribbons || []).map((r) => r.object), rules: { cones: this.rules.cones.length, volumes: this.rules.volumes.length, markers: this.rules.markers.length },
-      ghostBodies: this.ghostLayer.bodies.size, capture: !!this.phone.view, spec: this.spec ? `${this.spec.spec_id}@v${this.spec.version}` : null, report: this.report ? `${this.report.rollout_id} (${this.report.status})` : null,
+      ghostBodies: this.ghostLayer.bodies.size, capture: !!this.phone.view, arm: this.armModel || null, spec: this.spec ? `${this.spec.spec_id}@v${this.spec.version}` : null, report: this.report ? `${this.report.rollout_id} (${this.report.status})` : null,
       options: this.getOptions(), verdictMode: this.verdictMode || null, fallback: null };
   }
 
