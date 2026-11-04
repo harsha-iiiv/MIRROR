@@ -53,11 +53,14 @@ def main(argv=None):
             extra["ghost_run"] = ghosts[name]
         if name in rechecks:
             corr = json.loads(Path(rechecks[name]).read_text())
-            rc = corr.get("old_run_recheck") or {}
-            rep = ro.report.model_dump(mode="json")
-            rep.update({"rollout_id": rep["rollout_id"] + "@recheck", "status": rc.get("status", rep["status"]),
-                        "violations": rc.get("violations", []),
-                        "condition": f"re-check of this run under the corrected rule: {corr.get('text', '')}"})
+            if "old_run_recheck" in corr:          # a correction record (old run re-checked under the new spec)
+                rc = corr.get("old_run_recheck") or {}
+                rep = ro.report.model_dump(mode="json")
+                rep.update({"rollout_id": rep["rollout_id"] + "@recheck", "status": rc.get("status", rep["status"]),
+                            "violations": rc.get("violations", []),
+                            "condition": f"re-check of this run under the corrected rule: {corr.get('text', '')}"})
+            else:                                  # a RolloutReport produced by the checker's re-check
+                rep = dict(corr)
             extra["recheck_report"] = rep
             extra["recheck_note"] = corr.get("what", "")
             if "after" in specs:
