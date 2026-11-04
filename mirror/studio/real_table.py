@@ -540,7 +540,7 @@ def pipeline_source(d: Path, capture_id: Optional[str] = None, twin_override: Op
         if paths["rollout"] and paths["spec"] and paths["recheck"]:
             recorded.append({"id": c.get("name"), "text": c.get("text") or c.get("label"), "label": c.get("label"),
                              "rehearsal": rehearsal, "compiler": c.get("compiler"), **{k + "_path": v for k, v in paths.items()}})
-    return Source(capture_id=capture_id or man.get("capture_id") or d.parent.name if d.name == "out" else (capture_id or d.name),
+    return Source(capture_id=capture_id or man.get("capture_id") or (d.parent.name if d.name == "out" else d.name),
                   title=man.get("title") or "Your table",
                   session=session, take=take, tracks=f(man.get("tracks"), "tracks_full.json.gz", "tracks_proxy.json.gz"),
                   scene=f(man.get("scene"), "scene/scene.json", "scene.json"), spec=spec, spec_source=spec_source,
