@@ -80,7 +80,7 @@ export const Sentence: React.FC<{dur: number}> = ({dur}) => {
   const mc = DATA.film;
   const rows: [string, string][] = [
     ['type', 'keep_clearance'], ['applies to', 'cup (the mug)'], ['phase', 'transport (while carried)'],
-    ['min distance', '0.06 m from obstacles'], ['source', 'user_correction · offline rule interpreter'],
+    ['min distance', '0.06 m from obstacles'], ['source', 'user_correction'],
   ];
   return (
     <Frame>
@@ -107,7 +107,10 @@ export const Sentence: React.FC<{dur: number}> = ({dur}) => {
         <div style={{fontSize: 26, color: C.muted, lineHeight: 1.5, marginTop: 14}}>
           Goals, order and the other three rules are unchanged. The rule names the mug only, so the red box and marker keep their own paths.
         </div>
-        <div style={{fontFamily: MONO, fontSize: 17, color: C.faint, marginTop: 22}}>compiled offline · 0 model calls · one add_constraint op</div>
+        <div style={{marginTop: 26, paddingTop: 16, borderTop: `1px solid ${C.line}`}}>
+          <div style={{fontFamily: MONO, fontSize: 19, color: C.muted}}>{DATA.spark ? `Muse Spark (1 recorded call, $${DATA.spark.est_cost_usd.toFixed(3)}) and the offline rule interpreter compile the same rule` : 'offline rule interpreter · 0 model calls'}</div>
+          {DATA.spark?.rationale && <div style={{fontSize: 22, color: C.text, marginTop: 10, fontStyle: 'normal'}}>model's rationale: “{DATA.spark.rationale}”</div>}
+        </div>
       </div>
     </Frame>
   );
@@ -271,7 +274,7 @@ export const Table: React.FC<{dur: number}> = ({dur}) => {
         ))}
         <div style={{fontSize: 22, color: C.muted, marginTop: 18, lineHeight: 1.4, ...rise(f, 100)}}>A correction that changes nothing says so.</div>
       </div>
-      <Labels items={['offline rule interpreter · 0 model calls', 'MuJoCo · independent checker', 'development clip D1 · never scored']} x={96} y={1012} size={17} />
+      <Labels items={['rule from Muse Spark + offline interpreter (identical)', 'MuJoCo · independent checker', 'development clip D1 · never scored']} x={96} y={1012} size={18} />
     </Frame>
   );
 };

@@ -137,6 +137,7 @@ def main(argv=None):
     ap.add_argument("--out", required=True)
     ap.add_argument("--skip-video", action="store_true")
     ap.add_argument("--twin", default=None, help="twin track output dir (twin.json + overlay.mp4), optional")
+    ap.add_argument("--spark", default=None, help="spark_compile.py output (one recorded Muse Spark compile), optional")
     a = ap.parse_args(argv)
     cap, p2, corr, out = Path(a.capture), Path(a.phase2), Path(a.corr), Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -172,6 +173,11 @@ def main(argv=None):
                             object_base_offset_px=reg.get("object_base_offset_px"), plate=tj.get("plate", {}).get("method"),
                             source=str(Path(a.twin) / "overlay.mp4"), created_unix=tj.get("created_unix"))
         subprocess.run(["cp", str(Path(a.twin) / "overlay.mp4"), str(out / "twin_overlay.mp4")], check=True, timeout=60)
+    if a.spark and Path(a.spark).exists():
+        sp = json.loads(Path(a.spark).read_text())
+        data["spark"] = dict(model=sp["model"], same_scoped_rule=sp["same_scoped_rule"], est_cost_usd=sp["est_cost_usd"],
+                             live_calls=sp["live_calls"], rationale=(sp["ops_model"][0].get("rationale") if sp["ops_model"] else None),
+                             scoped=sp["scoped_model"])
     (out / "data.json").write_text(json.dumps(data, indent=1, default=str))
     print("ok", {k: len(v.get("poly", [])) for k, v in masks["objects"].items()})
 
