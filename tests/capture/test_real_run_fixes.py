@@ -307,7 +307,7 @@ def test_unknown_choice_id_is_refused_not_read_as_free_text(tmp_path):
     r = _run(tmp_path)
     r.rehearse = None
     q = _questions(tmp_path)
-    (tmp_path / "answers.json").write_text(json.dumps({"correction": {"choice_id": "box_upright", "by": "person", "at": 2000,
+    (tmp_path / "answers.json").write_text(json.dumps({"correction": {"choice_id": "red_box_upright", "by": "person", "at": 2000,
                                                                       "session_id": q["session_id"], "take_sha256": SHA}}))
     with pytest.raises(RR.StageStop):
         r._choose_correction()
