@@ -40,6 +40,8 @@ def test_film_numbers_copy_the_records():
                       "block_0": {"min_transport_clearance_m": 0.049}, "marker_0": {"min_transport_clearance_m": 0.0615}}
     C = {"old": {"status": "success", "measures": meas(0.0452), "rules": [], "execution_time_s": 72.5, "routes": ["a"]},
          "candidates": [{"id": "mug_clearance", "text": "Keep the mug ...", "outcome": "apply",
+                         "ops": [{"op": "add_constraint", "value": {"id": "c_keep_clearance_transport_cup", "type": "keep_clearance",
+                                                                     "applies_to": {"kind": "cup"}, "phase": "transport", "params": {"min_m": 0.06}}}],
                          "old_rechecked": {"status": "constraint_violated", "rules": rows},
                          "new": {"status": "success", "measures": meas(0.0633), "rules": [], "execution_time_s": 77.3, "routes": ["b"]}},
                         {"id": "marker_first", "text": "Pack ...", "outcome": "reject", "reason": "cycle"}]}
@@ -51,6 +53,21 @@ def test_film_numbers_copy_the_records():
     assert f["old_path_frames"] == [3, 6] and len(f["old_path"]) == 4
     assert f["old_clear_frame"] == 6  # nearest frame to t = 0.2 s
     assert f["others"] == [{"id": "marker_first", "text": "Pack ...", "outcome": "reject", "detail": "cycle", "routes_same": None}]
+    assert f["rule_id"] == "c_keep_clearance_transport_cup" and f["min_m"] == 0.06 and f["applies_obj"] == "cup_0"
+
+
+def test_events_and_segments_from_both_timeline_shapes():
+    ea = _load("export_assets")
+    d1 = {"events": [{"object": "mug", "moved_from_s": 13.5, "moved_to_s": 13.7, "image_displacement_px_540": 29.4, "ends_inside_tray_outline_2d": False},
+                     {"object": "mug", "moved_from_s": 14.57, "moved_to_s": 16.77, "image_displacement_px_540": 269.3, "ends_inside_tray_outline_2d": True},
+                     {"object": "marker", "moved_from_s": 27.47, "moved_to_s": 31.27, "image_displacement_px_540": 323.6, "ends_inside_tray_outline_2d": True}]}
+    rr = {"events": [{"object": "mug", "from_s": 14.57, "to_s": 16.77, "displacement_px": 269.3, "in_tray": True},
+                     {"object": "marker", "from_s": 27.47, "to_s": 31.27, "displacement_px": 323.6, "in_tray": True}]}
+    a, b = ea.norm_events(d1), ea.norm_events(rr)
+    assert [e for e in a if e["carry"]] == b
+    s = ea.segments(a, 1494, 29.999)
+    assert s == ea.segments(b, 1494, 29.999)
+    assert s["watch_src0"] == 12.77 and s["watch_rate"] == 1.75 and s["title_src0"] == 2.27
 
 
 def _video(path, frames):

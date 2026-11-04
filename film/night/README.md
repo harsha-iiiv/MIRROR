@@ -26,7 +26,18 @@ run from the phone's viewpoint · one sentence compiled into one scoped rule · 
 - `check_film.py`: contact sheet + motion check (ORB similarity scale change < 1 %/frame; text-zone flow p99 < 20 px/frame;
   loop boundary).
 
-## Rebuild
+## One command (D1 or tomorrow's take)
+```
+film/night/make_film.sh --d1 --loops --out <dir> [--twin <twin>/D1] [--spark spark.json] [--gate-note "..."]
+film/night/make_film.sh --pipeline <mirror.capture.real_run out dir> --loops --out <dir>     # twin picked up from <dir>/twin
+```
+Everything the film says that depends on the take (object names, the gate card, the spec lines, the rule table, the source
+windows of the footage, the top-view fit, the 3-D camera targets) is computed by `export_assets.py` into `data.json`
+(`copy`, `segments`, `events`); the Remotion code only draws it. The twin shot is dropped when no twin overlay exists.
+The film's correction is the first suggested correction that adds a clearance rule and whose old run re-judges as violated
+(else the first one that applies); the others appear in the rule table's side list with their real outcome.
+
+## Rebuild (step by step)
 ```
 python film/night/make_correction.py --phase2 <phone_real>/out/phase2 --out <corr>
 python film/night/export_assets.py --capture <D1 real-demo> --phase2 <phase2> --corr <corr> --take IMG_0815.MOV \
