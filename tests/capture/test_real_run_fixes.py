@@ -1,6 +1,5 @@
-"""Review fixes (night REVIEW.md P0/P1/P2) for mirror.capture.real_run: answers bound to the run, rehearsal
-provenance, --redo leaves nothing stale, stated-task provenance, gate whitelist, spend caps, working copies,
-Firebase publish/answers (with a fake Firebase)."""
+"""mirror.capture.real_run safeguards: answers bound to the run, rehearsal provenance, --redo leaves nothing
+stale, stated-task provenance, gate whitelist, spend caps, working copies, and the publish hook (with a fake hook)."""
 import json
 from pathlib import Path
 
@@ -17,8 +16,9 @@ def _run(tmp_path, take_sha=SHA, legacy=False):
     r.meas = RR.load_measurements(_meas(tmp_path))
     r.out = tmp_path
     r.answers_path = tmp_path / "answers.json"
-    r.answers_firebase = None
-    r.publish_firebase = None
+    r.answers_from = None
+    r.publish_to = None
+    r.hook = None
     r.publish_dir = None
     r.legacy_d1 = legacy
     r.state = {"stages": {"seed": {"frame": 375, "t": 12.5}, "probe": {"take": {"sha256": take_sha}}}, "inputs": {}}
@@ -63,7 +63,7 @@ def test_answers_bound_to_this_run_are_applied_and_stale_ones_refused(tmp_path):
 @pytest.mark.parametrize("over,why", [({"session_id": "cap_old"}, "session_id"),
                                       ({"question_set_sha256": "x" * 64}, "question_set_sha256"),
                                       ({"at": 10}, "before these questions"),
-                                      ({"by": "mana"}, "not 'person'")])
+                                      ({"by": "assistant"}, "not 'person'")])
 def test_each_binding_field_is_checked(tmp_path, over, why):
     r = _run(tmp_path)
     q = _questions(tmp_path)
@@ -73,7 +73,7 @@ def test_each_binding_field_is_checked(tmp_path, over, why):
 
 
 def test_d1_answers_without_binding_are_refused_for_a_new_take(tmp_path):
-    """REVIEW P0-1 repro: D1's page answers (no binding fields) pointed at a new take apply nothing."""
+    """D1's page answers (no binding fields) pointed at a new take apply nothing."""
     r = _run(tmp_path, take_sha="c" * 64)
     _questions(tmp_path, take="c" * 64)
     (tmp_path / "answers.json").write_text(json.dumps({"answers": {"mug": {"answer": "Yes, that's the mug", "by": "person",
@@ -115,23 +115,59 @@ def test_correction_and_spec_review_bindings(tmp_path):
     assert {x["item"] for x in r.state["answers_refused"]} == {"spec_review", "correction"}
 
 
-def test_firebase_answers_go_to_their_own_file_and_never_overwrite_the_local_one(tmp_path, monkeypatch):
+def test_hook_answers_go_to_their_own_file_and_never_overwrite_the_local_one(tmp_path):
     r = _run(tmp_path)
     q = _questions(tmp_path)
-    r.answers_firebase = "D9"
+    r.answers_from = "D9"
     (tmp_path / "answers.json").write_text('{"answers": {}}')
     seen = []
 
-    def fake(op, path, data=None):
-        seen.append((op, path))
-        return {"mug": _ans(q, "Yes, that's the mug")} if path.endswith("/answers") else None
-    monkeypatch.setattr(RR, "_fb", fake)
+    def fake(event, payload):
+        seen.append((event, payload))
+        return {"answers": {"mug": _ans(q, "Yes, that's the mug")}, "source": "store:D9"}
+    r.hook = fake
     got = r._load_answers()
     assert list(got) == ["mug"]
     assert (tmp_path / "answers.json").read_text() == '{"answers": {}}'
-    assert json.loads((tmp_path / "answers_firebase.json").read_text())["source"].endswith("/runs/D9")
-    assert all(op == "read" for op, _ in seen) and seen[0][1] == RR.FIREBASE_RUNS_BASE + "/D9/answers"
+    assert json.loads((tmp_path / "answers_hook.json").read_text())["source"] == "store:D9"
+    assert seen == [("answers", {"run_id": "D9", "keys": ["answers", "spec_review", "correction"]})]
     assert any("not used" in p for p in r.state["problems"])
+
+
+def test_hook_answers_are_still_bound_to_the_run(tmp_path):
+    r = _run(tmp_path)
+    q = _questions(tmp_path)
+    r.answers_from = "D9"
+    stale = {**_ans(q, "Yes, that's the mug"), "session_id": "cap_other"}
+    r.hook = lambda event, payload: {"answers": {"mug": stale}}
+    assert r._load_answers() == {}
+    assert r.state["answers_refused"][0]["item"] == "mug"
+
+
+def test_a_failing_hook_never_stops_the_run(tmp_path):
+    r = _run(tmp_path)
+    _questions(tmp_path)
+    r.answers_from = r.publish_to = "D9"
+
+    def boom(event, payload):
+        raise ConnectionError("down")
+    r.hook = boom
+    assert r._fetch_hook_answers() is None
+    r._hook_status("run", "running run")
+    r._publish_hook({"labels": ["x"], "paths": {}})
+    assert any("hook" in p for p in r.state["problems"])
+
+
+def test_publish_hook_loads_module_function(tmp_path, monkeypatch):
+    mod = tmp_path / "my_hook.py"
+    mod.write_text("CALLS = []\ndef hook(event, payload):\n    CALLS.append((event, payload))\n    return {'ok': 1}\n")
+    monkeypatch.syspath_prepend(str(tmp_path))
+    h = RR.PublishHook("my_hook:hook")
+    assert h("status", {"run_id": "R", "p": tmp_path, "x": float("nan")}) == {"ok": 1}
+    import my_hook
+    assert my_hook.CALLS == [("status", {"run_id": "R", "p": str(tmp_path), "x": None})]
+    with pytest.raises(SystemExit):
+        RR.PublishHook("no_function_given")
 
 
 def test_questions_node_matches_the_schema(tmp_path):
@@ -273,37 +309,46 @@ def test_prior_spend_is_persisted(tmp_path):
 
 
 def test_strip_abs_paths():
-    out = RR._strip_abs({"take": "/workspace/x/IMG_1.MOV", "pub": "/cloudspace/mirror/capture/D2/pipeline/a.json",
-                         "rel": "run/rollout.json", "error_trace": "/tmp/x"})
-    assert out == {"take": "local:IMG_1.MOV", "pub": "mirror/capture/D2/pipeline/a.json", "rel": "run/rollout.json"}
+    out = RR._strip_abs({"take": "/data/clips/IMG_1.MOV", "pub": "/srv/review/D2/pipeline/a.json",
+                         "rel": "run/rollout.json", "ratio": "/s", "error_trace": "/tmp/x"})
+    assert out == {"take": "local:IMG_1.MOV", "pub": "local:a.json", "rel": "run/rollout.json", "ratio": "/s"}
 
 
-def test_publish_firebase_writes_page_questions_status_with_storage_paths(tmp_path, monkeypatch):
+def test_publish_hook_gets_page_questions_status_with_relative_media(tmp_path):
     r = _run(tmp_path)
     q = _questions(tmp_path)
-    r.publish_firebase = "D9"
-    r.publish_dir = Path("/cloudspace/mirror/capture/D9/pipeline")
+    r.publish_to = "D9"
+    r.publish_dir = tmp_path / "pub"
     (tmp_path / "evidence").mkdir()
     (tmp_path / "evidence" / "mug_seed.jpg").write_bytes(b"j")
     qd = json.loads((tmp_path / "questions.json").read_text())
     qd["questions"][0]["evidence"] = {"image": "evidence/mug_seed.jpg", "t_s": 12.5}
     (tmp_path / "questions.json").write_text(json.dumps(qd))
-    writes = {}
-    monkeypatch.setattr(RR, "_fb", lambda op, path, data=None: writes.__setitem__(path, (op, data)))
+    calls = []
+    r.hook = lambda event, payload: calls.append((event, json.loads(json.dumps(payload, default=str))))
     page = {"labels": ["x"], "paths": {"overlay_mp4": "overlay.mp4", "tracks_full_json_gz": "tracks_full.json.gz"},
-            "notes": ["/workspace/secret/IMG_0815.MOV"], "confirmations_needed": qd["questions"]}
-    r._publish_firebase(page)
-    base = RR.FIREBASE_RUNS_BASE + "/D9"
-    assert set(writes) == {base + "/page", base + "/questions", base + "/status"}
-    pg = writes[base + "/page"][1]
-    assert pg["storage_base"] == "mirror/capture/D9/pipeline"
-    assert pg["media"] == {"overlay_mp4": "mirror/capture/D9/pipeline/overlay.mp4"}    # tracks are never published
-    assert "/workspace" not in json.dumps(pg)
-    qn = writes[base + "/questions"][1]
-    assert qn["items"]["mug"]["evidence"]["image_path"] == "mirror/capture/D9/pipeline/evidence/mug_seed.jpg"
-    assert qn["question_set_sha256"] == q["question_set_sha256"]
-    st = writes[base + "/status"][1]
-    assert set(st) == {"stage", "updated_at_ms", "message"}
+            "notes": ["/data/secret/IMG_0815.MOV"], "confirmations_needed": qd["questions"]}
+    r._publish_hook(page)
+    assert [e for e, _ in calls] == ["publish"]
+    p = calls[0][1]
+    assert p["run_id"] == "D9" and p["publish_dir"] == str(tmp_path / "pub")
+    pg = p["page"]
+    assert pg["media"] == {"overlay_mp4": "overlay.mp4"}    # tracks are never published
+    assert pg["confirmations_needed"][0]["evidence"]["image_path"] == "evidence/mug_seed.jpg"
+    assert "/data/secret" not in json.dumps(pg)
+    assert p["questions"]["items"]["mug"]["evidence"]["image_path"] == "evidence/mug_seed.jpg"
+    assert p["questions"]["question_set_sha256"] == q["question_set_sha256"]
+    assert set(p["status"]) == {"stage", "updated_at_ms", "message"}
+    r._publish_hook(page)                                    # unchanged question set: not sent again
+    assert calls[1][1]["questions"] is None
+
+
+def test_publish_to_without_a_hook_is_refused(tmp_path):
+    take = tmp_path / "t.mov"
+    take.write_bytes(b"x")
+    (tmp_path / "i.json").write_text("{}")
+    with pytest.raises(SystemExit, match="publish-hook"):
+        RR.RealRun(tmp_path / "o", take=take, intrinsics=tmp_path / "i.json", measurements=_meas(tmp_path), publish_to="D9")
 
 
 def test_unknown_choice_id_is_refused_not_read_as_free_text(tmp_path):

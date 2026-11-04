@@ -43,13 +43,13 @@ scene, run, correct/...) to `OUT/stale/<timestamp>/`, so nothing stale can re-en
 ```
 
 `name` is what Muse Spark is asked to find; object order is prompt order. A bare number is
-a ruler measurement in metres. D1's file: `/workspace/mirror-team/v2/night/pipeline/D1/measurements.json`.
+a ruler measurement in metres. The D1 development clip used exactly this shape.
 
 ## Modes and money
 
 | mode | model calls | spend |
 |---|---|---|
-| `record` | live Meta models (Muse Spark, SAM 3.1); every response saved as a cassette in `--cassettes` (default: one directory per take, `/workspace/mirror-team/v2/cassettes/take_<sha16>`, so a second output directory for the same take replays instead of paying again) | charged to `OUT/spend.jsonl` AND the project ledger `/workspace/mirror-team/v2/spend_project.jsonl` (`MIRROR_PROJECT_LEDGER`); before every call the worst case is checked against 95% of `--cap-usd` (plus `--prior-usd`, persisted in `real_run.json`) and against 95% of the $30 project cap (`MIRROR_PROJECT_CAP_USD`); retried or failed attempts whose usage was never logged are charged at worst case |
+| `record` | live Meta models (Muse Spark, SAM 3.1); every response saved as a cassette in `--cassettes` (default: one directory per take, `take_<sha16>` under `MIRROR_CASSETTE_ROOT` or `~/.cache/mirror/cassettes`, so a second output directory for the same take replays instead of paying again) | charged to `OUT/spend.jsonl` and, if configured, a project ledger shared by every output directory (`--project-ledger` or `MIRROR_PROJECT_LEDGER`); before every call the worst case is checked against 95% of `--cap-usd` (plus `--prior-usd`, persisted in `real_run.json`) and against 95% of the project cap (`--project-cap-usd` or `MIRROR_PROJECT_CAP_USD`, default $30); retried or failed attempts whose usage was never logged are charged at worst case |
 | `replay` | cassettes only; both clients get a transport that raises on any network request, and `MODEL_API_KEY` is removed from the environment | $0 |
 | `offline` | none; stops before grounding (perception needs a model or a recording) | $0 |
 
@@ -93,21 +93,32 @@ anything else (an old take's answers, another session, written by anyone but `pe
   rehearsal re-runs the correction (the rehearsal moves to `OUT/stale/`).
 
 A local `--answers` file uses the same shape (`{"answers": {...}, "spec_review": {...}, "correction": {...}}`).
-`--answers-firebase RUN_ID` reads them from the page and saves them to `OUT/answers_firebase.json` (the local file is
-never overwritten; if both exist the local one is ignored and a note says so). D1's page answers predate the binding
+`--answers-from RUN_ID` reads them through the publish hook (below) and saves them to `OUT/answers_hook.json` (the local
+file is never overwritten; if both exist the local one is ignored and a note says so). Answers from a hook go through
+exactly the same binding checks. D1's page answers predate the binding
 fields: `--legacy-answers-d1` accepts them for IMG_0815 only (sha256 6cc4955b...) and labels every output
 "Answers carried over from D1's own page (legacy, same take)".
 
-## Firebase run node (the review page)
+## Publishing to a review page (optional hook)
 
-`--publish-firebase RUN_ID` writes, after every stage, to
-`dQmURmmZYmQI8u8P7ctOVTYCLFM2/file-system/wiki/mirror/phone-capture/viewer/runs/RUN_ID`:
-`page` (page.json; `storage_base` and `media` hold Storage paths such as `mirror/capture/D2/pipeline/overlay.mp4`;
-no absolute sandbox paths, no token URLs), `questions` (`{session_id, take_sha256, question_set_sha256, created_at_ms,
-items: {<id>: {order, kind, question, proposal, options, evidence: {time_s, image_path}}}}`) and `status`
-(`{stage, updated_at_ms, message}`). Media are copied to `/cloudspace/mirror/capture/RUN_ID/pipeline` unless
-`--publish-dir` says otherwise. The page (wiki/mirror/phone-capture/review) writes only `answers`, `spec_review`
-and `correction`.
+The run itself only writes files. To show its progress, questions and results on a review page and read the person's
+answers back, give it a hook:
+
+```
+python -m mirror.capture.real_run ... --publish-dir PUB --publish-hook mypkg.review:hook --publish-to RUN_ID --answers-from RUN_ID
+# or MIRROR_PUBLISH_HOOK=mypkg.review:hook
+```
+
+`hook(event, payload)` is called with plain JSON:
+
+| event | payload | return |
+|---|---|---|
+| `status` | `{run_id, stage, updated_at_ms, message}`, before each stage | ignored |
+| `publish` | `{run_id, publish_dir, page, questions, status}` after every page update; `page` is page.json with no absolute paths, its `media` and the questions' `evidence.image_path` relative to `publish_dir` (where `--publish-dir` copied the light outputs); `questions` (`{session_id, take_sha256, question_set_sha256, created_at_ms, items: {<id>: {order, kind, question, proposal, options, evidence: {time_s, image_path}}}}`) is `null` when the question set has not changed since the last successful publish | ignored |
+| `answers` | `{run_id, keys: ["answers", "spec_review", "correction"]}` | a dict with any of those keys in the shapes above (and optionally `source`), or `null` |
+
+A hook that raises never stops the run: the failure is logged and listed in the run's problems. A review page should
+write only `answers`, `spec_review` and `correction`; the binding fields make stale or foreign answers harmless.
 
 ## What it never does
 
@@ -119,7 +130,7 @@ gate item ("Calibration reuse flagged" for recalibration_required), "End-of-take
 "Stated task (gate refused)", "Layout shifted by software (dx, dy) to fit the robot's reach" (and "still partly out of
 reach" if so), legacy answers, development clip, replayed model outputs.
 
-## This morning's take (D2 runbook)
+## Recording and running a new take
 
 0. **Film at 1080p, 30 fps** (iPhone: Settings > Camera > Record Video > 1080p at 30 fps). 4K or 60 fps still works
    (a 1080p30 working copy is made automatically and recorded) but costs time; SAM cost scales with frames.
@@ -127,19 +138,19 @@ reach" if so), legacy answers, development clip, replayed model outputs.
    board flat at the start of the task for at least half a second, sync card shown and hidden; leave the board where
    it was at the end, or answer the end-board question honestly.
 2. `m.json`: copy D1's and change names/sizes if the objects changed.
-3. Watch (record mode). Cap = what is left of the owner's budget; the project ledger also enforces the $30 total:
+3. Watch (record mode). Cap = what is left of your budget; a project ledger can enforce a total across runs:
 
 ```
-cd /workspace/mirror        # or the integration worktree
-MODEL_API_KEY=... MIRROR_RENDER_LOCK=/workspace/mirror-team/v2/night/render.lock MUJOCO_GL=osmesa \
+MODEL_API_KEY=... MUJOCO_GL=osmesa \
 python -m mirror.capture.real_run --lens IMG_LENS.MOV --take IMG_TASK.MOV --measurements m.json \
-    --out /workspace/mirror-team/v2/night/pipeline/D2/out --mode record --cap-usd 9.60 --dev-clip D2 \
-    --publish-firebase D2 --answers-firebase D2
+    --out runs/D2 --mode record --cap-usd 9.60 --dev-clip D2 \
+    --project-ledger runs/spend_project.jsonl \
+    [--publish-dir PUB --publish-hook mypkg.review:hook --publish-to D2 --answers-from D2]
 ```
 
-   It stops at `waiting: answers`. The questions, overlay, timeline and evidence are on the review page
-   (wiki/mirror/phone-capture/review, run D2).
-4. The person answers on the page. Run the SAME command again: answers bound to D2 are applied; the gate decides.
+   It stops at `waiting: answers` with the questions in `questions.json` (and on the review page, with a hook).
+4. The person answers (on the page, or in an answers file). Run the SAME command again: answers bound to this run are
+   applied; the gate decides.
    * Gate passed: Muse Spark proposes the task (recorded); it stops at `waiting: task review`; the person
      accepts/rejects each proposed rule on the page; run again.
    * Gate refused for `recalibration_required` only: with the `intent` answer the stated task runs, labelled.
@@ -147,8 +158,9 @@ python -m mirror.capture.real_run --lens IMG_LENS.MOV --take IMG_TASK.MOV --meas
 5. Robot run and render follow. The correction runs once the person picks one on the page (run again). For a demo
    before that, `--rehearse-correction <id>` runs one labelled as a rehearsal; the person's later choice replaces it.
 6. Twin films: `MUJOCO_GL=osmesa python scripts/twin_render.py --pipeline OUT --only main` then
-   `--only before_after` (under the render lock); run the pipeline once more so `page.twin` lists them.
+   `--only before_after`; run the pipeline once more so `page.twin` lists them. Set `MIRROR_RENDER_LOCK` to a file to
+   serialise heavy stages with other jobs on a shared machine.
 
-Wall time on this sandbox (4 shared cores, D1 replay): watch stages about 6 minutes of compute, robot stages under
+Wall time on 4 shared CPU cores (D1 replay): watch stages about 6 minutes of compute, robot stages under
 1 minute plus about 2 minutes per rendered video; record mode adds model latency (about 3 minutes of SAM video and
 40 s of grounding for a 50 s take). Lock waits are reported separately (`lock_wait_s`).

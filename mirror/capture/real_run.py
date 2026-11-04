@@ -2,7 +2,8 @@
 
     python -m mirror.capture.real_run --lens LENS.MOV --take TASK.MOV \
         --measurements m.json --out DIR [--mode record|replay|offline] [--cap-usd X] \
-        [--answers answers.json] [--seed-t S] [--intrinsics I.json]
+        [--answers answers.json] [--seed-t S] [--intrinsics I.json] \
+        [--publish-hook MODULE:FUNCTION --publish-to RUN_ID --answers-from RUN_ID]
 
 What it does, unattended and resumable (each stage writes its outputs and a
 marker in DIR/real_run.json; a second invocation continues where the first
@@ -32,6 +33,13 @@ Model calls go through MIRROR's Meta client and LLM client: record mode saves
 every response as a cassette (and charges the spend ledger, with a hard cap
 checked before each call); replay mode serves cassettes only and installs a
 transport that fails any network request; offline mode uses no model at all.
+
+Publishing to a review page is optional and pluggable: ``--publish-hook
+MODULE:FUNCTION`` (or ``MIRROR_PUBLISH_HOOK``) names a callable
+``hook(event, payload) -> dict | None`` that receives the page, questions and
+status payloads and can return the person's answers. See ``PublishHook`` below
+and docs/REAL_RUN.md. Answers from a hook are checked exactly like a local
+answers file: bound to this run's session id, take sha256 and question set.
 """
 from __future__ import annotations
 
@@ -57,7 +65,6 @@ STAGES = ("probe", "lens", "scan", "seed", "ground", "track", "session", "report
           "answers", "task", "scene", "run", "render", "correct", "publish")
 WATCH_STAGES = STAGES[:8]
 LABELS_REAL = ["Real phone footage", "One camera (single view, reduced)"]
-FIREBASE_RUNS_BASE = "dQmURmmZYmQI8u8P7ctOVTYCLFM2/file-system/wiki/mirror/phone-capture/viewer/runs"
 D1_TAKE_SHA256 = "6cc4955b90608dd4f154b69011b72321e510ecb5b22b21e06be6bd213c995bfe"   # IMG_0815 (D1)
 GATE_PROCEED_CODES = {"recalibration_required"}   # open gate items a stated-task layout run may proceed under (labelled)
 STOP_FRACTION = 0.95                    # stop before any call that could cross 95 % of the cap
@@ -126,22 +133,19 @@ def working_copy_plan(width: int, height: int, fps: Optional[float]) -> Optional
 
 
 def _safe_key(s: str) -> str:
-    """A Firebase/Storage-safe key (no . $ # [ ] / and no spaces)."""
+    """A key safe for most JSON stores and file names (no . $ # [ ] / and no spaces)."""
     return re.sub(r"[.$#\[\]/\s]+", "_", str(s)).strip("_") or "_"
 
 
 def _strip_abs(obj):
-    """Published copies carry no absolute sandbox paths: /cloudspace/<p> becomes the Storage-relative <p>, any other
-    absolute path its file name (marked 'local:')."""
+    """Published copies carry no absolute machine paths: any absolute path becomes its file name, marked 'local:'."""
     if isinstance(obj, dict):
         return {k: _strip_abs(v) for k, v in obj.items() if k != "error_trace"}
     if isinstance(obj, list):
         return [_strip_abs(v) for v in obj]
-    if isinstance(obj, str) and obj.startswith("/") and "\n" not in obj and len(obj) < 400:
-        if obj.startswith("/cloudspace/"):
-            return obj[len("/cloudspace/"):]
-        if re.match(r"^/(workspace|tmp|home|root|opt|var|usr)/", obj):
-            return "local:" + Path(obj).name
+    if isinstance(obj, str) and obj.startswith("/") and "\n" not in obj and len(obj) < 400 \
+            and re.match(r"^(/[^/\s]+){2,}/?$", obj):
+        return "local:" + Path(obj).name
     return obj
 
 
@@ -149,61 +153,48 @@ def _canon_sha(obj) -> str:
     return hashlib.sha256(json.dumps(obj, sort_keys=True, separators=(",", ":"), default=_json_default).encode()).hexdigest()
 
 
-def _fb_clean(obj):
-    """JSON for Firebase: keys made safe (no . $ # [ ] /), NaN/inf -> None."""
+def _plain(obj):
+    """Plain JSON for a publish hook: numpy values and paths converted, NaN/inf -> None."""
     if isinstance(obj, dict):
-        return {_safe_key(k): _fb_clean(v) for k, v in obj.items()}
+        return {str(k): _plain(v) for k, v in obj.items()}
     if isinstance(obj, (list, tuple)):
-        return [_fb_clean(v) for v in obj]
+        return [_plain(v) for v in obj]
     if isinstance(obj, float) and not math.isfinite(obj):
         return None
     if isinstance(obj, (np.integer, np.floating, np.ndarray, Path)):
-        return _fb_clean(json.loads(json.dumps(obj, default=_json_default)))
+        return _plain(json.loads(json.dumps(obj, default=_json_default)))
     return obj
 
 
-_FB_SCRIPT = (
-    "import json, logging, sys\n"
-    "sys.path.append('/opt/sandbox_libs')\n"
-    "for n in ('httpx', 'httpcore', 'urllib3'):\n"
-    "    logging.getLogger(n).setLevel(logging.WARNING)\n"
-    "from firebase_helper import firebase\n"
-    "op, path, f = sys.argv[1], sys.argv[2], sys.argv[3]\n"
-    "data = json.load(open(f)) if f != '-' else None\n"
-    "r = firebase.read(path) if op == 'read' else (firebase.update(path, data) if op == 'update' else "
-    "(firebase.delete(path) if op == 'delete' else firebase.write(path, data)))\n"
-    "print(json.dumps(r if op == 'read' else None))\n")
+# ------------------------------------------------------------- publish hook
+class PublishHook:
+    """Optional bridge to a review page (or any other store), loaded from ``MODULE:FUNCTION``.
 
+    The function is called as ``hook(event, payload)`` with plain-JSON payloads:
 
-def _fb(op: str, path: str, data=None):
-    """Firebase read/update/write/delete through the sandbox's helper (MIRROR's venv lacks it: a short subprocess
-    of the sandbox Python is used; its HTTP loggers are set to WARNING so no URL with a token reaches a log)."""
-    import logging
-    for n in ("httpx", "httpcore", "urllib3"):
-        logging.getLogger(n).setLevel(logging.WARNING)
-    try:
-        from firebase_helper import firebase      # noqa: F401 (sandbox Python)
-        if op == "read":
-            return firebase.read(path)
-        return {"update": firebase.update, "write": firebase.write}[op](path, data) if op != "delete" else firebase.delete(path)
-    except ImportError:
-        pass
-    py = os.environ.get("MANA_PYTHON") or "/workspace/.venv/bin/python"
-    if not Path(py).exists():
-        raise RuntimeError("no Firebase helper available (set MANA_PYTHON to the sandbox Python)")
-    import tempfile
-    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tf:
-        json.dump(data, tf, default=_json_default)
-        fname = tf.name
-    try:
-        env = {k: v for k, v in os.environ.items() if k not in ("PYTHONPATH", "VIRTUAL_ENV")}
-        r = subprocess.run([py, "-c", _FB_SCRIPT, op, path, fname if data is not None else "-"], capture_output=True, text=True,
-                           timeout=120, stdin=subprocess.DEVNULL, env=env)
-    finally:
-        os.unlink(fname)
-    if r.returncode != 0:
-        raise RuntimeError(f"Firebase {op} failed: " + (r.stderr.strip().splitlines() or ["?"])[-1][:300])
-    return json.loads((r.stdout.strip().splitlines() or ["null"])[-1])
+      ``"status"``   {"run_id", "stage", "updated_at_ms", "message"}: progress, before each stage.
+      ``"publish"``  {"run_id", "publish_dir", "page", "questions", "status"}: after every page update.
+                     ``page`` carries no absolute paths; its ``media`` and the questions' ``image_path``
+                     values are relative to ``publish_dir`` (where ``--publish-dir`` copied the light
+                     outputs). ``questions`` is None when the question set has not changed since the
+                     last successful publish.
+      ``"answers"``  {"run_id", "keys": ["answers", "spec_review", "correction"]}: returns a dict with
+                     any of those keys (and optionally "source"), or None. The run saves it to
+                     OUT/answers_hook.json and applies only records bound to this run.
+
+    The return value of "status" and "publish" is ignored. A hook that raises never stops the run:
+    the failure is logged and listed in the run's problems."""
+
+    def __init__(self, spec: str):
+        import importlib
+        mod, _, fn = str(spec).partition(":")
+        if not mod or not fn:
+            raise SystemExit(f"--publish-hook must be MODULE:FUNCTION, not {spec!r}")
+        self.spec = spec
+        self.fn = getattr(importlib.import_module(mod), fn)
+
+    def __call__(self, event: str, payload: dict):
+        return self.fn(event, _plain(payload))
 
 
 def _run(cmd: list, timeout: int = 1800):
@@ -217,7 +208,7 @@ _ORIG_PROBE = [None]      # mirror.capture.media.probe as imported (the session 
 
 @contextlib.contextmanager
 def heavy_lock():
-    """Shared CPU: hold the night render lock (if configured) for heavy work."""
+    """Shared CPU: hold the render lock (MIRROR_RENDER_LOCK, if set) for heavy work."""
     if not LOCK:
         yield
         return
@@ -234,7 +225,7 @@ def heavy_lock():
 
 # ------------------------------------------------------------- spend ledger
 PROJECT_CAP_USD = float(os.environ.get("MIRROR_PROJECT_CAP_USD", "30"))
-DEFAULT_PROJECT_LEDGER = "/workspace/mirror-team/v2/spend_project.jsonl"
+DEFAULT_CASSETTE_ROOT = Path.home() / ".cache" / "mirror" / "cassettes"
 
 
 def _ledger_sum(path: Path) -> float:
@@ -247,16 +238,16 @@ class Ledger:
     """Append-only spend ledger with a hard cap checked BEFORE each call.
 
     Two caps are checked: this output directory's ``cap_usd`` (with ``prior_usd``
-    already used against it elsewhere) and the project-wide ledger
-    (``MIRROR_PROJECT_LEDGER``, default /workspace/mirror-team/v2/spend_project.jsonl,
-    cap ``MIRROR_PROJECT_CAP_USD`` = $30): every charge is appended to both, so a
+    already used against it elsewhere) and, if configured, a project-wide ledger
+    (``--project-ledger`` or ``MIRROR_PROJECT_LEDGER``; cap ``--project-cap-usd`` or
+    ``MIRROR_PROJECT_CAP_USD``, default $30): every charge is appended to both, so a
     second output directory for the same take cannot start again from $0."""
 
     def __init__(self, path: Path, cap_usd: float, prior_usd: float = 0.0, project: Optional[Path] = None,
                  project_cap_usd: Optional[float] = None, track: str = "real_run"):
         self.path, self.cap, self.prior = Path(path), float(cap_usd), float(prior_usd)
         if project is None:
-            pe = os.environ.get("MIRROR_PROJECT_LEDGER", DEFAULT_PROJECT_LEDGER)
+            pe = os.environ.get("MIRROR_PROJECT_LEDGER", "")
             project = Path(pe) if pe and pe.lower() != "none" else None
         self.project = Path(project) if project else None
         self.project_cap = float(PROJECT_CAP_USD if project_cap_usd is None else project_cap_usd)
@@ -767,7 +758,8 @@ class RealRun:
                  seed_t: Optional[float] = None, answers: Optional[Path] = None, rehearse_correction: Optional[str] = None,
                  render: bool = True, label_extra: Optional[list] = None, dev_clip: Optional[str] = None,
                  media_cache: Optional[Path] = None, publish_dir: Optional[Path] = None,
-                 answers_firebase: Optional[str] = None, publish_firebase: Optional[str] = None,
+                 publish_hook: Optional[str] = None, publish_to: Optional[str] = None, answers_from: Optional[str] = None,
+                 project_ledger: Optional[Path] = None, project_cap_usd: Optional[float] = None,
                  legacy_answers_d1: Optional[bool] = None, log=print):
         self.out = Path(out)
         self.out.mkdir(parents=True, exist_ok=True)
@@ -798,7 +790,8 @@ class RealRun:
         self.cassettes = Path(cassettes) if cassettes else (Path(inp["cassettes"]) if inp.get("cassettes") else None)
         prior_usd = float(prior_usd if prior_usd else (inp.get("prior_usd") or 0.0))
         self.prior_usd = prior_usd
-        self.ledger = Ledger(self.out / "spend.jsonl", cap_usd, prior_usd)
+        self.ledger = Ledger(self.out / "spend.jsonl", cap_usd, prior_usd, project=project_ledger,
+                             project_cap_usd=project_cap_usd)
         self.seed_t = seed_t if seed_t is not None else inp.get("seed_t")
         self.answers_path = Path(answers) if answers else (Path(inp["answers"]) if inp.get("answers") else self.out / "answers.json")
         self.rehearse = rehearse_correction or inp.get("rehearse_correction")
@@ -807,10 +800,12 @@ class RealRun:
         self.label_extra = list(label_extra or inp.get("label_extra") or [])
         self.media_cache = Path(media_cache) if media_cache else None
         self.publish_dir = Path(publish_dir) if publish_dir else (Path(inp["publish_dir"]) if inp.get("publish_dir") else None)
-        self.answers_firebase = answers_firebase or inp.get("answers_firebase")
-        self.publish_firebase = publish_firebase or inp.get("publish_firebase")
-        if self.publish_firebase and self.publish_dir is None:
-            self.publish_dir = Path("/cloudspace/mirror/capture") / _safe_key(self.publish_firebase) / "pipeline"
+        self.hook_spec = publish_hook or inp.get("publish_hook") or os.environ.get("MIRROR_PUBLISH_HOOK") or None
+        self.publish_to = publish_to or inp.get("publish_to")
+        self.answers_from = answers_from or inp.get("answers_from")
+        if (self.publish_to or self.answers_from) and not self.hook_spec:
+            raise SystemExit("--publish-to / --answers-from need --publish-hook MODULE:FUNCTION (or MIRROR_PUBLISH_HOOK)")
+        self.hook = PublishHook(self.hook_spec) if self.hook_spec and (self.publish_to or self.answers_from) else None
         self.legacy_d1 = bool(legacy_answers_d1 if legacy_answers_d1 is not None else inp.get("legacy_answers_d1"))
         self.log = log
         self.state = st or {"version": VERSION, "stages": {}, "created_at": _now_ms()}
@@ -821,7 +816,7 @@ class RealRun:
                                 "dev_clip": self.dev_clip, "label_extra": self.label_extra,
                                 "answers": str(self.answers_path), "rehearse_correction": self.rehearse,
                                 "publish_dir": str(self.publish_dir) if self.publish_dir else None,
-                                "answers_firebase": self.answers_firebase, "publish_firebase": self.publish_firebase,
+                                "publish_hook": self.hook_spec, "publish_to": self.publish_to, "answers_from": self.answers_from,
                                 "legacy_answers_d1": self.legacy_d1,
                                 "take_original": inp.get("take_original"), "lens_original": inp.get("lens_original")}
         self.state["mode"] = mode
@@ -924,7 +919,7 @@ class RealRun:
     def cassette_dir(self) -> Path:
         if self.cassettes is None:
             sha = self.take_sha() or self.clip(self.take).sha256
-            root = Path(os.environ.get("MIRROR_CASSETTE_ROOT", "/workspace/mirror-team/v2/cassettes"))
+            root = Path(os.environ.get("MIRROR_CASSETTE_ROOT") or DEFAULT_CASSETTE_ROOT)
             self.cassettes = root / f"take_{sha[:16]}"
             self.state["inputs"]["cassettes"] = str(self.cassettes)
             self._save()
@@ -998,7 +993,7 @@ class RealRun:
                 if self.done(st):
                     continue
                 self._lock_mark = LOCK_WAIT_S[0]
-                self._fb_status(st, f"running {st}")
+                self._hook_status(st, f"running {st}")
                 getattr(self, "stage_" + st)()
                 if until and st == until:
                     break
@@ -2109,9 +2104,9 @@ class RealRun:
                               "still_out_of_reach": st["scene"].get("still_out_of_reach") or []}
                              if st.get("scene", {}).get("status") == "done" else None),
                "stated_intent": self._stated_intent_view(),
-               "capture_id": self.dev_clip or self.publish_firebase,
+               "capture_id": self.dev_clip or self.publish_to,
                "gate": page.get("gate"), "questions": "questions.json",
-               "answers": "answers_firebase.json" if self.answers_firebase else self.answers_path.name}
+               "answers": "answers_hook.json" if self.answers_from else self.answers_path.name}
         if st.get("run", {}).get("status") == "done" and (self.out / "run" / "rollout.json").exists():
             man["rollouts"]["run"] = "run/rollout.json"
         c = st.get("correct", {})
@@ -2149,31 +2144,25 @@ class RealRun:
             self._publish_copy()
         except OSError as e:
             self.log(f"[publish] copy failed: {e}")
-        self._publish_firebase(page)
+        self._publish_hook(page)
         return page
 
-    def _storage_rel(self) -> Optional[str]:
-        """The publish directory as a Storage path relative to the owner's bucket prefix (None if not under /cloudspace)."""
-        if self.publish_dir is None:
-            return None
-        p = str(Path(self.publish_dir).resolve() if Path(self.publish_dir).exists() else self.publish_dir)
-        return p[len("/cloudspace/"):].strip("/") if p.startswith("/cloudspace/") else None
-
-    def _fb_status(self, stage: str, message: str) -> None:
-        if not getattr(self, "publish_firebase", None):
+    def _hook_status(self, stage: str, message: str) -> None:
+        if getattr(self, "hook", None) is None or not getattr(self, "publish_to", None):
             return
         try:
-            _fb("write", f"{self._fb_base(self.publish_firebase)}/status",
-                {"stage": stage, "updated_at_ms": _now_ms(), "message": message})
+            self.hook("status", {"run_id": self.publish_to, "stage": stage, "updated_at_ms": _now_ms(), "message": message})
         except Exception as e:      # noqa: BLE001: the run goes on; the page just shows older status
-            self.log(f"[publish] Firebase status failed: {type(e).__name__}: {e}")
+            self.log(f"[publish] status hook failed: {type(e).__name__}: {e}")
 
-    def _questions_node(self, storage: Optional[str]) -> Optional[dict]:
+    def _questions_node(self, base: Optional[str] = "") -> Optional[dict]:
+        """The question set for a review page; evidence image paths relative to the publish directory
+        (prefixed with ``base`` if given; None without a publish directory)."""
         qf = self.out / "questions.json"
         if not qf.exists():
             return None
         qd = json.loads(qf.read_text())
-        img = lambda rel: (f"{storage}/{rel}" if storage and rel else None)
+        img = lambda rel: (None if base is None or not rel else (f"{base}/{rel}" if base else rel))
         items = {}
         for i, q in enumerate(qd.get("questions", [])):
             ev = q.get("evidence") or {}
@@ -2182,42 +2171,42 @@ class RealRun:
                                          "evidence": {"time_s": ev.get("t_s"), "image_path": img(ev.get("image"))}}
         return {k: qd.get(k) for k in ("session_id", "take_sha256", "question_set_sha256", "created_at_ms")} | {"items": items}
 
-    def _publish_firebase(self, page: dict) -> None:
-        """page / questions / status under viewer/runs/<RUN_ID> for the review page (schema: night/FIX_CONTRACT.md).
-        Media are Storage-relative paths under the publish directory; no absolute sandbox paths, no token URLs."""
-        if not getattr(self, "publish_firebase", None):
+    def _publish_hook(self, page: dict) -> None:
+        """page / questions / status to the publish hook (see PublishHook). Media paths are relative to the
+        publish directory; no absolute paths."""
+        if getattr(self, "hook", None) is None or not getattr(self, "publish_to", None):
             return
-        base = self._fb_base(self.publish_firebase)
-        storage = self._storage_rel()
+        has_dir = getattr(self, "publish_dir", None) is not None
+        base = "" if has_dir else None
         pub = set(self.PUBLISH) | {str(p.relative_to(self.out)) for p in self.out.glob("evidence/*.jpg")} \
             | {str(p.relative_to(self.out)) for p in self.out.glob("twin/*.mp4")}
         pg = _strip_abs(json.loads(json.dumps(page, default=_json_default)))
-        pg["run_id"] = self.publish_firebase
-        pg["storage_base"] = storage
-        pg["media"] = {k: f"{storage}/{v}" for k, v in (page.get("paths") or {}).items() if storage and v in pub}
+        pg["run_id"] = self.publish_to
+        pg["media"] = {k: v for k, v in (page.get("paths") or {}).items() if has_dir and v in pub}
         for q in pg.get("confirmations_needed") or []:
             ev = q.get("evidence") or {}
             if ev.get("image"):
-                ev["image_path"] = f"{storage}/{ev['image']}" if storage else None
-        twin = self.out / "twin" / "twin.json"
-        if twin.exists() and storage:
-            pg["media"]["twin_dir"] = f"{storage}/twin"
+                ev["image_path"] = ev["image"] if has_dir else None
+        if (self.out / "twin" / "twin.json").exists() and has_dir:
+            pg["media"]["twin_dir"] = "twin"
+        qn = self._questions_node(base)
+        if qn is not None and self.state.get("published_questions_sha") == qn["question_set_sha256"]:
+            qn = None
+        st = self.state.get("status") or "running"
+        stage = next((s for s in reversed(STAGES) if self.done(s)), "start")
+        status = {"stage": stage, "updated_at_ms": _now_ms(),
+                  "message": f"{st}: {self.state.get('waiting_for') or page.get('headline') or ''}"[:500]}
         try:
-            _fb("write", f"{base}/page", _fb_clean(pg))
-            qn = self._questions_node(storage)
-            if qn is not None and self.state.get("fb_questions_sha") != qn["question_set_sha256"]:
-                _fb("write", f"{base}/questions", _fb_clean(qn))
-                self.state["fb_questions_sha"] = qn["question_set_sha256"]
-            st = self.state.get("status") or "running"
-            stage = next((s for s in reversed(STAGES) if self.done(s)), "start")
-            _fb("write", f"{base}/status", {"stage": stage, "updated_at_ms": _now_ms(),
-                                            "message": f"{st}: {self.state.get('waiting_for') or page.get('headline') or ''}"[:500]})
-            self.state["published_firebase"] = {"base": base, "at": _now_ms()}
+            self.hook("publish", {"run_id": self.publish_to, "publish_dir": str(self.publish_dir) if has_dir else None,
+                                  "page": pg, "questions": qn, "status": status})
+            if qn is not None:
+                self.state["published_questions_sha"] = qn["question_set_sha256"]
+            self.state["published"] = {"run_id": self.publish_to, "at": _now_ms()}
             _jdump(self.state_path, self.state)
         except Exception as e:      # noqa: BLE001
-            self.log(f"[publish] Firebase write failed: {type(e).__name__}: {e}")
+            self.log(f"[publish] hook failed: {type(e).__name__}: {e}")
             self.state.setdefault("problems", [])
-            msg = f"Firebase publish failed: {type(e).__name__}"
+            msg = f"publish hook failed: {type(e).__name__}"
             if msg not in self.state["problems"]:
                 self.state["problems"].append(msg)
 
@@ -2307,7 +2296,7 @@ class RealRun:
                "correct/spec_after.json", "correct/sim_after.mp4", "correct/before_after.mp4", "lens/intrinsics.json")
 
     def _publish_copy(self):
-        """Copy the light outputs (no tracks, no rollouts) to --publish-dir, e.g. a /cloudspace folder the page reads."""
+        """Copy the light outputs (no tracks, no rollouts) to --publish-dir, e.g. a folder the review page reads."""
         if getattr(self, "publish_dir", None) is None:
             return
         files = list(self.PUBLISH) + [str(p.relative_to(self.out)) for p in self.out.glob("evidence/*.jpg")] \
@@ -2316,7 +2305,7 @@ class RealRun:
             src_, dst = self.out / rel, self.publish_dir / rel
             if not src_.exists():
                 continue
-            if rel in ("manifest.json", "real_run.json", "page.json"):     # no absolute sandbox paths in published copies
+            if rel in ("manifest.json", "real_run.json", "page.json"):     # no absolute paths in published copies
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 _jdump(dst, _strip_abs(json.loads(src_.read_text())))
                 continue
@@ -2325,29 +2314,24 @@ class RealRun:
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src_, dst)
 
-    # ------------------------------------------------------ Firebase (sandbox only)
-    def _fb_base(self, run_id: str) -> str:
-        """Firebase node of a run: <base>/<run_id> (an argument containing '/' is taken as the full node path)."""
-        if "/" in str(run_id):
-            return str(run_id).rstrip("/")
-        return f"{FIREBASE_RUNS_BASE}/{_safe_key(run_id)}"
-
-    def _fetch_firebase_answers(self) -> Optional[Path]:
-        """The person's answers, spec review and correction the page wrote under the run's Firebase node, saved to
-        OUT/answers_firebase.json (never over the local answers file). Returns that file, or None."""
-        if not getattr(self, "answers_firebase", None):
+    # ------------------------------------------------------ answers from the hook
+    def _fetch_hook_answers(self) -> Optional[Path]:
+        """The person's answers, spec review and correction returned by the publish hook for --answers-from,
+        saved to OUT/answers_hook.json (never over the local answers file). Returns that file, or None."""
+        if getattr(self, "hook", None) is None or not getattr(self, "answers_from", None):
             return None
-        base = self._fb_base(self.answers_firebase)
+        keys = ["answers", "spec_review", "correction"]
         try:
-            node = {k: _fb("read", f"{base}/{k}") for k in ("answers", "spec_review", "correction")}
+            node = self.hook("answers", {"run_id": self.answers_from, "keys": keys}) or {}
         except Exception as e:      # noqa: BLE001: unattended; the run reports it and waits
-            self.log(f"[answers] Firebase read failed ({type(e).__name__}: {e}); no answers read")
-            self.state.setdefault("problems", []).append(f"Firebase answers read failed: {type(e).__name__}")
+            self.log(f"[answers] hook read failed ({type(e).__name__}: {e}); no answers read")
+            self.state.setdefault("problems", []).append(f"answers hook read failed: {type(e).__name__}")
             return None
-        dst = self.out / "answers_firebase.json"
-        _jdump(dst, {"source": f"firebase:{base}", "fetched_at": _now_ms(), **{k: v for k, v in node.items() if v}})
+        src = node.get("source") or f"hook:{self.answers_from}"
+        dst = self.out / "answers_hook.json"
+        _jdump(dst, {"source": src, "fetched_at": _now_ms(), **{k: node.get(k) for k in keys if node.get(k)}})
         if self.answers_path.exists() and self.answers_path.resolve() != dst.resolve():
-            note = f"local answers file {self.answers_path.name} not used: --answers-firebase is set (answers from {base})"
+            note = f"local answers file {self.answers_path.name} not used: --answers-from is set (answers from {src})"
             if note not in self.state.setdefault("problems", []):
                 self.state["problems"].append(note)
         return dst
@@ -2391,8 +2375,8 @@ class RealRun:
         """The person's answers that are bound to THIS run (session id, take sha256, question set sha256, written
         after the questions). Anything else is refused and reported, never applied. Returns {item_id: record} plus
         normalised 'spec_review' {answer: {confirm, reject}, ...} and 'correction' {answer, ...}; None if no file."""
-        fb = self._fetch_firebase_answers()
-        src = fb if fb is not None else self.answers_path
+        fh = self._fetch_hook_answers()
+        src = fh if fh is not None else self.answers_path
         if not src.exists():
             return None
         d = json.loads(src.read_text())
@@ -2467,7 +2451,7 @@ class RealRun:
         ans = self._load_answers()
         refused = self.state.get("answers_refused") or []
         if not ans:
-            src = (f"Firebase run {self.answers_firebase}" if self.answers_firebase else self.answers_path.name)
+            src = (f"run {self.answers_from} via the publish hook" if self.answers_from else self.answers_path.name)
             raise StageStop(f"answers: waiting for the person's answers ({src}; questions in questions.json)"
                             + (f"; refused {len(refused)} not bound to this run" if refused else ""))
         self._answers_now = ans
@@ -2490,7 +2474,7 @@ class RealRun:
         applied["objects_rejected"] = sorted(rejected)
         if "camera_settings" in ans:
             cs = ans["camera_settings"]
-            who = ("Mana's record of the person's chat message (not a click on the page)" if cs.get("source") == "chat"
+            who = ("a record of the person's chat message (not a click on the page)" if cs.get("source") == "chat"
                    else "person")
             notes.append(f"camera settings ({who}): " + str(cs["answer"])
                          + "; recorded only, the calibration flag is not resolved by an answer")
@@ -3136,7 +3120,12 @@ def main(argv=None) -> int:
                          "offline: no model (stops before grounding)")
     ap.add_argument("--cap-usd", type=float, default=None, help="hard spend cap for this output directory (default 10)")
     ap.add_argument("--prior-usd", type=float, default=0.0, help="spend already used against the same cap elsewhere")
-    ap.add_argument("--cassettes", type=Path, help="cassette directory (default OUT/cassettes)")
+    ap.add_argument("--cassettes", type=Path, help="cassette directory (default: one per take under MIRROR_CASSETTE_ROOT, "
+                                                   "or ~/.cache/mirror/cassettes)")
+    ap.add_argument("--project-ledger", type=Path, help="project-wide spend ledger shared by every output directory "
+                                                        "(default MIRROR_PROJECT_LEDGER; none if unset)")
+    ap.add_argument("--project-cap-usd", type=float, default=None, help="cap for the project ledger (default "
+                                                                        "MIRROR_PROJECT_CAP_USD or 30)")
     ap.add_argument("--answers", type=Path, help="the person's answers (default OUT/answers.json)")
     ap.add_argument("--seed-t", type=float, help="ground on this time instead of the automatic clean frame")
     ap.add_argument("--rehearse-correction", help="with no correction chosen by the person, rehearse this candidate "
@@ -3145,11 +3134,12 @@ def main(argv=None) -> int:
     ap.add_argument("--dev-clip", help="label the take as a development clip with this name (never scored)")
     ap.add_argument("--label", action="append", default=[], help="extra honest label shown with every output")
     ap.add_argument("--media-cache", type=Path, help="directory with already-derived media (proxy/subclips) to reuse")
-    ap.add_argument("--publish-dir", type=Path, help="also copy the light outputs here (e.g. /cloudspace/mirror/capture/<id>/pipeline)")
-    ap.add_argument("--answers-firebase", metavar="RUN_ID", help="read the person's answers, spec review and correction from "
-                    "the page's Firebase run node viewer/runs/RUN_ID (saved to OUT/answers_firebase.json; bound to this run)")
-    ap.add_argument("--publish-firebase", metavar="RUN_ID", help="publish page/questions/status to viewer/runs/RUN_ID for the "
-                    "review page (media to /cloudspace/mirror/capture/RUN_ID/pipeline unless --publish-dir)")
+    ap.add_argument("--publish-dir", type=Path, help="also copy the light outputs here (e.g. a folder a review page reads)")
+    ap.add_argument("--publish-hook", metavar="MODULE:FUNCTION", help="callable hook(event, payload) that publishes the page, "
+                    "questions and status and returns answers (default MIRROR_PUBLISH_HOOK); see docs/REAL_RUN.md")
+    ap.add_argument("--publish-to", metavar="RUN_ID", help="publish page/questions/status through the hook under RUN_ID")
+    ap.add_argument("--answers-from", metavar="RUN_ID", help="read the person's answers, spec review and correction through "
+                    "the hook from RUN_ID (saved to OUT/answers_hook.json; applied only if bound to this run)")
     ap.add_argument("--legacy-answers-d1", action="store_true", help="D1 replay only: accept D1's page answers (3 Nov) that "
                     "predate the binding fields; refused for any other take; labelled everywhere")
     ap.add_argument("--until", choices=STAGES, help="stop after this stage")
@@ -3165,7 +3155,8 @@ def main(argv=None) -> int:
                 prior_usd=a.prior_usd, cassettes=a.cassettes, intrinsics=a.intrinsics, seed_t=a.seed_t,
                 answers=a.answers, rehearse_correction=a.rehearse_correction, render=not a.no_render,
                 label_extra=a.label, dev_clip=a.dev_clip, media_cache=a.media_cache, publish_dir=a.publish_dir,
-                answers_firebase=a.answers_firebase, publish_firebase=a.publish_firebase,
+                publish_hook=a.publish_hook, publish_to=a.publish_to, answers_from=a.answers_from,
+                project_ledger=a.project_ledger, project_cap_usd=a.project_cap_usd,
                 legacy_answers_d1=True if a.legacy_answers_d1 else None)
     if a.redo and prev:
         r.forget(a.redo)

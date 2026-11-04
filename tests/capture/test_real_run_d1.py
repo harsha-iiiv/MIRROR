@@ -4,7 +4,7 @@ and the honest outcome (gate refused on the calibration flag; his stated task
 run in simulation). Slow (about 15 minutes on 4 shared cores) and skipped unless
 the D1 inputs are present (personal footage is not in the repository):
 
-    MIRROR_D1_INPUTS=/workspace/mirror-team/v2/night/pipeline/D1 \
+    MIRROR_D1_INPUTS=<directory with the D1 inputs> \
         pytest -m slow tests/capture/test_real_run_d1.py
 
 The directory must hold measurements.json, answers_from_page.json, cassettes_d1/,
